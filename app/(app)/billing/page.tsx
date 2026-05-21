@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Check, ExternalLink, KeyRound, Sparkles, ShieldCheck } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Check, ExternalLink, KeyRound, Sparkles, ShieldCheck, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { updateUserDoc } from "@/lib/firebase/firestore";
+import { updateUserDoc, getPlansConfig } from "@/lib/firebase/firestore";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -12,15 +12,10 @@ import { Input } from "@/components/ui/Input";
 import { toast } from "@/store/uiStore";
 import { PLANS } from "@/lib/constants";
 import { useAuthStore } from "@/store/authStore";
-import type { PlanId } from "@/types";
+import { cn } from "@/lib/utils";
+import type { Plan, PlanId } from "@/types";
 
 const GUMROAD_URL = "https://danzbiz.gumroad.com/l/profileproplan";
-
-const PLAN_PERKS: Record<string, string[]> = {
-  free: ["1 profile", "Basic sections", "Public profile link", "AI mock content"],
-  pro: ["Everything in Free", "Real AI generation", "All sections unlocked", "Analytics & leads", "QR code & digital card", "Priority support"],
-  elite: ["Everything in Pro", "Clone profiles", "Custom domain", "Remove branding", "White-label ready", "Admin access"],
-};
 
 export default function BillingPage() {
   const { account } = useAuth();
@@ -30,6 +25,15 @@ export default function BillingPage() {
   const [licenseKey, setLicenseKey] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [activated, setActivated] = useState(false);
+  const [plans, setPlans] = useState<Plan[]>(PLANS);
+
+  useEffect(() => {
+    getPlansConfig()
+      .then((p) => {
+        if (p) setPlans(p);
+      })
+      .catch(() => null);
+  }, []);
 
   const activateLicense = async () => {
     if (!licenseKey.trim()) {
@@ -102,9 +106,8 @@ export default function BillingPage() {
 
       {/* Plan cards */}
       <div className="grid gap-4 lg:grid-cols-3">
-        {PLANS.map((plan) => {
+        {plans.map((plan) => {
           const isCurrent = plan.id === currentPlan;
-          const perks = PLAN_PERKS[plan.id] ?? [];
           return (
             <Card
               key={plan.id}
@@ -150,10 +153,20 @@ export default function BillingPage() {
               )}
 
               <ul className="mt-5 space-y-2">
-                {perks.map((f) => (
-                  <li key={f} className="flex items-center gap-2 text-sm text-white/70">
-                    <Check className="h-4 w-4 shrink-0 text-jade-400" />
-                    {f}
+                {plan.features.map((f, i) => (
+                  <li
+                    key={i}
+                    className={cn(
+                      "flex items-center gap-2 text-sm",
+                      f.included ? "text-white/70" : "text-white/35",
+                    )}
+                  >
+                    {f.included ? (
+                      <Check className="h-4 w-4 shrink-0 text-jade-400" />
+                    ) : (
+                      <X className="h-4 w-4 shrink-0 text-white/20" />
+                    )}
+                    {f.label}
                   </li>
                 ))}
               </ul>

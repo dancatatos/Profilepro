@@ -6,6 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
+  CreditCard,
   LayoutTemplate,
   BarChart3,
   LogOut,
@@ -20,6 +21,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/users", label: "Users", icon: Users, exact: false },
+  { href: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard, exact: false },
   { href: "/admin/templates", label: "Templates", icon: LayoutTemplate, exact: false },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3, exact: false },
 ];

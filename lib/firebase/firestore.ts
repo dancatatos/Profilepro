@@ -20,6 +20,7 @@ import type {
   AnalyticsSummary,
   FeatureFlags,
   Lead,
+  Plan,
   Profile,
 } from "@/types";
 
@@ -65,6 +66,30 @@ export async function setFeatureFlags(
   await setDoc(doc(db, COL.settings, FEATURE_FLAGS_DOC), patch, {
     merge: true,
   });
+}
+
+/* ---------------- Subscription plans ---------------- */
+/* Admin-editable plan pricing/features stored in settings/plans. */
+
+/** Read admin-edited plans. Returns null when none have been saved yet. */
+export async function getPlansConfig(): Promise<Plan[] | null> {
+  if (!isFirebaseConfigured) return null;
+  try {
+    const snap = await getDoc(doc(db, COL.settings, "plans"));
+    if (!snap.exists()) return null;
+    const data = snap.data() as { plans?: Plan[] };
+    return Array.isArray(data.plans) && data.plans.length > 0
+      ? data.plans
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Save the plan definitions (admin only — enforced by Firestore rules). */
+export async function setPlansConfig(plans: Plan[]): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await setDoc(doc(db, COL.settings, "plans"), { plans }, { merge: true });
 }
 
 /* ---------------- Users ---------------- */
