@@ -45,6 +45,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         reset();
         return;
       }
+      // Immediately mark as loading so the dashboard layout never sees
+      // loading=false + account=null (which triggers a /login redirect
+      // and causes flickering while ensureAccount is resolving).
+      setLoading(true);
       setFirebaseUser(user);
       try {
         setAccount(await ensureAccount(user));
