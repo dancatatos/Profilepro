@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Calendar, Check, ChevronLeft, ChevronRight, Clock } from "lucide-react";
+import {
+  Calendar,
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+} from "lucide-react";
 import { listBookedSlots } from "@/lib/firebase/firestore";
 import { cn } from "@/lib/utils";
 import type { AppointmentSection } from "@/types";
@@ -102,6 +109,7 @@ export function AppointmentBooking({
     (q) => q.enabled && q.question.trim().length > 0,
   );
 
+  const [expanded, setExpanded] = useState(false);
   const [taken, setTaken] = useState<Set<string>>(new Set());
   const [viewMonth, setViewMonth] = useState(
     () => new Date(today.getFullYear(), today.getMonth(), 1),
@@ -138,9 +146,7 @@ export function AppointmentBooking({
   const canNext = new Date(year, month + 1, 1) <= lastDate;
 
   const isSelectable = (d: Date) =>
-    d >= today &&
-    d <= lastDate &&
-    section.availableDays.includes(d.getDay());
+    d >= today && d <= lastDate && section.availableDays.includes(d.getDay());
 
   const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
   const todayISO = toISO(today);
@@ -186,6 +192,7 @@ export function AppointmentBooking({
     }
   };
 
+  /* ── Booked confirmation ── */
   if (done) {
     return (
       <div className="p-4" style={cardStyle}>
@@ -212,219 +219,243 @@ export function AppointmentBooking({
   }
 
   return (
-    <div className="p-4" style={cardStyle}>
-      <p className="font-display text-base font-semibold" style={{ color: "var(--tp-text)" }}>
-        {section.headline}
-      </p>
-      {section.subtext && (
-        <p className="mt-1 text-xs" style={{ color: "var(--tp-text3)" }}>
-          {section.subtext}
-        </p>
-      )}
-
-      {/* Calendar */}
-      <div className="mt-3 rounded-xl p-3" style={{ background: "var(--tp-input-bg)" }}>
-        <div className="mb-2 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={() =>
-              canPrev && setViewMonth(new Date(year, month - 1, 1))
-            }
-            disabled={!canPrev}
-            className="rounded-md p-1 disabled:opacity-25"
-            style={{ color: "var(--tp-text2)" }}
-            aria-label="Previous month"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <span
-            className="text-xs font-semibold"
-            style={{ color: "var(--tp-text)" }}
-          >
-            {viewMonth.toLocaleDateString(undefined, {
-              month: "long",
-              year: "numeric",
-            })}
+    <div className="space-y-2.5">
+      {/* Collapsed trigger — a themed button */}
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="tp-btn-el flex w-full items-center gap-3 px-4 py-3.5 text-left transition-transform active:scale-[0.99]"
+        style={btnStyle}
+      >
+        <Calendar className="h-5 w-5 shrink-0" />
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold">
+            {section.headline}
           </span>
-          <button
-            type="button"
-            onClick={() =>
-              canNext && setViewMonth(new Date(year, month + 1, 1))
-            }
-            disabled={!canNext}
-            className="rounded-md p-1 disabled:opacity-25"
-            style={{ color: "var(--tp-text2)" }}
-            aria-label="Next month"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
+          {section.subtext && (
+            <span className="block text-xs opacity-70">{section.subtext}</span>
+          )}
+        </span>
+        <ChevronDown
+          className={cn(
+            "h-4 w-4 shrink-0 transition-transform",
+            expanded && "rotate-180",
+          )}
+        />
+      </button>
 
-        <div className="grid grid-cols-7 gap-1">
-          {WEEKDAY_LABELS.map((d, i) => (
-            <div
-              key={i}
-              className="py-1 text-center text-[10px] font-medium"
-              style={{ color: "var(--tp-text3)" }}
-            >
-              {d}
-            </div>
-          ))}
-          {Array.from({ length: firstWeekday }).map((_, i) => (
-            <div key={`pad-${i}`} />
-          ))}
-          {Array.from({ length: daysInMonth }).map((_, i) => {
-            const cellDate = new Date(year, month, i + 1);
-            const iso = toISO(cellDate);
-            const selectable = isSelectable(cellDate);
-            const selected = iso === selectedDate;
-            return (
+      {/* Expanded booking panel */}
+      {expanded && (
+        <div className="p-4" style={cardStyle}>
+          {/* Calendar */}
+          <div
+            className="rounded-xl p-3"
+            style={{ background: "var(--tp-input-bg)" }}
+          >
+            <div className="mb-2 flex items-center justify-between">
               <button
-                key={iso}
                 type="button"
-                disabled={!selectable}
-                onClick={() => {
-                  setSelectedDate(iso);
-                  setSelectedTime(null);
-                  setError("");
-                }}
-                className={cn(
-                  "aspect-square rounded-lg text-xs font-medium transition-colors",
-                  !selectable && "opacity-25",
-                )}
-                style={
-                  selected
-                    ? { ...btnStyle, border: "none" }
-                    : selectable
-                      ? {
-                          background: "var(--tp-card)",
-                          color: "var(--tp-text)",
-                        }
-                      : { color: "var(--tp-text3)" }
+                onClick={() =>
+                  canPrev && setViewMonth(new Date(year, month - 1, 1))
                 }
+                disabled={!canPrev}
+                className="rounded-md p-1 disabled:opacity-25"
+                style={{ color: "var(--tp-text2)" }}
+                aria-label="Previous month"
               >
-                {i + 1}
+                <ChevronLeft className="h-4 w-4" />
               </button>
-            );
-          })}
-        </div>
-      </div>
+              <span
+                className="text-xs font-semibold"
+                style={{ color: "var(--tp-text)" }}
+              >
+                {viewMonth.toLocaleDateString(undefined, {
+                  month: "long",
+                  year: "numeric",
+                })}
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  canNext && setViewMonth(new Date(year, month + 1, 1))
+                }
+                disabled={!canNext}
+                className="rounded-md p-1 disabled:opacity-25"
+                style={{ color: "var(--tp-text2)" }}
+                aria-label="Next month"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
 
-      {/* Time slots */}
-      {selectedDate && (
-        <div className="mt-3">
-          <p
-            className="mb-1.5 flex items-center gap-1.5 text-xs font-medium"
-            style={{ color: "var(--tp-text2)" }}
-          >
-            <Clock className="h-3.5 w-3.5" />
-            {prettyDate(selectedDate)}
-          </p>
-          {slots.length === 0 ? (
-            <p className="text-xs" style={{ color: "var(--tp-text3)" }}>
-              No times available.
-            </p>
-          ) : (
-            <div className="grid grid-cols-3 gap-1.5">
-              {slots.map((slot) => {
-                const isTaken = taken.has(`${selectedDate}|${slot}`);
-                const isPast =
-                  selectedDate === todayISO && minutesOf(slot) <= nowMinutes;
-                const disabled = isTaken || isPast;
-                const selected = slot === selectedTime;
+            <div className="grid grid-cols-7 gap-1">
+              {WEEKDAY_LABELS.map((d, i) => (
+                <div
+                  key={i}
+                  className="py-1 text-center text-[10px] font-medium"
+                  style={{ color: "var(--tp-text3)" }}
+                >
+                  {d}
+                </div>
+              ))}
+              {Array.from({ length: firstWeekday }).map((_, i) => (
+                <div key={`pad-${i}`} />
+              ))}
+              {Array.from({ length: daysInMonth }).map((_, i) => {
+                const cellDate = new Date(year, month, i + 1);
+                const iso = toISO(cellDate);
+                const selectable = isSelectable(cellDate);
+                const selected = iso === selectedDate;
                 return (
                   <button
-                    key={slot}
+                    key={iso}
                     type="button"
-                    disabled={disabled}
+                    disabled={!selectable}
                     onClick={() => {
-                      setSelectedTime(slot);
+                      setSelectedDate(iso);
+                      setSelectedTime(null);
                       setError("");
                     }}
                     className={cn(
-                      "rounded-lg py-2 text-xs font-medium transition-colors",
-                      disabled && "line-through opacity-30",
+                      "aspect-square rounded-lg text-xs font-medium transition-colors",
+                      !selectable && "opacity-25",
                     )}
                     style={
                       selected
                         ? { ...btnStyle, border: "none" }
-                        : {
-                            background: "var(--tp-card)",
-                            border: "1px solid var(--tp-border)",
-                            color: "var(--tp-text)",
-                          }
+                        : selectable
+                          ? {
+                              background: "var(--tp-card)",
+                              color: "var(--tp-text)",
+                            }
+                          : { color: "var(--tp-text3)" }
                     }
                   >
-                    {fmtTime(slot)}
+                    {i + 1}
                   </button>
                 );
               })}
             </div>
+          </div>
+
+          {/* Time slots */}
+          {selectedDate && (
+            <div className="mt-3">
+              <p
+                className="mb-1.5 flex items-center gap-1.5 text-xs font-medium"
+                style={{ color: "var(--tp-text2)" }}
+              >
+                <Clock className="h-3.5 w-3.5" />
+                {prettyDate(selectedDate)}
+              </p>
+              {slots.length === 0 ? (
+                <p className="text-xs" style={{ color: "var(--tp-text3)" }}>
+                  No times available.
+                </p>
+              ) : (
+                <div className="grid grid-cols-3 gap-1.5">
+                  {slots.map((slot) => {
+                    const isTaken = taken.has(`${selectedDate}|${slot}`);
+                    const isPast =
+                      selectedDate === todayISO &&
+                      minutesOf(slot) <= nowMinutes;
+                    const disabled = isTaken || isPast;
+                    const selected = slot === selectedTime;
+                    return (
+                      <button
+                        key={slot}
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => {
+                          setSelectedTime(slot);
+                          setError("");
+                        }}
+                        className={cn(
+                          "rounded-lg py-2 text-xs font-medium transition-colors",
+                          disabled && "line-through opacity-30",
+                        )}
+                        style={
+                          selected
+                            ? { ...btnStyle, border: "none" }
+                            : {
+                                background: "var(--tp-card)",
+                                border: "1px solid var(--tp-border)",
+                                color: "var(--tp-text)",
+                              }
+                        }
+                      >
+                        {fmtTime(slot)}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Booking form */}
+          {selectedDate && selectedTime && (
+            <form onSubmit={submit} className="mt-3 space-y-2.5">
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your name"
+                className="h-11 w-full rounded-xl px-3.5 text-sm outline-none placeholder:opacity-40"
+                style={inputStyle}
+              />
+              <input
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="Your mobile number"
+                inputMode="tel"
+                className="h-11 w-full rounded-xl px-3.5 text-sm outline-none placeholder:opacity-40"
+                style={inputStyle}
+              />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Your email (optional)"
+                className="h-11 w-full rounded-xl px-3.5 text-sm outline-none placeholder:opacity-40"
+                style={inputStyle}
+              />
+              {questions.map((q) => (
+                <textarea
+                  key={q.id}
+                  value={answers[q.id] || ""}
+                  onChange={(e) =>
+                    setAnswers((a) => ({ ...a, [q.id]: e.target.value }))
+                  }
+                  placeholder={`${q.question} (optional)`}
+                  rows={2}
+                  className="w-full resize-none rounded-xl px-3.5 py-2.5 text-sm outline-none placeholder:opacity-40"
+                  style={inputStyle}
+                />
+              ))}
+              {error && <p className="text-xs text-red-400">{error}</p>}
+              <button
+                type="submit"
+                disabled={busy}
+                className="tp-btn-el h-11 w-full text-sm font-semibold transition-opacity disabled:opacity-60"
+                style={btnStyle}
+              >
+                {busy
+                  ? "Booking…"
+                  : `Book ${fmtTime(selectedTime)} on ${prettyDate(selectedDate)}`}
+              </button>
+            </form>
+          )}
+
+          {!selectedDate && (
+            <p
+              className="mt-3 flex items-center justify-center gap-1.5 text-xs"
+              style={{ color: "var(--tp-text3)" }}
+            >
+              <Calendar className="h-3.5 w-3.5" />
+              Pick an available day to see open times.
+            </p>
           )}
         </div>
-      )}
-
-      {/* Booking form */}
-      {selectedDate && selectedTime && (
-        <form onSubmit={submit} className="mt-3 space-y-2.5">
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Your name"
-            className="h-11 w-full rounded-xl px-3.5 text-sm outline-none placeholder:opacity-40"
-            style={inputStyle}
-          />
-          <input
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="Your mobile number"
-            inputMode="tel"
-            className="h-11 w-full rounded-xl px-3.5 text-sm outline-none placeholder:opacity-40"
-            style={inputStyle}
-          />
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Your email (optional)"
-            className="h-11 w-full rounded-xl px-3.5 text-sm outline-none placeholder:opacity-40"
-            style={inputStyle}
-          />
-          {questions.map((q) => (
-            <textarea
-              key={q.id}
-              value={answers[q.id] || ""}
-              onChange={(e) =>
-                setAnswers((a) => ({ ...a, [q.id]: e.target.value }))
-              }
-              placeholder={`${q.question} (optional)`}
-              rows={2}
-              className="w-full resize-none rounded-xl px-3.5 py-2.5 text-sm outline-none placeholder:opacity-40"
-              style={inputStyle}
-            />
-          ))}
-          {error && <p className="text-xs text-red-400">{error}</p>}
-          <button
-            type="submit"
-            disabled={busy}
-            className="tp-btn-el h-11 w-full text-sm font-semibold transition-opacity disabled:opacity-60"
-            style={btnStyle}
-          >
-            {busy
-              ? "Booking…"
-              : `Book ${fmtTime(selectedTime)} on ${prettyDate(selectedDate)}`}
-          </button>
-        </form>
-      )}
-
-      {!selectedDate && (
-        <p
-          className="mt-3 flex items-center justify-center gap-1.5 text-xs"
-          style={{ color: "var(--tp-text3)" }}
-        >
-          <Calendar className="h-3.5 w-3.5" />
-          Pick an available day to see open times.
-        </p>
       )}
     </div>
   );
