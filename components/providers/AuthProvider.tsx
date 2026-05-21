@@ -50,6 +50,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setAccount(await ensureAccount(user));
       } catch (err) {
         console.warn("[Credibly] account bootstrap failed:", err);
+        // Fallback: build a minimal account from the Firebase user so we
+        // never land in a login ↔ dashboard redirect loop if Firestore
+        // is temporarily unavailable.
+        setAccount({
+          uid: user.uid,
+          email: user.email ?? "",
+          displayName:
+            user.displayName ?? user.email?.split("@")[0] ?? "User",
+          photoURL: user.photoURL ?? "",
+          role: "user",
+          plan: "free",
+          username: user.uid.slice(0, 8),
+          onboardingComplete: false,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
       } finally {
         setLoading(false);
       }
