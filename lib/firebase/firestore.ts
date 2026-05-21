@@ -71,16 +71,47 @@ export async function setFeatureFlags(
 /* ---------------- Subscription plans ---------------- */
 /* Admin-editable plan pricing/features stored in settings/plans. */
 
+/**
+ * Coerce one stored plan record into a well-formed Plan. Tolerates older
+ * shapes — the legacy `priceMonthly` field and a missing `billingPeriod` —
+ * so a stale settings/plans document can never crash the pages that read it.
+ */
+function normalizePlan(raw: Record<string, unknown>): Plan {
+  const str = (v: unknown) => (typeof v === "string" ? v : "");
+  const num = (v: unknown) => (typeof v === "number" ? v : undefined);
+  return {
+    id: str(raw.id) as Plan["id"],
+    name: str(raw.name),
+    // `priceMonthly` is the legacy field name — fall back to it.
+    price: num(raw.price) ?? num(raw.priceMonthly) ?? 0,
+    billingPeriod: raw.billingPeriod === "annual" ? "annual" : "monthly",
+    tagline: str(raw.tagline),
+    features: Array.isArray(raw.features)
+      ? raw.features
+          .filter(
+            (f): f is Record<string, unknown> =>
+              typeof f === "object" && f !== null,
+          )
+          .map((f) => ({ label: str(f.label), included: f.included === true }))
+      : [],
+    highlighted: raw.highlighted === true,
+  };
+}
+
 /** Read admin-edited plans. Returns null when none have been saved yet. */
 export async function getPlansConfig(): Promise<Plan[] | null> {
   if (!isFirebaseConfigured) return null;
   try {
     const snap = await getDoc(doc(db, COL.settings, "plans"));
     if (!snap.exists()) return null;
-    const data = snap.data() as { plans?: Plan[] };
-    return Array.isArray(data.plans) && data.plans.length > 0
-      ? data.plans
-      : null;
+    const stored = snap.data()?.plans;
+    if (!Array.isArray(stored) || stored.length === 0) return null;
+    return stored
+      .filter(
+        (p): p is Record<string, unknown> =>
+          typeof p === "object" && p !== null,
+      )
+      .map(normalizePlan);
   } catch {
     return null;
   }
