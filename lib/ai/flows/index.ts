@@ -36,13 +36,11 @@ export interface FlowResult<T> {
 
 /* ---------------- Headline conciseness ---------------- */
 
-const HEADLINE_MAX = 80;
-
 /**
- * Keeps generated headlines tight. If one runs over the soft 80-char
- * max, the AI gets ONE more pass to condense it. Whatever comes back is
- * used as-is — the headline is NEVER mechanically chopped. If that
- * retry call fails, the original headline is kept (limit removed).
+ * Always runs one extra Gemini pass over a generated headline to tighten
+ * it into a shorter, sharper hook — fewer words, same punch. There is NO
+ * character limit, and the headline is never chopped: if the pass fails
+ * or comes back empty, the original headline is kept exactly as-is.
  */
 export async function condenseHeadline(
   headline: string,
@@ -50,14 +48,14 @@ export async function condenseHeadline(
   language: AILanguage,
 ): Promise<string> {
   const h = (headline || "").trim();
-  if (h.length <= HEADLINE_MAX) return h;
+  if (!h) return h;
   try {
     const shorter = await geminiText({
       system: ASSISTANT_SYSTEM,
       prompt: buildRewritePrompt(
-        `This credibility-profile headline is too long at ${h.length} characters. ` +
-          `Rewrite it as ONE concise, engaging hook — ideally under ${HEADLINE_MAX} ` +
-          `characters — keeping the same meaning and punch. Return only the headline.`,
+        "Tighten this credibility-profile headline into a shorter, sharper hook — " +
+          "fewer words, same meaning and the same punch. Keep it natural, complete " +
+          "and effective; never chop words or leave it unfinished. Return only the headline.",
         h,
         mode,
         language,
@@ -70,11 +68,9 @@ export async function condenseHeadline(
       .split("\n")[0]
       .replace(/^["']+|["']+$/g, "")
       .trim();
-    // Use the retried headline whether or not it hit the target —
-    // a still-long line is acceptable, a chopped one is not.
     return cleaned.length > 0 ? cleaned : h;
   } catch {
-    // Retry failed — keep the original. The limit is dropped, never chopped.
+    // Pass failed — keep the original headline exactly. Never chopped.
     return h;
   }
 }

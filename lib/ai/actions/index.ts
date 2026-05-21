@@ -18,7 +18,7 @@ type Action = (
 
 export const generateHeadline: Action = async (context, ctx) => {
   const res = await rewriteFlow(
-    "Write ONE concise, engaging headline hook for a credibility profile — a single natural line that names who this person helps and the result they deliver, crafted to grab attention. Keep it tight and scannable, ideally under 80 characters — no run-on sentences.",
+    "Write ONE concise, engaging headline hook for a credibility profile — a single natural line that names who this person helps and the result they deliver, crafted to grab attention. Keep it tight and scannable — no run-on sentences.",
     context,
     ctx.mode,
     ctx.language,
