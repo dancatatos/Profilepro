@@ -68,7 +68,7 @@ INTAKE
 ${styleBlock(answers.tone, answers.language)}
 
 REQUIREMENTS
-- headline: one trust-building line (max ~80 chars) naming WHO they help + the RESULT.
+- headline: ONE short, punchy line — 55 characters MAX — naming WHO they help + the RESULT. Rephrase the intake into natural, concise language; never just stitch the raw answers together.
 - bio: 2-3 short sentences. Credible, warm, mobile-readable.
 - ctaButtons: 3-5 buttons. Each has a short "label" and an "intent" describing the action.
 - aboutSection: 3-4 sentence personal story arc (struggle -> turning point -> mission).

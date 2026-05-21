@@ -42,7 +42,7 @@ export function HeaderEditor() {
         value={h.headline}
         onChange={(e) => updateHeader({ headline: e.target.value })}
         placeholder="I help [who] achieve [result]"
-        hint="One line that builds instant trust."
+        hint="One short line that builds instant trust — keep it under 55 characters."
       />
 
       <Textarea

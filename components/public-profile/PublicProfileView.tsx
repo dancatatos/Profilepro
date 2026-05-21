@@ -182,7 +182,7 @@ export function PublicProfileView({ profile, live = false, className }: Props) {
             )}
 
             <p
-              className="mt-2.5 text-sm font-semibold"
+              className="mt-2.5 line-clamp-3 text-sm font-semibold"
               style={{ color: "var(--tp-accent)" }}
             >
               {header.headline}
