@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Download, Mail, MapPin, Phone, Share2 } from "lucide-react";
 import { useProfileStore } from "@/store/profileStore";
 import { Card } from "@/components/ui/Card";
@@ -10,12 +11,14 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { QRBlock } from "@/components/qr/QRBlock";
 import { SocialIcon } from "@/components/ui/SocialIcon";
 import { PrintableCard } from "@/components/card/PrintableCard";
+import { ShareModal } from "@/components/share/ShareModal";
 import { APP } from "@/lib/constants";
 import { toast } from "@/store/uiStore";
 import type { SocialsSection } from "@/types";
 
 export default function DigitalCardPage() {
   const profile = useProfileStore((s) => s.profile);
+  const [shareOpen, setShareOpen] = useState(false);
   if (!profile) return null;
 
   const { header } = profile;
@@ -46,18 +49,6 @@ export default function DigitalCardPage() {
     toast.success("Contact card downloaded");
   };
 
-  const share = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: header.displayName, url });
-      } catch {
-        /* cancelled */
-      }
-    } else {
-      await navigator.clipboard.writeText(url);
-      toast.success("Card link copied");
-    }
-  };
 
   return (
     <div className="space-y-5">
@@ -152,7 +143,10 @@ export default function DigitalCardPage() {
           >
             Save contact
           </Button>
-          <Button onClick={share} leftIcon={<Share2 className="h-4 w-4" />}>
+          <Button
+            onClick={() => setShareOpen(true)}
+            leftIcon={<Share2 className="h-4 w-4" />}
+          >
             Share card
           </Button>
         </div>
@@ -169,6 +163,13 @@ export default function DigitalCardPage() {
           <PrintableCard profile={profile} />
         </div>
       </div>
+
+      <ShareModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        url={url}
+        title={header.displayName}
+      />
     </div>
   );
 }

@@ -137,8 +137,12 @@ async function drawCard(
   const avX = PAD;
   const avY = 64;
 
-  /* Avatar (cover-fit) or initials disc */
-  const avatar = h.avatarUrl ? await loadImage(h.avatarUrl) : null;
+  /* Avatar (cover-fit) or initials disc.
+     Routed through the same-origin /api/img proxy so the canvas isn't
+     tainted by Firebase Storage's missing CORS headers. */
+  const avatar = h.avatarUrl
+    ? await loadImage(`/api/img?url=${encodeURIComponent(h.avatarUrl)}`)
+    : null;
   ctx.save();
   ctx.beginPath();
   ctx.arc(avX + avSize / 2, avY + avSize / 2, avSize / 2, 0, Math.PI * 2);
