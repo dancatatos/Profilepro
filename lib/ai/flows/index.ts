@@ -50,10 +50,8 @@ export async function generateProfileFlow(
     });
     return { data: normalizeContent(data), usedAI: true };
   } catch (err) {
-    if (err instanceof AINotConfiguredError) {
-      return { data: mockProfileContent(answers), usedAI: false };
-    }
-    throw err;
+    console.warn("[AI] generateProfileFlow failed, using mock:", err);
+    return { data: mockProfileContent(answers), usedAI: false };
   }
 }
 
@@ -75,23 +73,21 @@ export async function cloneRewriteFlow(
     });
     return { data: normalizeContent(data), usedAI: true };
   } catch (err) {
-    if (err instanceof AINotConfiguredError) {
-      return {
-        data: mockProfileContent({
-          niche: source.header.company || "",
-          company: source.header.company || "",
-          offer: "",
-          targetMarket: "",
-          tone: mode,
-          language,
-          brandingStyle: "",
-          mission: source.header.bio,
-          resultYouHelpAchieve: "",
-        }),
-        usedAI: false,
-      };
-    }
-    throw err;
+    console.warn("[AI] cloneRewriteFlow failed, using mock:", err);
+    return {
+      data: mockProfileContent({
+        niche: source.header.company || "",
+        company: source.header.company || "",
+        offer: "",
+        targetMarket: "",
+        tone: mode,
+        language,
+        brandingStyle: "",
+        mission: source.header.bio,
+        resultYouHelpAchieve: "",
+      }),
+      usedAI: false,
+    };
   }
 }
 
@@ -110,10 +106,8 @@ export async function auditProfileFlow(
     });
     return { data: { ...raw, generatedAt: Date.now() }, usedAI: true };
   } catch (err) {
-    if (err instanceof AINotConfiguredError) {
-      return { data: heuristicAudit(profile), usedAI: false };
-    }
-    throw err;
+    console.warn("[AI] auditProfileFlow failed, using heuristic:", err);
+    return { data: heuristicAudit(profile), usedAI: false };
   }
 }
 
@@ -134,10 +128,8 @@ export async function rewriteFlow(
     });
     return { data: data.trim(), usedAI: true };
   } catch (err) {
-    if (err instanceof AINotConfiguredError) {
-      return { data: mockRewrite(instruction, content, language), usedAI: false };
-    }
-    throw err;
+    console.warn("[AI] rewriteFlow failed, using mock:", err);
+    return { data: mockRewrite(instruction, content, language), usedAI: false };
   }
 }
 
@@ -157,12 +149,10 @@ export async function assistantStreamFlow(
       maxOutputTokens: 1200,
     });
   } catch (err) {
-    if (err instanceof AINotConfiguredError) {
-      const text =
-        "I'm your Credibly AI assistant. To switch me on, add a Gemini API key to .env.local (GEMINI_API_KEY) — the README has a 2-minute walkthrough. Once connected I can rewrite your bio, generate CTAs, write recruiting pitches, create social captions and audit your profile.";
-      return canChunkStream(text);
-    }
-    throw err;
+    console.warn("[AI] assistantStreamFlow failed, using fallback:", err);
+    const text =
+      "I'm your Credibly AI assistant — I had trouble connecting right now, but I'm here to help. Try asking me to rewrite your bio, generate CTAs, write a recruiting pitch, or audit your profile.";
+    return canChunkStream(text);
   }
 }
 
