@@ -114,7 +114,6 @@ const LIGHT_BASE: ThemeVars = {
 
 const SANS = "ui-sans-serif, system-ui, -apple-system, sans-serif";
 const MONO = "'SF Mono', 'Fira Code', 'Cascadia Code', monospace";
-const SERIF = "Georgia, 'Times New Roman', serif";
 const ELEGANT = "'Cormorant Garamond', Georgia, 'Times New Roman', serif";
 
 /* ─────────────────────────────────────────────────────────────

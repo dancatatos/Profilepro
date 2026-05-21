@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import { Check, Lock, Sparkles, Search, Star, ChevronDown, ChevronUp } from "lucide-react";
 import {
   THEME_CONFIGS,
@@ -70,7 +71,7 @@ function AIRecommendPanel({
           ✕ Close
         </button>
       </div>
-      <p className="text-xs text-white/45">Tell us about your brand and we'll suggest the perfect theme.</p>
+      <p className="text-xs text-white/45">Tell us about your brand and we&apos;ll suggest the perfect theme.</p>
 
       <div className="space-y-3">
         {/* Niche */}
@@ -276,15 +277,15 @@ export function ThemePicker() {
   const profile = useProfileStore((s) => s.profile);
   const setTheme = useProfileStore((s) => s.setTheme);
   const { account } = useAuth();
-  if (!profile) return null;
 
-  const isPro = account?.plan === "pro" || account?.plan === "team";
-
+  // All hooks must be called before any early return
   const [category, setCategory] = useState("All");
   const [search, setSearch] = useState("");
   const [showAI, setShowAI] = useState(false);
   const [showAllFree, setShowAllFree] = useState(false);
   const [showAllPremium, setShowAllPremium] = useState(false);
+
+  const isPro = account?.plan === "pro" || account?.plan === "team";
 
   const isLocked = (tc: ThemeConfig) => tc.tier === "premium" && !isPro;
 
@@ -315,6 +316,9 @@ export function ThemePicker() {
 
   const FREE_LIMIT = 8;
   const PREMIUM_LIMIT = 9;
+
+  // Guard after all hooks
+  if (!profile) return null;
 
   return (
     <div className="space-y-4">
@@ -451,7 +455,7 @@ export function ThemePicker() {
 
           {/* Upgrade CTA */}
           {!isPro && (
-            <a
+            <Link
               href="/billing"
               className="mt-3 flex items-center gap-2 rounded-xl border border-gold-400/20 bg-gold-400/[0.06] px-4 py-3 transition-colors hover:bg-gold-400/10"
             >
@@ -459,13 +463,13 @@ export function ThemePicker() {
               <div className="flex-1">
                 <p className="text-xs font-semibold text-gold-300">Unlock All Premium Themes</p>
                 <p className="text-[11px] text-white/40">
-                  Upgrade to PRO — animated, glassmorphism, neon & more
+                  Upgrade to PRO — animated, glassmorphism, neon &amp; more
                 </p>
               </div>
               <span className="shrink-0 rounded-lg bg-gold-400/15 px-2.5 py-1 text-xs font-bold text-gold-300">
                 Upgrade
               </span>
-            </a>
+            </Link>
           )}
         </div>
       )}

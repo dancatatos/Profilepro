@@ -1,4 +1,4 @@
-import { getThemeConfig, type ThemeConfig } from "@/lib/themes";
+import { getThemeConfig } from "@/lib/themes";
 import type { CTAButton, ProfileTheme, ThemeId } from "@/types";
 
 /** Get full ThemeConfig for the new engine */

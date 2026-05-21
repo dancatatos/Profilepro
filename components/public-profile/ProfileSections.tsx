@@ -223,7 +223,6 @@ function LeadForm({
 
 export function SectionRenderer({
   section,
-  themeConfig,
   track,
   onLead,
 }: RendererProps) {
