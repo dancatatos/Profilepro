@@ -856,10 +856,10 @@ export const THEME_CONFIGS: ThemeConfig[] = [
     tier: "premium",
     categories: ["Luxury", "Dark Mode", "Corporate", "Masculine"],
     colorScheme: "dark",
-    background: "#0a0a0a",
+    background: "radial-gradient(120% 85% at 50% 0%,#1c1c1c 0%,#0e0e0e 55%,#050505 100%)",
     fontFamily: "'SF Pro Display', " + SANS,
-    effects: [],
-    previewGradient: "linear-gradient(180deg,#141414,#0a0a0a)",
+    effects: ["shimmer"],
+    previewGradient: "linear-gradient(180deg,#1c1c1c,#050505)",
     accent: "white",
     vars: {
       ...DARK_BASE,
@@ -1067,7 +1067,7 @@ export const THEME_CONFIGS: ThemeConfig[] = [
     colorScheme: "dark",
     background: "radial-gradient(120% 80% at 50% 0%,#18181b 0%,#0e0e10 55%,#060607 100%)",
     fontFamily: SANS,
-    effects: [],
+    effects: ["glow"],
     previewGradient: "radial-gradient(circle at 50% 0%,#18181b,#060607)",
     accent: "white",
     vars: {
@@ -1139,7 +1139,7 @@ export const THEME_CONFIGS: ThemeConfig[] = [
     colorScheme: "dark",
     background: "radial-gradient(120% 80% at 50% 0%,#1e1e2e 0%,#12121a 55%,#08080e 100%)",
     fontFamily: "'SF Pro Display', " + SANS,
-    effects: ["shimmer"],
+    effects: ["shimmer", "glow"],
     previewGradient: "radial-gradient(circle at 50% 0%,#1e1e2e,#08080e)",
     accent: "blue",
     vars: {
@@ -1213,7 +1213,7 @@ export const THEME_CONFIGS: ThemeConfig[] = [
     colorScheme: "dark",
     background: "radial-gradient(120% 80% at 50% 0%,#0a1628 0%,#060e1a 55%,#030810 100%)",
     fontFamily: "'SF Pro Display', " + SANS,
-    effects: [],
+    effects: ["glow"],
     previewGradient: "radial-gradient(circle at 50% 0%,#0a1628,#030810)",
     accent: "blue",
     vars: {

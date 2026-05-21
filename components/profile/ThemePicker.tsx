@@ -2,19 +2,42 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Check, Lock, Sparkles, Search, Star, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Check,
+  Lock,
+  Sparkles,
+  Search,
+  Crown,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import {
   THEME_CONFIGS,
   THEME_CATEGORIES,
   recommendTheme,
   type ThemeConfig,
+  type ThemeEffect,
 } from "@/lib/themes";
+import { ThemeMiniPreview } from "@/components/profile/ThemeMiniPreview";
 import { useProfileStore } from "@/store/profileStore";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import type { ThemeId } from "@/types";
 
-/* ── AI Recommend modal ── */
+/* ── Effect labels ── */
+
+const EFFECT_LABELS: Record<ThemeEffect, string> = {
+  "animated-gradient": "Animated",
+  glassmorphism: "Glass",
+  glow: "Glow",
+  neon: "Neon",
+  shimmer: "Shimmer",
+  aurora: "Aurora",
+  particles: "Particles",
+  grain: "Grain",
+};
+
+/* ── AI Recommend ── */
 
 const NICHES = [
   "Network Marketing / MLM",
@@ -55,26 +78,29 @@ function AIRecommendPanel({
   const [gender, setGender] = useState<"any" | "feminine" | "masculine">("any");
   const [results, setResults] = useState<ThemeId[] | null>(null);
 
-  const run = () => {
-    const ids = recommendTheme({ niche, style, gender });
-    setResults(ids);
-  };
+  const run = () => setResults(recommendTheme({ niche, style, gender }));
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-ink-900 p-4 space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="rounded-2xl border border-electric-500/20 bg-gradient-to-b from-electric-500/[0.07] to-ink-900/40 p-4">
+      <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-electric-400" />
-          <span className="text-sm font-semibold text-white">AI Theme Recommendation</span>
+          <span className="text-sm font-semibold text-white">
+            AI Theme Match
+          </span>
         </div>
-        <button onClick={onClose} className="text-white/40 hover:text-white text-xs">
-          ✕ Close
+        <button
+          onClick={onClose}
+          className="text-xs text-white/40 transition-colors hover:text-white"
+        >
+          Close
         </button>
       </div>
-      <p className="text-xs text-white/45">Tell us about your brand and we&apos;ll suggest the perfect theme.</p>
+      <p className="mb-3 text-xs text-white/45">
+        Tell us about your brand and we&apos;ll pick themes that fit.
+      </p>
 
       <div className="space-y-3">
-        {/* Niche */}
         <div>
           <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-white/40">
             Your Niche
@@ -82,14 +108,17 @@ function AIRecommendPanel({
           <select
             value={niche}
             onChange={(e) => setNiche(e.target.value)}
-            className="h-9 w-full rounded-lg border border-white/10 bg-white/[0.05] px-3 text-xs text-white outline-none"
+            className="h-9 w-full rounded-lg border border-white/10 bg-white/[0.05] px-3 text-xs text-white outline-none focus:border-electric-500/50"
           >
             <option value="">Select a niche…</option>
-            {NICHES.map((n) => <option key={n} value={n}>{n}</option>)}
+            {NICHES.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
           </select>
         </div>
 
-        {/* Style */}
         <div>
           <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-white/40">
             Branding Style
@@ -97,14 +126,17 @@ function AIRecommendPanel({
           <select
             value={style}
             onChange={(e) => setStyle(e.target.value)}
-            className="h-9 w-full rounded-lg border border-white/10 bg-white/[0.05] px-3 text-xs text-white outline-none"
+            className="h-9 w-full rounded-lg border border-white/10 bg-white/[0.05] px-3 text-xs text-white outline-none focus:border-electric-500/50"
           >
             <option value="">Select a style…</option>
-            {STYLES.map((s) => <option key={s} value={s}>{s}</option>)}
+            {STYLES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
           </select>
         </div>
 
-        {/* Gender vibe */}
         <div>
           <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-white/40">
             Audience Vibe
@@ -130,40 +162,41 @@ function AIRecommendPanel({
         <button
           onClick={run}
           disabled={!niche && !style}
-          className="h-9 w-full rounded-xl bg-electric-500 text-sm font-semibold text-white disabled:opacity-40 transition-opacity"
+          className="h-9 w-full rounded-xl bg-brand-gradient text-sm font-semibold text-white transition-opacity disabled:opacity-40"
         >
           Find My Theme
         </button>
       </div>
 
-      {/* Results */}
       {results && (
-        <div>
+        <div className="mt-4">
           <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-white/40">
             Recommended for you
           </p>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <div className="grid grid-cols-3 gap-2">
             {results.map((id) => {
               const tc = THEME_CONFIGS.find((t) => t.id === id);
               if (!tc) return null;
               return (
                 <button
                   key={id}
-                  onClick={() => { onPick(id); onClose(); }}
-                  className="group overflow-hidden rounded-xl border border-white/10 text-left hover:border-electric-500/50 transition-colors"
+                  onClick={() => {
+                    onPick(id);
+                    onClose();
+                  }}
+                  className="group overflow-hidden rounded-xl border border-white/10 text-left transition-all hover:border-electric-500/50"
                 >
-                  <div
-                    className="h-10 w-full"
-                    style={{ background: tc.previewGradient }}
-                  />
-                  <div className="px-2 py-1.5">
-                    <p className="truncate text-[11px] font-semibold text-white">
-                      {tc.name}
-                    </p>
+                  <div className="relative aspect-[3/4] w-full overflow-hidden">
+                    <ThemeMiniPreview theme={tc} />
                     {tc.tier === "premium" && (
-                      <span className="text-[9px] font-medium text-gold-300">PRO</span>
+                      <span className="absolute right-1 top-1 rounded bg-gradient-to-r from-gold-300 to-gold-500 px-1 py-0.5 text-[7px] font-bold uppercase text-ink-950">
+                        Pro
+                      </span>
                     )}
                   </div>
+                  <p className="truncate px-1.5 py-1 text-[10px] font-medium text-white/80">
+                    {tc.name}
+                  </p>
                 </button>
               );
             })}
@@ -174,9 +207,9 @@ function AIRecommendPanel({
   );
 }
 
-/* ── Theme card ── */
+/* ── Theme gallery card ── */
 
-function ThemeCard({
+function ThemeGalleryCard({
   theme,
   active,
   locked,
@@ -187,85 +220,84 @@ function ThemeCard({
   locked: boolean;
   onSelect: () => void;
 }) {
+  const premium = theme.tier === "premium";
+
   return (
     <button
       onClick={onSelect}
       className={cn(
-        "group relative overflow-hidden rounded-xl border text-left transition-all",
+        "group relative flex flex-col overflow-hidden rounded-2xl border p-1.5 text-left transition-all duration-200",
         active
-          ? "border-electric-500 ring-2 ring-electric-500/30"
-          : locked
-          ? "border-white/[0.06] opacity-70 hover:opacity-90"
-          : "border-white/10 hover:border-white/25",
+          ? "border-electric-500 ring-2 ring-electric-500/40"
+          : premium
+            ? "border-gold-400/25 bg-gold-400/[0.03] hover:-translate-y-0.5 hover:border-gold-400/55 hover:shadow-glow-gold"
+            : "border-white/10 hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.03]",
       )}
     >
-      {/* Preview swatch */}
-      <div
-        className="relative h-16 w-full overflow-hidden"
-        style={{ background: theme.previewGradient }}
-      >
-        {/* Simulated profile mini-UI */}
-        <div className="flex flex-col items-center pt-2.5">
-          <div
-            className="mb-1 h-4 w-4 rounded-full"
-            style={{ background: "rgba(255,255,255,0.25)" }}
-          />
-          <div
-            className="mb-0.5 h-1 w-10 rounded-full"
-            style={{ background: "rgba(255,255,255,0.30)" }}
-          />
-          <div
-            className="h-0.5 w-14 rounded-full"
-            style={{ background: "rgba(255,255,255,0.18)" }}
-          />
-        </div>
+      {/* Preview */}
+      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl">
+        <ThemeMiniPreview theme={theme} />
+
+        {/* legibility scrim */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/15" />
 
         {/* Premium badge */}
-        {theme.tier === "premium" && (
-          <div className="absolute left-1.5 top-1.5 flex items-center gap-0.5 rounded-md bg-black/50 px-1.5 py-0.5">
-            <Star className="h-2.5 w-2.5 fill-gold-400 text-gold-400" />
-            <span className="text-[9px] font-bold text-gold-300">PRO</span>
+        {premium && (
+          <div className="absolute right-1.5 top-1.5 flex items-center gap-0.5 rounded-full bg-gradient-to-r from-gold-200 to-gold-500 px-1.5 py-[3px] shadow-sm">
+            <Crown className="h-2.5 w-2.5 text-ink-950" />
+            <span className="text-[8px] font-bold uppercase tracking-wide text-ink-950">
+              Premium
+            </span>
           </div>
         )}
 
         {/* Active check */}
         {active && (
-          <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-electric-500">
+          <span className="absolute left-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-electric-500 ring-2 ring-white/25">
             <Check className="h-3 w-3 text-white" />
           </span>
         )}
 
         {/* Lock overlay */}
         {locked && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 backdrop-blur-[2px]">
-            <Lock className="h-5 w-5 text-white/70" />
+          <div className="absolute inset-0 flex items-center justify-center bg-ink-950/45 backdrop-blur-[1px]">
+            <div className="flex items-center gap-1 rounded-full bg-ink-950/85 px-2 py-1 ring-1 ring-gold-400/30">
+              <Lock className="h-3 w-3 text-gold-300" />
+              <span className="text-[9px] font-bold tracking-wide text-gold-200">
+                PRO
+              </span>
+            </div>
           </div>
         )}
 
-        {/* Effect indicators */}
-        {theme.effects.length > 0 && !locked && (
-          <div className="absolute bottom-1 right-1.5 flex gap-0.5">
-            {theme.effects.slice(0, 3).map((fx) => (
+        {/* Effect chips */}
+        {theme.effects.length > 0 && (
+          <div className="absolute bottom-1.5 left-1.5 flex flex-wrap gap-1">
+            {theme.effects.slice(0, 2).map((fx) => (
               <span
                 key={fx}
-                className="h-1 w-1 rounded-full bg-white/50"
-              />
+                className="rounded-md bg-black/55 px-1.5 py-0.5 text-[8px] font-medium text-white/85 backdrop-blur-sm"
+              >
+                {EFFECT_LABELS[fx]}
+              </span>
             ))}
           </div>
         )}
       </div>
 
-      {/* Name */}
-      <div
-        className="px-2 py-1.5"
-        style={{ background: "rgba(0,0,0,0.35)" }}
-      >
-        <p className="truncate text-[11px] font-medium text-white/80">
+      {/* Footer */}
+      <div className="px-1.5 pb-1 pt-2">
+        <p
+          className={cn(
+            "truncate text-xs font-semibold",
+            active ? "text-electric-300" : "text-white",
+          )}
+        >
           {theme.name}
         </p>
-        {locked && (
-          <p className="text-[9px] text-gold-300/70">Upgrade to unlock</p>
-        )}
+        <p className="truncate text-[10px] text-white/35">
+          {theme.description}
+        </p>
       </div>
     </button>
   );
@@ -278,7 +310,7 @@ export function ThemePicker() {
   const setTheme = useProfileStore((s) => s.setTheme);
   const { account } = useAuth();
 
-  // All hooks must be called before any early return
+  // All hooks before any early return
   const [category, setCategory] = useState("All");
   const [search, setSearch] = useState("");
   const [showAI, setShowAI] = useState(false);
@@ -286,7 +318,6 @@ export function ThemePicker() {
   const [showAllPremium, setShowAllPremium] = useState(false);
 
   const isPro = account?.plan === "pro" || account?.plan === "team";
-
   const isLocked = (tc: ThemeConfig) => tc.tier === "premium" && !isPro;
 
   const handleSelect = (tc: ThemeConfig) => {
@@ -314,23 +345,56 @@ export function ThemePicker() {
   const freeThemes = filtered.filter((t) => t.tier === "free");
   const premiumThemes = filtered.filter((t) => t.tier === "premium");
 
-  const FREE_LIMIT = 8;
-  const PREMIUM_LIMIT = 9;
+  const FREE_LIMIT = 6;
+  const PREMIUM_LIMIT = 6;
 
   // Guard after all hooks
   if (!profile) return null;
 
+  const current = THEME_CONFIGS.find((t) => t.id === profile.themeId);
+
   return (
     <div className="space-y-4">
-      {/* AI Recommend toggle */}
+      {/* ── Currently applied ── */}
+      {current && (
+        <div className="flex items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-2.5">
+          <div className="relative h-16 w-12 shrink-0 overflow-hidden rounded-lg">
+            <ThemeMiniPreview theme={current} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-medium uppercase tracking-wider text-white/35">
+                Applied
+              </span>
+              {current.tier === "premium" && (
+                <span className="flex items-center gap-0.5 rounded bg-gold-400/15 px-1.5 py-0.5 text-[9px] font-bold uppercase text-gold-300">
+                  <Crown className="h-2.5 w-2.5" /> Premium
+                </span>
+              )}
+            </div>
+            <p className="truncate text-sm font-semibold text-white">
+              {current.name}
+            </p>
+            <p className="truncate text-[11px] text-white/40">
+              {current.description}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ── AI Recommend ── */}
       <button
         onClick={() => setShowAI((v) => !v)}
         className="flex w-full items-center gap-2 rounded-xl border border-electric-500/20 bg-electric-500/[0.06] px-3 py-2.5 text-left transition-colors hover:bg-electric-500/10"
       >
-        <Sparkles className="h-4 w-4 text-electric-400 shrink-0" />
+        <Sparkles className="h-4 w-4 shrink-0 text-electric-400" />
         <div className="flex-1">
-          <p className="text-xs font-semibold text-electric-300">AI Theme Recommendation</p>
-          <p className="text-[11px] text-white/40">Find the perfect theme for your brand</p>
+          <p className="text-xs font-semibold text-electric-300">
+            AI Theme Match
+          </p>
+          <p className="text-[11px] text-white/40">
+            Get themes picked for your brand
+          </p>
         </div>
         {showAI ? (
           <ChevronUp className="h-4 w-4 text-white/30" />
@@ -346,19 +410,19 @@ export function ThemePicker() {
         />
       )}
 
-      {/* Search */}
+      {/* ── Search ── */}
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30" />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search themes…"
-          className="h-9 w-full rounded-xl border border-white/10 bg-white/[0.04] pl-8 pr-3 text-xs text-white placeholder:text-white/30 outline-none focus:border-electric-500/50"
+          className="h-9 w-full rounded-xl border border-white/10 bg-white/[0.04] pl-8 pr-3 text-xs text-white outline-none placeholder:text-white/30 focus:border-electric-500/50"
         />
       </div>
 
-      {/* Category tabs */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+      {/* ── Category tabs ── */}
+      <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 no-scrollbar">
         {THEME_CATEGORIES.map((cat) => (
           <button
             key={cat}
@@ -375,98 +439,126 @@ export function ThemePicker() {
         ))}
       </div>
 
-      {/* Results count */}
       {search && (
         <p className="text-[11px] text-white/35">
           {filtered.length} theme{filtered.length !== 1 ? "s" : ""} found
         </p>
       )}
 
-      {/* ── FREE THEMES ── */}
+      {/* ── Essentials (free) ── */}
       {freeThemes.length > 0 && (
-        <div>
-          <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-white/30">
-            Free Themes ({freeThemes.length})
-          </p>
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-            {(showAllFree ? freeThemes : freeThemes.slice(0, FREE_LIMIT)).map((tc) => (
-              <ThemeCard
-                key={tc.id}
-                theme={tc}
-                active={profile.themeId === tc.id}
-                locked={false}
-                onSelect={() => handleSelect(tc)}
-              />
-            ))}
+        <div className="space-y-2.5">
+          <div className="flex items-baseline gap-2">
+            <h3 className="text-sm font-semibold text-white">Essentials</h3>
+            <span className="text-[11px] text-white/35">
+              {freeThemes.length} free
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {(showAllFree ? freeThemes : freeThemes.slice(0, FREE_LIMIT)).map(
+              (tc) => (
+                <ThemeGalleryCard
+                  key={tc.id}
+                  theme={tc}
+                  active={profile.themeId === tc.id}
+                  locked={false}
+                  onSelect={() => handleSelect(tc)}
+                />
+              ),
+            )}
           </div>
           {freeThemes.length > FREE_LIMIT && (
             <button
               onClick={() => setShowAllFree((v) => !v)}
-              className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/[0.06] bg-white/[0.02] py-2 text-[11px] font-medium text-white/40 hover:bg-white/[0.05] hover:text-white/60 transition-colors"
+              className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/[0.06] bg-white/[0.02] py-2 text-[11px] font-medium text-white/45 transition-colors hover:bg-white/[0.05] hover:text-white/70"
             >
               {showAllFree ? (
-                <><ChevronUp className="h-3.5 w-3.5" /> Show less</>
+                <>
+                  <ChevronUp className="h-3.5 w-3.5" /> Show less
+                </>
               ) : (
-                <><ChevronDown className="h-3.5 w-3.5" /> +{freeThemes.length - FREE_LIMIT} more free themes</>
+                <>
+                  <ChevronDown className="h-3.5 w-3.5" /> Show all{" "}
+                  {freeThemes.length} essentials
+                </>
               )}
             </button>
           )}
         </div>
       )}
 
-      {/* ── PREMIUM THEMES ── */}
+      {/* ── Premium Collection ── */}
       {premiumThemes.length > 0 && (
-        <div>
-          <div className="mb-2 flex items-center justify-between">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-white/30">
-              ⭐ Premium Themes ({premiumThemes.length})
-            </p>
+        <div className="rounded-2xl border border-gold-400/15 bg-gradient-to-b from-gold-400/[0.06] via-gold-400/[0.015] to-transparent p-3">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-baseline gap-2">
+              <div className="flex items-center gap-1.5">
+                <Crown className="h-4 w-4 text-gold-400" />
+                <h3 className="text-sm font-bold text-gold-200">
+                  Premium Collection
+                </h3>
+              </div>
+              <span className="text-[11px] text-gold-300/50">
+                {premiumThemes.length}
+              </span>
+            </div>
             {!isPro && (
-              <span className="rounded-full bg-gold-400/10 px-2 py-0.5 text-[10px] font-semibold text-gold-300">
-                PRO required
+              <span className="rounded-full bg-gold-400/12 px-2 py-0.5 text-[10px] font-semibold text-gold-300">
+                PRO
               </span>
             )}
           </div>
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-            {(showAllPremium ? premiumThemes : premiumThemes.slice(0, PREMIUM_LIMIT)).map(
-              (tc) => (
-                <ThemeCard
-                  key={tc.id}
-                  theme={tc}
-                  active={profile.themeId === tc.id}
-                  locked={isLocked(tc)}
-                  onSelect={() => handleSelect(tc)}
-                />
-              ),
-            )}
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {(showAllPremium
+              ? premiumThemes
+              : premiumThemes.slice(0, PREMIUM_LIMIT)
+            ).map((tc) => (
+              <ThemeGalleryCard
+                key={tc.id}
+                theme={tc}
+                active={profile.themeId === tc.id}
+                locked={isLocked(tc)}
+                onSelect={() => handleSelect(tc)}
+              />
+            ))}
           </div>
+
           {premiumThemes.length > PREMIUM_LIMIT && (
             <button
               onClick={() => setShowAllPremium((v) => !v)}
-              className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/[0.06] bg-white/[0.02] py-2 text-[11px] font-medium text-white/40 hover:bg-white/[0.05] hover:text-white/60 transition-colors"
+              className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl border border-gold-400/15 bg-gold-400/[0.04] py-2 text-[11px] font-medium text-gold-300/70 transition-colors hover:bg-gold-400/[0.09] hover:text-gold-300"
             >
               {showAllPremium ? (
-                <><ChevronUp className="h-3.5 w-3.5" /> Show less</>
+                <>
+                  <ChevronUp className="h-3.5 w-3.5" /> Show less
+                </>
               ) : (
-                <><ChevronDown className="h-3.5 w-3.5" /> +{premiumThemes.length - PREMIUM_LIMIT} more premium themes</>
+                <>
+                  <ChevronDown className="h-3.5 w-3.5" /> Show all{" "}
+                  {premiumThemes.length} premium themes
+                </>
               )}
             </button>
           )}
 
-          {/* Upgrade CTA */}
           {!isPro && (
             <Link
               href="/billing"
-              className="mt-3 flex items-center gap-2 rounded-xl border border-gold-400/20 bg-gold-400/[0.06] px-4 py-3 transition-colors hover:bg-gold-400/10"
+              className="mt-3 flex items-center gap-3 rounded-xl border border-gold-400/25 bg-gradient-to-r from-gold-400/[0.12] to-gold-400/[0.04] px-4 py-3 transition-colors hover:from-gold-400/20"
             >
-              <Star className="h-4 w-4 text-gold-400 shrink-0" />
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-gold-300 to-gold-500">
+                <Crown className="h-4 w-4 text-ink-950" />
+              </div>
               <div className="flex-1">
-                <p className="text-xs font-semibold text-gold-300">Unlock All Premium Themes</p>
-                <p className="text-[11px] text-white/40">
-                  Upgrade to PRO — animated, glassmorphism, neon &amp; more
+                <p className="text-xs font-bold text-gold-200">
+                  Unlock the Premium Collection
+                </p>
+                <p className="text-[11px] text-white/45">
+                  Animated, glass, neon &amp; luxury themes
                 </p>
               </div>
-              <span className="shrink-0 rounded-lg bg-gold-400/15 px-2.5 py-1 text-xs font-bold text-gold-300">
+              <span className="shrink-0 rounded-lg bg-gradient-to-r from-gold-300 to-gold-500 px-3 py-1.5 text-xs font-bold text-ink-950">
                 Upgrade
               </span>
             </Link>
@@ -479,27 +571,6 @@ export function ThemePicker() {
           No themes match &ldquo;{search}&rdquo;
         </p>
       )}
-
-      {/* Current theme description */}
-      {(() => {
-        const current = THEME_CONFIGS.find((t) => t.id === profile.themeId);
-        if (!current) return null;
-        return (
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
-            <div className="flex items-center gap-2">
-              <div
-                className="h-3 w-3 rounded-full shrink-0"
-                style={{ background: current.previewGradient }}
-              />
-              <p className="text-xs font-semibold text-white">{current.name}</p>
-              {current.tier === "premium" && (
-                <Star className="h-3 w-3 fill-gold-400 text-gold-400" />
-              )}
-            </div>
-            <p className="mt-0.5 text-[11px] text-white/40">{current.description}</p>
-          </div>
-        );
-      })()}
     </div>
   );
 }
