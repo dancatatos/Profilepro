@@ -183,6 +183,55 @@ export const THEMES: ProfileTheme[] = [
     accent: "white",
     buttonStyle: "solid",
   },
+  /* ── Vibrant / Coloured themes ── */
+  {
+    id: "vivid-purple",
+    name: "Vivid Purple",
+    background:
+      "linear-gradient(180deg, #7c3aed 0%, #5b21b6 50%, #3b0764 100%)",
+    accent: "white",
+    buttonStyle: "solid",
+  },
+  {
+    id: "rose-vibe",
+    name: "Rose Vibe",
+    background:
+      "linear-gradient(180deg, #ec4899 0%, #db2777 45%, #9d174d 100%)",
+    accent: "white",
+    buttonStyle: "solid",
+  },
+  {
+    id: "deep-red",
+    name: "Deep Red",
+    background:
+      "linear-gradient(180deg, #dc2626 0%, #991b1b 50%, #450a0a 100%)",
+    accent: "gold",
+    buttonStyle: "solid",
+  },
+  {
+    id: "sky-blue",
+    name: "Sky Blue",
+    background:
+      "linear-gradient(180deg, #0ea5e9 0%, #0284c7 50%, #0c4a6e 100%)",
+    accent: "white",
+    buttonStyle: "solid",
+  },
+  {
+    id: "warm-coral",
+    name: "Warm Coral",
+    background:
+      "linear-gradient(180deg, #f97316 0%, #ea580c 50%, #7c2d12 100%)",
+    accent: "white",
+    buttonStyle: "solid",
+  },
+  {
+    id: "purple-dusk",
+    name: "Purple Dusk",
+    background:
+      "radial-gradient(120% 80% at 50% 0%, #4c1d95 0%, #2e1065 55%, #0f0a1a 100%)",
+    accent: "white",
+    buttonStyle: "outline",
+  },
 ];
 
 /* ---------------- AI copy modes ---------------- */

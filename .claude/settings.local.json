@@ -25,7 +25,8 @@
       "mcp__Claude_in_Chrome__select_browser",
       "mcp__Claude_in_Chrome__computer",
       "mcp__Claude_in_Chrome__browser_batch",
-      "mcp__Claude_in_Chrome__read_page"
+      "mcp__Claude_in_Chrome__read_page",
+      "Bash(dir \"C:\\\\Users\\\\Project\\\\Desktop\\\\Firebase Project\\\\Portfolio builder\\\\app\" /b)"
     ]
   }
 }

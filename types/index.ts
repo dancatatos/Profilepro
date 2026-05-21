@@ -198,7 +198,14 @@ export type ThemeId =
   | "navy-glass"
   | "emerald-lux"
   | "gold-elite"
-  | "pure-mono";
+  | "pure-mono"
+  /* vibrant / coloured themes */
+  | "vivid-purple"
+  | "rose-vibe"
+  | "deep-red"
+  | "sky-blue"
+  | "warm-coral"
+  | "purple-dusk";
 
 export interface ProfileTheme {
   id: ThemeId;
