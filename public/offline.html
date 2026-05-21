@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Offline — Credibly</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+        background:
+          radial-gradient(120% 80% at 50% 0%, #16161d 0%, #0a0a0c 55%, #050507 100%);
+        color: #e8eaf0;
+        padding: 24px;
+        text-align: center;
+      }
+      .card {
+        max-width: 380px;
+        width: 100%;
+        padding: 40px 28px;
+        border-radius: 28px;
+        background: rgba(20, 20, 25, 0.62);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+      }
+      .badge {
+        width: 76px;
+        height: 76px;
+        margin: 0 auto 22px;
+        border-radius: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #2e6bff, #1a52e0);
+        box-shadow: 0 0 36px rgba(46, 107, 255, 0.35);
+        font-size: 34px;
+      }
+      h1 { font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+      p { font-size: 14px; line-height: 1.6; color: #9ca3b4; margin-bottom: 24px; }
+      button {
+        width: 100%;
+        padding: 14px;
+        border: 0;
+        border-radius: 14px;
+        font-size: 15px;
+        font-weight: 600;
+        color: #fff;
+        background: linear-gradient(135deg, #2e6bff, #1a52e0);
+        cursor: pointer;
+      }
+      button:active { transform: scale(0.98); }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="badge">&#9889;</div>
+      <h1>You're offline</h1>
+      <p>
+        Credibly needs a connection to load this page. Your saved work is safe —
+        reconnect and try again.
+      </p>
+      <button onclick="location.reload()">Try again</button>
+    </div>
+  </body>
+</html>

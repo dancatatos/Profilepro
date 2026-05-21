@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -la \"C:/Users/Project/Desktop/Firebase Project/Portfolio builder\" 2>/dev/null; echo \"---\"; ls -la \"C:/Users/Project/Desktop/Firebase Project\" 2>/dev/null)",
+      "Bash(npm --version)",
+      "Bash(npx --version)",
+      "Bash(firebase --version)",
+      "Bash(npx --yes create-next-app@latest . --typescript --tailwind --app --no-src-dir --eslint --import-alias \"@/*\" --use-npm --turbopack --skip-install --yes)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(curl -s http://localhost:3000/demo)",
+      "Bash(curl -s -X POST http://localhost:3000/api/ai/generate-profile -H \"Content-Type: application/json\" -d '{\"answers\":{\"niche\":\"wellness\",\"company\":\"Acme\",\"offer\":\"supplements\",\"targetMarket\":\"busy moms\",\"mission\":\"help families\",\"resultYouHelpAchieve\":\"extra income\",\"brandingStyle\":\"premium\",\"tone\":\"professional\",\"language\":\"taglish\"}}')",
+      "Bash(curl -s -X POST http://localhost:3000/api/ai/chat -H \"Content-Type: application/json\" -d '{\"messages\":[{\"id\":\"1\",\"role\":\"user\",\"content\":\"hi\",\"createdAt\":0}]}')",
+      "Bash(pkill -f \"next start\")",
+      "Bash(pkill -f \"next-server\")",
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
+    ]
+  }
+}

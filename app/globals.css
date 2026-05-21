@@ -1,0 +1,261 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Credibly — Design System (Tailwind v4 theme tokens)
+   Premium fintech / futuristic SaaS. Dark-first, mobile-first.
+   ============================================================ */
+
+@theme {
+  /* --- Matte black / ink scale --- */
+  --color-ink-950: #050507;
+  --color-ink-900: #0a0a0c;
+  --color-ink-850: #0f0f13;
+  --color-ink-800: #141419;
+  --color-ink-700: #1c1c23;
+  --color-ink-600: #26262f;
+  --color-ink-500: #36363f;
+
+  /* --- Deep navy scale --- */
+  --color-navy-950: #060b16;
+  --color-navy-900: #0a1322;
+  --color-navy-800: #0f1e36;
+  --color-navy-700: #162a4a;
+  --color-navy-600: #1f3a63;
+
+  /* --- Electric blue --- */
+  --color-electric-300: #8fb0ff;
+  --color-electric-400: #5b8cff;
+  --color-electric-500: #2e6bff;
+  --color-electric-600: #1a52e0;
+  --color-electric-700: #1340b4;
+
+  /* --- Emerald / jade --- */
+  --color-jade-300: #6ff2c6;
+  --color-jade-400: #2ee6a6;
+  --color-jade-500: #10b981;
+  --color-jade-600: #0b9468;
+
+  /* --- Gold accent --- */
+  --color-gold-200: #f6e6c0;
+  --color-gold-300: #f0d9a8;
+  --color-gold-400: #e3c081;
+  --color-gold-500: #cda45e;
+
+  /* --- Typography --- */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+    sans-serif;
+  --font-display: var(--font-display), var(--font-inter), ui-sans-serif,
+    system-ui, sans-serif;
+
+  /* --- Radii --- */
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+  --radius-3xl: 1.75rem;
+
+  /* --- Shadows / glows --- */
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.45);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
+  --shadow-glow-blue: 0 0 36px rgba(46, 107, 255, 0.35);
+  --shadow-glow-jade: 0 0 36px rgba(16, 185, 129, 0.32);
+  --shadow-glow-gold: 0 0 30px rgba(205, 164, 94, 0.3);
+
+  /* --- Animations --- */
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-shimmer: shimmer 2.4s linear infinite;
+  --animate-pulse-glow: pulse-glow 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+/* ============================================================
+   Base layer
+   ============================================================ */
+@layer base {
+  :root {
+    --app-bg: #050507;
+    color-scheme: dark;
+  }
+
+  * {
+    border-color: var(--color-ink-700);
+  }
+
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    background-color: var(--app-bg);
+    color: #e8eaf0;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overscroll-behavior-y: none;
+  }
+
+  ::selection {
+    background: rgba(46, 107, 255, 0.35);
+    color: #fff;
+  }
+
+  /* Slim, premium scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-ink-600);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-ink-500);
+  }
+
+  /* Hide number input spinners */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
+/* ============================================================
+   Component utilities
+   ============================================================ */
+@layer components {
+  /* Glassmorphism surfaces */
+  .glass {
+    background: rgba(20, 20, 25, 0.62);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+  }
+
+  .glass-strong {
+    background: rgba(12, 14, 22, 0.85);
+    backdrop-filter: blur(24px) saturate(170%);
+    -webkit-backdrop-filter: blur(24px) saturate(170%);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+  }
+
+  .glass-card {
+    background: linear-gradient(
+      160deg,
+      rgba(28, 28, 35, 0.72),
+      rgba(10, 11, 14, 0.78)
+    );
+    backdrop-filter: blur(16px) saturate(150%);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Gradient text */
+  .text-gradient {
+    background: linear-gradient(120deg, #ffffff 0%, #8fb0ff 55%, #2e6bff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .text-gradient-jade {
+    background: linear-gradient(120deg, #ffffff 0%, #6ff2c6 55%, #10b981 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Primary gradient surface (buttons / accents) */
+  .bg-brand-gradient {
+    background: linear-gradient(135deg, #2e6bff 0%, #1a52e0 100%);
+  }
+
+  .bg-jade-gradient {
+    background: linear-gradient(135deg, #2ee6a6 0%, #0b9468 100%);
+  }
+
+  /* Ambient page glow blobs */
+  .glow-blob {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(90px);
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Hairline divider */
+  .hairline {
+    border-color: rgba(255, 255, 255, 0.06);
+  }
+
+  /* Shimmer skeleton */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.04) 25%,
+      rgba(255, 255, 255, 0.09) 37%,
+      rgba(255, 255, 255, 0.04) 63%
+    );
+    background-size: 200% 100%;
+    animation: var(--animate-shimmer);
+  }
+}
+
+/* ============================================================
+   Mobile safe areas (notches / home indicator)
+   ============================================================ */
+@layer utilities {
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .min-h-dvh {
+    min-height: 100dvh;
+  }
+  .no-tap-highlight {
+    -webkit-tap-highlight-color: transparent;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}

@@ -1,0 +1,38 @@
+# dependencies
+/node_modules
+/functions/node_modules
+/.pnp
+.pnp.*
+
+# next.js
+/.next/
+/out/
+/build
+next-env.d.ts
+
+# firebase
+/functions/lib
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+*-debug.log
+
+# env files (keep .env.example tracked)
+.env
+.env.local
+.env*.local
+serviceAccountKey.json
+
+# misc
+.DS_Store
+*.pem
+/coverage
+
+# typescript
+*.tsbuildinfo
+
+# editor
+.vscode/*
+!.vscode/extensions.json
+.idea

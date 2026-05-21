@@ -1,0 +1,87 @@
+rules_version = '2';
+
+// ============================================================
+// Credibly — Firestore security rules
+// Role-based access. Profiles are public-readable; everything
+// else is owner-scoped. Admin role is read from the user doc.
+// ============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // ---- Users ----
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid);
+      allow update: if isOwner(uid) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ---- Profiles (public read) ----
+    match /profiles/{profileId} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isAdmin()
+        || (isSignedIn() && resource.data.ownerId == request.auth.uid);
+    }
+
+    // ---- Leads (anyone can submit, owner can read) ----
+    match /leads/{leadId} {
+      allow create: if request.resource.data.keys().hasAll(['ownerId', 'profileId', 'name']);
+      allow read, list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isAdmin()
+        || (isSignedIn() && resource.data.ownerId == request.auth.uid);
+    }
+
+    // ---- Analytics events (anyone can log, owner can read) ----
+    match /analytics_events/{eventId} {
+      allow create: if request.resource.data.keys().hasAll(['ownerId', 'profileId', 'type']);
+      allow read, list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // ---- AI generation history ----
+    match /ai_generations/{genId} {
+      allow create: if isSignedIn()
+        && request.resource.data.ownerId == request.auth.uid;
+      allow read, list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // ---- Templates (public read, admin-managed) ----
+    match /templates/{templateId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ---- Media assets ----
+    match /media_assets/{assetId} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isAdmin()
+        || (isSignedIn() && resource.data.ownerId == request.auth.uid);
+    }
+
+    // ---- Subscriptions (server / admin managed) ----
+    match /subscriptions/{subId} {
+      allow read: if isOwner(subId) || isAdmin();
+      allow write: if isAdmin();
+    }
+  }
+}

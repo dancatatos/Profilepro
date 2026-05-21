@@ -1,0 +1,68 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import { useProfileStore } from "@/store/profileStore";
+import { getProfile } from "@/lib/firebase/firestore";
+import { createDefaultProfile, DEMO_PROFILE } from "@/lib/defaults";
+import { FullScreenLoader } from "@/components/ui/Spinner";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { TopBar } from "@/components/layout/TopBar";
+import { BottomNav } from "@/components/layout/BottomNav";
+
+export default function AppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { account, loading } = useAuth();
+  const router = useRouter();
+  const profile = useProfileStore((s) => s.profile);
+  const setProfile = useProfileStore((s) => s.setProfile);
+
+  useEffect(() => {
+    if (!loading && !account) router.replace("/login");
+  }, [loading, account, router]);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      if (!account || profile) return;
+      if (account.uid === "demo") {
+        setProfile({ ...DEMO_PROFILE });
+        return;
+      }
+      const existing = await getProfile(account.uid);
+      if (!active) return;
+      setProfile(
+        existing ??
+          createDefaultProfile(
+            account.uid,
+            account.username || "me",
+            account.displayName,
+          ),
+      );
+    })();
+    return () => {
+      active = false;
+    };
+  }, [account, profile, setProfile]);
+
+  if (loading || !account) {
+    return <FullScreenLoader label="Loading your workspace…" />;
+  }
+
+  return (
+    <div className="min-h-dvh bg-ink-950">
+      <Sidebar />
+      <div className="lg:pl-64">
+        <TopBar />
+        <main className="mx-auto max-w-5xl px-4 pb-28 pt-5 lg:px-8 lg:pb-12">
+          {children}
+        </main>
+      </div>
+      <BottomNav />
+    </div>
+  );
+}
