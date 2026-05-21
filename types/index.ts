@@ -20,6 +20,10 @@ export interface AccountUser {
   onboardingComplete: boolean;
   createdAt: number;
   updatedAt: number;
+  /** Gumroad license key used to activate a paid plan */
+  licenseKey?: string;
+  /** Email associated with the Gumroad purchase */
+  licenseEmail?: string;
 }
 
 /* ---------------- Profile sections ---------------- */

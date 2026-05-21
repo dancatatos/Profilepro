@@ -6,7 +6,6 @@
    ============================================================ */
 
 import {
-  AINotConfiguredError,
   geminiJSON,
   geminiStream,
   geminiText,
