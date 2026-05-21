@@ -9,7 +9,7 @@
 const API_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
 
 function modelName(): string {
-  return process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  return process.env.GEMINI_MODEL || "gemini-1.5-flash";
 }
 function apiKey(): string {
   return process.env.GEMINI_API_KEY || "";
