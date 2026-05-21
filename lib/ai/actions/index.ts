@@ -3,7 +3,7 @@
    Each delegates to rewriteFlow with a focused instruction.
    ============================================================ */
 
-import { rewriteFlow, type FlowResult } from "../flows";
+import { condenseHeadline, rewriteFlow, type FlowResult } from "../flows";
 import type { AICopyMode, AILanguage } from "@/types";
 
 export interface ActionContext {
@@ -16,13 +16,20 @@ type Action = (
   ctx: ActionContext,
 ) => Promise<FlowResult<string>>;
 
-export const generateHeadline: Action = (context, ctx) =>
-  rewriteFlow(
-    "Write ONE concise, engaging headline hook for a credibility profile — a single natural line that names who this person helps and the result they deliver, crafted to grab attention. Keep it tight, smooth and scannable — no run-on sentences.",
+export const generateHeadline: Action = async (context, ctx) => {
+  const res = await rewriteFlow(
+    "Write ONE concise, engaging headline hook for a credibility profile — a single natural line that names who this person helps and the result they deliver, crafted to grab attention. Keep it tight and scannable, ideally under 80 characters — no run-on sentences.",
     context,
     ctx.mode,
     ctx.language,
   );
+  if (!res.usedAI) return res;
+  // If the headline overshoots, give the AI one more pass to condense it.
+  return {
+    ...res,
+    data: await condenseHeadline(res.data, ctx.mode, ctx.language),
+  };
+};
 
 export const generateBio: Action = (context, ctx) =>
   rewriteFlow(

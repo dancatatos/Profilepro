@@ -68,7 +68,7 @@ INTAKE
 ${styleBlock(answers.tone, answers.language)}
 
 REQUIREMENTS
-- headline: ONE concise, engaging hook — a single natural line that names WHO they help and the RESULT, written to grab attention. Rephrase the intake into smooth, compelling copy that reads well; never just stitch the raw answers together. Keep it tight and scannable — no run-on sentences.
+- headline: ONE concise, engaging hook — a single natural line that names WHO they help and the RESULT, written to grab attention. Rephrase the intake into smooth, compelling copy that reads well; never just stitch the raw answers together. Keep it tight and scannable — ideally under 80 characters, and never a run-on sentence.
 - bio: 2-3 short sentences. Credible, warm, mobile-readable.
 - ctaButtons: 3-5 buttons. Each has a short "label" and an "intent" describing the action.
 - aboutSection: 3-4 sentence personal story arc (struggle -> turning point -> mission).

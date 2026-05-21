@@ -34,6 +34,51 @@ export interface FlowResult<T> {
   usedAI: boolean;
 }
 
+/* ---------------- Headline conciseness ---------------- */
+
+const HEADLINE_MAX = 80;
+
+/**
+ * Keeps generated headlines tight. If one runs over the soft 80-char
+ * max, the AI gets ONE more pass to condense it. Whatever comes back is
+ * used as-is — the headline is NEVER mechanically chopped. If that
+ * retry call fails, the original headline is kept (limit removed).
+ */
+export async function condenseHeadline(
+  headline: string,
+  mode: AICopyMode,
+  language: AILanguage,
+): Promise<string> {
+  const h = (headline || "").trim();
+  if (h.length <= HEADLINE_MAX) return h;
+  try {
+    const shorter = await geminiText({
+      system: ASSISTANT_SYSTEM,
+      prompt: buildRewritePrompt(
+        `This credibility-profile headline is too long at ${h.length} characters. ` +
+          `Rewrite it as ONE concise, engaging hook — ideally under ${HEADLINE_MAX} ` +
+          `characters — keeping the same meaning and punch. Return only the headline.`,
+        h,
+        mode,
+        language,
+      ),
+      temperature: 0.7,
+      maxOutputTokens: 120,
+    });
+    const cleaned = shorter
+      .trim()
+      .split("\n")[0]
+      .replace(/^["']+|["']+$/g, "")
+      .trim();
+    // Use the retried headline whether or not it hit the target —
+    // a still-long line is acceptable, a chopped one is not.
+    return cleaned.length > 0 ? cleaned : h;
+  } catch {
+    // Retry failed — keep the original. The limit is dropped, never chopped.
+    return h;
+  }
+}
+
 /* ---------------- Profile generation ---------------- */
 
 export async function generateProfileFlow(
@@ -47,7 +92,13 @@ export async function generateProfileFlow(
       temperature: 0.85,
       maxOutputTokens: 2048,
     });
-    return { data: normalizeContent(data), usedAI: true };
+    const content = normalizeContent(data);
+    content.headline = await condenseHeadline(
+      content.headline,
+      answers.tone,
+      answers.language,
+    );
+    return { data: content, usedAI: true };
   } catch (err) {
     console.warn("[AI] generateProfileFlow failed, using mock:", err);
     return { data: mockProfileContent(answers), usedAI: false };
@@ -70,7 +121,9 @@ export async function cloneRewriteFlow(
       temperature: 0.9,
       maxOutputTokens: 2048,
     });
-    return { data: normalizeContent(data), usedAI: true };
+    const content = normalizeContent(data);
+    content.headline = await condenseHeadline(content.headline, mode, language);
+    return { data: content, usedAI: true };
   } catch (err) {
     console.warn("[AI] cloneRewriteFlow failed, using mock:", err);
     return {
