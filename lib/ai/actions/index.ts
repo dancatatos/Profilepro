@@ -18,7 +18,7 @@ type Action = (
 
 export const generateHeadline: Action = (context, ctx) =>
   rewriteFlow(
-    "Write ONE short, punchy credibility-profile headline — 55 characters MAX — naming who this person helps and the result they deliver. Keep it natural and concise; do not exceed the limit.",
+    "Write ONE concise, engaging headline hook for a credibility profile — a single natural line that names who this person helps and the result they deliver, crafted to grab attention. Keep it tight, smooth and scannable — no run-on sentences.",
     context,
     ctx.mode,
     ctx.language,

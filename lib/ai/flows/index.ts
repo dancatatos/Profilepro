@@ -176,15 +176,6 @@ function normalizeContent(c: GeneratedProfileContent): GeneratedProfileContent {
 
 /* ---- Mock generators (used when no Gemini key) ---- */
 
-/** Trim text to a max length at a word boundary — keeps headlines short. */
-function clipWords(text: string, max: number): string {
-  const t = (text || "").trim();
-  if (t.length <= max) return t;
-  const cut = t.slice(0, max);
-  const sp = cut.lastIndexOf(" ");
-  return (sp > 8 ? cut.slice(0, sp) : cut).trim();
-}
-
 function mockProfileContent(
   a: AIOnboardingAnswers,
 ): GeneratedProfileContent {
@@ -192,12 +183,9 @@ function mockProfileContent(
   const result = a.resultYouHelpAchieve || "reach their goals";
   const taglish = a.language === "taglish";
   return {
-    headline: clipWords(
-      taglish
-        ? `Tinutulungan ko ang ${clipWords(audience, 24)} na ${clipWords(result, 26)}`
-        : `I help ${clipWords(audience, 24)} ${clipWords(result, 26)}`,
-      60,
-    ),
+    headline: taglish
+      ? `Tinutulungan ko ang ${audience} na ${result}`
+      : `I help ${audience} ${result}`,
     bio: taglish
       ? `${a.mission || "Nandito ako para tumulong."} Kasama ko ang ${a.company || "isang trusted brand"} sa ${a.niche || "industriyang ito"} — simple lang: gusto kitang makita na mag-succeed.`
       : `${a.mission || "I'm here to help people win."} I work with ${a.company || "a trusted brand"} in ${a.niche || "this space"} — and my goal is simple: to see you succeed.`,
