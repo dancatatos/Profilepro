@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
-import { Download, FileText } from "lucide-react";
+import { Download, FileText, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { APP, QR_FG_DEFAULT } from "@/lib/constants";
 import { toast } from "@/store/uiStore";
@@ -267,6 +267,41 @@ export function PrintableCard({ profile }: { profile: Profile }) {
     toast.success("Business card PNG downloaded");
   };
 
+  const shareImage = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        toast.error("Couldn't prepare the card image.");
+        return;
+      }
+      const file = new File([blob], `${profile.username}-business-card.png`, {
+        type: "image/png",
+      });
+      const canShareFiles =
+        typeof navigator.canShare === "function" &&
+        navigator.canShare({ files: [file] });
+      if (canShareFiles) {
+        navigator
+          .share({
+            files: [file],
+            title: `${profile.header.displayName} — business card`,
+          })
+          .catch(() => {
+            /* user cancelled the share sheet */
+          });
+      } else {
+        // No file-share support (most desktops) — save the image instead.
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = file.name;
+        link.click();
+        URL.revokeObjectURL(link.href);
+        toast.info("Sharing isn't supported here — card image saved instead.");
+      }
+    }, "image/png");
+  };
+
   const downloadPdf = async () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -309,6 +344,15 @@ export function PrintableCard({ profile }: { profile: Profile }) {
         className="w-full rounded-2xl border border-white/[0.08] shadow-card"
       />
 
+      <Button
+        onClick={shareImage}
+        disabled={!rendered}
+        fullWidth
+        leftIcon={<Share2 className="h-4 w-4" />}
+      >
+        Share card image
+      </Button>
+
       <div className="grid grid-cols-2 gap-3">
         <Button
           variant="outline"
@@ -316,20 +360,23 @@ export function PrintableCard({ profile }: { profile: Profile }) {
           disabled={!rendered}
           leftIcon={<Download className="h-4 w-4" />}
         >
-          Download PNG
+          PNG
         </Button>
         <Button
+          variant="outline"
           onClick={downloadPdf}
           loading={pdfBusy}
           disabled={!rendered}
           leftIcon={<FileText className="h-4 w-4" />}
         >
-          Print-ready PDF
+          Print PDF
         </Button>
       </div>
 
       <p className="text-center text-xs text-white/35">
-        Standard 3.5″ × 2″ business card · 300 DPI
+        Standard 3.5″ × 2″ business card · 300 DPI ·{" "}
+        <span className="text-white/50">Share</span> sends it straight to any
+        chat app.
       </p>
     </div>
   );
