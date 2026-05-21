@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { MapPin } from "lucide-react";
+import { BadgeCheck, MapPin } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { LogoMark } from "@/components/ui/Logo";
 import {
@@ -15,6 +15,10 @@ import { buildThemeStyle, buildThemeEffectClasses, getThemeConfig } from "@/lib/
 import { createLead, logEvent } from "@/lib/firebase/firestore";
 import { cn } from "@/lib/utils";
 import type { AnalyticsEventType, Profile } from "@/types";
+
+/** Mask gradient that fades the hero cover photo into the theme background. */
+const HERO_FADE =
+  "linear-gradient(to bottom, #000 0%, #000 56%, transparent 100%)";
 
 interface Props {
   profile: Profile;
@@ -64,6 +68,15 @@ export function PublicProfileView({ profile, live = false, className }: Props) {
   const { header } = profile;
   const sections = profile.sections.filter((s) => s.enabled);
   const isLight = tc.colorScheme === "light";
+  const isHero = tc.headerStyle === "hero";
+  const initials =
+    header.displayName
+      .trim()
+      .split(/\s+/)
+      .map((w) => w[0] ?? "")
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "?";
 
   return (
     <div
@@ -75,80 +88,142 @@ export function PublicProfileView({ profile, live = false, className }: Props) {
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center text-center"
         >
-          <Avatar
-            name={header.displayName}
-            src={header.avatarUrl}
-            size={104}
-            verified={header.verified}
-          />
-
-          <h1
-            className="mt-3.5 font-display text-xl font-bold"
-            style={{ color: "var(--tp-text)" }}
-          >
-            {header.displayName}
-          </h1>
-
-          {(header.company || header.location) && (
-            <p
-              className="mt-0.5 flex items-center gap-1 text-xs"
-              style={{ color: "var(--tp-text3)" }}
-            >
-              {header.company}
-              {header.company && header.location && " · "}
-              {header.location && (
-                <>
-                  <MapPin className="h-3 w-3" />
-                  {header.location}
-                </>
-              )}
-            </p>
-          )}
-
-          <p
-            className="mt-2.5 text-sm font-semibold"
-            style={{ color: "var(--tp-accent)" }}
-          >
-            {header.headline}
-          </p>
-
-          <p
-            className="mt-1.5 text-sm leading-relaxed"
-            style={{ color: "var(--tp-text2)" }}
-          >
-            {header.bio}
-          </p>
-
-          {/* Social proof stats */}
-          {header.socialProof.length > 0 && (
-            <div className="mt-4 flex w-full gap-2">
-              {header.socialProof.map((stat) => (
+          {isHero ? (
+            /* ── Hero cover-photo header ── */
+            <div className="relative -mx-4 -mt-8">
+              {header.avatarUrl ? (
                 <div
-                  key={stat.id}
-                  className="flex-1 rounded-xl px-2 py-2.5"
+                  className="aspect-[4/5] w-full bg-cover bg-center"
                   style={{
-                    background: "var(--tp-stat-card)",
-                    border: "1px solid var(--tp-stat-border)",
+                    backgroundImage: `url("${header.avatarUrl}")`,
+                    maskImage: HERO_FADE,
+                    WebkitMaskImage: HERO_FADE,
+                  }}
+                />
+              ) : (
+                <div
+                  className="flex aspect-[4/5] w-full items-center justify-center"
+                  style={{
+                    background: "var(--tp-card)",
+                    maskImage: HERO_FADE,
+                    WebkitMaskImage: HERO_FADE,
                   }}
                 >
-                  <p
-                    className="font-display text-sm font-bold"
-                    style={{ color: "var(--tp-text)" }}
-                  >
-                    {stat.value}
-                  </p>
-                  <p
-                    className="text-[10px] leading-tight"
+                  <span
+                    className="font-display text-7xl font-bold"
                     style={{ color: "var(--tp-text3)" }}
                   >
-                    {stat.label}
-                  </p>
+                    {initials}
+                  </span>
                 </div>
-              ))}
+              )}
+
+              {/* Name overlaid where the photo fades out */}
+              <div className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1.5 px-5 pb-2.5">
+                <h1
+                  className="font-display text-[1.7rem] font-extrabold leading-[1.05]"
+                  style={{
+                    color: "var(--tp-text)",
+                    textShadow: isLight
+                      ? "0 1px 10px rgba(255,255,255,0.6)"
+                      : "0 2px 16px rgba(0,0,0,0.55)",
+                  }}
+                >
+                  {header.displayName}
+                </h1>
+                {header.verified && (
+                  <BadgeCheck
+                    className="h-5 w-5 shrink-0"
+                    style={{ color: "var(--tp-accent)" }}
+                  />
+                )}
+              </div>
+            </div>
+          ) : (
+            /* ── Standard centered avatar ── */
+            <div className="flex flex-col items-center text-center">
+              <Avatar
+                name={header.displayName}
+                src={header.avatarUrl}
+                size={104}
+                verified={header.verified}
+              />
+              <h1
+                className="mt-3.5 font-display text-xl font-bold"
+                style={{ color: "var(--tp-text)" }}
+              >
+                {header.displayName}
+              </h1>
             </div>
           )}
+
+          {/* ── Shared sub-info ── */}
+          <div
+            className={cn(
+              "flex flex-col items-center text-center",
+              isHero && "mt-3",
+            )}
+          >
+            {(header.company || header.location) && (
+              <p
+                className="mt-0.5 flex items-center gap-1 text-xs"
+                style={{ color: "var(--tp-text3)" }}
+              >
+                {header.company}
+                {header.company && header.location && " · "}
+                {header.location && (
+                  <>
+                    <MapPin className="h-3 w-3" />
+                    {header.location}
+                  </>
+                )}
+              </p>
+            )}
+
+            <p
+              className="mt-2.5 text-sm font-semibold"
+              style={{ color: "var(--tp-accent)" }}
+            >
+              {header.headline}
+            </p>
+
+            <p
+              className="mt-1.5 text-sm leading-relaxed"
+              style={{ color: "var(--tp-text2)" }}
+            >
+              {header.bio}
+            </p>
+
+            {/* Social proof stats */}
+            {header.socialProof.length > 0 && (
+              <div className="mt-4 flex w-full gap-2">
+                {header.socialProof.map((stat) => (
+                  <div
+                    key={stat.id}
+                    className="flex-1 rounded-xl px-2 py-2.5"
+                    style={{
+                      background: "var(--tp-stat-card)",
+                      border: "1px solid var(--tp-stat-border)",
+                    }}
+                  >
+                    <p
+                      className="font-display text-sm font-bold"
+                      style={{ color: "var(--tp-text)" }}
+                    >
+                      {stat.value}
+                    </p>
+                    <p
+                      className="text-[10px] leading-tight"
+                      style={{ color: "var(--tp-text3)" }}
+                    >
+                      {stat.label}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </motion.div>
 
         {/* Sections */}

@@ -21,6 +21,8 @@ export interface ThemeConfig {
   vars: ThemeVars;
   // Legacy compat for CTAButton colour logic
   accent: "blue" | "jade" | "gold" | "white";
+  /** Header layout — "hero" renders a full-bleed cover photo. Defaults to "standard". */
+  headerStyle?: "standard" | "hero";
 }
 
 export type ThemeEffect =
@@ -1012,6 +1014,7 @@ export const THEME_CONFIGS: ThemeConfig[] = [
   {
     id: "influencer-studio",
     name: "Influencer Studio",
+    headerStyle: "hero",
     description: "Instagram creator HQ. Collab-ready.",
     tier: "premium",
     categories: ["Influencer", "Creator", "Dark Mode", "Feminine"],
@@ -1037,6 +1040,7 @@ export const THEME_CONFIGS: ThemeConfig[] = [
   {
     id: "viral-creator",
     name: "Viral Creator",
+    headerStyle: "hero",
     description: "TikTok energy. Built to get views.",
     tier: "premium",
     categories: ["Creator", "Influencer", "Vibrant"],
@@ -1084,6 +1088,7 @@ export const THEME_CONFIGS: ThemeConfig[] = [
   {
     id: "video-funnel",
     name: "Video Funnel",
+    headerStyle: "hero",
     description: "Watch. Click. Convert. Video-first CTA.",
     tier: "premium",
     categories: ["Creator", "Affiliate", "Business & Sales"],
@@ -1133,6 +1138,7 @@ export const THEME_CONFIGS: ThemeConfig[] = [
   {
     id: "modern-ceo",
     name: "Modern CEO",
+    headerStyle: "hero",
     description: "C-suite energy. Leadership at a glance.",
     tier: "premium",
     categories: ["Luxury", "Corporate", "Professional", "Masculine"],
@@ -1370,6 +1376,7 @@ export const THEME_CONFIGS: ThemeConfig[] = [
   {
     id: "velvet-rose",
     name: "Velvet Rose",
+    headerStyle: "hero",
     description: "Luxury feminine royalty. High-ticket brand.",
     tier: "premium",
     categories: ["Luxury", "Feminine", "Dark Mode"],
@@ -1492,6 +1499,7 @@ export const THEME_CONFIGS: ThemeConfig[] = [
   {
     id: "ai-personal-brand",
     name: "AI Personal Brand",
+    headerStyle: "hero",
     description: "The AI entrepreneur identity. Future-proof.",
     tier: "premium",
     categories: ["AI Futuristic", "Professional", "Business & Sales"],
