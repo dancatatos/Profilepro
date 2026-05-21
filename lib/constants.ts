@@ -276,7 +276,7 @@ export const PLANS: Plan[] = [
   {
     id: "pro",
     name: "Pro",
-    priceMonthly: 9,
+    priceMonthly: 499,
     highlighted: true,
     tagline: "AI-powered profile that converts.",
     features: [
@@ -292,7 +292,7 @@ export const PLANS: Plan[] = [
   {
     id: "team",
     name: "Team",
-    priceMonthly: 29,
+    priceMonthly: 1499,
     tagline: "Scale your downline with cloning.",
     features: [
       { label: "Everything in Pro", included: true },

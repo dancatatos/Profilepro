@@ -175,24 +175,24 @@ export default function AdminSubscriptionsPage() {
     {
       label: "Free",
       value: fetching ? "…" : String(counts.free),
-      sub: `$${priceOf("free")}/mo`,
+      sub: `₱${priceOf("free").toLocaleString()}/mo`,
       color: "text-white/60",
     },
     {
       label: "Pro",
       value: fetching ? "…" : String(counts.pro),
-      sub: `$${priceOf("pro")}/mo each`,
+      sub: `₱${priceOf("pro").toLocaleString()}/mo each`,
       color: "text-electric-400",
     },
     {
       label: "Team",
       value: fetching ? "…" : String(counts.team),
-      sub: `$${priceOf("team")}/mo each`,
+      sub: `₱${priceOf("team").toLocaleString()}/mo each`,
       color: "text-gold-400",
     },
     {
       label: "Est. MRR",
-      value: fetching ? "…" : `$${mrr.toLocaleString()}`,
+      value: fetching ? "…" : `₱${mrr.toLocaleString()}`,
       sub: `${paid} paid ${paid === 1 ? "user" : "users"}`,
       color: "text-jade-400",
     },
@@ -317,7 +317,7 @@ export default function AdminSubscriptionsPage() {
                 </label>
                 <div className="relative">
                   <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-white/40">
-                    $
+                    ₱
                   </span>
                   <input
                     type="number"

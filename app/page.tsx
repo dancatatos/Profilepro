@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -20,6 +21,8 @@ import { Badge } from "@/components/ui/Badge";
 import { PublicProfileView } from "@/components/public-profile/PublicProfileView";
 import { DEMO_PROFILE } from "@/lib/defaults";
 import { PLANS } from "@/lib/constants";
+import { getPlansConfig } from "@/lib/firebase/firestore";
+import type { Plan } from "@/types";
 
 const AUDIENCES = [
   "Network Marketers",
@@ -46,6 +49,16 @@ const STEPS = [
 ];
 
 export default function LandingPage() {
+  const [plans, setPlans] = useState<Plan[]>(PLANS);
+
+  useEffect(() => {
+    getPlansConfig()
+      .then((p) => {
+        if (p) setPlans(p);
+      })
+      .catch(() => null);
+  }, []);
+
   return (
     <div className="relative overflow-hidden bg-ink-950">
       <div className="glow-blob -left-32 top-0 h-80 w-80 bg-electric-600/30" />
@@ -246,7 +259,7 @@ export default function LandingPage() {
           </p>
         </div>
         <div className="mt-10 grid gap-4 lg:grid-cols-3">
-          {PLANS.map((plan) => (
+          {plans.map((plan) => (
             <div
               key={plan.id}
               className={`rounded-2xl border p-6 ${
@@ -265,7 +278,7 @@ export default function LandingPage() {
               </h3>
               <p className="text-xs text-white/45">{plan.tagline}</p>
               <p className="mt-4 font-display text-3xl font-bold text-white">
-                ${plan.priceMonthly}
+                ₱{plan.priceMonthly.toLocaleString()}
                 <span className="text-sm font-normal text-white/40">/mo</span>
               </p>
               <Button

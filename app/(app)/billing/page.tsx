@@ -128,7 +128,7 @@ export default function BillingPage() {
               </div>
               <p className="text-xs text-white/45">{plan.tagline}</p>
               <p className="mt-3 font-display text-3xl font-bold text-white">
-                ${plan.priceMonthly}
+                ₱{plan.priceMonthly.toLocaleString()}
                 <span className="text-sm font-normal text-white/40">/mo</span>
               </p>
 
