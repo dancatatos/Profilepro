@@ -261,7 +261,8 @@ export const PLANS: Plan[] = [
   {
     id: "free",
     name: "Free",
-    priceMonthly: 0,
+    price: 0,
+    billingPeriod: "monthly",
     tagline: "Get online and look professional.",
     features: [
       { label: "1 credibility profile", included: true },
@@ -276,7 +277,8 @@ export const PLANS: Plan[] = [
   {
     id: "pro",
     name: "Pro",
-    priceMonthly: 499,
+    price: 499,
+    billingPeriod: "monthly",
     highlighted: true,
     tagline: "AI-powered profile that converts.",
     features: [
@@ -292,7 +294,8 @@ export const PLANS: Plan[] = [
   {
     id: "team",
     name: "Team",
-    priceMonthly: 1499,
+    price: 14990,
+    billingPeriod: "annual",
     tagline: "Scale your downline with cloning.",
     features: [
       { label: "Everything in Pro", included: true },

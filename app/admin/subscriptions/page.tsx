@@ -161,39 +161,50 @@ export default function AdminSubscriptionsPage() {
   };
 
   /* ── Overview ── */
-  const priceOf = (id: string) =>
-    plans.find((p) => p.id === id)?.priceMonthly ?? 0;
+  const planOf = (id: string) => plans.find((p) => p.id === id);
+  const priceOf = (id: string) => planOf(id)?.price ?? 0;
+  const periodSuffix = (id: string) =>
+    planOf(id)?.billingPeriod === "annual" ? "/yr" : "/mo";
+  /** A plan's price normalised to a monthly figure (annual ÷ 12). */
+  const monthlyValueOf = (id: string) => {
+    const p = planOf(id);
+    if (!p) return 0;
+    return p.billingPeriod === "annual" ? p.price / 12 : p.price;
+  };
+
   const counts = {
     free: users.filter((u) => u.plan === "free").length,
     pro: users.filter((u) => u.plan === "pro").length,
     team: users.filter((u) => u.plan === "team").length,
   };
-  const mrr = users.reduce((sum, u) => sum + priceOf(u.plan), 0);
+  const mrr = Math.round(
+    users.reduce((sum, u) => sum + monthlyValueOf(u.plan), 0),
+  );
   const paid = counts.pro + counts.team;
 
   const overview = [
     {
       label: "Free",
       value: fetching ? "…" : String(counts.free),
-      sub: `₱${priceOf("free").toLocaleString()}/mo`,
+      sub: `₱${priceOf("free").toLocaleString()}${periodSuffix("free")}`,
       color: "text-white/60",
     },
     {
       label: "Pro",
       value: fetching ? "…" : String(counts.pro),
-      sub: `₱${priceOf("pro").toLocaleString()}/mo each`,
+      sub: `₱${priceOf("pro").toLocaleString()}${periodSuffix("pro")} each`,
       color: "text-electric-400",
     },
     {
       label: "Team",
       value: fetching ? "…" : String(counts.team),
-      sub: `₱${priceOf("team").toLocaleString()}/mo each`,
+      sub: `₱${priceOf("team").toLocaleString()}${periodSuffix("team")} each`,
       color: "text-gold-400",
     },
     {
       label: "Est. MRR",
       value: fetching ? "…" : `₱${mrr.toLocaleString()}`,
-      sub: `${paid} paid ${paid === 1 ? "user" : "users"}`,
+      sub: `${paid} paid ${paid === 1 ? "user" : "users"} · annual ÷ 12`,
       color: "text-jade-400",
     },
   ];
@@ -310,10 +321,34 @@ export default function AdminSubscriptionsPage() {
                 />
               </div>
 
+              {/* Billing period */}
+              <div>
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/40">
+                  Billing period
+                </label>
+                <div className="flex gap-1.5">
+                  {(["monthly", "annual"] as const).map((bp) => (
+                    <button
+                      key={bp}
+                      type="button"
+                      onClick={() => updatePlan(pIdx, { billingPeriod: bp })}
+                      className={cn(
+                        "flex-1 rounded-lg border py-1.5 text-xs font-medium capitalize transition-colors",
+                        plan.billingPeriod === bp
+                          ? "border-electric-500/50 bg-electric-500/15 text-electric-300"
+                          : "border-white/10 bg-white/[0.04] text-white/50 hover:bg-white/[0.08]",
+                      )}
+                    >
+                      {bp}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Price */}
               <div>
                 <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/40">
-                  Price / month
+                  Price / {plan.billingPeriod === "annual" ? "year" : "month"}
                 </label>
                 <div className="relative">
                   <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-white/40">
@@ -323,13 +358,10 @@ export default function AdminSubscriptionsPage() {
                     type="number"
                     min={0}
                     className={cn(inputCls, "pl-7")}
-                    value={plan.priceMonthly}
+                    value={plan.price}
                     onChange={(e) =>
                       updatePlan(pIdx, {
-                        priceMonthly: Math.max(
-                          0,
-                          Number(e.target.value) || 0,
-                        ),
+                        price: Math.max(0, Number(e.target.value) || 0),
                       })
                     }
                   />

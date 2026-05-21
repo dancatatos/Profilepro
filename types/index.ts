@@ -351,6 +351,8 @@ export interface Template {
 
 /* ---------------- Subscription ---------------- */
 
+export type BillingPeriod = "monthly" | "annual";
+
 export interface PlanFeature {
   label: string;
   included: boolean;
@@ -359,7 +361,9 @@ export interface PlanFeature {
 export interface Plan {
   id: PlanId;
   name: string;
-  priceMonthly: number;
+  /** Price for one billing period — monthly amount, or yearly amount when annual. */
+  price: number;
+  billingPeriod: BillingPeriod;
   tagline: string;
   features: PlanFeature[];
   highlighted?: boolean;

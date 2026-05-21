@@ -278,8 +278,10 @@ export default function LandingPage() {
               </h3>
               <p className="text-xs text-white/45">{plan.tagline}</p>
               <p className="mt-4 font-display text-3xl font-bold text-white">
-                ₱{plan.priceMonthly.toLocaleString()}
-                <span className="text-sm font-normal text-white/40">/mo</span>
+                ₱{plan.price.toLocaleString()}
+                <span className="text-sm font-normal text-white/40">
+                  {plan.billingPeriod === "annual" ? "/yr" : "/mo"}
+                </span>
               </p>
               <Button
                 href="/signup"
