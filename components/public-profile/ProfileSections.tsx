@@ -4,6 +4,7 @@ import { useState } from "react";
 import { MessageCircle, Send, Star } from "lucide-react";
 import { Icon } from "@/components/ui/Icon";
 import { SocialIcon } from "@/components/ui/SocialIcon";
+import { ctaButtonClasses } from "@/lib/theme";
 import { cn, isValidEmail, toEmbedUrl } from "@/lib/utils";
 import type { AnalyticsEventType, ProfileSection } from "@/types";
 import type { ThemeConfig } from "@/lib/themes";
@@ -238,8 +239,11 @@ export function SectionRenderer({
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => track("cta_click", b.id)}
-                className="tp-btn-el flex items-center justify-center gap-2 px-5 py-4 text-sm font-semibold transition-transform active:scale-[0.98]"
-                style={V.btn}
+                className={cn(
+                  "flex items-center justify-center gap-2 px-5 py-4 text-sm font-semibold shadow-card transition-transform active:scale-[0.98]",
+                  ctaButtonClasses(b),
+                )}
+                style={{ borderRadius: "var(--tp-btn-radius)" }}
               >
                 <Icon name={b.icon} className="h-4 w-4" />
                 {b.label}

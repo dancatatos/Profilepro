@@ -77,18 +77,12 @@ export function PublicProfileView({ profile, live = false, className }: Props) {
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col items-center text-center"
         >
-          {/* Avatar with theme ring */}
-          <div
-            className="tp-avatar rounded-full p-[3px]"
-            style={{ background: `var(--tp-avatar-ring)` }}
-          >
-            <Avatar
-              name={header.displayName}
-              src={header.avatarUrl}
-              size={100}
-              verified={header.verified}
-            />
-          </div>
+          <Avatar
+            name={header.displayName}
+            src={header.avatarUrl}
+            size={104}
+            verified={header.verified}
+          />
 
           <h1
             className="mt-3.5 font-display text-xl font-bold"

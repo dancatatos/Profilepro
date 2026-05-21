@@ -1571,8 +1571,8 @@ export function buildThemeStyle(id: ThemeId): React.CSSProperties {
     "--tp-success-text": tc.vars.successText,
     "--tp-stat-card": tc.vars.statCard,
     "--tp-stat-border": tc.vars.statBorder,
+    "--tp-font": tc.fontFamily,
     background: tc.background,
-    fontFamily: tc.fontFamily,
   } as React.CSSProperties;
 }
 

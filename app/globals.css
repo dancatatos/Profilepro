@@ -328,6 +328,8 @@
 
 /* ── Profile CSS custom property defaults (dark) ── */
 .public-profile {
+  --tp-font: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-family: var(--tp-font);
   --tp-card: rgba(255,255,255,0.03);
   --tp-border: rgba(255,255,255,0.07);
   --tp-text: rgba(255,255,255,1);
