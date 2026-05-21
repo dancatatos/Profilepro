@@ -102,52 +102,54 @@ export default function ProfileBuilderPage() {
       ─────────────────────────────────────────────────────────────────── */}
       <div className="-mx-4 lg:-mx-8 lg:flex lg:h-[calc(100dvh-9.5rem)] lg:overflow-hidden">
 
-        {/* Left: scrollable editor */}
-        <div className="space-y-4 px-4 pb-28 lg:flex-1 lg:min-w-0 lg:overflow-y-auto lg:px-8 lg:pb-10 lg:pt-1">
-          <Card className="p-4">
-            <CardHeader
-              title="Profile Header"
-              subtitle="The first thing prospects see"
-            />
-            <div className="mt-4">
-              <HeaderEditor />
-            </div>
-          </Card>
+        {/* Left: scrollable editor — content capped + centred like Linktree */}
+        <div className="px-4 pb-28 lg:flex-1 lg:min-w-0 lg:overflow-y-auto lg:px-8 lg:pb-10 lg:pt-1">
+          <div className="mx-auto max-w-3xl space-y-4">
+            <Card className="p-4">
+              <CardHeader
+                title="Profile Header"
+                subtitle="The first thing prospects see"
+              />
+              <div className="mt-4">
+                <HeaderEditor />
+              </div>
+            </Card>
 
-          <Card className="p-4">
-            <CardHeader
-              title="Sections"
-              subtitle="Drag to reorder · toggle to show/hide"
-            />
-            <div className="mt-4">
-              <SectionsManager />
-            </div>
-          </Card>
+            <Card className="p-4">
+              <CardHeader
+                title="Sections"
+                subtitle="Drag to reorder · toggle to show/hide"
+              />
+              <div className="mt-4">
+                <SectionsManager />
+              </div>
+            </Card>
 
-          <Card className="p-4">
-            <CardHeader title="Theme" subtitle="Pick your profile look" />
-            <div className="mt-4">
-              <ThemePicker />
-            </div>
-          </Card>
+            <Card className="p-4">
+              <CardHeader title="Theme" subtitle="Pick your profile look" />
+              <div className="mt-4">
+                <ThemePicker />
+              </div>
+            </Card>
 
-          <Card className="p-4">
-            <CardHeader
-              title="Publish & Settings"
-              subtitle="Your URL, SEO and visibility"
-            />
-            <div className="mt-4">
-              <PublishSettings />
-            </div>
-          </Card>
+            <Card className="p-4">
+              <CardHeader
+                title="Publish & Settings"
+                subtitle="Your URL, SEO and visibility"
+              />
+              <div className="mt-4">
+                <PublishSettings />
+              </div>
+            </Card>
+          </div>
         </div>
 
         {/* Right: phone preview — always in view, no page scroll needed */}
-        <div className="hidden lg:flex lg:w-[320px] lg:shrink-0 lg:flex-col lg:items-center lg:overflow-y-auto lg:border-l lg:border-white/[0.06] lg:px-4 lg:py-5">
-          <p className="mb-2.5 text-center text-xs font-medium text-white/40">
+        <div className="hidden lg:flex lg:w-[400px] lg:shrink-0 lg:flex-col lg:items-center lg:overflow-y-auto lg:border-l lg:border-white/[0.06] lg:bg-ink-900/30 lg:px-6 lg:py-6">
+          <p className="mb-3 text-center text-xs font-medium text-white/40">
             Live preview
           </p>
-          <PhonePreview height={580} />
+          <PhonePreview height={660} />
         </div>
       </div>
 
