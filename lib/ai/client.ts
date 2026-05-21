@@ -6,7 +6,7 @@
    without touching prompts / flows / actions.
    ============================================================ */
 
-const API_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
+const API_BASE = "https://generativelanguage.googleapis.com/v1/models";
 
 function modelName(): string {
   return process.env.GEMINI_MODEL || "gemini-1.5-flash";
