@@ -49,9 +49,9 @@ export default function ProfileBuilderPage() {
   };
 
   return (
-    <div className="space-y-5">
-      {/* Action bar */}
-      <div className="flex flex-wrap items-center gap-2">
+    <>
+      {/* ── Action bar ── */}
+      <div className="mb-3 flex flex-wrap items-center gap-2">
         <div className="mr-auto">
           <h1 className="font-display text-xl font-bold text-white">
             Profile Builder
@@ -95,9 +95,15 @@ export default function ProfileBuilderPage() {
         </Button>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
-        {/* Editors */}
-        <div className="space-y-4">
+      {/* ── Split-pane ──
+          Breaks out of the max-w-5xl horizontal padding so neither pane
+          causes horizontal overflow. The left pane scrolls independently;
+          the right pane is always visible without any page-level scroll.
+      ─────────────────────────────────────────────────────────────────── */}
+      <div className="-mx-4 lg:-mx-8 lg:flex lg:h-[calc(100dvh-9.5rem)] lg:overflow-hidden">
+
+        {/* Left: scrollable editor */}
+        <div className="space-y-4 px-4 pb-28 lg:flex-1 lg:min-w-0 lg:overflow-y-auto lg:px-8 lg:pb-10 lg:pt-1">
           <Card className="p-4">
             <CardHeader
               title="Profile Header"
@@ -136,17 +142,16 @@ export default function ProfileBuilderPage() {
           </Card>
         </div>
 
-        {/* Desktop live preview */}
-        <div className="hidden lg:block">
-          <div className="sticky top-20">
-            <p className="mb-2.5 text-center text-xs font-medium text-white/40">
-              Live preview
-            </p>
-            <PhonePreview height={620} />
-          </div>
+        {/* Right: phone preview — always in view, no page scroll needed */}
+        <div className="hidden lg:flex lg:w-[320px] lg:shrink-0 lg:flex-col lg:items-center lg:overflow-y-auto lg:border-l lg:border-white/[0.06] lg:px-4 lg:py-5">
+          <p className="mb-2.5 text-center text-xs font-medium text-white/40">
+            Live preview
+          </p>
+          <PhonePreview height={580} />
         </div>
       </div>
 
+      {/* ── Modals ── */}
       <AIGenerateModal open={aiOpen} onClose={() => setAiOpen(false)} />
       <ShareModal
         open={shareOpen}
@@ -163,6 +168,6 @@ export default function ProfileBuilderPage() {
           <PhonePreview height={560} />
         </div>
       </Modal>
-    </div>
+    </>
   );
 }
