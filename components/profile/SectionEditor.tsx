@@ -9,6 +9,7 @@ import { SOCIAL_PLATFORMS } from "@/lib/constants";
 import { cn, uid } from "@/lib/utils";
 import type {
   AboutSection,
+  AppointmentSection,
   CredibilitySection,
   CtaSection,
   GallerySection,
@@ -630,6 +631,183 @@ function LeadCaptureEditor({ section }: { section: LeadCaptureSection }) {
   );
 }
 
+/* ---------------- Appointment scheduler ---------------- */
+
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function AppointmentEditor({ section }: { section: AppointmentSection }) {
+  const update = useProfileStore((s) => s.updateSection);
+
+  const toggleDay = (d: number) => {
+    const next = section.availableDays.includes(d)
+      ? section.availableDays.filter((x) => x !== d)
+      : [...section.availableDays, d].sort((a, b) => a - b);
+    update(section.id, { availableDays: next });
+  };
+
+  const patchQuestions = (questions: AppointmentSection["questions"]) =>
+    update(section.id, { questions });
+  const editQuestion = (
+    id: string,
+    p: Partial<AppointmentSection["questions"][number]>,
+  ) =>
+    patchQuestions(
+      section.questions.map((q) => (q.id === id ? { ...q, ...p } : q)),
+    );
+
+  return (
+    <div className="space-y-3">
+      <input
+        value={section.headline}
+        onChange={(e) => update(section.id, { headline: e.target.value })}
+        placeholder="Booking headline"
+        className={FIELD}
+      />
+      <input
+        value={section.subtext || ""}
+        onChange={(e) => update(section.id, { subtext: e.target.value })}
+        placeholder="Supporting text (optional)"
+        className={FIELD}
+      />
+
+      <div>
+        <p className="mb-1.5 text-xs font-medium text-white/65">
+          Available days
+        </p>
+        <div className="flex gap-1.5">
+          {WEEKDAYS.map((label, i) => (
+            <button
+              key={label}
+              onClick={() => toggleDay(i)}
+              className={cn(
+                "flex-1 rounded-lg border py-2 text-[11px] font-medium",
+                section.availableDays.includes(i)
+                  ? "border-electric-500 bg-electric-500/15 text-electric-300"
+                  : "border-white/10 text-white/45",
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <p className="mb-1.5 text-xs font-medium text-white/65">From</p>
+          <input
+            type="time"
+            value={section.startTime}
+            onChange={(e) => update(section.id, { startTime: e.target.value })}
+            className={FIELD}
+          />
+        </div>
+        <div>
+          <p className="mb-1.5 text-xs font-medium text-white/65">To</p>
+          <input
+            type="time"
+            value={section.endTime}
+            onChange={(e) => update(section.id, { endTime: e.target.value })}
+            className={FIELD}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <p className="mb-1.5 text-xs font-medium text-white/65">
+            Slot length
+          </p>
+          <Select
+            value={String(section.slotMinutes)}
+            onChange={(v) => update(section.id, { slotMinutes: Number(v) })}
+            options={[
+              { value: "15", label: "15 minutes" },
+              { value: "30", label: "30 minutes" },
+              { value: "45", label: "45 minutes" },
+              { value: "60", label: "60 minutes" },
+            ]}
+          />
+        </div>
+        <div>
+          <p className="mb-1.5 text-xs font-medium text-white/65">
+            Booking window
+          </p>
+          <Select
+            value={String(section.bookingWindowDays)}
+            onChange={(v) =>
+              update(section.id, { bookingWindowDays: Number(v) })
+            }
+            options={[
+              { value: "7", label: "Next 7 days" },
+              { value: "14", label: "Next 14 days" },
+              { value: "30", label: "Next 30 days" },
+              { value: "60", label: "Next 60 days" },
+            ]}
+          />
+        </div>
+      </div>
+
+      <div>
+        <p className="mb-1.5 text-xs font-medium text-white/65">
+          Intake questions · optional for visitors · max 5
+        </p>
+        <div className="space-y-2">
+          {section.questions.map((q) => (
+            <div key={q.id} className="flex items-center gap-2">
+              <button
+                onClick={() => editQuestion(q.id, { enabled: !q.enabled })}
+                aria-label="Toggle question"
+                className={cn(
+                  "relative h-5 w-9 shrink-0 rounded-full transition-colors",
+                  q.enabled ? "bg-jade-500" : "bg-white/15",
+                )}
+              >
+                <span
+                  className={cn(
+                    "absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform",
+                    q.enabled ? "translate-x-[1.125rem]" : "translate-x-0.5",
+                  )}
+                />
+              </button>
+              <input
+                value={q.question}
+                onChange={(e) =>
+                  editQuestion(q.id, { question: e.target.value })
+                }
+                placeholder="Question to ask the visitor"
+                className={cn(FIELD, "h-9 flex-1 text-xs")}
+              />
+              <button
+                onClick={() =>
+                  patchQuestions(
+                    section.questions.filter((x) => x.id !== q.id),
+                  )
+                }
+                aria-label="Remove question"
+                className="shrink-0 rounded-md p-1.5 text-white/30 hover:text-red-400"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+          {section.questions.length < 5 && (
+            <AddRow
+              label="Add question"
+              onClick={() =>
+                patchQuestions([
+                  ...section.questions,
+                  { id: uid("q"), question: "", enabled: true },
+                ])
+              }
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ---------------- Dispatcher ---------------- */
 
 export function SectionEditor({ section }: { section: ProfileSection }) {
@@ -652,6 +830,8 @@ export function SectionEditor({ section }: { section: ProfileSection }) {
       return <GalleryEditor section={section} />;
     case "leadCapture":
       return <LeadCaptureEditor section={section} />;
+    case "appointment":
+      return <AppointmentEditor section={section} />;
     default:
       return null;
   }

@@ -90,5 +90,24 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
+
+    // ---- Appointment slot markers (public, PII-free availability) ----
+    match /bookingSlots/{slotId} {
+      allow read, list: if true;
+      allow create: if request.resource.data.keys().hasAll(['profileId', 'ownerId', 'date', 'time']);
+      allow update: if false;
+      allow delete: if isAdmin()
+        || (isSignedIn() && resource.data.ownerId == request.auth.uid);
+    }
+
+    // ---- Appointment bookings (owner-only read — holds visitor contact info) ----
+    match /bookings/{bookingId} {
+      allow create: if request.resource.data.keys().hasAll(['profileId', 'ownerId', 'date', 'time', 'name']);
+      allow read, list: if isAdmin()
+        || (isSignedIn() && resource.data.ownerId == request.auth.uid);
+      allow update: if false;
+      allow delete: if isAdmin()
+        || (isSignedIn() && resource.data.ownerId == request.auth.uid);
+    }
   }
 }

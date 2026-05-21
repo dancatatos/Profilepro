@@ -73,6 +73,26 @@ export function createSection(type: SectionType): ProfileSection {
         fields: ["name", "email"],
         channels: {},
       };
+    case "appointment":
+      return {
+        ...base,
+        type: "appointment",
+        title: "Book an Appointment",
+        headline: "Schedule a call with me",
+        subtext: "Pick a day and time that works for you.",
+        availableDays: [1, 3, 5],
+        startTime: "14:00",
+        endTime: "16:00",
+        slotMinutes: 30,
+        bookingWindowDays: 30,
+        questions: [
+          {
+            id: uid("q"),
+            question: "What would you like to discuss?",
+            enabled: true,
+          },
+        ],
+      };
   }
 }
 

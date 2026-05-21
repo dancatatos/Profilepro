@@ -33,6 +33,7 @@ export const DASHBOARD_NAV: NavItem[] = [
   { key: "templates", label: "Template Marketplace", href: "/templates", icon: "LayoutTemplate" },
   { key: "qr", label: "QR Codes", href: "/qr", icon: "QrCode" },
   { key: "card", label: "Digital Card", href: "/card", icon: "CreditCard" },
+  { key: "appointments", label: "Appointments", href: "/appointments", icon: "CalendarDays" },
   { key: "leads", label: "Leads", href: "/leads", icon: "Users" },
   { key: "analytics", label: "Analytics", href: "/analytics", icon: "BarChart3" },
   { key: "ai", label: "AI Assistant", href: "/ai-assistant", icon: "Sparkles" },
@@ -113,6 +114,12 @@ export const SECTION_CATALOG: SectionMeta[] = [
     label: "Lead Capture",
     description: "Collect names, emails and chat leads",
     icon: "Inbox",
+  },
+  {
+    type: "appointment",
+    label: "Appointment Scheduler",
+    description: "Let visitors book a call or meeting with you",
+    icon: "CalendarClock",
   },
 ];
 

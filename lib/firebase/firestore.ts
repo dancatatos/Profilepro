@@ -6,6 +6,8 @@ import {
   setDoc,
   updateDoc,
   addDoc,
+  deleteDoc,
+  runTransaction,
   query,
   where,
   orderBy,
@@ -18,6 +20,8 @@ import type {
   AIGenerationRecord,
   AnalyticsEvent,
   AnalyticsSummary,
+  Booking,
+  BookingAnswer,
   FeatureFlags,
   Lead,
   Plan,
@@ -35,6 +39,8 @@ export const COL = {
   media: "media_assets",
   subscriptions: "subscriptions",
   settings: "settings",
+  bookings: "bookings",
+  bookingSlots: "bookingSlots",
 } as const;
 
 /* ---------------- Feature flags ---------------- */
@@ -215,6 +221,111 @@ export async function listLeads(ownerId: string): Promise<Lead[]> {
   );
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Lead);
+}
+
+/* ---------------- Appointments / bookings ---------------- */
+
+function slotId(profileId: string, date: string, time: string): string {
+  return `${profileId}__${date}__${time.replace(":", "")}`;
+}
+
+/** Public, PII-free slot markers — used to render which times are taken. */
+export async function listBookedSlots(
+  profileId: string,
+): Promise<{ date: string; time: string }[]> {
+  if (!isFirebaseConfigured) return [];
+  try {
+    const snap = await getDocs(
+      query(
+        collection(db, COL.bookingSlots),
+        where("profileId", "==", profileId),
+        fsLimit(1000),
+      ),
+    );
+    return snap.docs.map((d) => {
+      const data = d.data() as { date: string; time: string };
+      return { date: data.date, time: data.time };
+    });
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Atomically reserve a slot and store the booking. The slot marker uses a
+ * deterministic id, so two visitors can never book the same time — the
+ * transaction throws "SLOT_TAKEN" when the slot already exists.
+ */
+export async function createBooking(input: {
+  profileId: string;
+  ownerId: string;
+  date: string;
+  time: string;
+  durationMin: number;
+  name: string;
+  phone: string;
+  email: string;
+  answers: BookingAnswer[];
+}): Promise<void> {
+  if (!isFirebaseConfigured) {
+    throw new Error("Booking is unavailable in demo mode.");
+  }
+  await runTransaction(db, async (tx) => {
+    const slotRef = doc(
+      db,
+      COL.bookingSlots,
+      slotId(input.profileId, input.date, input.time),
+    );
+    const existing = await tx.get(slotRef);
+    if (existing.exists()) throw new Error("SLOT_TAKEN");
+    tx.set(slotRef, {
+      profileId: input.profileId,
+      ownerId: input.ownerId,
+      date: input.date,
+      time: input.time,
+    });
+    tx.set(doc(collection(db, COL.bookings)), {
+      profileId: input.profileId,
+      ownerId: input.ownerId,
+      date: input.date,
+      time: input.time,
+      durationMin: input.durationMin,
+      name: input.name,
+      phone: input.phone,
+      email: input.email,
+      answers: input.answers,
+      createdAt: Date.now(),
+      serverCreatedAt: serverTimestamp(),
+    });
+  });
+}
+
+/** List the owner's bookings, ordered by date + time. */
+export async function listBookings(ownerId: string): Promise<Booking[]> {
+  if (!isFirebaseConfigured) return [];
+  const snap = await getDocs(
+    query(
+      collection(db, COL.bookings),
+      where("ownerId", "==", ownerId),
+      fsLimit(500),
+    ),
+  );
+  const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Booking);
+  items.sort((a, b) =>
+    `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`),
+  );
+  return items;
+}
+
+/** Cancel a booking — removes the record and frees the slot. */
+export async function cancelBooking(booking: Booking): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await Promise.allSettled([
+    deleteDoc(doc(db, COL.bookings, booking.id)),
+    deleteDoc(
+      doc(db, COL.bookingSlots, slotId(booking.profileId, booking.date, booking.time)),
+    ),
+  ]);
 }
 
 /* ---------------- Analytics ---------------- */

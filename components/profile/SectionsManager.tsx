@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   AnimatePresence,
   motion,
   Reorder,
   useDragControls,
 } from "framer-motion";
-import { ChevronDown, GripVertical, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, GripVertical, Lock, Plus, Trash2 } from "lucide-react";
 import { useProfileStore } from "@/store/profileStore";
+import { useAuth } from "@/hooks/useAuth";
 import { SectionEditor } from "./SectionEditor";
 import { Switch } from "@/components/ui/Switch";
 import { Icon } from "@/components/ui/Icon";
@@ -125,8 +127,11 @@ export function SectionsManager() {
   const profile = useProfileStore((s) => s.profile);
   const setSections = useProfileStore((s) => s.setSections);
   const addSection = useProfileStore((s) => s.addSection);
+  const { account } = useAuth();
   const [addOpen, setAddOpen] = useState(false);
   if (!profile) return null;
+
+  const isPro = account?.plan === "pro" || account?.plan === "team";
 
   return (
     <div className="space-y-2.5">
@@ -156,27 +161,56 @@ export function SectionsManager() {
         description="Pick a block to add to your profile."
       >
         <div className="grid gap-2 pb-2">
-          {SECTION_CATALOG.map((s) => (
-            <button
-              key={s.type}
-              onClick={() => {
-                addSection(s.type);
-                setAddOpen(false);
-              }}
-              className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3 text-left hover:border-electric-500/40"
-            >
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-electric-500/12">
-                <Icon name={s.icon} className="h-5 w-5 text-electric-400" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-white">{s.label}</p>
-                <p className="truncate text-xs text-white/45">
-                  {s.description}
-                </p>
-              </div>
-              <Plus className="ml-auto h-4 w-4 text-white/30" />
-            </button>
-          ))}
+          {SECTION_CATALOG.map((s) => {
+            /* The Appointment Scheduler is a Pro / Team feature. */
+            if (s.type === "appointment" && !isPro) {
+              return (
+                <Link
+                  key={s.type}
+                  href="/billing"
+                  onClick={() => setAddOpen(false)}
+                  className="flex items-center gap-3 rounded-xl border border-gold-400/20 bg-gold-400/[0.04] p-3 text-left transition-colors hover:border-gold-400/45"
+                >
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold-400/12">
+                    <Icon name={s.icon} className="h-5 w-5 text-gold-300" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="flex items-center gap-1.5 text-sm font-medium text-white">
+                      {s.label}
+                      <span className="rounded bg-gold-400/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-gold-300">
+                        Pro
+                      </span>
+                    </p>
+                    <p className="truncate text-xs text-white/45">
+                      {s.description}
+                    </p>
+                  </div>
+                  <Lock className="ml-auto h-4 w-4 shrink-0 text-gold-300/70" />
+                </Link>
+              );
+            }
+            return (
+              <button
+                key={s.type}
+                onClick={() => {
+                  addSection(s.type);
+                  setAddOpen(false);
+                }}
+                className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3 text-left hover:border-electric-500/40"
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-electric-500/12">
+                  <Icon name={s.icon} className="h-5 w-5 text-electric-400" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-white">{s.label}</p>
+                  <p className="truncate text-xs text-white/45">
+                    {s.description}
+                  </p>
+                </div>
+                <Plus className="ml-auto h-4 w-4 text-white/30" />
+              </button>
+            );
+          })}
         </div>
       </Modal>
     </div>

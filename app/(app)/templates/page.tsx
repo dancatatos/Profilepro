@@ -377,6 +377,7 @@ const SECTION_LABELS: Record<SectionType, string> = {
   video: "Video",
   gallery: "Gallery",
   leadCapture: "Lead Form",
+  appointment: "Booking",
 };
 
 const SECTION_COLORS: Record<SectionType, string> = {
@@ -389,6 +390,7 @@ const SECTION_COLORS: Record<SectionType, string> = {
   video: "bg-red-500/20 text-red-300",
   gallery: "bg-pink-500/20 text-pink-300",
   leadCapture: "bg-jade-500/20 text-jade-300",
+  appointment: "bg-electric-500/20 text-electric-300",
 };
 
 /* ---- Mini preview component ---- */

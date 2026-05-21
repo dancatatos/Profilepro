@@ -11,8 +11,9 @@ import {
   type LeadSubmitFn,
   type TrackFn,
 } from "./ProfileSections";
+import type { BookingSubmitFn } from "./AppointmentBooking";
 import { buildThemeStyle, buildThemeEffectClasses, getThemeConfig } from "@/lib/themes";
-import { createLead, logEvent } from "@/lib/firebase/firestore";
+import { createBooking, createLead, logEvent } from "@/lib/firebase/firestore";
 import { cn } from "@/lib/utils";
 import type { AnalyticsEventType, Profile } from "@/types";
 
@@ -62,6 +63,21 @@ export function PublicProfileView({ profile, live = false, className }: Props) {
       ...(data.email ? { email: data.email } : {}),
       ...(data.phone ? { phone: data.phone } : {}),
       source: data.source,
+    });
+  };
+
+  const onBook: BookingSubmitFn = async (data) => {
+    if (!live) return;
+    await createBooking({
+      profileId: profile.id,
+      ownerId: profile.ownerId,
+      date: data.date,
+      time: data.time,
+      durationMin: data.durationMin,
+      name: data.name,
+      phone: data.phone,
+      email: data.email,
+      answers: data.answers,
     });
   };
 
@@ -241,6 +257,8 @@ export function PublicProfileView({ profile, live = false, className }: Props) {
                 themeConfig={tc}
                 track={track}
                 onLead={onLead}
+                onBook={onBook}
+                profileId={profile.id}
               />
             </motion.div>
           ))}

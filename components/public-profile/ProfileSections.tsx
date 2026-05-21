@@ -4,6 +4,7 @@ import { useState } from "react";
 import { MessageCircle, Send, Star } from "lucide-react";
 import { Icon } from "@/components/ui/Icon";
 import { SocialIcon } from "@/components/ui/SocialIcon";
+import { AppointmentBooking, type BookingSubmitFn } from "./AppointmentBooking";
 import { ctaButtonClasses } from "@/lib/theme";
 import { cn, isValidEmail, toEmbedUrl } from "@/lib/utils";
 import type { AnalyticsEventType, ProfileSection } from "@/types";
@@ -22,6 +23,8 @@ interface RendererProps {
   themeConfig: ThemeConfig;
   track: TrackFn;
   onLead: LeadSubmitFn;
+  onBook: BookingSubmitFn;
+  profileId: string;
 }
 
 /* ──────────────────────────────────────────
@@ -226,6 +229,8 @@ export function SectionRenderer({
   section,
   track,
   onLead,
+  onBook,
+  profileId,
 }: RendererProps) {
   switch (section.type) {
     case "cta":
@@ -508,6 +513,18 @@ export function SectionRenderer({
       return (
         <SectionShell title={section.title}>
           <LeadForm section={section} track={track} onLead={onLead} />
+        </SectionShell>
+      );
+
+    case "appointment":
+      return (
+        <SectionShell title={section.title}>
+          <AppointmentBooking
+            section={section}
+            profileId={profileId}
+            onBook={onBook}
+            onTrack={() => track("lead_submit", section.id)}
+          />
         </SectionShell>
       );
 

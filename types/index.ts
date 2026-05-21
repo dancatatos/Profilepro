@@ -44,7 +44,8 @@ export type SectionType =
   | "products"
   | "video"
   | "gallery"
-  | "leadCapture";
+  | "leadCapture"
+  | "appointment";
 
 export interface CTAButton {
   id: string;
@@ -169,6 +170,28 @@ export interface LeadCaptureSection extends SectionBase {
   channels: LeadCaptureChannels;
 }
 
+export interface AppointmentQuestion {
+  id: string;
+  question: string;
+  enabled: boolean;
+}
+export interface AppointmentSection extends SectionBase {
+  type: "appointment";
+  headline: string;
+  subtext?: string;
+  /** Weekdays the owner is available — 0=Sun … 6=Sat */
+  availableDays: number[];
+  /** Daily window, "HH:MM" 24-hour */
+  startTime: string;
+  endTime: string;
+  /** Length of each bookable slot, in minutes */
+  slotMinutes: number;
+  /** How many days ahead a visitor may book */
+  bookingWindowDays: number;
+  /** Custom intake questions — only enabled ones are shown, all optional */
+  questions: AppointmentQuestion[];
+}
+
 export type ProfileSection =
   | CtaSection
   | SocialsSection
@@ -178,7 +201,31 @@ export type ProfileSection =
   | ProductsSection
   | VideoSection
   | GallerySection
-  | LeadCaptureSection;
+  | LeadCaptureSection
+  | AppointmentSection;
+
+/** One answer to a custom appointment question. */
+export interface BookingAnswer {
+  question: string;
+  answer: string;
+}
+
+/** A confirmed appointment booking — owner-visible, holds visitor contact info. */
+export interface Booking {
+  id: string;
+  profileId: string;
+  ownerId: string;
+  /** ISO date, "YYYY-MM-DD" */
+  date: string;
+  /** Start time, "HH:MM" 24-hour */
+  time: string;
+  durationMin: number;
+  name: string;
+  phone: string;
+  email: string;
+  answers: BookingAnswer[];
+  createdAt: number;
+}
 
 /* ---------------- Profile ---------------- */
 
