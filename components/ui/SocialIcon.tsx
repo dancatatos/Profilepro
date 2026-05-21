@@ -1,3 +1,4 @@
+import type React from "react";
 import {
   FaFacebookF,
   FaInstagram,
@@ -29,10 +30,12 @@ const MAP: Record<SocialPlatform, IconType> = {
 export function SocialIcon({
   platform,
   className,
+  style,
 }: {
   platform: SocialPlatform;
   className?: string;
+  style?: React.CSSProperties;
 }) {
   const Cmp = MAP[platform] ?? FaGlobe;
-  return <Cmp className={className} />;
+  return <Cmp className={className} style={style} />;
 }

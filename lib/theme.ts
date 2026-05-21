@@ -1,11 +1,23 @@
-import { THEMES } from "@/lib/constants";
+import { getThemeConfig, type ThemeConfig } from "@/lib/themes";
 import type { CTAButton, ProfileTheme, ThemeId } from "@/types";
 
+/** Get full ThemeConfig for the new engine */
+export { getThemeConfig } from "@/lib/themes";
+
+/** Legacy: get a ProfileTheme-shaped object for backward compat */
 export function getTheme(id: ThemeId): ProfileTheme {
-  return THEMES.find((t) => t.id === id) ?? THEMES[0];
+  const tc = getThemeConfig(id);
+  return {
+    id: tc.id,
+    name: tc.name,
+    background: tc.background,
+    accent: tc.accent,
+    buttonStyle: tc.vars.btnBorder === "transparent" ? "solid" : "outline",
+  };
 }
 
-/** Tailwind classes for a public-profile CTA button. */
+/** Tailwind classes for a public-profile CTA button.
+ *  CTA buttons have their own accent/style; theme overrides via CSS vars. */
 export function ctaButtonClasses(button: CTAButton): string {
   if (button.style === "outline") {
     return "border border-white/20 bg-white/[0.04] text-white";

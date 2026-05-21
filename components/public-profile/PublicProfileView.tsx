@@ -11,7 +11,7 @@ import {
   type LeadSubmitFn,
   type TrackFn,
 } from "./ProfileSections";
-import { getTheme } from "@/lib/theme";
+import { buildThemeStyle, buildThemeEffectClasses, getThemeConfig } from "@/lib/themes";
 import { createLead, logEvent } from "@/lib/firebase/firestore";
 import { cn } from "@/lib/utils";
 import type { AnalyticsEventType, Profile } from "@/types";
@@ -24,7 +24,9 @@ interface Props {
 }
 
 export function PublicProfileView({ profile, live = false, className }: Props) {
-  const theme = getTheme(profile.themeId);
+  const tc = getThemeConfig(profile.themeId);
+  const themeStyle = buildThemeStyle(profile.themeId);
+  const effectClasses = buildThemeEffectClasses(profile.themeId);
   const viewed = useRef(false);
 
   useEffect(() => {
@@ -61,11 +63,12 @@ export function PublicProfileView({ profile, live = false, className }: Props) {
 
   const { header } = profile;
   const sections = profile.sections.filter((s) => s.enabled);
+  const isLight = tc.colorScheme === "light";
 
   return (
     <div
-      className={cn("min-h-full w-full", className)}
-      style={{ background: theme.background }}
+      className={cn("min-h-full w-full", effectClasses, className)}
+      style={themeStyle}
     >
       <div className="mx-auto max-w-md px-4 pb-14 pt-8">
         {/* Header */}
@@ -74,17 +77,31 @@ export function PublicProfileView({ profile, live = false, className }: Props) {
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col items-center text-center"
         >
-          <Avatar
-            name={header.displayName}
-            src={header.avatarUrl}
-            size={104}
-            verified={header.verified}
-          />
-          <h1 className="mt-3.5 font-display text-xl font-bold text-white">
+          {/* Avatar with theme ring */}
+          <div
+            className="tp-avatar rounded-full p-[3px]"
+            style={{ background: `var(--tp-avatar-ring)` }}
+          >
+            <Avatar
+              name={header.displayName}
+              src={header.avatarUrl}
+              size={100}
+              verified={header.verified}
+            />
+          </div>
+
+          <h1
+            className="mt-3.5 font-display text-xl font-bold"
+            style={{ color: "var(--tp-text)" }}
+          >
             {header.displayName}
           </h1>
+
           {(header.company || header.location) && (
-            <p className="mt-0.5 flex items-center gap-1 text-xs text-white/45">
+            <p
+              className="mt-0.5 flex items-center gap-1 text-xs"
+              style={{ color: "var(--tp-text3)" }}
+            >
               {header.company}
               {header.company && header.location && " · "}
               {header.location && (
@@ -95,24 +112,43 @@ export function PublicProfileView({ profile, live = false, className }: Props) {
               )}
             </p>
           )}
-          <p className="mt-2.5 text-sm font-medium text-electric-300">
+
+          <p
+            className="mt-2.5 text-sm font-semibold"
+            style={{ color: "var(--tp-accent)" }}
+          >
             {header.headline}
           </p>
-          <p className="mt-1.5 text-sm leading-relaxed text-white/55">
+
+          <p
+            className="mt-1.5 text-sm leading-relaxed"
+            style={{ color: "var(--tp-text2)" }}
+          >
             {header.bio}
           </p>
 
+          {/* Social proof stats */}
           {header.socialProof.length > 0 && (
             <div className="mt-4 flex w-full gap-2">
               {header.socialProof.map((stat) => (
                 <div
                   key={stat.id}
-                  className="flex-1 rounded-xl border border-white/[0.07] bg-white/[0.03] px-2 py-2.5"
+                  className="flex-1 rounded-xl px-2 py-2.5"
+                  style={{
+                    background: "var(--tp-stat-card)",
+                    border: "1px solid var(--tp-stat-border)",
+                  }}
                 >
-                  <p className="font-display text-sm font-bold text-white">
+                  <p
+                    className="font-display text-sm font-bold"
+                    style={{ color: "var(--tp-text)" }}
+                  >
                     {stat.value}
                   </p>
-                  <p className="text-[10px] leading-tight text-white/45">
+                  <p
+                    className="text-[10px] leading-tight"
+                    style={{ color: "var(--tp-text3)" }}
+                  >
                     {stat.label}
                   </p>
                 </div>
@@ -133,7 +169,7 @@ export function PublicProfileView({ profile, live = false, className }: Props) {
             >
               <SectionRenderer
                 section={section}
-                theme={theme}
+                themeConfig={tc}
                 track={track}
                 onLead={onLead}
               />
@@ -144,10 +180,17 @@ export function PublicProfileView({ profile, live = false, className }: Props) {
         {/* Branding footer */}
         <Link
           href="/"
-          className="mt-10 flex items-center justify-center gap-1.5 text-xs text-white/30"
+          className="mt-10 flex items-center justify-center gap-1.5 text-xs"
+          style={{ color: isLight ? "rgba(0,0,0,0.25)" : "rgba(255,255,255,0.28)" }}
         >
           <LogoMark className="h-4 w-4" />
-          Made with <span className="font-semibold text-white/50">Credibly</span>
+          Made with{" "}
+          <span
+            className="font-semibold"
+            style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.45)" }}
+          >
+            Credibly
+          </span>
         </Link>
       </div>
     </div>

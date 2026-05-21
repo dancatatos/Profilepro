@@ -140,7 +140,7 @@ export const SOCIAL_PLATFORMS: SocialMeta[] = [
   { platform: "website", label: "Website", icon: "website", color: "#2e6bff", placeholder: "https://yoursite.com" },
 ];
 
-/* ---------------- Profile themes ---------------- */
+/* ---------------- Profile themes (legacy compat — new system is lib/themes.ts) ---------------- */
 
 export const THEMES: ProfileTheme[] = [
   {

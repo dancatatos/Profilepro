@@ -194,18 +194,65 @@ export interface ProfileHeader {
 }
 
 export type ThemeId =
+  /* ── Original dark themes ── */
   | "midnight"
   | "navy-glass"
   | "emerald-lux"
   | "gold-elite"
   | "pure-mono"
-  /* vibrant / coloured themes */
+  /* ── Vibrant / coloured ── */
   | "vivid-purple"
   | "rose-vibe"
   | "deep-red"
   | "sky-blue"
   | "warm-coral"
-  | "purple-dusk";
+  | "purple-dusk"
+  /* ── New free dark ── */
+  | "neon-dark"
+  | "carbon-pro"
+  | "tropical-pop"
+  | "aqua-energy"
+  | "candy-ui"
+  /* ── New free light ── */
+  | "minimal-white"
+  | "soft-gray-pro"
+  | "mint-fresh"
+  | "cream-beige"
+  | "pastel-dream"
+  | "lavender-mood"
+  | "peach-soft"
+  | "cloud-white"
+  /* ── Premium themes ── */
+  | "black-gold-empire"
+  | "platinum-elite"
+  | "royal-emerald"
+  | "diamond-glass"
+  | "executive-noir"
+  | "neon-cyber"
+  | "ai-matrix"
+  | "hologram-pro"
+  | "quantum-ui"
+  | "hyperflow"
+  | "influencer-studio"
+  | "viral-creator"
+  | "podcast-pro"
+  | "video-funnel"
+  | "streamer-mode"
+  | "modern-ceo"
+  | "startup-pitch"
+  | "consultant-elite"
+  | "financial-pro"
+  | "realtor-luxe"
+  | "soft-luxe"
+  | "tokyo-nights"
+  | "scandinavian"
+  | "monochrome-art"
+  | "velvet-rose"
+  | "sales-funnel-pro"
+  | "affiliate-machine"
+  | "webinar-launch"
+  | "mlm-authority"
+  | "ai-personal-brand";
 
 export interface ProfileTheme {
   id: ThemeId;
