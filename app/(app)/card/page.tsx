@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, MapPin, Share2 } from "lucide-react";
+import { Download, Mail, MapPin, Phone, Share2 } from "lucide-react";
 import { useProfileStore } from "@/store/profileStore";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -9,6 +9,7 @@ import { LogoMark } from "@/components/ui/Logo";
 import { PageHeader } from "@/components/common/PageHeader";
 import { QRBlock } from "@/components/qr/QRBlock";
 import { SocialIcon } from "@/components/ui/SocialIcon";
+import { PrintableCard } from "@/components/card/PrintableCard";
 import { APP } from "@/lib/constants";
 import { toast } from "@/store/uiStore";
 import type { SocialsSection } from "@/types";
@@ -30,6 +31,8 @@ export default function DigitalCardPage() {
       `FN:${header.displayName}`,
       header.company ? `ORG:${header.company}` : "",
       header.headline ? `TITLE:${header.headline}` : "",
+      header.phone ? `TEL;TYPE=CELL:${header.phone}` : "",
+      header.email ? `EMAIL;TYPE=INTERNET:${header.email}` : "",
       `URL:${url}`,
       "END:VCARD",
     ]
@@ -96,6 +99,23 @@ export default function DigitalCardPage() {
               </p>
             )}
 
+            {(header.phone || header.email) && (
+              <div className="mt-3 space-y-1.5">
+                {header.phone && (
+                  <p className="flex items-center gap-2 text-xs text-white/55">
+                    <Phone className="h-3.5 w-3.5 text-electric-400" />
+                    {header.phone}
+                  </p>
+                )}
+                {header.email && (
+                  <p className="flex items-center gap-2 text-xs text-white/55">
+                    <Mail className="h-3.5 w-3.5 text-electric-400" />
+                    {header.email}
+                  </p>
+                )}
+              </div>
+            )}
+
             {socials && socials.links.length > 0 && (
               <div className="mt-4 flex gap-2">
                 {socials.links.map((l) => (
@@ -135,6 +155,18 @@ export default function DigitalCardPage() {
           <Button onClick={share} leftIcon={<Share2 className="h-4 w-4" />}>
             Share card
           </Button>
+        </div>
+
+        {/* Printable business card */}
+        <div className="mt-8">
+          <h2 className="font-display text-sm font-semibold text-white">
+            Printable business card
+          </h2>
+          <p className="mb-3 mt-0.5 text-xs text-white/45">
+            A print-ready card for events, tarps and handouts. Add your phone
+            &amp; email in the Profile Builder header to fill it out.
+          </p>
+          <PrintableCard profile={profile} />
         </div>
       </div>
     </div>

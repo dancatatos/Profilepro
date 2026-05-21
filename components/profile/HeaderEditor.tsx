@@ -68,6 +68,22 @@ export function HeaderEditor() {
         />
       </div>
 
+      <div className="grid grid-cols-2 gap-3">
+        <Input
+          label="Phone"
+          value={h.phone || ""}
+          onChange={(e) => updateHeader({ phone: e.target.value })}
+          placeholder="+63 900 000 0000"
+        />
+        <Input
+          label="Email"
+          value={h.email || ""}
+          onChange={(e) => updateHeader({ email: e.target.value })}
+          placeholder="you@email.com"
+          hint="Used on your business card — not shown publicly."
+        />
+      </div>
+
       <div className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5">
         <div className="flex items-center gap-2.5">
           <BadgeCheck className="h-5 w-5 text-electric-400" />

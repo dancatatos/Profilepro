@@ -196,6 +196,10 @@ export interface ProfileHeader {
   coverUrl?: string;
   location?: string;
   company?: string;
+  /** Contact phone — used on the business card & saved contact, not the public profile. */
+  phone?: string;
+  /** Contact email — used on the business card & saved contact, not the public profile. */
+  email?: string;
   verified: boolean;
   socialProof: SocialProofStat[];
 }
