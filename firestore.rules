@@ -40,10 +40,11 @@ service cloud.firestore {
         || (isSignedIn() && resource.data.ownerId == request.auth.uid);
     }
 
-    // ---- Leads (anyone can submit, owner can read) ----
+    // ---- Leads (anyone can submit, owner can read, admin can list all) ----
     match /leads/{leadId} {
       allow create: if request.resource.data.keys().hasAll(['ownerId', 'profileId', 'name']);
-      allow read, list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow read: if isAdmin() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
+      allow list: if isAdmin() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
       allow update, delete: if isAdmin()
         || (isSignedIn() && resource.data.ownerId == request.auth.uid);
     }

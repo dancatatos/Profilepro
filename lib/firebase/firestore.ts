@@ -183,3 +183,40 @@ export async function recordAIGeneration(
     createdAt: Date.now(),
   });
 }
+
+/* ---------------- Admin helpers ---------------- */
+
+/** Fetch all user documents (admin only — enforced by Firestore rules). */
+export async function listAllUsers(): Promise<AccountUser[]> {
+  if (!isFirebaseConfigured) return [];
+  const snap = await getDocs(
+    query(collection(db, COL.users), orderBy("createdAt", "desc"), fsLimit(500)),
+  );
+  return snap.docs.map((d) => d.data() as AccountUser);
+}
+
+/** Manually set a user's plan (admin only). */
+export async function adminSetUserPlan(
+  uid: string,
+  plan: AccountUser["plan"],
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await updateDoc(doc(db, COL.users, uid), {
+    plan,
+    updatedAt: Date.now(),
+  });
+}
+
+/** Count all profiles (admin overview). */
+export async function countAllProfiles(): Promise<number> {
+  if (!isFirebaseConfigured) return 0;
+  const snap = await getDocs(collection(db, COL.profiles));
+  return snap.size;
+}
+
+/** Count all leads (admin overview). */
+export async function countAllLeads(): Promise<number> {
+  if (!isFirebaseConfigured) return 0;
+  const snap = await getDocs(collection(db, COL.leads));
+  return snap.size;
+}
