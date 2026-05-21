@@ -10,6 +10,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Modal } from "@/components/ui/Modal";
 import { Badge } from "@/components/ui/Badge";
 import { useAuth } from "@/hooks/useAuth";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { logout } from "@/lib/firebase/auth";
 import { toast } from "@/store/uiStore";
 import { cn } from "@/lib/utils";
@@ -28,7 +29,13 @@ export function TopBar() {
   const pathname = usePathname();
   const router = useRouter();
   const { account } = useAuth();
+  const { flags } = useFeatureFlags();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  /* The Template Marketplace tab is admin-gated and off by default. */
+  const navItems = DASHBOARD_NAV.filter(
+    (item) => item.key !== "templates" || flags.templateMarketplace,
+  );
 
   const publicUrl = `/${account?.username || "demo"}`;
 
@@ -77,7 +84,7 @@ export function TopBar() {
         title="Menu"
       >
         <div className="space-y-1 pb-2">
-          {DASHBOARD_NAV.map((item) => {
+          {navItems.map((item) => {
             const active =
               item.href === "/dashboard"
                 ? pathname === "/dashboard"

@@ -84,5 +84,11 @@ service cloud.firestore {
       allow read: if isOwner(subId) || isAdmin();
       allow write: if isAdmin();
     }
+
+    // ---- Settings / feature flags (public read, admin-managed) ----
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
   }
 }

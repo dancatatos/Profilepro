@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, type ReactNode } from "react";
 import {
   Users,
   UserRound,
@@ -8,6 +8,7 @@ import {
   CreditCard,
   RefreshCw,
   ArrowRight,
+  LayoutTemplate,
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
@@ -18,8 +19,12 @@ import {
   listAllUsers,
   countAllProfiles,
   countAllLeads,
+  getFeatureFlags,
+  setFeatureFlags,
 } from "@/lib/firebase/firestore";
-import type { AccountUser } from "@/types";
+import { useFeatureFlagsStore } from "@/store/featureFlagsStore";
+import { cn } from "@/lib/utils";
+import type { AccountUser, FeatureFlags } from "@/types";
 
 export default function AdminDashboardPage() {
   const { account } = useAuth();
@@ -27,6 +32,10 @@ export default function AdminDashboardPage() {
   const [profileCount, setProfileCount] = useState<number | null>(null);
   const [leadCount, setLeadCount] = useState<number | null>(null);
   const [fetching, setFetching] = useState(false);
+
+  const [flags, setFlags] = useState<FeatureFlags | null>(null);
+  const [savingFlag, setSavingFlag] = useState<string | null>(null);
+  const patchLocalFlags = useFeatureFlagsStore((s) => s.patchLocal);
 
   const loadData = useCallback(async () => {
     setFetching(true);
@@ -48,8 +57,28 @@ export default function AdminDashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (account?.role === "admin") loadData();
+    if (account?.role === "admin") {
+      loadData();
+      getFeatureFlags().then(setFlags);
+    }
   }, [account, loadData]);
+
+  const toggleFlag = async (key: keyof FeatureFlags, label: string) => {
+    if (!flags) return;
+    const next = !flags[key];
+    setFlags({ ...flags, [key]: next });
+    setSavingFlag(key);
+    try {
+      await setFeatureFlags({ [key]: next });
+      patchLocalFlags({ [key]: next });
+      toast.success(`${label} ${next ? "enabled" : "disabled"}.`);
+    } catch {
+      setFlags((f) => (f ? { ...f, [key]: !next } : f));
+      toast.error("Couldn't update — check Firestore rules are published.");
+    } finally {
+      setSavingFlag(null);
+    }
+  };
 
   const proCount = users.filter((u) => u.plan !== "free").length;
   const freeCount = users.filter((u) => u.plan === "free").length;
@@ -145,6 +174,88 @@ export default function AdminDashboardPage() {
           </p>
         </Card>
       </div>
+
+      {/* Feature flags */}
+      <div>
+        <h2 className="mb-3 font-display text-sm font-semibold text-white">
+          Feature Flags
+        </h2>
+        <Card className="divide-y divide-white/[0.06] p-0">
+          <FeatureFlagRow
+            icon={<LayoutTemplate className="h-5 w-5 text-electric-400" />}
+            title="Template Marketplace"
+            description="Shows the standalone Template Marketplace tab in the user sidebar. Keep this OFF until the marketplace is ready to launch."
+            enabled={flags?.templateMarketplace ?? false}
+            loading={!flags || savingFlag === "templateMarketplace"}
+            onToggle={() =>
+              toggleFlag("templateMarketplace", "Template Marketplace")
+            }
+          />
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+/* ── Feature flag toggle row ── */
+
+function FeatureFlagRow({
+  icon,
+  title,
+  description,
+  enabled,
+  loading,
+  onToggle,
+}: {
+  icon: ReactNode;
+  title: string;
+  description: string;
+  enabled: boolean;
+  loading: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div className="flex items-start gap-4 p-5">
+      <div className="mt-0.5 shrink-0">{icon}</div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <h3 className="font-display text-sm font-semibold text-white">
+            {title}
+          </h3>
+          <span
+            className={cn(
+              "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+              enabled
+                ? "bg-jade-500/15 text-jade-300"
+                : "bg-white/[0.06] text-white/40",
+            )}
+          >
+            {enabled ? "ON" : "OFF"}
+          </span>
+        </div>
+        <p className="mt-1 text-xs leading-relaxed text-white/45">
+          {description}
+        </p>
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={enabled}
+        aria-label={`Toggle ${title}`}
+        disabled={loading}
+        onClick={onToggle}
+        className={cn(
+          "relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50",
+          enabled ? "bg-jade-500" : "bg-white/15",
+        )}
+      >
+        <span
+          className={cn(
+            "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform",
+            enabled ? "translate-x-[1.375rem]" : "translate-x-0.5",
+          )}
+        />
+      </button>
     </div>
   );
 }

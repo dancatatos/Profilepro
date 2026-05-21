@@ -26,6 +26,13 @@ export interface AccountUser {
   licenseEmail?: string;
 }
 
+/* ---------------- Feature flags (admin-controlled) ---------------- */
+
+export interface FeatureFlags {
+  /** When true, the standalone Template Marketplace tab is visible to users. */
+  templateMarketplace: boolean;
+}
+
 /* ---------------- Profile sections ---------------- */
 
 export type SectionType =

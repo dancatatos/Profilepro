@@ -9,6 +9,7 @@ import { Icon } from "@/components/ui/Icon";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { useAuth } from "@/hooks/useAuth";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { cn } from "@/lib/utils";
 
 function isActive(pathname: string, href: string) {
@@ -19,6 +20,12 @@ function isActive(pathname: string, href: string) {
 export function Sidebar() {
   const pathname = usePathname();
   const { account } = useAuth();
+  const { flags } = useFeatureFlags();
+
+  /* The Template Marketplace tab is admin-gated and off by default. */
+  const navItems = DASHBOARD_NAV.filter(
+    (item) => item.key !== "templates" || flags.templateMarketplace,
+  );
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-white/[0.06] bg-ink-900/80 backdrop-blur-xl lg:flex">
@@ -29,7 +36,7 @@ export function Sidebar() {
       </div>
 
       <nav className="no-scrollbar flex-1 space-y-1 overflow-y-auto px-3 py-2">
-        {DASHBOARD_NAV.map((item) => {
+        {navItems.map((item) => {
           const active = isActive(pathname, item.href);
           return (
             <Link

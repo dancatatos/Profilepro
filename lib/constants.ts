@@ -30,7 +30,7 @@ export interface NavItem {
 export const DASHBOARD_NAV: NavItem[] = [
   { key: "home", label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" },
   { key: "profile", label: "My Profile", href: "/profile", icon: "UserRound" },
-  { key: "templates", label: "Templates", href: "/templates", icon: "LayoutTemplate" },
+  { key: "templates", label: "Template Marketplace", href: "/templates", icon: "LayoutTemplate" },
   { key: "qr", label: "QR Codes", href: "/qr", icon: "QrCode" },
   { key: "card", label: "Digital Card", href: "/card", icon: "CreditCard" },
   { key: "leads", label: "Leads", href: "/leads", icon: "Users" },

@@ -18,6 +18,7 @@ import type {
   AIGenerationRecord,
   AnalyticsEvent,
   AnalyticsSummary,
+  FeatureFlags,
   Lead,
   Profile,
 } from "@/types";
@@ -32,7 +33,39 @@ export const COL = {
   templates: "templates",
   media: "media_assets",
   subscriptions: "subscriptions",
+  settings: "settings",
 } as const;
+
+/* ---------------- Feature flags ---------------- */
+/* A single settings/featureFlags doc, admin-managed, publicly readable. */
+
+export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
+  templateMarketplace: false,
+};
+
+const FEATURE_FLAGS_DOC = "featureFlags";
+
+/** Read the platform feature flags. Falls back to defaults if unset. */
+export async function getFeatureFlags(): Promise<FeatureFlags> {
+  if (!isFirebaseConfigured) return { ...DEFAULT_FEATURE_FLAGS };
+  try {
+    const snap = await getDoc(doc(db, COL.settings, FEATURE_FLAGS_DOC));
+    if (!snap.exists()) return { ...DEFAULT_FEATURE_FLAGS };
+    return { ...DEFAULT_FEATURE_FLAGS, ...(snap.data() as Partial<FeatureFlags>) };
+  } catch {
+    return { ...DEFAULT_FEATURE_FLAGS };
+  }
+}
+
+/** Update one or more feature flags (admin only — enforced by rules). */
+export async function setFeatureFlags(
+  patch: Partial<FeatureFlags>,
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await setDoc(doc(db, COL.settings, FEATURE_FLAGS_DOC), patch, {
+    merge: true,
+  });
+}
 
 /* ---------------- Users ---------------- */
 

@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useProfileStore } from "@/store/profileStore";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { createSection } from "@/lib/defaults";
 import { THEMES } from "@/lib/constants";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { FullScreenLoader } from "@/components/ui/Spinner";
 import { toast } from "@/store/uiStore";
 import { cn } from "@/lib/utils";
 import type { SectionType, ThemeId } from "@/types";
@@ -435,8 +437,21 @@ export default function TemplatesPage() {
   const router = useRouter();
   const profile = useProfileStore((s) => s.profile);
   const setProfile = useProfileStore((s) => s.setProfile);
+  const { flags, loaded } = useFeatureFlags();
   const [activeCategory, setActiveCategory] = useState("All");
   const [applying, setApplying] = useState<string | null>(null);
+
+  /* Template Marketplace is admin-gated. While it's off, this route
+     is unreachable — bounce direct visits back to the dashboard. */
+  useEffect(() => {
+    if (loaded && !flags.templateMarketplace) {
+      router.replace("/dashboard");
+    }
+  }, [loaded, flags.templateMarketplace, router]);
+
+  if (!loaded || !flags.templateMarketplace) {
+    return <FullScreenLoader label="Loading…" />;
+  }
 
   const filtered =
     activeCategory === "All"
