@@ -9,8 +9,8 @@ import {
   useDragControls,
 } from "framer-motion";
 import { ChevronDown, GripVertical, Lock, Plus, Trash2 } from "lucide-react";
-import { useProfileStore } from "@/store/profileStore";
 import { useAuth } from "@/hooks/useAuth";
+import { useSections } from "./SectionsContext";
 import { SectionEditor } from "./SectionEditor";
 import { Switch } from "@/components/ui/Switch";
 import { Icon } from "@/components/ui/Icon";
@@ -31,9 +31,7 @@ function metaFor(type: ProfileSection["type"]): SectionMeta {
 function SectionCard({ section }: { section: ProfileSection }) {
   const controls = useDragControls();
   const [open, setOpen] = useState(false);
-  const toggleSection = useProfileStore((s) => s.toggleSection);
-  const removeSection = useProfileStore((s) => s.removeSection);
-  const updateSection = useProfileStore((s) => s.updateSection);
+  const { toggleSection, removeSection, updateSection } = useSections();
   const meta = metaFor(section.type);
 
   return (
@@ -124,12 +122,9 @@ function SectionCard({ section }: { section: ProfileSection }) {
 }
 
 export function SectionsManager() {
-  const profile = useProfileStore((s) => s.profile);
-  const setSections = useProfileStore((s) => s.setSections);
-  const addSection = useProfileStore((s) => s.addSection);
+  const { sections, setSections, addSection } = useSections();
   const { account } = useAuth();
   const [addOpen, setAddOpen] = useState(false);
-  if (!profile) return null;
 
   const isPro = account?.plan === "pro" || account?.plan === "team";
 
@@ -137,11 +132,11 @@ export function SectionsManager() {
     <div className="space-y-2.5">
       <Reorder.Group
         axis="y"
-        values={profile.sections}
+        values={sections}
         onReorder={setSections}
         className="space-y-2.5"
       >
-        {profile.sections.map((section) => (
+        {sections.map((section) => (
           <SectionCard key={section.id} section={section} />
         ))}
       </Reorder.Group>

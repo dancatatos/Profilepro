@@ -31,6 +31,7 @@ export interface NavItem {
 export const DASHBOARD_NAV: NavItem[] = [
   { key: "home", label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" },
   { key: "profile", label: "My Profile", href: "/profile", icon: "UserRound" },
+  { key: "funnels", label: "Funnels", href: "/funnels", icon: "Filter" },
   { key: "templates", label: "Template Marketplace", href: "/templates", icon: "LayoutTemplate" },
   { key: "shared-builds", label: "Shared Builds", href: "/shared-builds", icon: "Package" },
   { key: "qr", label: "QR Codes", href: "/qr", icon: "QrCode" },
@@ -344,6 +345,13 @@ export const QR_BG_DEFAULT = "#ffffff";
 
 /** How many shared builds each plan can keep saved in their locker. */
 export const TEMPLATE_LOCKER_SLOTS: Record<PlanId, number> = {
+  free: 0,
+  pro: 5,
+  team: 15,
+};
+
+/** How many funnels each plan can create. */
+export const FUNNEL_LIMITS: Record<PlanId, number> = {
   free: 0,
   pro: 5,
   team: 15,

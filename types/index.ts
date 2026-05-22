@@ -457,6 +457,46 @@ export interface SavedBuild {
   savedAt: number;
 }
 
+/* ---------------- Funnels ---------------- */
+
+/** A funnel step's role in the visitor flow. */
+export type FunnelStepType = "optin" | "content" | "offer" | "thankyou";
+
+/** The button that advances the visitor, or links out. */
+export interface FunnelCta {
+  label: string;
+  /** "next" moves to the following step; "url" opens an external link. */
+  action: "next" | "url";
+  url?: string;
+}
+
+/** One page in a funnel — a section-based page with an advance action. */
+export interface FunnelStep {
+  id: string;
+  type: FunnelStepType;
+  name: string;
+  /** Page content — reuses the profile section system. */
+  sections: ProfileSection[];
+  /** Advance button. Omitted on a final thank-you step. */
+  cta?: FunnelCta;
+}
+
+export type FunnelStatus = "draft" | "published";
+
+/** A mini sales funnel — an ordered sequence of steps. */
+export interface Funnel {
+  id: string;
+  ownerId: string;
+  name: string;
+  /** URL slug — the funnel lives at /{username}/{slug}. */
+  slug: string;
+  themeId: ThemeId;
+  status: FunnelStatus;
+  steps: FunnelStep[];
+  createdAt: number;
+  updatedAt: number;
+}
+
 /* ---------------- Subscription ---------------- */
 
 export type BillingPeriod = "monthly" | "annual";

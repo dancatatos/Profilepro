@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { HeaderEditor } from "@/components/profile/HeaderEditor";
 import { ThemePicker } from "@/components/profile/ThemePicker";
-import { SectionsManager } from "@/components/profile/SectionsManager";
+import { ProfileSectionsManager } from "@/components/profile/ProfileSectionsManager";
 import { PublishSettings } from "@/components/profile/PublishSettings";
 import { PhonePreview } from "@/components/profile/PhonePreview";
 import { AIGenerateModal } from "@/components/profile/AIGenerateModal";
@@ -131,7 +131,7 @@ export default function ProfileBuilderPage() {
                 subtitle="Drag to reorder · toggle to show/hide"
               />
               <div className="mt-4">
-                <SectionsManager />
+                <ProfileSectionsManager />
               </div>
             </Card>
 

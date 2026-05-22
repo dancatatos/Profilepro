@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus, Star, X } from "lucide-react";
-import { useProfileStore } from "@/store/profileStore";
+import { useSections } from "./SectionsContext";
 import { Select } from "@/components/ui/Select";
 import { Icon } from "@/components/ui/Icon";
 import { ImageUploadField } from "./ImageUploadField";
@@ -101,7 +101,7 @@ function IconPicker({
 /* ---------------- CTA ---------------- */
 
 function CtaEditor({ section }: { section: CtaSection }) {
-  const update = useProfileStore((s) => s.updateSection);
+  const { updateSection: update } = useSections();
   const patch = (buttons: CtaSection["buttons"]) =>
     update(section.id, { buttons });
   const edit = (id: string, p: Partial<CtaSection["buttons"][number]>) =>
@@ -183,7 +183,7 @@ function CtaEditor({ section }: { section: CtaSection }) {
 /* ---------------- Socials ---------------- */
 
 function SocialsEditor({ section }: { section: SocialsSection }) {
-  const update = useProfileStore((s) => s.updateSection);
+  const { updateSection: update } = useSections();
   const patch = (links: SocialsSection["links"]) =>
     update(section.id, { links });
 
@@ -240,7 +240,7 @@ function SocialsEditor({ section }: { section: SocialsSection }) {
 /* ---------------- About ---------------- */
 
 function AboutEditor({ section }: { section: AboutSection }) {
-  const update = useProfileStore((s) => s.updateSection);
+  const { updateSection: update } = useSections();
   return (
     <textarea
       value={section.body}
@@ -267,7 +267,7 @@ const RichTextEditor = dynamic(
 );
 
 function TextEditor({ section }: { section: TextSection }) {
-  const update = useProfileStore((s) => s.updateSection);
+  const { updateSection: update } = useSections();
   return (
     <RichTextEditor
       value={section.doc}
@@ -279,7 +279,7 @@ function TextEditor({ section }: { section: TextSection }) {
 /* ---------------- Credibility ---------------- */
 
 function CredibilityEditor({ section }: { section: CredibilitySection }) {
-  const update = useProfileStore((s) => s.updateSection);
+  const { updateSection: update } = useSections();
   const patch = (items: CredibilitySection["items"]) =>
     update(section.id, { items });
   const edit = (id: string, p: Partial<CredibilitySection["items"][number]>) =>
@@ -327,7 +327,7 @@ function CredibilityEditor({ section }: { section: CredibilitySection }) {
 /* ---------------- Testimonials ---------------- */
 
 function TestimonialsEditor({ section }: { section: TestimonialsSection }) {
-  const update = useProfileStore((s) => s.updateSection);
+  const { updateSection: update } = useSections();
   const patch = (testimonials: TestimonialsSection["testimonials"]) =>
     update(section.id, { testimonials });
   const edit = (
@@ -407,7 +407,7 @@ function TestimonialsEditor({ section }: { section: TestimonialsSection }) {
 /* ---------------- Products ---------------- */
 
 function ProductsEditor({ section }: { section: ProductsSection }) {
-  const update = useProfileStore((s) => s.updateSection);
+  const { updateSection: update } = useSections();
   const patch = (products: ProductsSection["products"]) =>
     update(section.id, { products });
   const edit = (id: string, p: Partial<ProductsSection["products"][number]>) =>
@@ -482,7 +482,7 @@ function ProductsEditor({ section }: { section: ProductsSection }) {
 /* ---------------- Video ---------------- */
 
 function VideoEditor({ section }: { section: VideoSection }) {
-  const update = useProfileStore((s) => s.updateSection);
+  const { updateSection: update } = useSections();
   const patch = (videos: VideoSection["videos"]) =>
     update(section.id, { videos });
   const edit = (id: string, p: Partial<VideoSection["videos"][number]>) =>
@@ -536,7 +536,7 @@ function VideoEditor({ section }: { section: VideoSection }) {
 /* ---------------- Gallery ---------------- */
 
 function GalleryEditor({ section }: { section: GallerySection }) {
-  const update = useProfileStore((s) => s.updateSection);
+  const { updateSection: update } = useSections();
   const patch = (images: GallerySection["images"]) =>
     update(section.id, { images });
 
@@ -575,7 +575,7 @@ function GalleryEditor({ section }: { section: GallerySection }) {
 /* ---------------- Lead capture ---------------- */
 
 function LeadCaptureEditor({ section }: { section: LeadCaptureSection }) {
-  const update = useProfileStore((s) => s.updateSection);
+  const { updateSection: update } = useSections();
   const fields: LeadFieldKey[] = ["name", "email", "phone"];
 
   const toggleField = (f: LeadFieldKey) => {
@@ -662,7 +662,7 @@ function LeadCaptureEditor({ section }: { section: LeadCaptureSection }) {
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function AppointmentEditor({ section }: { section: AppointmentSection }) {
-  const update = useProfileStore((s) => s.updateSection);
+  const { updateSection: update } = useSections();
 
   const toggleDay = (d: number) => {
     const next = section.availableDays.includes(d)

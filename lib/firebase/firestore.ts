@@ -23,6 +23,7 @@ import type {
   Booking,
   BookingAnswer,
   FeatureFlags,
+  Funnel,
   Lead,
   Plan,
   Profile,
@@ -44,6 +45,7 @@ export const COL = {
   bookings: "bookings",
   bookingSlots: "bookingSlots",
   sharedBuilds: "sharedBuilds",
+  funnels: "funnels",
 } as const;
 
 /** Subcollection name for a user's saved-build locker. */
@@ -543,4 +545,65 @@ export async function deleteSavedBuild(
 ): Promise<void> {
   if (!isFirebaseConfigured) return;
   await deleteDoc(doc(db, COL.users, uid, SAVED_BUILDS_SUB, savedId));
+}
+
+/* ---------------- Funnels ---------------- */
+/* Mini sales funnels — public-readable like profiles, owner-writable. */
+
+/** All funnels owned by a user, newest first. */
+export async function listFunnels(ownerId: string): Promise<Funnel[]> {
+  if (!isFirebaseConfigured) return [];
+  const snap = await getDocs(
+    query(
+      collection(db, COL.funnels),
+      where("ownerId", "==", ownerId),
+      fsLimit(50),
+    ),
+  );
+  return snap.docs
+    .map((d) => ({ ...(d.data() as Funnel), id: d.id }))
+    .sort((a, b) => b.createdAt - a.createdAt);
+}
+
+/** Fetch one funnel by its id. */
+export async function getFunnelById(id: string): Promise<Funnel | null> {
+  if (!isFirebaseConfigured) return null;
+  const snap = await getDoc(doc(db, COL.funnels, id));
+  return snap.exists() ? { ...(snap.data() as Funnel), id: snap.id } : null;
+}
+
+/** Resolve a funnel by owner + slug — used by the public funnel route. */
+export async function getFunnelBySlug(
+  ownerId: string,
+  slug: string,
+): Promise<Funnel | null> {
+  if (!isFirebaseConfigured) return null;
+  const snap = await getDocs(
+    query(
+      collection(db, COL.funnels),
+      where("ownerId", "==", ownerId),
+      where("slug", "==", slug.toLowerCase()),
+      fsLimit(1),
+    ),
+  );
+  return snap.empty
+    ? null
+    : { ...(snap.docs[0].data() as Funnel), id: snap.docs[0].id };
+}
+
+/** Create or update a funnel (owner-only — enforced by rules). */
+export async function saveFunnel(funnel: Funnel): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await setDoc(
+    doc(db, COL.funnels, funnel.id),
+    /* JSON round-trip drops any undefined values so the write never fails. */
+    JSON.parse(JSON.stringify({ ...funnel, updatedAt: Date.now() })),
+    { merge: true },
+  );
+}
+
+/** Delete a funnel. */
+export async function deleteFunnel(id: string): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await deleteDoc(doc(db, COL.funnels, id));
 }

@@ -84,6 +84,15 @@ service cloud.firestore {
         || (isSignedIn() && resource.data.ownerId == request.auth.uid);
     }
 
+    // ---- Funnels (public-readable mini sales funnels) ----
+    match /funnels/{funnelId} {
+      allow read, list: if true;
+      allow create: if isSignedIn()
+        && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isAdmin()
+        || (isSignedIn() && resource.data.ownerId == request.auth.uid);
+    }
+
     // ---- Media assets ----
     match /media_assets/{assetId} {
       allow read: if true;
