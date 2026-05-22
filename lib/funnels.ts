@@ -5,6 +5,7 @@
    ============================================================ */
 
 import { createSection } from "@/lib/defaults";
+import { snapshotSections } from "@/lib/sharedBuilds";
 import { slugify, uid } from "@/lib/utils";
 import type {
   Funnel,
@@ -13,6 +14,8 @@ import type {
   GeneratedFunnelContent,
   ProfileSection,
   RichTextNode,
+  SharedFunnel,
+  SharedFunnelContent,
   TextSection,
 } from "@/types";
 
@@ -224,6 +227,61 @@ export function funnelFromGenerated(
     steps:
       steps.length > 0
         ? steps
+        : [createFunnelStep("optin"), createFunnelStep("thankyou")],
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+/* ---------------- Funnel sharing ---------------- */
+
+/** Deep-copy funnel steps with fresh ids and every link/URL cleared. */
+export function snapshotFunnelSteps(steps: FunnelStep[]): FunnelStep[] {
+  return steps.map((s) => {
+    const step: FunnelStep = {
+      id: uid("fstep"),
+      type: s.type,
+      name: s.name,
+      sections: snapshotSections(s.sections),
+    };
+    if (s.cta) {
+      step.cta = {
+        label: s.cta.label,
+        action: s.cta.action,
+        ...(s.cta.action === "url" ? { url: "" } : {}),
+      };
+    }
+    return step;
+  });
+}
+
+/** A portable, link-free snapshot of a funnel, ready to publish. */
+export function funnelSnapshot(funnel: Funnel): SharedFunnelContent {
+  return JSON.parse(
+    JSON.stringify({
+      themeId: funnel.themeId,
+      steps: snapshotFunnelSteps(funnel.steps),
+    }),
+  ) as SharedFunnelContent;
+}
+
+/** Build a fresh funnel for a recipient from a shared funnel. */
+export function funnelFromShared(
+  ownerId: string,
+  shared: SharedFunnel,
+): Funnel {
+  const now = Date.now();
+  const name = shared.name.trim() || "Shared Funnel";
+  return {
+    id: uid("funnel"),
+    ownerId,
+    name,
+    slug: slugify(name) || `funnel-${now.toString(36)}`,
+    themeId: shared.funnel.themeId,
+    status: "draft",
+    steps:
+      shared.funnel.steps.length > 0
+        ? snapshotFunnelSteps(shared.funnel.steps)
         : [createFunnelStep("optin"), createFunnelStep("thankyou")],
     createdAt: now,
     updatedAt: now,

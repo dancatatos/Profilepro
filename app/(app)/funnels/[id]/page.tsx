@@ -10,6 +10,7 @@ import {
   Plus,
   RefreshCw,
   Save,
+  Send,
   Trash2,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,6 +21,7 @@ import { Switch } from "@/components/ui/Switch";
 import { Modal } from "@/components/ui/Modal";
 import { FullScreenLoader } from "@/components/ui/Spinner";
 import { SectionsManager } from "@/components/profile/SectionsManager";
+import { ShareFunnelModal } from "@/components/funnels/ShareFunnelModal";
 import {
   SectionsProvider,
   type SectionsApi,
@@ -129,6 +131,7 @@ export default function FunnelBuilderPage() {
   const [addStepOpen, setAddStepOpen] = useState(false);
   const [analytics, setAnalytics] = useState<Record<number, number>>({});
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -314,6 +317,14 @@ export default function FunnelBuilderPage() {
             {dirty ? "Unsaved changes" : "All changes saved"}
           </p>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShareOpen(true)}
+          leftIcon={<Send className="h-4 w-4" />}
+        >
+          Share
+        </Button>
         <Button
           size="sm"
           onClick={save}
@@ -564,6 +575,12 @@ export default function FunnelBuilderPage() {
           ))}
         </div>
       </Modal>
+
+      <ShareFunnelModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        funnel={funnel}
+      />
     </div>
   );
 }

@@ -29,6 +29,7 @@ import type {
   Profile,
   SavedBuild,
   SharedBuild,
+  SharedFunnel,
 } from "@/types";
 
 /* Firestore collection names — kept in one place. */
@@ -46,6 +47,7 @@ export const COL = {
   bookingSlots: "bookingSlots",
   sharedBuilds: "sharedBuilds",
   funnels: "funnels",
+  sharedFunnels: "sharedFunnels",
 } as const;
 
 /** Subcollection name for a user's saved-build locker. */
@@ -635,4 +637,81 @@ export async function getFunnelAnalytics(
     counts[idx] = (counts[idx] ?? 0) + 1;
   });
   return counts;
+}
+
+/* ---------------- Shared funnels ---------------- */
+/* A funnel published as a share-coded, cloneable template. */
+
+/** Publish a funnel snapshot and return the stored record. */
+export async function publishSharedFunnel(
+  input: Omit<SharedFunnel, "id" | "createdAt" | "updatedAt">,
+): Promise<SharedFunnel> {
+  if (!isFirebaseConfigured) {
+    throw new Error("Sharing is unavailable in demo mode.");
+  }
+  const ref = doc(collection(db, COL.sharedFunnels));
+  const now = Date.now();
+  const record: SharedFunnel = {
+    ...input,
+    id: ref.id,
+    createdAt: now,
+    updatedAt: now,
+  };
+  await setDoc(ref, record);
+  return record;
+}
+
+/** All funnels the given user has published. */
+export async function listMySharedFunnels(
+  ownerId: string,
+): Promise<SharedFunnel[]> {
+  if (!isFirebaseConfigured) return [];
+  const snap = await getDocs(
+    query(
+      collection(db, COL.sharedFunnels),
+      where("ownerId", "==", ownerId),
+      fsLimit(50),
+    ),
+  );
+  return snap.docs
+    .map((d) => ({ ...(d.data() as SharedFunnel), id: d.id }))
+    .sort((a, b) => b.createdAt - a.createdAt);
+}
+
+/** Enable/disable a published funnel's share code. */
+export async function setSharedFunnelRevoked(
+  id: string,
+  revoked: boolean,
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await updateDoc(doc(db, COL.sharedFunnels, id), {
+    revoked,
+    updatedAt: Date.now(),
+  });
+}
+
+/** Permanently remove a published funnel. */
+export async function deleteSharedFunnel(id: string): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await deleteDoc(doc(db, COL.sharedFunnels, id));
+}
+
+/** Resolve a share code to its funnel. Null when missing or revoked. */
+export async function lookupSharedFunnelByCode(
+  code: string,
+): Promise<SharedFunnel | null> {
+  if (!isFirebaseConfigured) return null;
+  const snap = await getDocs(
+    query(
+      collection(db, COL.sharedFunnels),
+      where("shareCode", "==", code.trim().toUpperCase()),
+      fsLimit(1),
+    ),
+  );
+  if (snap.empty) return null;
+  const found = {
+    ...(snap.docs[0].data() as SharedFunnel),
+    id: snap.docs[0].id,
+  };
+  return found.revoked ? null : found;
 }

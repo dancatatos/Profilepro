@@ -3,7 +3,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Crown, Filter, Plus, RefreshCw, Sparkles, Trash2 } from "lucide-react";
+import {
+  Crown,
+  Filter,
+  Plus,
+  RefreshCw,
+  Sparkles,
+  Ticket,
+  Trash2,
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card } from "@/components/ui/Card";
@@ -12,6 +20,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Badge } from "@/components/ui/Badge";
 import { FullScreenLoader } from "@/components/ui/Spinner";
 import { AIFunnelModal } from "@/components/funnels/AIFunnelModal";
+import { UseFunnelCodeModal } from "@/components/funnels/UseFunnelCodeModal";
 import {
   deleteFunnel,
   listFunnels,
@@ -39,6 +48,7 @@ export default function FunnelsPage() {
   const [creating, setCreating] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [aiOpen, setAiOpen] = useState(false);
+  const [useCodeOpen, setUseCodeOpen] = useState(false);
 
   const load = useCallback(async () => {
     if (!account || !isPaid) return;
@@ -167,6 +177,14 @@ export default function FunnelsPage() {
             New funnel
           </Button>
           <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setUseCodeOpen(true)}
+            leftIcon={<Ticket className="h-3.5 w-3.5" />}
+          >
+            Use a code
+          </Button>
+          <Button
             size="sm"
             onClick={() => {
               if (atLimit) {
@@ -287,6 +305,14 @@ export default function FunnelsPage() {
         open={aiOpen}
         onClose={() => setAiOpen(false)}
         takenSlugs={funnels.map((f) => f.slug)}
+      />
+
+      <UseFunnelCodeModal
+        open={useCodeOpen}
+        onClose={() => setUseCodeOpen(false)}
+        takenSlugs={funnels.map((f) => f.slug)}
+        atLimit={atLimit}
+        limit={limit}
       />
     </div>
   );

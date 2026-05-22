@@ -508,6 +508,26 @@ export interface Funnel {
   updatedAt: number;
 }
 
+/** The portable part of a funnel — theme + steps, links and ids stripped. */
+export interface SharedFunnelContent {
+  themeId: ThemeId;
+  steps: FunnelStep[];
+}
+
+/** A funnel published as a share-coded, cloneable template. */
+export interface SharedFunnel {
+  id: string;
+  ownerId: string;
+  ownerName: string;
+  name: string;
+  shareCode: string;
+  funnel: SharedFunnelContent;
+  /** When true the code no longer resolves. */
+  revoked: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
 /* ---------------- Subscription ---------------- */
 
 export type BillingPeriod = "monthly" | "annual";
