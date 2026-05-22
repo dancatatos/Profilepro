@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, Save, Share2, Sparkles } from "lucide-react";
+import { Eye, Package, Save, Share2, Sparkles } from "lucide-react";
 import { useProfileStore } from "@/store/profileStore";
 import { saveProfile } from "@/lib/firebase/firestore";
 import { isFirebaseConfigured } from "@/lib/firebase/config";
@@ -14,6 +14,7 @@ import { SectionsManager } from "@/components/profile/SectionsManager";
 import { PublishSettings } from "@/components/profile/PublishSettings";
 import { PhonePreview } from "@/components/profile/PhonePreview";
 import { AIGenerateModal } from "@/components/profile/AIGenerateModal";
+import { PublishBuildModal } from "@/components/profile/PublishBuildModal";
 import { ShareModal } from "@/components/share/ShareModal";
 import { FullScreenLoader } from "@/components/ui/Spinner";
 import { APP } from "@/lib/constants";
@@ -28,6 +29,7 @@ export default function ProfileBuilderPage() {
   const [aiOpen, setAiOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [publishBuildOpen, setPublishBuildOpen] = useState(false);
 
   if (!profile) return <FullScreenLoader label="Loading your profile…" />;
 
@@ -76,6 +78,14 @@ export default function ProfileBuilderPage() {
           className="lg:hidden"
         >
           Preview
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setPublishBuildOpen(true)}
+          leftIcon={<Package className="h-4 w-4" />}
+        >
+          Publish Build
         </Button>
         <Button
           variant="outline"
@@ -155,6 +165,10 @@ export default function ProfileBuilderPage() {
 
       {/* ── Modals ── */}
       <AIGenerateModal open={aiOpen} onClose={() => setAiOpen(false)} />
+      <PublishBuildModal
+        open={publishBuildOpen}
+        onClose={() => setPublishBuildOpen(false)}
+      />
       <ShareModal
         open={shareOpen}
         onClose={() => setShareOpen(false)}

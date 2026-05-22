@@ -400,6 +400,43 @@ export interface Template {
   isTeamTemplate?: boolean;
 }
 
+/* ---------------- Shared builds ---------------- */
+
+/** The portable part of a profile build — copy + sections, no identity. */
+export interface SharedBuildContent {
+  headline: string;
+  bio: string;
+  sections: ProfileSection[];
+}
+
+/** A profile build published as a share-coded, reusable template. */
+export interface SharedBuild {
+  id: string;
+  ownerId: string;
+  ownerName: string;
+  name: string;
+  shareCode: string;
+  themeId: ThemeId;
+  build: SharedBuildContent;
+  /** When true the code no longer resolves — publisher disabled it. */
+  revoked: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+/** A shared build saved into a user's locker (the Shared Builds page). */
+export interface SavedBuild {
+  id: string;
+  /** id of the SharedBuild this snapshot came from */
+  sourceId: string;
+  shareCode: string;
+  name: string;
+  ownerName: string;
+  themeId: ThemeId;
+  build: SharedBuildContent;
+  savedAt: number;
+}
+
 /* ---------------- Subscription ---------------- */
 
 export type BillingPeriod = "monthly" | "annual";

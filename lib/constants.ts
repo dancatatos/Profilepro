@@ -5,6 +5,7 @@
 import type {
   AICopyMode,
   Plan,
+  PlanId,
   ProfileTheme,
   SectionType,
   SocialPlatform,
@@ -31,6 +32,7 @@ export const DASHBOARD_NAV: NavItem[] = [
   { key: "home", label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" },
   { key: "profile", label: "My Profile", href: "/profile", icon: "UserRound" },
   { key: "templates", label: "Template Marketplace", href: "/templates", icon: "LayoutTemplate" },
+  { key: "shared-builds", label: "Shared Builds", href: "/shared-builds", icon: "Package" },
   { key: "qr", label: "QR Codes", href: "/qr", icon: "QrCode" },
   { key: "card", label: "Digital Card", href: "/card", icon: "CreditCard" },
   { key: "appointments", label: "Appointments", href: "/appointments", icon: "CalendarDays" },
@@ -295,6 +297,7 @@ export const PLANS: Plan[] = [
       { label: "AI profile audit & scoring", included: true },
       { label: "Analytics dashboard", included: true },
       { label: "Branded HD QR export", included: true },
+      { label: "Shared build templates", included: true },
       { label: "Remove Credibly branding", included: true },
     ],
   },
@@ -330,3 +333,12 @@ export const ONBOARDING_QUESTIONS = [
 
 export const QR_FG_DEFAULT = "#0a0a0c";
 export const QR_BG_DEFAULT = "#ffffff";
+
+/* ---------------- Shared build locker ---------------- */
+
+/** How many shared builds each plan can keep saved in their locker. */
+export const TEMPLATE_LOCKER_SLOTS: Record<PlanId, number> = {
+  free: 0,
+  pro: 5,
+  team: 15,
+};

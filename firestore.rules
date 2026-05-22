@@ -29,6 +29,11 @@ service cloud.firestore {
       allow create: if isOwner(uid);
       allow update: if isOwner(uid) || isAdmin();
       allow delete: if isAdmin();
+
+      // Saved-build locker — strictly owner-only.
+      match /savedBuilds/{buildId} {
+        allow read, write: if isOwner(uid);
+      }
     }
 
     // ---- Profiles (public read) ----
@@ -68,6 +73,15 @@ service cloud.firestore {
     match /templates/{templateId} {
       allow read: if true;
       allow write: if isAdmin();
+    }
+
+    // ---- Shared builds (published profile templates, resolved by code) ----
+    match /sharedBuilds/{buildId} {
+      allow read, list: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isAdmin()
+        || (isSignedIn() && resource.data.ownerId == request.auth.uid);
     }
 
     // ---- Media assets ----

@@ -26,6 +26,8 @@ import type {
   Lead,
   Plan,
   Profile,
+  SavedBuild,
+  SharedBuild,
 } from "@/types";
 
 /* Firestore collection names — kept in one place. */
@@ -41,7 +43,11 @@ export const COL = {
   settings: "settings",
   bookings: "bookings",
   bookingSlots: "bookingSlots",
+  sharedBuilds: "sharedBuilds",
 } as const;
+
+/** Subcollection name for a user's saved-build locker. */
+const SAVED_BUILDS_SUB = "savedBuilds";
 
 /* ---------------- Feature flags ---------------- */
 /* A single settings/featureFlags doc, admin-managed, publicly readable. */
@@ -419,4 +425,122 @@ export async function countAllLeads(): Promise<number> {
   if (!isFirebaseConfigured) return 0;
   const snap = await getDocs(collection(db, COL.leads));
   return snap.size;
+}
+
+/* ---------------- Shared builds ---------------- */
+/* A published build is a share-coded, identity-free profile template. */
+
+/** Publish a build snapshot and return the stored record (with its id). */
+export async function publishSharedBuild(
+  input: Omit<SharedBuild, "id" | "createdAt" | "updatedAt">,
+): Promise<SharedBuild> {
+  if (!isFirebaseConfigured) {
+    throw new Error("Sharing is unavailable in demo mode.");
+  }
+  const ref = doc(collection(db, COL.sharedBuilds));
+  const now = Date.now();
+  const record: SharedBuild = {
+    ...input,
+    id: ref.id,
+    createdAt: now,
+    updatedAt: now,
+  };
+  await setDoc(ref, record);
+  return record;
+}
+
+/** All builds the given user has published. */
+export async function listMySharedBuilds(
+  ownerId: string,
+): Promise<SharedBuild[]> {
+  if (!isFirebaseConfigured) return [];
+  const snap = await getDocs(
+    query(
+      collection(db, COL.sharedBuilds),
+      where("ownerId", "==", ownerId),
+      fsLimit(50),
+    ),
+  );
+  return snap.docs
+    .map((d) => ({ ...(d.data() as SharedBuild), id: d.id }))
+    .sort((a, b) => b.createdAt - a.createdAt);
+}
+
+/** Enable/disable a published build's share code. */
+export async function setSharedBuildRevoked(
+  id: string,
+  revoked: boolean,
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await updateDoc(doc(db, COL.sharedBuilds, id), {
+    revoked,
+    updatedAt: Date.now(),
+  });
+}
+
+/** Permanently remove a published build (owner only — enforced by rules). */
+export async function deleteSharedBuild(id: string): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await deleteDoc(doc(db, COL.sharedBuilds, id));
+}
+
+/** Resolve a share code to its build. Returns null when missing or revoked. */
+export async function lookupSharedBuildByCode(
+  code: string,
+): Promise<SharedBuild | null> {
+  if (!isFirebaseConfigured) return null;
+  const snap = await getDocs(
+    query(
+      collection(db, COL.sharedBuilds),
+      where("shareCode", "==", code.trim().toUpperCase()),
+      fsLimit(1),
+    ),
+  );
+  if (snap.empty) return null;
+  const found = { ...(snap.docs[0].data() as SharedBuild), id: snap.docs[0].id };
+  return found.revoked ? null : found;
+}
+
+/* ---------------- Saved-build locker ---------------- */
+/* Owner-only subcollection under the user doc. */
+
+/** All builds the user has saved into their locker, newest first. */
+export async function listSavedBuilds(uid: string): Promise<SavedBuild[]> {
+  if (!isFirebaseConfigured) return [];
+  const snap = await getDocs(
+    query(collection(db, COL.users, uid, SAVED_BUILDS_SUB), fsLimit(50)),
+  );
+  return snap.docs
+    .map((d) => ({ ...(d.data() as SavedBuild), id: d.id }))
+    .sort((a, b) => b.savedAt - a.savedAt);
+}
+
+/**
+ * Save a build into the locker. When `replaceId` is given, that slot is
+ * removed first — used when the locker is already at its plan limit.
+ */
+export async function saveBuildToLocker(
+  uid: string,
+  build: Omit<SavedBuild, "id" | "savedAt">,
+  replaceId?: string,
+): Promise<void> {
+  if (!isFirebaseConfigured) {
+    throw new Error("Saving is unavailable in demo mode.");
+  }
+  if (replaceId) {
+    await deleteDoc(doc(db, COL.users, uid, SAVED_BUILDS_SUB, replaceId));
+  }
+  await addDoc(collection(db, COL.users, uid, SAVED_BUILDS_SUB), {
+    ...build,
+    savedAt: Date.now(),
+  });
+}
+
+/** Remove one saved build from the locker. */
+export async function deleteSavedBuild(
+  uid: string,
+  savedId: string,
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await deleteDoc(doc(db, COL.users, uid, SAVED_BUILDS_SUB, savedId));
 }
