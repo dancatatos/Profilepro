@@ -6,6 +6,7 @@ import { Download, FileText, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { CardShareModal } from "./CardShareModal";
 import { APP, QR_FG_DEFAULT } from "@/lib/constants";
+import type { CardTemplate } from "@/lib/cardTemplates";
 import { toast } from "@/store/uiStore";
 import type { Profile } from "@/types";
 
@@ -37,7 +38,15 @@ function initialsOf(name: string): string {
   );
 }
 
-/** Largest font size (from a `{S}` template) at which `text` fits `maxW`. */
+function setFont(
+  ctx: CanvasRenderingContext2D,
+  tpl: string,
+  size: number,
+): void {
+  ctx.font = tpl.replace("{S}", String(size));
+}
+
+/** Shrink a `{S}` font template until `text` fits `maxW` (down to `minS`). */
 function fitFont(
   ctx: CanvasRenderingContext2D,
   text: string,
@@ -48,10 +57,67 @@ function fitFont(
 ): void {
   let s = maxS;
   for (; s > minS; s--) {
-    ctx.font = tpl.replace("{S}", String(s));
+    setFont(ctx, tpl, s);
     if (ctx.measureText(text).width <= maxW) break;
   }
-  ctx.font = tpl.replace("{S}", String(s));
+  setFont(ctx, tpl, s);
+}
+
+/** Hard-trim `text` to `maxW`, appending an ellipsis when clipped. */
+function truncateToWidth(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxW: number,
+): string {
+  if (ctx.measureText(text).width <= maxW) return text;
+  let t = text;
+  while (t.length > 1 && ctx.measureText(`${t}…`).width > maxW) {
+    t = t.slice(0, -1);
+  }
+  return `${t.replace(/\s+$/, "")}…`;
+}
+
+/** Word-wrap `text` to lines no wider than `maxW` (current ctx.font). */
+function wrapText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxW: number,
+): string[] {
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let cur = "";
+  for (const w of words) {
+    const test = cur ? `${cur} ${w}` : w;
+    if (cur && ctx.measureText(test).width > maxW) {
+      lines.push(cur);
+      cur = w;
+    } else {
+      cur = test;
+    }
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+/**
+ * Word-wrap `text` at a fixed (readable) font size into at most `maxLines`
+ * lines. The headline keeps its size — only the line count grows.
+ */
+function wrapFixed(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  font: string,
+  maxW: number,
+  maxLines: number,
+): string[] {
+  ctx.font = font;
+  let lines = wrapText(ctx, text, maxW);
+  if (lines.length > maxLines) {
+    const head = lines.slice(0, maxLines - 1);
+    head.push(lines.slice(maxLines - 1).join(" "));
+    lines = head;
+  }
+  return lines.map((l) => truncateToWidth(ctx, l, maxW));
 }
 
 function roundRectPath(
@@ -100,6 +166,7 @@ async function drawCard(
   qrCanvas: HTMLCanvasElement | null,
   profile: Profile,
   websiteUrl: string,
+  theme: CardTemplate,
 ): Promise<void> {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
@@ -112,10 +179,12 @@ async function drawCard(
     getComputedStyle(document.body).fontFamily || "system-ui, sans-serif";
   const h = profile.header;
 
+  ctx.clearRect(0, 0, CARD_W, CARD_H);
+
   /* Background */
   const bg = ctx.createLinearGradient(0, 0, 0, CARD_H);
-  bg.addColorStop(0, "#13131f");
-  bg.addColorStop(1, "#0a0a10");
+  bg.addColorStop(0, theme.bg[0]);
+  bg.addColorStop(1, theme.bg[1]);
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, CARD_W, CARD_H);
 
@@ -128,8 +197,8 @@ async function drawCard(
     70,
     440,
   );
-  glow.addColorStop(0, "rgba(46,107,255,0.22)");
-  glow.addColorStop(1, "rgba(46,107,255,0)");
+  glow.addColorStop(0, theme.glow[0]);
+  glow.addColorStop(1, theme.glow[1]);
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, CARD_W, CARD_H);
 
@@ -152,12 +221,12 @@ async function drawCard(
   if (avatar) {
     drawCover(ctx, avatar, avX, avY, avSize);
   } else {
-    ctx.fillStyle = "#1b2540";
+    ctx.fillStyle = theme.avatarBg;
     ctx.fillRect(avX, avY, avSize, avSize);
   }
   ctx.restore();
   if (!avatar) {
-    ctx.fillStyle = "#8fb0ff";
+    ctx.fillStyle = theme.avatarText;
     ctx.font = `600 44px ${fam}`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -169,34 +238,50 @@ async function drawCard(
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
   }
-  ctx.strokeStyle = "rgba(255,255,255,0.16)";
+  ctx.strokeStyle = theme.avatarRing;
   ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.arc(avX + avSize / 2, avY + avSize / 2, avSize / 2, 0, Math.PI * 2);
   ctx.stroke();
 
-  /* Identity block */
+  /* Identity block — name, then a wrapped headline, then company.
+     The headline word-wraps to a 2nd line instead of being clipped. */
   const textX = avX + avSize + 32;
   const textMaxW = 660 - textX;
   ctx.textBaseline = "alphabetic";
+  ctx.textAlign = "left";
 
-  ctx.fillStyle = "#ffffff";
-  fitFont(ctx, h.displayName, `700 {S}px ${fam}`, 46, 28, textMaxW);
-  ctx.fillText(h.displayName, textX, avY + 52);
+  const nameY = avY + 50;
+  fitFont(ctx, h.displayName, `700 {S}px ${fam}`, 44, 28, textMaxW);
+  ctx.fillStyle = theme.nameColor;
+  ctx.fillText(truncateToWidth(ctx, h.displayName, textMaxW), textX, nameY);
 
-  if (h.headline) {
-    ctx.fillStyle = "#5b8cff";
-    fitFont(ctx, h.headline, `600 {S}px ${fam}`, 25, 16, textMaxW);
-    ctx.fillText(h.headline, textX, avY + 90);
+  let blockY = nameY;
+  if (h.headline && h.headline.trim().length > 0) {
+    const lines = wrapFixed(
+      ctx,
+      h.headline,
+      `600 24px ${fam}`,
+      textMaxW,
+      2,
+    );
+    ctx.fillStyle = theme.headlineColor;
+    let hy = nameY + 40;
+    for (const ln of lines) {
+      ctx.fillText(ln, textX, hy);
+      blockY = hy;
+      hy += 32;
+    }
   }
   if (h.company) {
-    ctx.fillStyle = "#9aa0ad";
     fitFont(ctx, h.company, `400 {S}px ${fam}`, 22, 15, textMaxW);
-    ctx.fillText(h.company, textX, avY + 122);
+    ctx.fillStyle = theme.companyColor;
+    const companyY = blockY === nameY ? nameY + 38 : blockY + 34;
+    ctx.fillText(truncateToWidth(ctx, h.company, textMaxW), textX, companyY);
   }
 
   /* Divider */
-  ctx.strokeStyle = "rgba(255,255,255,0.10)";
+  ctx.strokeStyle = theme.divider;
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(PAD, 256);
@@ -209,29 +294,40 @@ async function drawCard(
     .filter((v) => v.length > 0);
   let cy = 318;
   for (const val of contacts) {
-    ctx.fillStyle = "#5b8cff";
+    ctx.fillStyle = theme.accent;
     ctx.beginPath();
     ctx.arc(PAD + 5, cy - 8, 5, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "#e8eaf0";
+    ctx.fillStyle = theme.contactColor;
     fitFont(ctx, val, `400 {S}px ${fam}`, 25, 16, 530);
-    ctx.fillText(val, PAD + 28, cy);
+    ctx.fillText(truncateToWidth(ctx, val, 530), PAD + 28, cy);
     cy += 50;
   }
 
-  /* QR panel */
+  /* QR panel — always a white panel with a dark code for reliable scanning. */
   const qW = 296;
   const qX = CARD_W - PAD - qW;
   const qY = 150;
+  ctx.save();
+  if (theme.scheme === "light") {
+    ctx.shadowColor = "rgba(0,0,0,0.14)";
+    ctx.shadowBlur = 26;
+    ctx.shadowOffsetY = 8;
+  }
   roundRectPath(ctx, qX, qY, qW, qW, 26);
   ctx.fillStyle = "#ffffff";
   ctx.fill();
+  ctx.restore();
+  roundRectPath(ctx, qX, qY, qW, qW, 26);
+  ctx.strokeStyle = "rgba(0,0,0,0.10)";
+  ctx.lineWidth = 2;
+  ctx.stroke();
   if (qrCanvas) {
     const inner = 248;
     const off = (qW - inner) / 2;
     ctx.drawImage(qrCanvas, qX + off, qY + off, inner, inner);
   }
-  ctx.fillStyle = "#8b8f9c";
+  ctx.fillStyle = theme.scanLabel;
   ctx.font = `600 17px ${fam}`;
   ctx.textAlign = "center";
   ctx.fillText("SCAN TO VIEW FULL PROFILE", qX + qW / 2, qY + qW + 40);
@@ -240,7 +336,13 @@ async function drawCard(
 
 /* ── component ── */
 
-export function PrintableCard({ profile }: { profile: Profile }) {
+export function PrintableCard({
+  profile,
+  template,
+}: {
+  profile: Profile;
+  template: CardTemplate;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const qrWrapRef = useRef<HTMLDivElement>(null);
   const [rendered, setRendered] = useState(false);
@@ -255,13 +357,13 @@ export function PrintableCard({ profile }: { profile: Profile }) {
     if (!canvas) return;
     setRendered(false);
     const qrCanvas = qrWrapRef.current?.querySelector("canvas") ?? null;
-    drawCard(canvas, qrCanvas, profile, websiteUrl).then(() => {
+    drawCard(canvas, qrCanvas, profile, websiteUrl, template).then(() => {
       if (!cancelled) setRendered(true);
     });
     return () => {
       cancelled = true;
     };
-  }, [profile, websiteUrl]);
+  }, [profile, websiteUrl, template]);
 
   const downloadPng = () => {
     const canvas = canvasRef.current;
