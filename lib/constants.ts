@@ -82,6 +82,12 @@ export const SECTION_CATALOG: SectionMeta[] = [
     icon: "FileText",
   },
   {
+    type: "text",
+    label: "Text Block",
+    description: "Formatted text — bold, lists, headings, alignment",
+    icon: "Type",
+  },
+  {
     type: "credibility",
     label: "Credibility",
     description: "Awards, ranks, milestones, certifications",

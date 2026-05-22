@@ -384,3 +384,63 @@
     scrollbar-width: none;
   }
 }
+
+/* ============================================================
+   Rich-text editor (Text block sections)
+   ============================================================ */
+.rt-content {
+  min-height: 7rem;
+  padding: 0.75rem;
+  outline: none;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.85);
+}
+.rt-content:focus {
+  outline: none;
+}
+.rt-content > :first-child {
+  margin-top: 0;
+}
+.rt-content > :last-child {
+  margin-bottom: 0;
+}
+.rt-content p {
+  margin: 0 0 0.5rem;
+}
+.rt-content h2 {
+  margin: 0.25rem 0 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+.rt-content h3 {
+  margin: 0.25rem 0 0.4rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+.rt-content ul {
+  margin: 0 0 0.5rem;
+  padding-left: 1.25rem;
+  list-style: disc;
+}
+.rt-content ol {
+  margin: 0 0 0.5rem;
+  padding-left: 1.25rem;
+  list-style: decimal;
+}
+.rt-content li {
+  margin: 0.15rem 0;
+}
+.rt-content strong {
+  font-weight: 700;
+}
+.rt-content em {
+  font-style: italic;
+}
+.rt-content mark {
+  background: transparent;
+  color: #5b8cff;
+  font-weight: 600;
+}

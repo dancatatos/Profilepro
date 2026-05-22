@@ -55,6 +55,12 @@ function freshSection(section: ProfileSection): ProfileSection {
       };
     case "about":
       return { ...base, type: "about", body: section.body };
+    case "text":
+      return {
+        ...base,
+        type: "text",
+        doc: JSON.parse(JSON.stringify(section.doc)),
+      };
     case "credibility":
       return {
         ...base,

@@ -13,6 +13,11 @@
     "deploy": "firebase deploy"
   },
   "dependencies": {
+    "@tiptap/extension-highlight": "^3.23.6",
+    "@tiptap/extension-text-align": "^3.23.6",
+    "@tiptap/pm": "^3.23.6",
+    "@tiptap/react": "^3.23.6",
+    "@tiptap/starter-kit": "^3.23.6",
     "clsx": "^2.1.1",
     "firebase": "^11.6.0",
     "framer-motion": "^11.18.2",

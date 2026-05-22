@@ -38,6 +38,12 @@ export function createSection(type: SectionType): ProfileSection {
         title: "About Me",
         body: "Share your story, your mission and the journey that brought you here.",
       };
+    case "text":
+      return {
+        ...base,
+        type: "text",
+        doc: { type: "doc", content: [{ type: "paragraph" }] },
+      };
     case "credibility":
       return {
         ...base,

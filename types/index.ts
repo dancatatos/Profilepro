@@ -45,7 +45,8 @@ export type SectionType =
   | "video"
   | "gallery"
   | "leadCapture"
-  | "appointment";
+  | "appointment"
+  | "text";
 
 export interface CTAButton {
   id: string;
@@ -130,6 +131,19 @@ export interface SectionBase {
   title?: string;
 }
 
+/**
+ * A Tiptap-compatible rich-text document node — used by Text sections.
+ * Stored as structured JSON so the format stays constrained (no arbitrary
+ * HTML), which keeps it both on-brand and XSS-safe.
+ */
+export interface RichTextNode {
+  type?: string;
+  text?: string;
+  attrs?: Record<string, unknown>;
+  marks?: { type: string; attrs?: Record<string, unknown> }[];
+  content?: RichTextNode[];
+}
+
 export interface CtaSection extends SectionBase {
   type: "cta";
   buttons: CTAButton[];
@@ -141,6 +155,11 @@ export interface SocialsSection extends SectionBase {
 export interface AboutSection extends SectionBase {
   type: "about";
   body: string;
+}
+export interface TextSection extends SectionBase {
+  type: "text";
+  /** Tiptap rich-text document. */
+  doc: RichTextNode;
 }
 export interface CredibilitySection extends SectionBase {
   type: "credibility";
@@ -196,6 +215,7 @@ export type ProfileSection =
   | CtaSection
   | SocialsSection
   | AboutSection
+  | TextSection
   | CredibilitySection
   | TestimonialsSection
   | ProductsSection

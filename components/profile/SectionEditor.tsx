@@ -5,6 +5,7 @@ import { useProfileStore } from "@/store/profileStore";
 import { Select } from "@/components/ui/Select";
 import { Icon } from "@/components/ui/Icon";
 import { ImageUploadField } from "./ImageUploadField";
+import dynamic from "next/dynamic";
 import { SOCIAL_PLATFORMS } from "@/lib/constants";
 import { cn, uid } from "@/lib/utils";
 import type {
@@ -19,6 +20,7 @@ import type {
   ProfileSection,
   SocialsSection,
   TestimonialsSection,
+  TextSection,
   VideoSection,
 } from "@/types";
 
@@ -246,6 +248,30 @@ function AboutEditor({ section }: { section: AboutSection }) {
       rows={6}
       placeholder="Tell your story — your mission, background and journey."
       className="w-full resize-none rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-electric-500/60"
+    />
+  );
+}
+
+/* ---------------- Text block ---------------- */
+
+/* Tiptap is heavy — load it only when a Text section is actually opened,
+   so it never weighs down the profile builder's initial bundle. */
+const RichTextEditor = dynamic(
+  () => import("@/components/ui/RichTextEditor").then((m) => m.RichTextEditor),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-40 rounded-xl border border-white/10 bg-white/[0.03]" />
+    ),
+  },
+);
+
+function TextEditor({ section }: { section: TextSection }) {
+  const update = useProfileStore((s) => s.updateSection);
+  return (
+    <RichTextEditor
+      value={section.doc}
+      onChange={(doc) => update(section.id, { doc })}
     />
   );
 }
@@ -818,6 +844,8 @@ export function SectionEditor({ section }: { section: ProfileSection }) {
       return <SocialsEditor section={section} />;
     case "about":
       return <AboutEditor section={section} />;
+    case "text":
+      return <TextEditor section={section} />;
     case "credibility":
       return <CredibilityEditor section={section} />;
     case "testimonials":

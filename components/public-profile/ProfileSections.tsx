@@ -5,6 +5,7 @@ import { MessageCircle, Send, Star } from "lucide-react";
 import { Icon } from "@/components/ui/Icon";
 import { SocialIcon } from "@/components/ui/SocialIcon";
 import { AppointmentBooking, type BookingSubmitFn } from "./AppointmentBooking";
+import { RichTextRenderer } from "@/components/ui/RichTextRenderer";
 import { ctaButtonClasses } from "@/lib/theme";
 import { cn, isValidEmail, toEmbedUrl } from "@/lib/utils";
 import type { AnalyticsEventType, ProfileSection } from "@/types";
@@ -292,6 +293,15 @@ export function SectionRenderer({
           >
             {section.body}
           </p>
+        </SectionShell>
+      );
+
+    case "text":
+      return (
+        <SectionShell title={section.title}>
+          <div className="text-sm leading-relaxed" style={V.text2}>
+            <RichTextRenderer doc={section.doc} />
+          </div>
         </SectionShell>
       );
 
