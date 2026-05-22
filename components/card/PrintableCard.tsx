@@ -100,24 +100,34 @@ function wrapText(
 }
 
 /**
- * Word-wrap `text` at a fixed (readable) font size into at most `maxLines`
- * lines. The headline keeps its size — only the line count grows.
+ * Wrap `text` into at most `maxLines` lines, shrinking the font from `maxS`
+ * down to `minS` only as much as needed so the whole headline fits without
+ * being clipped. Returns the chosen size and the wrapped lines.
  */
-function wrapFixed(
+function fitWrap(
   ctx: CanvasRenderingContext2D,
   text: string,
-  font: string,
+  fontTpl: string,
+  maxS: number,
+  minS: number,
   maxW: number,
   maxLines: number,
-): string[] {
-  ctx.font = font;
-  let lines = wrapText(ctx, text, maxW);
+): { size: number; lines: string[] } {
+  let size = minS;
+  let lines: string[] = [];
+  for (let s = maxS; s >= minS; s--) {
+    ctx.font = fontTpl.replace("{S}", String(s));
+    lines = wrapText(ctx, text, maxW);
+    size = s;
+    if (lines.length <= maxLines) break;
+  }
+  ctx.font = fontTpl.replace("{S}", String(size));
   if (lines.length > maxLines) {
     const head = lines.slice(0, maxLines - 1);
     head.push(lines.slice(maxLines - 1).join(" "));
     lines = head;
   }
-  return lines.map((l) => truncateToWidth(ctx, l, maxW));
+  return { size, lines: lines.map((l) => truncateToWidth(ctx, l, maxW)) };
 }
 
 function roundRectPath(
@@ -258,19 +268,22 @@ async function drawCard(
 
   let blockY = nameY;
   if (h.headline && h.headline.trim().length > 0) {
-    const lines = wrapFixed(
+    const { size, lines } = fitWrap(
       ctx,
       h.headline,
-      `600 24px ${fam}`,
+      `600 {S}px ${fam}`,
+      24,
+      17,
       textMaxW,
       3,
     );
+    const lineH = Math.round(size * 1.32);
     ctx.fillStyle = theme.headlineColor;
     let hy = nameY + 40;
     for (const ln of lines) {
       ctx.fillText(ln, textX, hy);
       blockY = hy;
-      hy += 32;
+      hy += lineH;
     }
   }
   if (h.company) {
