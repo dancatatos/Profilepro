@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   ChevronDown,
   ChevronUp,
+  Eye,
   Plus,
   RefreshCw,
   Save,
@@ -22,6 +23,7 @@ import { Modal } from "@/components/ui/Modal";
 import { FullScreenLoader } from "@/components/ui/Spinner";
 import { SectionsManager } from "@/components/profile/SectionsManager";
 import { ShareFunnelModal } from "@/components/funnels/ShareFunnelModal";
+import { FunnelPhonePreview } from "@/components/funnels/FunnelPhonePreview";
 import {
   SectionsProvider,
   type SectionsApi,
@@ -132,6 +134,7 @@ export default function FunnelBuilderPage() {
   const [analytics, setAnalytics] = useState<Record<number, number>>({});
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -299,9 +302,9 @@ export default function FunnelBuilderPage() {
   const publicPath = `${APP.url}/${account?.username || "you"}/${funnel.slug}`;
 
   return (
-    <div className="space-y-4">
+    <>
       {/* Action bar */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
         <Link
           href="/funnels"
           aria-label="Back to Funnels"
@@ -320,6 +323,15 @@ export default function FunnelBuilderPage() {
         <Button
           variant="outline"
           size="sm"
+          onClick={() => setPreviewOpen(true)}
+          leftIcon={<Eye className="h-4 w-4" />}
+          className="lg:hidden"
+        >
+          Preview
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => setShareOpen(true)}
           leftIcon={<Send className="h-4 w-4" />}
         >
@@ -334,6 +346,11 @@ export default function FunnelBuilderPage() {
           Save{dirty ? "" : "d"}
         </Button>
       </div>
+
+      {/* Split-pane: editor + live preview */}
+      <div className="-mx-4 lg:-mx-8 lg:flex lg:h-[calc(100dvh-9.5rem)] lg:overflow-hidden">
+        <div className="px-4 pb-28 lg:flex-1 lg:min-w-0 lg:overflow-y-auto lg:px-8 lg:pb-10 lg:pt-1">
+          <div className="mx-auto max-w-3xl space-y-4">
 
       {/* Funnel settings */}
       <Card className="p-4">
@@ -555,6 +572,20 @@ export default function FunnelBuilderPage() {
         )}
       </Card>
 
+          </div>
+        </div>
+        <div className="hidden lg:flex lg:w-[400px] lg:shrink-0 lg:flex-col lg:items-center lg:overflow-y-auto lg:border-l lg:border-white/[0.06] lg:bg-ink-900/30 lg:px-6 lg:py-6">
+          <p className="mb-3 text-center text-xs font-medium text-white/40">
+            Live preview · {currentStep.name}
+          </p>
+          <FunnelPhonePreview
+            funnel={funnel}
+            currentStepId={currentStep.id}
+            height={660}
+          />
+        </div>
+      </div>
+
       {/* Add step modal */}
       <Modal
         open={addStepOpen}
@@ -581,6 +612,21 @@ export default function FunnelBuilderPage() {
         onClose={() => setShareOpen(false)}
         funnel={funnel}
       />
-    </div>
+
+      {/* Mobile preview modal */}
+      <Modal
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        title="Live preview"
+      >
+        <div className="pb-3">
+          <FunnelPhonePreview
+            funnel={funnel}
+            currentStepId={currentStep.id}
+            height={560}
+          />
+        </div>
+      </Modal>
+    </>
   );
 }
