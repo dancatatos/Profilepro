@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { LogoMark } from "@/components/ui/Logo";
@@ -15,7 +15,7 @@ import {
   buildThemeStyle,
   getThemeConfig,
 } from "@/lib/themes";
-import { createBooking, createLead } from "@/lib/firebase/firestore";
+import { createBooking, createLead, logEvent } from "@/lib/firebase/firestore";
 import { cn } from "@/lib/utils";
 import type { Funnel } from "@/types";
 
@@ -42,6 +42,19 @@ export function FunnelView({
   live?: boolean;
 }) {
   const [stepIndex, setStepIndex] = useState(0);
+  const loggedSteps = useRef<Set<number>>(new Set());
+
+  /* Log each step the visitor reaches — once per session — for drop-off. */
+  useEffect(() => {
+    if (!live || loggedSteps.current.has(stepIndex)) return;
+    loggedSteps.current.add(stepIndex);
+    logEvent({
+      profileId,
+      ownerId,
+      type: "funnel_step",
+      target: `${funnel.id}#${stepIndex}`,
+    }).catch(() => null);
+  }, [live, stepIndex, profileId, ownerId, funnel.id]);
 
   const tc = getThemeConfig(funnel.themeId);
   const themeStyle = buildThemeStyle(funnel.themeId);

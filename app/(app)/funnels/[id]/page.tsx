@@ -8,6 +8,7 @@ import {
   ChevronDown,
   ChevronUp,
   Plus,
+  RefreshCw,
   Save,
   Trash2,
 } from "lucide-react";
@@ -23,7 +24,11 @@ import {
   SectionsProvider,
   type SectionsApi,
 } from "@/components/profile/SectionsContext";
-import { getFunnelById, saveFunnel } from "@/lib/firebase/firestore";
+import {
+  getFunnelAnalytics,
+  getFunnelById,
+  saveFunnel,
+} from "@/lib/firebase/firestore";
 import { createFunnelStep } from "@/lib/funnels";
 import { createSection } from "@/lib/defaults";
 import { APP } from "@/lib/constants";
@@ -122,6 +127,8 @@ export default function FunnelBuilderPage() {
   const [dirty, setDirty] = useState(false);
   const [currentStepId, setCurrentStepId] = useState("");
   const [addStepOpen, setAddStepOpen] = useState(false);
+  const [analytics, setAnalytics] = useState<Record<number, number>>({});
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -139,6 +146,22 @@ export default function FunnelBuilderPage() {
       cancelled = true;
     };
   }, [funnelId]);
+
+  const loadAnalytics = useCallback(async () => {
+    if (!account) return;
+    setAnalyticsLoading(true);
+    try {
+      setAnalytics(await getFunnelAnalytics(account.uid, funnelId));
+    } catch {
+      /* analytics is non-critical — ignore load failures */
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  }, [account, funnelId]);
+
+  useEffect(() => {
+    loadAnalytics();
+  }, [loadAnalytics]);
 
   const mutate = useCallback((fn: (f: Funnel) => Funnel) => {
     setFunnel((prev) => (prev ? { ...fn(prev), updatedAt: Date.now() } : prev));
@@ -240,6 +263,10 @@ export default function FunnelBuilderPage() {
 
   const currentStep =
     funnel.steps.find((s) => s.id === currentStepId) ?? funnel.steps[0];
+
+  const entered = analytics[0] ?? 0;
+  const finished = analytics[funnel.steps.length - 1] ?? 0;
+  const completion = entered > 0 ? Math.round((finished / entered) * 100) : 0;
 
   const sectionsApi: SectionsApi = {
     sections: currentStep.sections,
@@ -460,6 +487,61 @@ export default function FunnelBuilderPage() {
             </SectionsProvider>
           </div>
         </div>
+      </Card>
+
+      {/* Funnel analytics */}
+      <Card className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <CardHeader
+            title="Funnel analytics"
+            subtitle="How visitors move through your steps"
+          />
+          <button
+            onClick={loadAnalytics}
+            disabled={analyticsLoading}
+            aria-label="Refresh analytics"
+            className="shrink-0 rounded-lg p-1.5 text-white/40 hover:bg-white/5 hover:text-white disabled:opacity-40"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </button>
+        </div>
+        {entered === 0 ? (
+          <p className="mt-3 text-xs text-white/45">
+            No visits yet — publish your funnel and share its link to start
+            tracking step-by-step drop-off.
+          </p>
+        ) : (
+          <>
+            <div className="mt-3 space-y-2.5">
+              {funnel.steps.map((step, i) => {
+                const views = analytics[i] ?? 0;
+                const pct = Math.min(100, (views / entered) * 100);
+                return (
+                  <div key={step.id}>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="truncate text-white/70">
+                        {i + 1}. {step.name}
+                      </span>
+                      <span className="shrink-0 text-white/45">
+                        {views} view{views === 1 ? "" : "s"}
+                      </span>
+                    </div>
+                    <div className="mt-1 h-2 overflow-hidden rounded-full bg-white/[0.06]">
+                      <div
+                        className="h-full rounded-full bg-electric-500"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="mt-3 text-xs text-white/45">
+              {entered} entered · {finished} reached the end · {completion}%
+              completion
+            </p>
+          </>
+        )}
       </Card>
 
       {/* Add step modal */}

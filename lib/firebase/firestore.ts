@@ -607,3 +607,32 @@ export async function deleteFunnel(id: string): Promise<void> {
   if (!isFirebaseConfigured) return;
   await deleteDoc(doc(db, COL.funnels, id));
 }
+
+/**
+ * Per-step view counts for one funnel — powers the drop-off chart. Funnel
+ * step views are logged as analytics events with `target` = "{id}#{step}".
+ */
+export async function getFunnelAnalytics(
+  ownerId: string,
+  funnelId: string,
+): Promise<Record<number, number>> {
+  if (!isFirebaseConfigured) return {};
+  const snap = await getDocs(
+    query(
+      collection(db, COL.events),
+      where("ownerId", "==", ownerId),
+      where("type", "==", "funnel_step"),
+      fsLimit(3000),
+    ),
+  );
+  const counts: Record<number, number> = {};
+  const prefix = `${funnelId}#`;
+  snap.docs.forEach((d) => {
+    const target = (d.data() as AnalyticsEvent).target ?? "";
+    if (!target.startsWith(prefix)) return;
+    const idx = Number(target.slice(prefix.length));
+    if (Number.isNaN(idx)) return;
+    counts[idx] = (counts[idx] ?? 0) + 1;
+  });
+  return counts;
+}

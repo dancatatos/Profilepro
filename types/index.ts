@@ -395,7 +395,8 @@ export type AnalyticsEventType =
   | "cta_click"
   | "social_click"
   | "lead_submit"
-  | "share";
+  | "share"
+  | "funnel_step";
 
 export interface AnalyticsEvent {
   id: string;
