@@ -263,7 +263,7 @@ async function drawCard(
       h.headline,
       `600 24px ${fam}`,
       textMaxW,
-      2,
+      3,
     );
     ctx.fillStyle = theme.headlineColor;
     let hy = nameY + 40;
@@ -278,21 +278,24 @@ async function drawCard(
     ctx.fillStyle = theme.companyColor;
     const companyY = blockY === nameY ? nameY + 38 : blockY + 34;
     ctx.fillText(truncateToWidth(ctx, h.company, textMaxW), textX, companyY);
+    blockY = companyY;
   }
 
-  /* Divider */
+  /* Divider — flows below the identity block so a 3-line headline never
+     collides with it, but never rises above the original balanced spot. */
+  const dividerY = Math.max(256, blockY + 22);
   ctx.strokeStyle = theme.divider;
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(PAD, 256);
-  ctx.lineTo(636, 256);
+  ctx.moveTo(PAD, dividerY);
+  ctx.lineTo(636, dividerY);
   ctx.stroke();
 
   /* Contact lines */
   const contacts = [h.phone, h.email, websiteUrl.replace(/^https?:\/\//, "")]
     .map((v) => (v ?? "").trim())
     .filter((v) => v.length > 0);
-  let cy = 318;
+  let cy = dividerY + 62;
   for (const val of contacts) {
     ctx.fillStyle = theme.accent;
     ctx.beginPath();
