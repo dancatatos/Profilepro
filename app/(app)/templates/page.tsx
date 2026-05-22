@@ -379,6 +379,7 @@ const SECTION_LABELS: Record<SectionType, string> = {
   leadCapture: "Lead Form",
   appointment: "Booking",
   text: "Text",
+  countdown: "Countdown",
 };
 
 const SECTION_COLORS: Record<SectionType, string> = {
@@ -393,6 +394,7 @@ const SECTION_COLORS: Record<SectionType, string> = {
   leadCapture: "bg-jade-500/20 text-jade-300",
   appointment: "bg-electric-500/20 text-electric-300",
   text: "bg-white/10 text-white/60",
+  countdown: "bg-gold-400/20 text-gold-300",
 };
 
 /* ---- Mini preview component ---- */

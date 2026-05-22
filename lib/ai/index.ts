@@ -10,6 +10,7 @@ export {
 } from "./client";
 export {
   generateProfileFlow,
+  generateFunnelFlow,
   cloneRewriteFlow,
   auditProfileFlow,
   rewriteFlow,
@@ -18,4 +19,4 @@ export {
 } from "./flows";
 export { applyGeneratedContent } from "./generators";
 export { AI_ACTIONS, QUICK_ACTIONS, type QuickAction } from "./actions";
-export { profileContentSchema, auditSchema } from "./schemas";
+export { profileContentSchema, auditSchema, funnelContentSchema } from "./schemas";

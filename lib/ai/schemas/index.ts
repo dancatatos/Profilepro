@@ -100,3 +100,25 @@ export const auditSchema: Record<string, unknown> = {
   },
   required: ["scores", "suggestions", "headlineIdeas", "ctaIdeas"],
 };
+
+export const funnelContentSchema: Record<string, unknown> = {
+  type: "OBJECT",
+  properties: {
+    funnelName: { type: "STRING" },
+    steps: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: {
+          type: { type: "STRING" },
+          name: { type: "STRING" },
+          headline: { type: "STRING" },
+          body: { type: "STRING" },
+          ctaLabel: { type: "STRING" },
+        },
+        required: ["type", "name", "headline", "body", "ctaLabel"],
+      },
+    },
+  },
+  required: ["funnelName", "steps"],
+};

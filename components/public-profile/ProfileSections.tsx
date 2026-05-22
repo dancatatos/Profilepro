@@ -6,6 +6,7 @@ import { Icon } from "@/components/ui/Icon";
 import { SocialIcon } from "@/components/ui/SocialIcon";
 import { AppointmentBooking, type BookingSubmitFn } from "./AppointmentBooking";
 import { RichTextRenderer } from "@/components/ui/RichTextRenderer";
+import { CountdownTimer } from "./CountdownTimer";
 import { ctaButtonClasses } from "@/lib/theme";
 import { cn, isValidEmail, toEmbedUrl } from "@/lib/utils";
 import type { AnalyticsEventType, ProfileSection } from "@/types";
@@ -301,6 +302,23 @@ export function SectionRenderer({
         <SectionShell title={section.title}>
           <div className="text-sm leading-relaxed" style={V.text2}>
             <RichTextRenderer doc={section.doc} />
+          </div>
+        </SectionShell>
+      );
+
+    case "countdown":
+      return (
+        <SectionShell title={section.title}>
+          <div className="p-4 text-center" style={V.card}>
+            {section.headline && (
+              <p className="mb-3 text-sm font-medium" style={V.text2}>
+                {section.headline}
+              </p>
+            )}
+            <CountdownTimer
+              targetIso={section.targetIso}
+              expiredText={section.expiredText}
+            />
           </div>
         </SectionShell>
       );

@@ -46,7 +46,8 @@ export type SectionType =
   | "gallery"
   | "leadCapture"
   | "appointment"
-  | "text";
+  | "text"
+  | "countdown";
 
 export interface CTAButton {
   id: string;
@@ -161,6 +162,14 @@ export interface TextSection extends SectionBase {
   /** Tiptap rich-text document. */
   doc: RichTextNode;
 }
+export interface CountdownSection extends SectionBase {
+  type: "countdown";
+  headline: string;
+  /** Target as a datetime-local value (YYYY-MM-DDTHH:MM, local time). */
+  targetIso: string;
+  /** Shown once the countdown reaches zero. */
+  expiredText: string;
+}
 export interface CredibilitySection extends SectionBase {
   type: "credibility";
   items: CredibilityItem[];
@@ -216,6 +225,7 @@ export type ProfileSection =
   | SocialsSection
   | AboutSection
   | TextSection
+  | CountdownSection
   | CredibilitySection
   | TestimonialsSection
   | ProductsSection
@@ -557,6 +567,31 @@ export interface GeneratedProfileContent {
   testimonials: { authorName: string; quote: string }[];
   leadMagnet: string;
   suggestedSections: SectionType[];
+}
+
+/** Inputs collected by the AI funnel generator wizard. */
+export interface AIFunnelAnswers {
+  funnelType: string;
+  goal: string;
+  audience: string;
+  result: string;
+  tone: AICopyMode;
+  language: AILanguage;
+}
+
+/** One AI-generated funnel step — copy only. */
+export interface GeneratedFunnelStep {
+  type: FunnelStepType;
+  name: string;
+  headline: string;
+  body: string;
+  ctaLabel: string;
+}
+
+/** Structured JSON the Gemini funnel generator returns. */
+export interface GeneratedFunnelContent {
+  funnelName: string;
+  steps: GeneratedFunnelStep[];
 }
 
 export interface ProfileAuditScores {

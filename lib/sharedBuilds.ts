@@ -61,6 +61,14 @@ function freshSection(section: ProfileSection): ProfileSection {
         type: "text",
         doc: JSON.parse(JSON.stringify(section.doc)),
       };
+    case "countdown":
+      return {
+        ...base,
+        type: "countdown",
+        headline: section.headline,
+        targetIso: section.targetIso,
+        expiredText: section.expiredText,
+      };
     case "credibility":
       return {
         ...base,

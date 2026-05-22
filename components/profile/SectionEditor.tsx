@@ -11,6 +11,7 @@ import { cn, uid } from "@/lib/utils";
 import type {
   AboutSection,
   AppointmentSection,
+  CountdownSection,
   CredibilitySection,
   CtaSection,
   GallerySection,
@@ -273,6 +274,39 @@ function TextEditor({ section }: { section: TextSection }) {
       value={section.doc}
       onChange={(doc) => update(section.id, { doc })}
     />
+  );
+}
+
+/* ---------------- Countdown ---------------- */
+
+function CountdownEditor({ section }: { section: CountdownSection }) {
+  const { updateSection: update } = useSections();
+  return (
+    <div className="space-y-3">
+      <input
+        value={section.headline}
+        onChange={(e) => update(section.id, { headline: e.target.value })}
+        placeholder="Countdown headline"
+        className={FIELD}
+      />
+      <div>
+        <p className="mb-1.5 text-xs font-medium text-white/65">
+          Counts down to
+        </p>
+        <input
+          type="datetime-local"
+          value={section.targetIso}
+          onChange={(e) => update(section.id, { targetIso: e.target.value })}
+          className={FIELD}
+        />
+      </div>
+      <input
+        value={section.expiredText}
+        onChange={(e) => update(section.id, { expiredText: e.target.value })}
+        placeholder="Message shown when the timer ends"
+        className={FIELD}
+      />
+    </div>
   );
 }
 
@@ -846,6 +880,8 @@ export function SectionEditor({ section }: { section: ProfileSection }) {
       return <AboutEditor section={section} />;
     case "text":
       return <TextEditor section={section} />;
+    case "countdown":
+      return <CountdownEditor section={section} />;
     case "credibility":
       return <CredibilityEditor section={section} />;
     case "testimonials":

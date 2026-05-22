@@ -44,6 +44,16 @@ export function createSection(type: SectionType): ProfileSection {
         type: "text",
         doc: { type: "doc", content: [{ type: "paragraph" }] },
       };
+    case "countdown":
+      return {
+        ...base,
+        type: "countdown",
+        headline: "Hurry — offer ends in",
+        targetIso: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .slice(0, 16),
+        expiredText: "This offer has ended.",
+      };
     case "credibility":
       return {
         ...base,

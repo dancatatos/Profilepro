@@ -4,6 +4,7 @@
 
 import type {
   AICopyMode,
+  AIFunnelAnswers,
   AILanguage,
   AIOnboardingAnswers,
   Profile,
@@ -78,6 +79,35 @@ REQUIREMENTS
 - testimonials: 2 short, realistic testimonial objects (authorName + quote).
 - leadMagnet: one compelling free offer idea to capture leads.
 - suggestedSections: from this list only — cta, socials, about, credibility, testimonials, products, video, gallery, leadCapture.
+
+Return ONLY the JSON object matching the schema.`;
+}
+
+/* ---------------- Funnel generation ---------------- */
+
+export function buildFunnelPrompt(answers: AIFunnelAnswers): string {
+  return `Generate a complete mini sales funnel from this intake.
+
+FUNNEL TYPE: ${answers.funnelType}
+
+INTAKE
+- Promoting / recruiting for: ${answers.goal || "—"}
+- Target market: ${answers.audience || "—"}
+- Result they help people achieve: ${answers.result || "—"}
+
+${styleBlock(answers.tone, answers.language)}
+
+REQUIREMENTS
+- funnelName: a short, clear internal name for this funnel.
+- steps: 2 to 4 steps, in visitor order. Each step has:
+  - type: one of "optin" (capture a name + contact), "content" (pitch / story / video),
+    "offer" (a product with a buy link), or "thankyou" (final confirmation).
+  - name: a short internal step name.
+  - headline: ONE punchy, scannable hook line for the page.
+  - body: 2-4 short, mobile-readable sentences of page copy.
+  - ctaLabel: the button text that moves the visitor to the next step.
+- The funnel must fit the FUNNEL TYPE above and flow logically step to step.
+- The final step must be a "thankyou" step.
 
 Return ONLY the JSON object matching the schema.`;
 }

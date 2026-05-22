@@ -10,20 +10,24 @@ import {
   geminiStream,
   geminiText,
 } from "../client";
-import { auditSchema, profileContentSchema } from "../schemas";
+import { auditSchema, funnelContentSchema, profileContentSchema } from "../schemas";
 import {
   ASSISTANT_SYSTEM,
   BASE_SYSTEM,
   buildAuditPrompt,
   buildClonePrompt,
+  buildFunnelPrompt,
   buildProfilePrompt,
   buildRewritePrompt,
 } from "../prompts";
 import type {
   AICopyMode,
+  AIFunnelAnswers,
   AILanguage,
   AIChatMessage,
   AIOnboardingAnswers,
+  GeneratedFunnelContent,
+  GeneratedFunnelStep,
   GeneratedProfileContent,
   Profile,
   ProfileAudit,
@@ -98,6 +102,26 @@ export async function generateProfileFlow(
   } catch (err) {
     console.warn("[AI] generateProfileFlow failed, using mock:", err);
     return { data: mockProfileContent(answers), usedAI: false };
+  }
+}
+
+/* ---------------- Funnel generation ---------------- */
+
+export async function generateFunnelFlow(
+  answers: AIFunnelAnswers,
+): Promise<FlowResult<GeneratedFunnelContent>> {
+  try {
+    const data = await geminiJSON<GeneratedFunnelContent>({
+      system: BASE_SYSTEM,
+      prompt: buildFunnelPrompt(answers),
+      schema: funnelContentSchema,
+      temperature: 0.85,
+      maxOutputTokens: 2048,
+    });
+    return { data: normalizeFunnelContent(data, answers), usedAI: true };
+  } catch (err) {
+    console.warn("[AI] generateFunnelFlow failed, using mock:", err);
+    return { data: mockFunnelContent(answers), usedAI: false };
   }
 }
 
@@ -220,6 +244,64 @@ function normalizeContent(c: GeneratedProfileContent): GeneratedProfileContent {
     testimonials: (c.testimonials || []).slice(0, 4),
     leadMagnet: c.leadMagnet || "",
     suggestedSections: c.suggestedSections || [],
+  };
+}
+
+/* ---- Funnel content helpers ---- */
+
+const FUNNEL_STEP_TYPES = ["optin", "content", "offer", "thankyou"];
+
+function mockFunnelContent(a: AIFunnelAnswers): GeneratedFunnelContent {
+  const audience = a.audience || "people who want more";
+  const result = a.result || "reach their goals";
+  return {
+    funnelName: `${a.funnelType || "My"} Funnel`,
+    steps: [
+      {
+        type: "optin",
+        name: "Opt-In",
+        headline: `Free guide: how ${audience} can ${result}`,
+        body: "Enter your details below and I'll send it straight to you — no cost, no pressure.",
+        ctaLabel: "Get Instant Access",
+      },
+      {
+        type: "content",
+        name: "The Details",
+        headline: "Here's exactly how it works",
+        body:
+          a.goal ||
+          "Walk your visitor through your offer, your story and why it works.",
+        ctaLabel: "I'm Interested",
+      },
+      {
+        type: "thankyou",
+        name: "Thank You",
+        headline: "You're all set!",
+        body: "Check your messages — I'll personally reach out to you shortly.",
+        ctaLabel: "Done",
+      },
+    ],
+  };
+}
+
+function normalizeFunnelContent(
+  c: GeneratedFunnelContent,
+  answers: AIFunnelAnswers,
+): GeneratedFunnelContent {
+  const raw = Array.isArray(c.steps) ? c.steps : [];
+  const steps: GeneratedFunnelStep[] = raw
+    .filter((s): s is GeneratedFunnelStep => !!s && typeof s === "object")
+    .slice(0, 5)
+    .map((s) => ({
+      type: FUNNEL_STEP_TYPES.includes(s.type) ? s.type : "content",
+      name: String(s.name || "Step"),
+      headline: String(s.headline || ""),
+      body: String(s.body || ""),
+      ctaLabel: String(s.ctaLabel || "Continue"),
+    }));
+  return {
+    funnelName: String(c.funnelName || `${answers.funnelType} Funnel`),
+    steps: steps.length > 0 ? steps : mockFunnelContent(answers).steps,
   };
 }
 

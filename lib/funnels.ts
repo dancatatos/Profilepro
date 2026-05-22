@@ -10,6 +10,8 @@ import type {
   Funnel,
   FunnelStep,
   FunnelStepType,
+  GeneratedFunnelContent,
+  ProfileSection,
   RichTextNode,
   TextSection,
 } from "@/types";
@@ -92,6 +94,12 @@ export const FUNNEL_TEMPLATES: FunnelTemplate[] = [
     description: "Why extra income → presentation → call to action.",
     steps: ["content", "content", "thankyou"],
   },
+  {
+    id: "webinar",
+    name: "Webinar",
+    description: "Registration → countdown → replay.",
+    steps: ["optin", "content", "content"],
+  },
 ];
 
 /** Build a fresh funnel from a template. */
@@ -110,6 +118,113 @@ export function createFunnel(
     themeId: "midnight",
     status: "draft",
     steps: template.steps.map(createFunnelStep),
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+/* ---------------- AI funnel generator ---------------- */
+
+export interface AIFunnelType {
+  id: string;
+  label: string;
+  description: string;
+}
+
+/** Funnel kinds offered by the AI funnel generator wizard. */
+export const AI_FUNNEL_TYPES: AIFunnelType[] = [
+  {
+    id: "lead-capture",
+    label: "Lead Capture",
+    description: "A landing page and opt-in form to collect leads.",
+  },
+  {
+    id: "opportunity",
+    label: "Opportunity",
+    description: "An MLM recruiting flow — the why, the presentation, the CTA.",
+  },
+  {
+    id: "webinar",
+    label: "Webinar",
+    description: "Registration, a countdown, and a replay page.",
+  },
+  {
+    id: "product",
+    label: "Product",
+    description: "A product pitch leading to an offer.",
+  },
+];
+
+function isFunnelStepType(v: string): v is FunnelStepType {
+  return (
+    v === "optin" || v === "content" || v === "offer" || v === "thankyou"
+  );
+}
+
+/** A Text section built from an AI-generated headline + body. */
+function richTextBlock(headline: string, body: string): TextSection {
+  const content: RichTextNode[] = [];
+  if (headline.trim()) {
+    content.push({
+      type: "heading",
+      attrs: { level: 2 },
+      content: [{ type: "text", text: headline.trim() }],
+    });
+  }
+  for (const para of body
+    .split(/\n+/)
+    .map((p) => p.trim())
+    .filter(Boolean)) {
+    content.push({ type: "paragraph", content: [{ type: "text", text: para }] });
+  }
+  if (content.length === 0) content.push({ type: "paragraph" });
+  return {
+    id: uid("sec"),
+    type: "text",
+    enabled: true,
+    doc: { type: "doc", content },
+  };
+}
+
+/** Assemble a real funnel from AI-generated funnel content. */
+export function funnelFromGenerated(
+  ownerId: string,
+  content: GeneratedFunnelContent,
+): Funnel {
+  const now = Date.now();
+  const name = content.funnelName.trim() || "AI Funnel";
+  const steps: FunnelStep[] = content.steps.map((gs) => {
+    const type: FunnelStepType = isFunnelStepType(gs.type)
+      ? gs.type
+      : "content";
+    const sections: ProfileSection[] = [richTextBlock(gs.headline, gs.body)];
+    if (type === "optin") sections.push(createSection("leadCapture"));
+    const step: FunnelStep = {
+      id: uid("fstep"),
+      type,
+      name: gs.name.trim() || type,
+      sections,
+    };
+    if (type !== "thankyou") {
+      step.cta = {
+        label: gs.ctaLabel.trim() || "Continue",
+        action: type === "offer" ? "url" : "next",
+        ...(type === "offer" ? { url: "" } : {}),
+      };
+    }
+    return step;
+  });
+  return {
+    id: uid("funnel"),
+    ownerId,
+    name,
+    slug: slugify(name) || `funnel-${now.toString(36)}`,
+    themeId: "midnight",
+    status: "draft",
+    steps:
+      steps.length > 0
+        ? steps
+        : [createFunnelStep("optin"), createFunnelStep("thankyou")],
     createdAt: now,
     updatedAt: now,
   };

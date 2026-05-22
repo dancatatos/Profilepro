@@ -89,6 +89,12 @@ export const SECTION_CATALOG: SectionMeta[] = [
     icon: "Type",
   },
   {
+    type: "countdown",
+    label: "Countdown Timer",
+    description: "A live timer that builds urgency",
+    icon: "Timer",
+  },
+  {
     type: "credibility",
     label: "Credibility",
     description: "Awards, ranks, milestones, certifications",

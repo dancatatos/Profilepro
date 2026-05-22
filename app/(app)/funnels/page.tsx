@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Crown, Filter, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { Crown, Filter, Plus, RefreshCw, Sparkles, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card } from "@/components/ui/Card";
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Badge } from "@/components/ui/Badge";
 import { FullScreenLoader } from "@/components/ui/Spinner";
+import { AIFunnelModal } from "@/components/funnels/AIFunnelModal";
 import {
   deleteFunnel,
   listFunnels,
@@ -37,6 +38,7 @@ export default function FunnelsPage() {
   const [templateId, setTemplateId] = useState(FUNNEL_TEMPLATES[0].id);
   const [creating, setCreating] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [aiOpen, setAiOpen] = useState(false);
 
   const load = useCallback(async () => {
     if (!account || !isPaid) return;
@@ -138,7 +140,7 @@ export default function FunnelsPage() {
           title="Funnels"
           subtitle={`Your mini sales funnels · ${funnels.length}/${limit}`}
         />
-        <div className="flex shrink-0 gap-2">
+        <div className="flex shrink-0 flex-wrap justify-end gap-2">
           <Button
             variant="outline"
             size="sm"
@@ -149,6 +151,7 @@ export default function FunnelsPage() {
             Refresh
           </Button>
           <Button
+            variant="outline"
             size="sm"
             onClick={() => {
               if (atLimit) {
@@ -162,6 +165,19 @@ export default function FunnelsPage() {
             leftIcon={<Plus className="h-3.5 w-3.5" />}
           >
             New funnel
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => {
+              if (atLimit) {
+                toast.error(`Your plan allows ${limit} funnels.`);
+                return;
+              }
+              setAiOpen(true);
+            }}
+            leftIcon={<Sparkles className="h-3.5 w-3.5" />}
+          >
+            AI funnel
           </Button>
         </div>
       </div>
@@ -266,6 +282,12 @@ export default function FunnelsPage() {
           </Button>
         </div>
       </Modal>
+
+      <AIFunnelModal
+        open={aiOpen}
+        onClose={() => setAiOpen(false)}
+        takenSlugs={funnels.map((f) => f.slug)}
+      />
     </div>
   );
 }
