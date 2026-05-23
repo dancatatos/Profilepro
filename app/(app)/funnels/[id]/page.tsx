@@ -392,7 +392,7 @@ export default function FunnelBuilderPage() {
               onClick={() => setThemeOpen(true)}
               className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-2 text-left transition-colors hover:border-white/25"
             >
-              <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md">
+              <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md">
                 <ThemeMiniPreview theme={currentTheme} />
               </div>
               <div className="min-w-0 flex-1">
