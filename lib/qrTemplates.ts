@@ -4,6 +4,16 @@
  * dark-on-white in every template so they remain universally scannable.
  */
 
+export type QRDotsType =
+  | "square"
+  | "rounded"
+  | "dots"
+  | "classy"
+  | "classy-rounded"
+  | "extra-rounded";
+export type QRCornersSquareType = "square" | "dot" | "extra-rounded";
+export type QRCornersDotType = "square" | "dot";
+
 export interface QRTemplate {
   id: string;
   name: string;
@@ -22,6 +32,14 @@ export interface QRTemplate {
   labelColor: string;
   /** Embed the user's avatar in the centre of the QR. */
   includeAvatar: boolean;
+  /** Module / dot style — defaults to "square". */
+  dotsType?: QRDotsType;
+  /** Three large position markers — defaults to "square". */
+  cornersSquareType?: QRCornersSquareType;
+  /** Inner dot of each position marker — defaults to "square". */
+  cornersDotType?: QRCornersDotType;
+  /** Optional gradient applied to the QR modules. */
+  dotsGradient?: { angle: number; from: string; to: string };
 }
 
 export const QR_TEMPLATES: QRTemplate[] = [
@@ -36,6 +54,9 @@ export const QR_TEMPLATES: QRTemplate[] = [
     label: "",
     labelColor: "#0a0a0c",
     includeAvatar: false,
+    dotsType: "square",
+    cornersSquareType: "square",
+    cornersDotType: "square",
   },
   {
     id: "midnight",
@@ -48,6 +69,9 @@ export const QR_TEMPLATES: QRTemplate[] = [
     label: "SCAN ME",
     labelColor: "#5b8cff",
     includeAvatar: true,
+    dotsType: "rounded",
+    cornersSquareType: "extra-rounded",
+    cornersDotType: "dot",
   },
   {
     id: "gold-elite",
@@ -60,6 +84,9 @@ export const QR_TEMPLATES: QRTemplate[] = [
     label: "SCAN ME",
     labelColor: "#e3c081",
     includeAvatar: true,
+    dotsType: "classy",
+    cornersSquareType: "extra-rounded",
+    cornersDotType: "dot",
   },
   {
     id: "glass",
@@ -72,6 +99,9 @@ export const QR_TEMPLATES: QRTemplate[] = [
     label: "SCAN TO VIEW",
     labelColor: "rgba(255,255,255,0.65)",
     includeAvatar: true,
+    dotsType: "dots",
+    cornersSquareType: "dot",
+    cornersDotType: "dot",
   },
   {
     id: "brand-bold",
@@ -84,6 +114,10 @@ export const QR_TEMPLATES: QRTemplate[] = [
     label: "SCAN ME",
     labelColor: "#ffffff",
     includeAvatar: true,
+    dotsType: "extra-rounded",
+    cornersSquareType: "extra-rounded",
+    cornersDotType: "dot",
+    dotsGradient: { angle: 45, from: "#0a0a0c", to: "#2e6bff" },
   },
   {
     id: "plum",
@@ -96,6 +130,10 @@ export const QR_TEMPLATES: QRTemplate[] = [
     label: "SCAN ME",
     labelColor: "#d6aefc",
     includeAvatar: true,
+    dotsType: "classy-rounded",
+    cornersSquareType: "extra-rounded",
+    cornersDotType: "dot",
+    dotsGradient: { angle: 135, from: "#160b1d", to: "#7c3aed" },
   },
   {
     id: "ivory",
@@ -108,6 +146,9 @@ export const QR_TEMPLATES: QRTemplate[] = [
     label: "SCAN ME",
     labelColor: "#3b5b9a",
     includeAvatar: false,
+    dotsType: "rounded",
+    cornersSquareType: "extra-rounded",
+    cornersDotType: "dot",
   },
   {
     id: "mint",
@@ -120,6 +161,9 @@ export const QR_TEMPLATES: QRTemplate[] = [
     label: "SCAN ME",
     labelColor: "#2f9466",
     includeAvatar: false,
+    dotsType: "rounded",
+    cornersSquareType: "extra-rounded",
+    cornersDotType: "dot",
   },
 ];
 

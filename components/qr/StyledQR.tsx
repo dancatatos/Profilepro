@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef } from "react";
-import { QRCodeCanvas } from "qrcode.react";
+import { useEffect, useRef } from "react";
+import QRCodeStyling, { type Options } from "qr-code-styling";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { toast } from "@/store/uiStore";
@@ -10,11 +10,64 @@ import { cn } from "@/lib/utils";
 import type { QRTemplate } from "@/lib/qrTemplates";
 
 /**
- * QR code in a styled panel — panel bg/border/shadow, optional label and
- * optional avatar overlay come from the chosen template. The QR itself
- * stays dark-on-white in every template so it always scans cleanly.
- *
- * The HD download is the bare QR canvas (most useful for print/embed).
+ * Build a QRCodeStyling Options object from one of our templates. Renders
+ * at 1024×1024 internally for crisp HD download — the rendered canvas is
+ * scaled to the requested `display` size via CSS.
+ */
+function buildOptions(
+  value: string,
+  template: QRTemplate,
+  imageSrc: string | undefined,
+): Options {
+  return {
+    width: 1024,
+    height: 1024,
+    type: "canvas",
+    data: value || "https://credibly.app",
+    image: imageSrc,
+    margin: 16,
+    qrOptions: { errorCorrectionLevel: "H" },
+    dotsOptions: {
+      type: template.dotsType ?? "square",
+      color: QR_FG_DEFAULT,
+      ...(template.dotsGradient
+        ? {
+            gradient: {
+              type: "linear",
+              rotation: (template.dotsGradient.angle * Math.PI) / 180,
+              colorStops: [
+                { offset: 0, color: template.dotsGradient.from },
+                { offset: 1, color: template.dotsGradient.to },
+              ],
+            },
+          }
+        : {}),
+    },
+    cornersSquareOptions: {
+      type: template.cornersSquareType ?? "square",
+      color: QR_FG_DEFAULT,
+    },
+    cornersDotOptions: {
+      type: template.cornersDotType ?? "square",
+      color: QR_FG_DEFAULT,
+    },
+    backgroundOptions: { color: QR_BG_DEFAULT },
+    imageOptions: imageSrc
+      ? {
+          hideBackgroundDots: true,
+          imageSize: 0.22,
+          margin: 4,
+          crossOrigin: "anonymous",
+        }
+      : undefined,
+  };
+}
+
+/**
+ * QR code in a styled panel — uses qr-code-styling so we can have
+ * rounded/classy modules and gradient dots. The QR itself stays
+ * dark on white (with optional gradient) and uses error-correction H
+ * so it still scans cleanly even with styled modules and a centre image.
  */
 export function StyledQR({
   value,
@@ -33,35 +86,43 @@ export function StyledQR({
   showDownload?: boolean;
   className?: string;
 }) {
-  const wrap = useRef<HTMLDivElement>(null);
-
-  const download = () => {
-    const canvas = wrap.current?.querySelector("canvas");
-    if (!canvas) return;
-    const link = document.createElement("a");
-    link.download = `${fileName}.png`;
-    link.href = canvas.toDataURL("image/png");
-    link.click();
-    toast.success("HD QR code downloaded");
-  };
+  const containerRef = useRef<HTMLDivElement>(null);
+  const qrRef = useRef<QRCodeStyling | null>(null);
 
   /* Route the avatar through the same-origin /api/img proxy so the canvas
      isn't tainted by Firebase Storage's missing CORS headers. */
-  const imageSettings =
+  const imageSrc =
     template.includeAvatar && avatarUrl
-      ? {
-          src: `/api/img?url=${encodeURIComponent(avatarUrl)}`,
-          height: Math.round(display * 0.22),
-          width: Math.round(display * 0.22),
-          excavate: true,
-          crossOrigin: "anonymous" as const,
-        }
+      ? `/api/img?url=${encodeURIComponent(avatarUrl)}`
       : undefined;
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const opts = buildOptions(value, template, imageSrc);
+    if (!qrRef.current) {
+      qrRef.current = new QRCodeStyling(opts);
+      qrRef.current.append(containerRef.current);
+    } else {
+      qrRef.current.update(opts);
+    }
+    /* qr-code-styling renders the canvas at width/height = 1024 px.
+       Scale it down to the requested `display` size via CSS — keeps the
+       crisp HD pixels while fitting the UI. */
+    const canvas = containerRef.current.querySelector("canvas");
+    if (canvas instanceof HTMLCanvasElement) {
+      canvas.style.width = `${display}px`;
+      canvas.style.height = `${display}px`;
+    }
+  }, [value, template, imageSrc, display]);
+
+  const download = () => {
+    qrRef.current?.download({ name: fileName, extension: "png" });
+    toast.success("HD QR code downloaded");
+  };
 
   return (
     <div className={cn("flex flex-col items-center gap-3", className)}>
       <div
-        ref={wrap}
         className="flex flex-col items-center rounded-3xl p-5"
         style={{
           background: template.panelBg,
@@ -73,14 +134,8 @@ export function StyledQR({
           className="rounded-2xl bg-white p-3.5"
           style={{ border: `1px solid ${template.qrCardBorder}` }}
         >
-          <QRCodeCanvas
-            value={value || "https://credibly.app"}
-            size={1024}
-            level="H"
-            fgColor={QR_FG_DEFAULT}
-            bgColor={QR_BG_DEFAULT}
-            marginSize={2}
-            imageSettings={imageSettings}
+          <div
+            ref={containerRef}
             style={{ width: display, height: display }}
           />
         </div>
