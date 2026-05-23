@@ -68,12 +68,21 @@ const V = {
 function SectionShell({
   title,
   children,
+  narrow,
 }: {
   title?: string;
   children: React.ReactNode;
+  /** Cap section to a readable/form-friendly width on wider containers. */
+  narrow?: "md" | "2xl";
 }) {
+  const narrowCls =
+    narrow === "md"
+      ? "mx-auto max-w-md"
+      : narrow === "2xl"
+        ? "mx-auto max-w-2xl"
+        : "";
   return (
-    <section>
+    <section className={narrowCls || undefined}>
       {title && (
         <div className="mb-3 flex items-center gap-2">
           <span
@@ -280,7 +289,7 @@ export function SectionRenderer({
   switch (section.type) {
     case "cta":
       return (
-        <SectionShell title={section.title}>
+        <SectionShell title={section.title} narrow="md">
           <div className="space-y-2.5">
             {section.buttons.map((b) => (
               <a
@@ -330,7 +339,7 @@ export function SectionRenderer({
 
     case "about":
       return (
-        <SectionShell title={section.title}>
+        <SectionShell title={section.title} narrow="2xl">
           <p
             className="whitespace-pre-line text-sm leading-relaxed"
             style={V.text2}
@@ -342,7 +351,7 @@ export function SectionRenderer({
 
     case "text":
       return (
-        <SectionShell title={section.title}>
+        <SectionShell title={section.title} narrow="2xl">
           <div className="text-sm leading-relaxed" style={V.text2}>
             <RichTextRenderer doc={section.doc} />
           </div>
@@ -402,7 +411,7 @@ export function SectionRenderer({
     case "benefits":
       return (
         <SectionShell title={section.title}>
-          <div className="space-y-2.5">
+          <div className="grid gap-2.5 @xl:grid-cols-2">
             {section.items.map((it) => (
               <div
                 key={it.id}
@@ -432,14 +441,14 @@ export function SectionRenderer({
 
     case "faq":
       return (
-        <SectionShell title={section.title}>
+        <SectionShell title={section.title} narrow="2xl">
           <FaqList items={section.items} />
         </SectionShell>
       );
 
     case "pricingCard":
       return (
-        <SectionShell title={section.title}>
+        <SectionShell title={section.title} narrow="md">
           <div className="overflow-hidden p-5" style={V.card}>
             <p
               className="text-center font-display text-base font-semibold"
@@ -501,7 +510,7 @@ export function SectionRenderer({
     case "credibility":
       return (
         <SectionShell title={section.title}>
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-2 gap-2.5 @2xl:grid-cols-3">
             {section.items.map((it) => (
               <div key={it.id} className="p-3.5" style={V.card}>
                 <Icon
@@ -529,7 +538,7 @@ export function SectionRenderer({
     case "testimonials":
       return (
         <SectionShell title={section.title}>
-          <div className="space-y-2.5">
+          <div className="grid gap-2.5 @xl:grid-cols-2">
             {section.testimonials.map((t) => (
               <div key={t.id} className="p-4" style={V.card}>
                 {t.kind === "image" && t.mediaUrl && (
@@ -581,7 +590,7 @@ export function SectionRenderer({
     case "products":
       return (
         <SectionShell title={section.title}>
-          <div className="grid gap-2.5">
+          <div className="grid gap-2.5 @xl:grid-cols-2">
             {section.products.map((p) => (
               <div
                 key={p.id}
@@ -714,7 +723,7 @@ export function SectionRenderer({
 
     case "leadCapture":
       return (
-        <SectionShell title={section.title}>
+        <SectionShell title={section.title} narrow="md">
           <LeadForm section={section} track={track} onLead={onLead} />
         </SectionShell>
       );

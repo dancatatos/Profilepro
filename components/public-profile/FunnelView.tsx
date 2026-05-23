@@ -117,7 +117,7 @@ export function FunnelView({
 
   return (
     <div className={cn("min-h-full w-full", effectClasses)} style={themeStyle}>
-      <div className="mx-auto max-w-md px-4 pb-14 pt-10">
+      <div className="@container mx-auto max-w-md px-4 pb-14 pt-10 md:max-w-2xl lg:max-w-3xl">
         {/* Progress */}
         {funnel.steps.length > 1 && (
           <div className="mb-7 flex justify-center gap-1.5">
