@@ -89,6 +89,24 @@ export const SECTION_CATALOG: SectionMeta[] = [
     icon: "Rocket",
   },
   {
+    type: "benefits",
+    label: "Benefits",
+    description: "Bullet list of value props",
+    icon: "ListChecks",
+  },
+  {
+    type: "faq",
+    label: "FAQ",
+    description: "Common questions and answers",
+    icon: "HelpCircle",
+  },
+  {
+    type: "pricingCard",
+    label: "Pricing Card",
+    description: "Featured offer — price + features + CTA",
+    icon: "Tag",
+  },
+  {
     type: "text",
     label: "Text Block",
     description: "Formatted text — bold, lists, headings, alignment",

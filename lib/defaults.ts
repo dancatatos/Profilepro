@@ -62,6 +62,50 @@ export function createSection(type: SectionType): ProfileSection {
         subtext:
           "A short subhead that explains who this is for and what they get.",
       };
+    case "benefits":
+      return {
+        ...base,
+        type: "benefits",
+        title: "What you'll get",
+        items: [
+          { id: uid("bn"), title: "First key benefit", icon: "Check" },
+          { id: uid("bn"), title: "Second key benefit", icon: "Check" },
+          { id: uid("bn"), title: "Third key benefit", icon: "Check" },
+        ],
+      };
+    case "faq":
+      return {
+        ...base,
+        type: "faq",
+        title: "Frequently asked",
+        items: [
+          {
+            id: uid("fq"),
+            question: "Is this for me?",
+            answer: "Yes — if you want a clear next step.",
+          },
+          {
+            id: uid("fq"),
+            question: "How does it work?",
+            answer: "Sign up, get instant access and follow the steps.",
+          },
+        ],
+      };
+    case "pricingCard":
+      return {
+        ...base,
+        type: "pricingCard",
+        headline: "Get instant access",
+        price: "₱1,997",
+        priceNote: "one-time payment",
+        features: [
+          { id: uid("pf"), text: "Full course access" },
+          { id: uid("pf"), text: "Lifetime updates" },
+          { id: uid("pf"), text: "Community support" },
+        ],
+        ctaLabel: "Get it now",
+        ctaUrl: "",
+      };
     case "credibility":
       return {
         ...base,

@@ -79,6 +79,29 @@ function freshSection(section: ProfileSection): ProfileSection {
           ? { backgroundUrl: section.backgroundUrl }
           : {}),
       };
+    case "benefits":
+      return {
+        ...base,
+        type: "benefits",
+        items: section.items.map((it) => ({ ...it, id: uid("bn") })),
+      };
+    case "faq":
+      return {
+        ...base,
+        type: "faq",
+        items: section.items.map((it) => ({ ...it, id: uid("fq") })),
+      };
+    case "pricingCard":
+      return {
+        ...base,
+        type: "pricingCard",
+        headline: section.headline,
+        price: section.price,
+        priceNote: section.priceNote,
+        features: section.features.map((f) => ({ ...f, id: uid("pf") })),
+        ctaLabel: section.ctaLabel,
+        ctaUrl: "",
+      };
     case "credibility":
       return {
         ...base,

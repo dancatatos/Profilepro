@@ -48,7 +48,10 @@ export type SectionType =
   | "appointment"
   | "text"
   | "countdown"
-  | "hero";
+  | "hero"
+  | "benefits"
+  | "faq"
+  | "pricingCard";
 
 export interface CTAButton {
   id: string;
@@ -178,6 +181,39 @@ export interface HeroSection extends SectionBase {
   /** Optional background image URL. */
   backgroundUrl?: string;
 }
+export interface BenefitItem {
+  id: string;
+  title: string;
+  detail?: string;
+  /** Lucide icon name — defaults to "Check". */
+  icon?: string;
+}
+export interface BenefitsSection extends SectionBase {
+  type: "benefits";
+  items: BenefitItem[];
+}
+export interface FaqItem {
+  id: string;
+  question: string;
+  answer: string;
+}
+export interface FaqSection extends SectionBase {
+  type: "faq";
+  items: FaqItem[];
+}
+export interface PricingFeature {
+  id: string;
+  text: string;
+}
+export interface PricingCardSection extends SectionBase {
+  type: "pricingCard";
+  headline: string;
+  price: string;
+  priceNote?: string;
+  features: PricingFeature[];
+  ctaLabel: string;
+  ctaUrl: string;
+}
 export interface CredibilitySection extends SectionBase {
   type: "credibility";
   items: CredibilityItem[];
@@ -235,6 +271,9 @@ export type ProfileSection =
   | TextSection
   | CountdownSection
   | HeroSection
+  | BenefitsSection
+  | FaqSection
+  | PricingCardSection
   | CredibilitySection
   | TestimonialsSection
   | ProductsSection

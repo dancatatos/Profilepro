@@ -14,6 +14,9 @@ import type {
   CountdownSection,
   CredibilitySection,
   HeroSection,
+  BenefitsSection,
+  FaqSection,
+  PricingCardSection,
   CtaSection,
   GallerySection,
   LeadCaptureSection,
@@ -335,6 +338,196 @@ function HeroEditor({ section }: { section: HeroSection }) {
         onChange={(url) => update(section.id, { backgroundUrl: url })}
         folder="hero"
       />
+    </div>
+  );
+}
+
+/* ---------------- Benefits ---------------- */
+
+const BENEFIT_ICONS = [
+  "Check",
+  "Star",
+  "Sparkles",
+  "ShieldCheck",
+  "Heart",
+  "ThumbsUp",
+  "Trophy",
+  "Zap",
+  "Target",
+  "Rocket",
+];
+
+function BenefitsEditor({ section }: { section: BenefitsSection }) {
+  const { updateSection: update } = useSections();
+  const patch = (items: BenefitsSection["items"]) =>
+    update(section.id, { items });
+  const edit = (id: string, p: Partial<BenefitsSection["items"][number]>) =>
+    patch(section.items.map((i) => (i.id === id ? { ...i, ...p } : i)));
+
+  return (
+    <div className="space-y-2.5">
+      {section.items.map((it) => (
+        <RowCard
+          key={it.id}
+          onRemove={() => patch(section.items.filter((x) => x.id !== it.id))}
+        >
+          <input
+            value={it.title}
+            onChange={(e) => edit(it.id, { title: e.target.value })}
+            placeholder="Benefit title"
+            className={FIELD}
+          />
+          <input
+            value={it.detail || ""}
+            onChange={(e) => edit(it.id, { detail: e.target.value })}
+            placeholder="Detail (optional)"
+            className={FIELD}
+          />
+          <IconPicker
+            icons={BENEFIT_ICONS}
+            value={it.icon || "Check"}
+            onChange={(icon) => edit(it.id, { icon })}
+          />
+        </RowCard>
+      ))}
+      <AddRow
+        label="Add benefit"
+        onClick={() =>
+          patch([
+            ...section.items,
+            { id: uid("bn"), title: "New benefit", icon: "Check" },
+          ])
+        }
+      />
+    </div>
+  );
+}
+
+/* ---------------- FAQ ---------------- */
+
+function FaqEditor({ section }: { section: FaqSection }) {
+  const { updateSection: update } = useSections();
+  const patch = (items: FaqSection["items"]) => update(section.id, { items });
+  const edit = (id: string, p: Partial<FaqSection["items"][number]>) =>
+    patch(section.items.map((i) => (i.id === id ? { ...i, ...p } : i)));
+
+  return (
+    <div className="space-y-2.5">
+      {section.items.map((it) => (
+        <RowCard
+          key={it.id}
+          onRemove={() => patch(section.items.filter((x) => x.id !== it.id))}
+        >
+          <input
+            value={it.question}
+            onChange={(e) => edit(it.id, { question: e.target.value })}
+            placeholder="Question"
+            className={FIELD}
+          />
+          <textarea
+            value={it.answer}
+            onChange={(e) => edit(it.id, { answer: e.target.value })}
+            rows={2}
+            placeholder="Answer"
+            className="w-full resize-none rounded-lg border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-electric-500/60"
+          />
+        </RowCard>
+      ))}
+      <AddRow
+        label="Add question"
+        onClick={() =>
+          patch([
+            ...section.items,
+            { id: uid("fq"), question: "", answer: "" },
+          ])
+        }
+      />
+    </div>
+  );
+}
+
+/* ---------------- Pricing card ---------------- */
+
+function PricingCardEditor({ section }: { section: PricingCardSection }) {
+  const { updateSection: update } = useSections();
+  const patchFeatures = (features: PricingCardSection["features"]) =>
+    update(section.id, { features });
+  const editFeature = (id: string, text: string) =>
+    patchFeatures(
+      section.features.map((f) => (f.id === id ? { ...f, text } : f)),
+    );
+
+  return (
+    <div className="space-y-3">
+      <input
+        value={section.headline}
+        onChange={(e) => update(section.id, { headline: e.target.value })}
+        placeholder="Headline (e.g. Get instant access)"
+        className={FIELD}
+      />
+      <div className="grid grid-cols-2 gap-2">
+        <input
+          value={section.price}
+          onChange={(e) => update(section.id, { price: e.target.value })}
+          placeholder="Price (e.g. ₱1,997)"
+          className={FIELD}
+        />
+        <input
+          value={section.priceNote || ""}
+          onChange={(e) => update(section.id, { priceNote: e.target.value })}
+          placeholder="Note (e.g. one-time)"
+          className={FIELD}
+        />
+      </div>
+      <div>
+        <p className="mb-1.5 text-xs font-medium text-white/65">
+          What&apos;s included
+        </p>
+        <div className="space-y-2">
+          {section.features.map((f) => (
+            <div key={f.id} className="flex items-center gap-2">
+              <input
+                value={f.text}
+                onChange={(e) => editFeature(f.id, e.target.value)}
+                placeholder="Feature included"
+                className={cn(FIELD, "h-9 flex-1 text-xs")}
+              />
+              <button
+                onClick={() =>
+                  patchFeatures(section.features.filter((x) => x.id !== f.id))
+                }
+                aria-label="Remove feature"
+                className="shrink-0 rounded-md p-1.5 text-white/30 hover:text-red-400"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+          <AddRow
+            label="Add feature"
+            onClick={() =>
+              patchFeatures([
+                ...section.features,
+                { id: uid("pf"), text: "" },
+              ])
+            }
+          />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <input
+          value={section.ctaLabel}
+          onChange={(e) => update(section.id, { ctaLabel: e.target.value })}
+          placeholder="Button label"
+          className={FIELD}
+        />
+        <input
+          value={section.ctaUrl}
+          onChange={(e) => update(section.id, { ctaUrl: e.target.value })}
+          placeholder="Link / checkout URL"
+          className={FIELD}
+        />
+      </div>
     </div>
   );
 }
@@ -913,6 +1106,12 @@ export function SectionEditor({ section }: { section: ProfileSection }) {
       return <CountdownEditor section={section} />;
     case "hero":
       return <HeroEditor section={section} />;
+    case "benefits":
+      return <BenefitsEditor section={section} />;
+    case "faq":
+      return <FaqEditor section={section} />;
+    case "pricingCard":
+      return <PricingCardEditor section={section} />;
     case "credibility":
       return <CredibilityEditor section={section} />;
     case "testimonials":

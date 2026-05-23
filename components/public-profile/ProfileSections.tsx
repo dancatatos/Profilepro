@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MessageCircle, Send, Star } from "lucide-react";
+import { Check, ChevronDown, MessageCircle, Send, Star } from "lucide-react";
 import { Icon } from "@/components/ui/Icon";
 import { SocialIcon } from "@/components/ui/SocialIcon";
 import { AppointmentBooking, type BookingSubmitFn } from "./AppointmentBooking";
@@ -9,7 +9,7 @@ import { RichTextRenderer } from "@/components/ui/RichTextRenderer";
 import { CountdownTimer } from "./CountdownTimer";
 import { ctaButtonClasses } from "@/lib/theme";
 import { cn, isValidEmail, toEmbedUrl } from "@/lib/utils";
-import type { AnalyticsEventType, ProfileSection } from "@/types";
+import type { AnalyticsEventType, FaqItem, ProfileSection } from "@/types";
 import type { ThemeConfig } from "@/lib/themes";
 
 export type TrackFn = (type: AnalyticsEventType, target?: string) => void;
@@ -224,6 +224,49 @@ function LeadForm({
 }
 
 /* ──────────────────────────────────────────
+   FAQ accordion
+────────────────────────────────────────── */
+
+function FaqList({ items }: { items: FaqItem[] }) {
+  const [openId, setOpenId] = useState<string | null>(items[0]?.id ?? null);
+  return (
+    <div className="space-y-2">
+      {items.map((it) => {
+        const isOpen = openId === it.id;
+        return (
+          <div key={it.id} className="overflow-hidden" style={V.card}>
+            <button
+              type="button"
+              onClick={() => setOpenId(isOpen ? null : it.id)}
+              className="flex w-full items-center justify-between gap-3 p-4 text-left"
+            >
+              <p className="text-sm font-medium" style={V.text}>
+                {it.question}
+              </p>
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 shrink-0 transition-transform",
+                  isOpen && "rotate-180",
+                )}
+                style={V.text3}
+              />
+            </button>
+            {isOpen && (
+              <p
+                className="whitespace-pre-line px-4 pb-4 text-sm leading-relaxed"
+                style={V.text2}
+              >
+                {it.answer}
+              </p>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────
    Section renderer
 ────────────────────────────────────────── */
 
@@ -352,6 +395,105 @@ export function SectionRenderer({
                 </p>
               )}
             </div>
+          </div>
+        </SectionShell>
+      );
+
+    case "benefits":
+      return (
+        <SectionShell title={section.title}>
+          <div className="space-y-2.5">
+            {section.items.map((it) => (
+              <div
+                key={it.id}
+                className="flex items-start gap-3 p-3.5"
+                style={V.card}
+              >
+                <Icon
+                  name={it.icon || "Check"}
+                  className="h-5 w-5 shrink-0"
+                  style={{ color: "var(--tp-accent)" }}
+                />
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold" style={V.text}>
+                    {it.title}
+                  </p>
+                  {it.detail && (
+                    <p className="mt-0.5 text-xs" style={V.text3}>
+                      {it.detail}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </SectionShell>
+      );
+
+    case "faq":
+      return (
+        <SectionShell title={section.title}>
+          <FaqList items={section.items} />
+        </SectionShell>
+      );
+
+    case "pricingCard":
+      return (
+        <SectionShell title={section.title}>
+          <div className="overflow-hidden p-5" style={V.card}>
+            <p
+              className="text-center font-display text-base font-semibold"
+              style={V.text}
+            >
+              {section.headline}
+            </p>
+            <div className="my-3 flex items-baseline justify-center gap-2">
+              <span
+                className="font-display text-3xl font-bold"
+                style={V.text}
+              >
+                {section.price}
+              </span>
+              {section.priceNote && (
+                <span className="text-xs" style={V.text3}>
+                  · {section.priceNote}
+                </span>
+              )}
+            </div>
+            {section.features.length > 0 && (
+              <ul className="my-4 space-y-2">
+                {section.features.map((f) => (
+                  <li
+                    key={f.id}
+                    className="flex items-start gap-2 text-sm"
+                    style={V.text2}
+                  >
+                    <Check
+                      className="mt-0.5 h-4 w-4 shrink-0"
+                      style={{ color: "var(--tp-accent)" }}
+                    />
+                    <span>{f.text}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {section.ctaLabel && (
+              <a
+                href={section.ctaUrl || "#"}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => track("cta_click", `pricing-${section.id}`)}
+                className="tp-btn-el block w-full px-5 py-3.5 text-center text-sm font-semibold transition-transform active:scale-[0.98]"
+                style={{
+                  background: "var(--tp-btn)",
+                  color: "var(--tp-btn-text)",
+                  borderRadius: "var(--tp-btn-radius)",
+                  border: "1px solid var(--tp-btn-border)",
+                }}
+              >
+                {section.ctaLabel}
+              </a>
+            )}
           </div>
         </SectionShell>
       );
