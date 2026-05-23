@@ -1,24 +1,61 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Copy, Printer, QrCode } from "lucide-react";
 import { useProfileStore } from "@/store/profileStore";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/common/PageHeader";
-import { QRBlock } from "@/components/qr/QRBlock";
+import { StyledQR } from "@/components/qr/StyledQR";
+import { QRTemplatePicker } from "@/components/qr/QRTemplatePicker";
+import {
+  QR_TEMPLATE_STORAGE_KEY,
+  getQRTemplate,
+} from "@/lib/qrTemplates";
 import { APP } from "@/lib/constants";
 import { copyToClipboard } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 
 const USE_CASES = [
-  { icon: "Printer", title: "Tarpaulins & banners", desc: "Print on event tarps so prospects scan instantly." },
-  { icon: "CreditCard", title: "Business cards", desc: "Add to physical cards for a modern hybrid card." },
-  { icon: "Presentation", title: "Presentations", desc: "Show on slides during opportunity meetings." },
+  {
+    title: "Tarpaulins & banners",
+    desc: "Print on event tarps so prospects scan instantly.",
+  },
+  {
+    title: "Business cards",
+    desc: "Add to physical cards for a modern hybrid card.",
+  },
+  {
+    title: "Presentations",
+    desc: "Show on slides during opportunity meetings.",
+  },
 ];
 
 export default function QRPage() {
   const profile = useProfileStore((s) => s.profile);
   const url = `${APP.url}/${profile?.username || "demo"}`;
+
+  const [templateId, setTemplateId] = useState("midnight");
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(QR_TEMPLATE_STORAGE_KEY);
+      if (saved) setTemplateId(saved);
+    } catch {
+      /* localStorage unavailable */
+    }
+  }, []);
+
+  const pickTemplate = (id: string) => {
+    setTemplateId(id);
+    try {
+      localStorage.setItem(QR_TEMPLATE_STORAGE_KEY, id);
+    } catch {
+      /* localStorage unavailable */
+    }
+  };
+
+  const template = getQRTemplate(templateId);
 
   return (
     <div className="space-y-5">
@@ -29,14 +66,25 @@ export default function QRPage() {
 
       <div className="grid gap-5 lg:grid-cols-2">
         <Card className="flex flex-col items-center p-6">
-          <QRBlock value={url} display={240} fileName="credibly-profile-qr" />
+          <QRTemplatePicker
+            active={templateId}
+            onPick={pickTemplate}
+            className="w-full"
+          />
+          <div className="mt-4">
+            <StyledQR
+              value={url}
+              template={template}
+              avatarUrl={profile?.header.avatarUrl}
+              display={240}
+              fileName="credibly-profile-qr"
+            />
+          </div>
           <p className="mt-4 text-center text-xs text-white/45">
             High-resolution 1024px PNG — print-ready for tarps and cards.
           </p>
           <div className="mt-3 flex w-full items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-1.5 pl-3">
-            <span className="flex-1 truncate text-xs text-white/55">
-              {url}
-            </span>
+            <span className="flex-1 truncate text-xs text-white/55">{url}</span>
             <Button
               size="sm"
               variant="outline"
