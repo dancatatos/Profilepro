@@ -47,7 +47,8 @@ export type SectionType =
   | "leadCapture"
   | "appointment"
   | "text"
-  | "countdown";
+  | "countdown"
+  | "hero";
 
 export interface CTAButton {
   id: string;
@@ -170,6 +171,13 @@ export interface CountdownSection extends SectionBase {
   /** Shown once the countdown reaches zero. */
   expiredText: string;
 }
+export interface HeroSection extends SectionBase {
+  type: "hero";
+  headline: string;
+  subtext: string;
+  /** Optional background image URL. */
+  backgroundUrl?: string;
+}
 export interface CredibilitySection extends SectionBase {
   type: "credibility";
   items: CredibilityItem[];
@@ -226,6 +234,7 @@ export type ProfileSection =
   | AboutSection
   | TextSection
   | CountdownSection
+  | HeroSection
   | CredibilitySection
   | TestimonialsSection
   | ProductsSection

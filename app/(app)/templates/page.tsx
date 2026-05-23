@@ -380,6 +380,7 @@ const SECTION_LABELS: Record<SectionType, string> = {
   appointment: "Booking",
   text: "Text",
   countdown: "Countdown",
+  hero: "Hero",
 };
 
 const SECTION_COLORS: Record<SectionType, string> = {
@@ -395,6 +396,7 @@ const SECTION_COLORS: Record<SectionType, string> = {
   appointment: "bg-electric-500/20 text-electric-300",
   text: "bg-white/10 text-white/60",
   countdown: "bg-gold-400/20 text-gold-300",
+  hero: "bg-electric-500/20 text-electric-300",
 };
 
 /* ---- Mini preview component ---- */

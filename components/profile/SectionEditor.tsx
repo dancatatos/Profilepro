@@ -13,6 +13,7 @@ import type {
   AppointmentSection,
   CountdownSection,
   CredibilitySection,
+  HeroSection,
   CtaSection,
   GallerySection,
   LeadCaptureSection,
@@ -305,6 +306,34 @@ function CountdownEditor({ section }: { section: CountdownSection }) {
         onChange={(e) => update(section.id, { expiredText: e.target.value })}
         placeholder="Message shown when the timer ends"
         className={FIELD}
+      />
+    </div>
+  );
+}
+
+/* ---------------- Hero ---------------- */
+
+function HeroEditor({ section }: { section: HeroSection }) {
+  const { updateSection: update } = useSections();
+  return (
+    <div className="space-y-3">
+      <input
+        value={section.headline}
+        onChange={(e) => update(section.id, { headline: e.target.value })}
+        placeholder="Big bold headline"
+        className={FIELD}
+      />
+      <textarea
+        value={section.subtext}
+        onChange={(e) => update(section.id, { subtext: e.target.value })}
+        rows={2}
+        placeholder="Short subhead"
+        className="w-full resize-none rounded-lg border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-electric-500/60"
+      />
+      <ImageUploadField
+        value={section.backgroundUrl}
+        onChange={(url) => update(section.id, { backgroundUrl: url })}
+        folder="hero"
       />
     </div>
   );
@@ -882,6 +911,8 @@ export function SectionEditor({ section }: { section: ProfileSection }) {
       return <TextEditor section={section} />;
     case "countdown":
       return <CountdownEditor section={section} />;
+    case "hero":
+      return <HeroEditor section={section} />;
     case "credibility":
       return <CredibilityEditor section={section} />;
     case "testimonials":

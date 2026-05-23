@@ -83,6 +83,12 @@ export const SECTION_CATALOG: SectionMeta[] = [
     icon: "FileText",
   },
   {
+    type: "hero",
+    label: "Hero",
+    description: "Big headline + subhead — your eye-catching top block",
+    icon: "Rocket",
+  },
+  {
     type: "text",
     label: "Text Block",
     description: "Formatted text — bold, lists, headings, alignment",

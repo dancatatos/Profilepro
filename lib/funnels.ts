@@ -118,7 +118,7 @@ export function createFunnel(
     ownerId,
     name: trimmed,
     slug: slugify(trimmed) || `funnel-${now.toString(36)}`,
-    themeId: "midnight",
+    themeId: "navy-glass",
     status: "draft",
     steps: template.steps.map(createFunnelStep),
     createdAt: now,
@@ -222,7 +222,7 @@ export function funnelFromGenerated(
     ownerId,
     name,
     slug: slugify(name) || `funnel-${now.toString(36)}`,
-    themeId: "midnight",
+    themeId: "navy-glass",
     status: "draft",
     steps:
       steps.length > 0

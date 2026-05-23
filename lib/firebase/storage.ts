@@ -15,7 +15,13 @@ import { uid } from "@/lib/utils";
 export async function uploadImage(
   ownerId: string,
   file: File,
-  folder: "avatars" | "covers" | "gallery" | "products" | "media" = "media",
+  folder:
+    | "avatars"
+    | "covers"
+    | "gallery"
+    | "products"
+    | "media"
+    | "hero" = "media",
 ): Promise<string> {
   if (!isFirebaseConfigured) {
     return URL.createObjectURL(file);

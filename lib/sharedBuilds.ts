@@ -69,6 +69,16 @@ function freshSection(section: ProfileSection): ProfileSection {
         targetIso: section.targetIso,
         expiredText: section.expiredText,
       };
+    case "hero":
+      return {
+        ...base,
+        type: "hero",
+        headline: section.headline,
+        subtext: section.subtext,
+        ...(section.backgroundUrl
+          ? { backgroundUrl: section.backgroundUrl }
+          : {}),
+      };
     case "credibility":
       return {
         ...base,

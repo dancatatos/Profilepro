@@ -24,6 +24,9 @@ import { FullScreenLoader } from "@/components/ui/Spinner";
 import { SectionsManager } from "@/components/profile/SectionsManager";
 import { ShareFunnelModal } from "@/components/funnels/ShareFunnelModal";
 import { FunnelPhonePreview } from "@/components/funnels/FunnelPhonePreview";
+import { FunnelThemeModal } from "@/components/funnels/FunnelThemeModal";
+import { ThemeMiniPreview } from "@/components/profile/ThemeMiniPreview";
+import { THEME_CONFIGS } from "@/lib/themes";
 import {
   SectionsProvider,
   type SectionsApi,
@@ -135,6 +138,7 @@ export default function FunnelBuilderPage() {
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [themeOpen, setThemeOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -274,6 +278,9 @@ export default function FunnelBuilderPage() {
   const finished = analytics[funnel.steps.length - 1] ?? 0;
   const completion = entered > 0 ? Math.round((finished / entered) * 100) : 0;
 
+  const currentTheme =
+    THEME_CONFIGS.find((t) => t.id === funnel.themeId) ?? THEME_CONFIGS[0];
+
   const sectionsApi: SectionsApi = {
     sections: currentStep.sections,
     setSections: (sections) =>
@@ -378,6 +385,23 @@ export default function FunnelBuilderPage() {
             <p className="mt-1 truncate text-[11px] text-white/35">
               {publicPath}
             </p>
+          </div>
+          <div>
+            <p className="mb-1.5 text-xs font-medium text-white/65">Theme</p>
+            <button
+              onClick={() => setThemeOpen(true)}
+              className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-2 text-left transition-colors hover:border-white/25"
+            >
+              <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md">
+                <ThemeMiniPreview theme={currentTheme} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-white">
+                  {currentTheme.name}
+                </p>
+                <p className="text-[11px] text-white/40">Tap to change</p>
+              </div>
+            </button>
           </div>
           <div className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
             <div>
@@ -611,6 +635,13 @@ export default function FunnelBuilderPage() {
         open={shareOpen}
         onClose={() => setShareOpen(false)}
         funnel={funnel}
+      />
+
+      <FunnelThemeModal
+        open={themeOpen}
+        onClose={() => setThemeOpen(false)}
+        themeId={funnel.themeId}
+        onChange={(id) => patchFunnel({ themeId: id })}
       />
 
       {/* Mobile preview modal */}

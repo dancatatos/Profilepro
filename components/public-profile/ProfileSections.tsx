@@ -323,6 +323,39 @@ export function SectionRenderer({
         </SectionShell>
       );
 
+    case "hero":
+      return (
+        <SectionShell title={section.title}>
+          <div
+            className="overflow-hidden"
+            style={{ ...V.card, padding: 0 }}
+          >
+            {section.backgroundUrl && (
+              <div
+                className="aspect-[16/9] bg-cover bg-center"
+                style={{ backgroundImage: `url("${section.backgroundUrl}")` }}
+              />
+            )}
+            <div className="px-5 py-6 text-center">
+              <h2
+                className="font-display text-2xl font-bold leading-tight"
+                style={V.text}
+              >
+                {section.headline}
+              </h2>
+              {section.subtext && (
+                <p
+                  className="mt-2 text-sm leading-relaxed"
+                  style={V.text2}
+                >
+                  {section.subtext}
+                </p>
+              )}
+            </div>
+          </div>
+        </SectionShell>
+      );
+
     case "credibility":
       return (
         <SectionShell title={section.title}>

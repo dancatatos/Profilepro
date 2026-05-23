@@ -54,6 +54,14 @@ export function createSection(type: SectionType): ProfileSection {
           .slice(0, 16),
         expiredText: "This offer has ended.",
       };
+    case "hero":
+      return {
+        ...base,
+        type: "hero",
+        headline: "Your bold headline goes here",
+        subtext:
+          "A short subhead that explains who this is for and what they get.",
+      };
     case "credibility":
       return {
         ...base,
