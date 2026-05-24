@@ -3,7 +3,7 @@
    App-shell caching, offline fallback, push-notification ready.
    ============================================================ */
 
-const VERSION = "credibly-v1";
+const VERSION = "credibly-v2";
 const STATIC_CACHE = VERSION + "-static";
 const OFFLINE_URL = "/offline.html";
 const PRECACHE = [OFFLINE_URL, "/icons/icon.svg", "/manifest.webmanifest"];
@@ -42,20 +42,24 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith("/api/")) return;
 
-  // Navigations: network-first, fall back to cache then offline page.
+  // Navigations: network-only — never serve stale HTML.
+  // (HTML references hashed JS bundles, so a stale HTML pins users to an
+  // old build forever. Fetch fresh every time; only fall back to the
+  // offline page if the network actually fails AND the offline page is
+  // in cache. Otherwise let the browser show its default error.)
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy));
-          return response;
-        })
-        .catch(() =>
-          caches
-            .match(request)
-            .then((cached) => cached || caches.match(OFFLINE_URL)),
-        ),
+      fetch(request).catch(() =>
+        caches.match(OFFLINE_URL).then((cached) => {
+          return (
+            cached ||
+            new Response("Offline", {
+              status: 503,
+              headers: { "Content-Type": "text/plain" },
+            })
+          );
+        }),
+      ),
     );
     return;
   }
