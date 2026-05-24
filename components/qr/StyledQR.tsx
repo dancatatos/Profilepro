@@ -52,14 +52,12 @@ function buildOptions(
       color: QR_FG_DEFAULT,
     },
     backgroundOptions: { color: QR_BG_DEFAULT },
-    imageOptions: imageSrc
-      ? {
-          hideBackgroundDots: true,
-          imageSize: 0.22,
-          margin: 4,
-          crossOrigin: "anonymous",
-        }
-      : undefined,
+    imageOptions: {
+      hideBackgroundDots: true,
+      imageSize: 0.22,
+      margin: 4,
+      crossOrigin: "anonymous",
+    },
   };
 }
 
