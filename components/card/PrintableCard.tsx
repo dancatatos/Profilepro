@@ -5,8 +5,9 @@ import { QRCodeCanvas } from "qrcode.react";
 import { Download, FileText, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { CardShareModal } from "./CardShareModal";
-import { APP, QR_FG_DEFAULT } from "@/lib/constants";
+import { QR_FG_DEFAULT } from "@/lib/constants";
 import type { CardTemplate } from "@/lib/cardTemplates";
+import { getAppOrigin } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 import type { Profile } from "@/types";
 
@@ -365,7 +366,7 @@ export function PrintableCard({
   const [pdfBusy, setPdfBusy] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
 
-  const websiteUrl = `${APP.url}/${profile.username}`;
+  const websiteUrl = `${getAppOrigin()}/${profile.username}`;
 
   useEffect(() => {
     let cancelled = false;

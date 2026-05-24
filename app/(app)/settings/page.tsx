@@ -13,8 +13,7 @@ import { Card, CardHeader } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { APP } from "@/lib/constants";
-import { copyToClipboard } from "@/lib/utils";
+import { copyToClipboard, getAppOrigin } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 
 export default function SettingsPage() {
@@ -25,7 +24,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
 
   if (!account) return null;
-  const profileUrl = `${APP.url}/${account.username || "demo"}`;
+  const profileUrl = `${getAppOrigin()}/${account.username || "demo"}`;
 
   const saveName = async () => {
     if (name.trim().length < 2) {

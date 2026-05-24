@@ -16,7 +16,7 @@ export const APP = {
   tagline: "Your AI-powered credibility profile",
   description:
     "Build a professional online credibility profile in minutes. Perfect for network marketers, recruiters, coaches and online sellers.",
-  url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  url: process.env.NEXT_PUBLIC_APP_URL || "https://www.crediblyai.com",
 };
 
 /* ---------------- Dashboard navigation ---------------- */

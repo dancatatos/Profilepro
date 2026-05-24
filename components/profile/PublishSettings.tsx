@@ -8,8 +8,7 @@ import { isUsernameAvailable } from "@/lib/firebase/firestore";
 import { isFirebaseConfigured } from "@/lib/firebase/config";
 import { Input, Textarea } from "@/components/ui/Input";
 import { Switch } from "@/components/ui/Switch";
-import { APP } from "@/lib/constants";
-import { slugify } from "@/lib/utils";
+import { getAppOrigin, slugify } from "@/lib/utils";
 
 const RESERVED = new Set([
   "login", "signup", "dashboard", "profile", "admin", "api", "settings",
@@ -76,7 +75,7 @@ export function PublishSettings() {
           }
         />
         <p className="mt-1.5 text-xs text-white/40">
-          {APP.url.replace(/^https?:\/\//, "")}/
+          {getAppOrigin().replace(/^https?:\/\//, "")}/
           <span className="text-electric-300">{username || "your-name"}</span>
           {availability === "taken" && (
             <span className="ml-2 text-red-400">Already taken</span>

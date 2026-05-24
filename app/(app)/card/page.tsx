@@ -16,7 +16,7 @@ import {
   CARD_TEMPLATE_STORAGE_KEY,
   getCardTemplate,
 } from "@/lib/cardTemplates";
-import { APP } from "@/lib/constants";
+import { getAppOrigin } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 import type { SocialsSection } from "@/types";
 
@@ -38,7 +38,7 @@ export default function DigitalCardPage() {
   if (!profile) return null;
 
   const { header } = profile;
-  const url = `${APP.url}/${profile.username}`;
+  const url = `${getAppOrigin()}/${profile.username}`;
   const socials = profile.sections.find(
     (s): s is SocialsSection => s.type === "socials" && s.enabled,
   );

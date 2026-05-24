@@ -38,8 +38,7 @@ import {
 } from "@/lib/firebase/firestore";
 import { createFunnelStep } from "@/lib/funnels";
 import { createSection } from "@/lib/defaults";
-import { APP } from "@/lib/constants";
-import { cn, slugify } from "@/lib/utils";
+import { cn, getAppOrigin, slugify } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 import type {
   Funnel,
@@ -306,7 +305,7 @@ export default function FunnelBuilderPage() {
       ),
   };
 
-  const publicPath = `${APP.url}/${account?.username || "you"}/${funnel.slug}`;
+  const publicPath = `${getAppOrigin()}/${account?.username || "you"}/${funnel.slug}`;
 
   return (
     <>

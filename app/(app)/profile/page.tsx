@@ -17,7 +17,7 @@ import { AIGenerateModal } from "@/components/profile/AIGenerateModal";
 import { PublishBuildModal } from "@/components/profile/PublishBuildModal";
 import { ShareModal } from "@/components/share/ShareModal";
 import { FullScreenLoader } from "@/components/ui/Spinner";
-import { APP } from "@/lib/constants";
+import { getAppOrigin } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 
 export default function ProfileBuilderPage() {
@@ -33,7 +33,7 @@ export default function ProfileBuilderPage() {
 
   if (!profile) return <FullScreenLoader label="Loading your profile…" />;
 
-  const profileUrl = `${APP.url}/${profile.username}`;
+  const profileUrl = `${getAppOrigin()}/${profile.username}`;
 
   const save = async () => {
     setSaving(true);

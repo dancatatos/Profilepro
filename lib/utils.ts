@@ -60,6 +60,22 @@ export function isValidEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
+/**
+ * Returns the URL origin to use when building share/profile links.
+ *
+ * On the client this is always `window.location.origin` — i.e. whichever
+ * domain the user is currently visiting. That way share URLs, QR codes
+ * and printable cards always match the current domain, even if the app
+ * is served from multiple domains or the canonical domain changes.
+ *
+ * On the server (SSR) it falls back to the configured NEXT_PUBLIC_APP_URL
+ * or a sensible default.
+ */
+export function getAppOrigin(): string {
+  if (typeof window !== "undefined") return window.location.origin;
+  return process.env.NEXT_PUBLIC_APP_URL || "https://www.crediblyai.com";
+}
+
 /** Copy text to the clipboard, returns success. */
 export async function copyToClipboard(text: string): Promise<boolean> {
   try {

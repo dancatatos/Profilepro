@@ -12,8 +12,7 @@ import {
   QR_TEMPLATE_STORAGE_KEY,
   getQRTemplate,
 } from "@/lib/qrTemplates";
-import { APP } from "@/lib/constants";
-import { copyToClipboard } from "@/lib/utils";
+import { copyToClipboard, getAppOrigin } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 
 const USE_CASES = [
@@ -33,7 +32,7 @@ const USE_CASES = [
 
 export default function QRPage() {
   const profile = useProfileStore((s) => s.profile);
-  const url = `${APP.url}/${profile?.username || "demo"}`;
+  const url = `${getAppOrigin()}/${profile?.username || "demo"}`;
 
   const [templateId, setTemplateId] = useState("midnight");
 
