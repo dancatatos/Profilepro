@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Copy, Printer, QrCode } from "lucide-react";
 import { useProfileStore } from "@/store/profileStore";
 import { Card } from "@/components/ui/Card";
@@ -16,44 +16,51 @@ import { copyToClipboard, getAppOrigin } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 
 /**
- * Compute a safe QR display size for the current viewport. The QR sits
- * inside a panel + card + page-wrapper with a stack of paddings, so on
- * narrow phones the previous fixed 240px overflowed horizontally. We
- * measure the actual width of the rendered Card and pick a size that
- * always fits, capped at 240px on tablet+ so it stays crisp.
+ * Compute a safe QR display size for the current viewport.
+ *
+ * Originally measured the Card's clientWidth, but that hit a chicken-
+ * and-egg problem: the QR initially renders at 240px, overflows the
+ * Card on narrow phones, the Card grows to fit (via flex layout), the
+ * measurement returns "plenty of room" and never shrinks the QR.
+ *
+ * Fix: anchor the calculation to `window.innerWidth` instead. That's a
+ * stable ceiling that doesn't depend on the QR itself, so we always
+ * shrink correctly. Overhead numbers below match the actual padding
+ * chain (page px-4 + Card p-4 + QR panel p-5 + inner card p-3.5).
  */
-function useResponsiveQRSize(): { ref: React.RefObject<HTMLDivElement | null>; size: number } {
-  const ref = useRef<HTMLDivElement | null>(null);
+function useResponsiveQRSize(): number {
   const [size, setSize] = useState(240);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const compute = () => {
-      const el = ref.current;
-      if (!el) return;
-      /* Available width = container width minus all stacked horizontal
-         padding (Card p-4/p-6 + panel p-5 + inner card p-3.5).
-         We measure the container directly so any future padding tweaks
-         stay in sync without manual math. */
-      const containerWidth = el.clientWidth;
-      const FRAME_PADDING = 16 + 20 + 14 + 16; // page-card + panel + inner-card + breathing room
+      const vw = window.innerWidth;
+      /* Two-column grid kicks in at lg (1024px+) — at that point the
+         QR card gets half the viewport minus gap + sidebar (64px nav).
+         For < lg we have the full content width, single column. */
+      const isWideLayout = vw >= 1024;
+      const availableForCard = isWideLayout
+        ? (vw - 256) / 2 - 32 // sidebar + grid gap + safe margin
+        : vw - 32; // page horizontal padding (px-4 = 16 each side)
+      /* Padding chain inside the Card:
+           Card p-4 mobile / p-6 desktop  → 32 / 48
+           QR panel p-5                    → 40
+           Inner card p-3.5                → 28
+           Safety buffer                   →  8 */
+      const cardPadding = isWideLayout ? 48 : 32;
+      const overhead = cardPadding + 40 + 28 + 8;
       const next = Math.max(
-        160, // never go below this — too small to scan reliably
-        Math.min(240, containerWidth - FRAME_PADDING * 2),
+        160, // floor — anything smaller scans poorly with stylised dots
+        Math.min(240, availableForCard - overhead),
       );
       setSize(Math.round(next));
     };
     compute();
-    const ro = new ResizeObserver(compute);
-    if (ref.current) ro.observe(ref.current);
     window.addEventListener("resize", compute);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", compute);
-    };
+    return () => window.removeEventListener("resize", compute);
   }, []);
 
-  return { ref, size };
+  return size;
 }
 
 const USE_CASES = [
@@ -74,7 +81,7 @@ const USE_CASES = [
 export default function QRPage() {
   const profile = useProfileStore((s) => s.profile);
   const url = `${getAppOrigin()}/${profile?.username || "demo"}`;
-  const { ref: qrCardRef, size: qrSize } = useResponsiveQRSize();
+  const qrSize = useResponsiveQRSize();
 
   const [templateId, setTemplateId] = useState("midnight");
 
@@ -106,25 +113,27 @@ export default function QRPage() {
       />
 
       <div className="grid gap-5 lg:grid-cols-2">
-        {/* Card padding shrinks on mobile so the QR + url row never
-            overflow on narrow phones. The QR size itself is computed
-            from the container width — see useResponsiveQRSize above. */}
-        <Card
-          ref={qrCardRef}
-          className="flex flex-col items-center p-4 sm:p-6"
-        >
+        {/*
+          Card padding shrinks on mobile and overflow-hidden ensures
+          nothing inside (QR, URL row, template swatches) can blow the
+          card out. The QR size itself is computed from window.innerWidth
+          via useResponsiveQRSize so it's anchored to a stable ceiling
+          rather than measuring its own potentially-overflowing parent.
+        */}
+        <Card className="flex w-full max-w-full flex-col items-center overflow-hidden p-4 sm:p-6">
           <QRTemplatePicker
             active={templateId}
             onPick={pickTemplate}
             className="w-full"
           />
-          <div className="mt-4">
+          <div className="mt-4 w-full max-w-full overflow-hidden">
             <StyledQR
               value={url}
               template={template}
               avatarUrl={profile?.header.avatarUrl}
               display={qrSize}
               fileName="credibly-profile-qr"
+              className="mx-auto"
             />
           </div>
           <p className="mt-4 text-center text-xs text-white/45">

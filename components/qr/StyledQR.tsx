@@ -119,9 +119,12 @@ export function StyledQR({
   };
 
   return (
-    <div className={cn("flex flex-col items-center gap-3", className)}>
+    <div className={cn("flex max-w-full flex-col items-center gap-3", className)}>
+      {/* max-w-full + overflow-hidden defends against any stale `display`
+          value (e.g. before useResponsiveQRSize has measured) — the
+          panel can never push beyond its parent's width. */}
       <div
-        className="flex flex-col items-center rounded-3xl p-5"
+        className="flex max-w-full flex-col items-center overflow-hidden rounded-3xl p-5"
         style={{
           background: template.panelBg,
           border: `1px solid ${template.panelBorder}`,
