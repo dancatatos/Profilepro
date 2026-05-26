@@ -48,6 +48,11 @@ export const COL = {
   sharedBuilds: "sharedBuilds",
   funnels: "funnels",
   sharedFunnels: "sharedFunnels",
+  /* Affiliate system — wired progressively across Steps 2–6. */
+  affiliates: "affiliates",
+  affiliateInvites: "affiliate_invites",
+  affiliateClicks: "affiliate_clicks",
+  commissions: "commissions",
 } as const;
 
 /** Subcollection name for a user's saved-build locker. */

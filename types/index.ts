@@ -37,6 +37,15 @@ export interface AccountUser {
   licenseKey?: string;
   /** Email associated with the Gumroad purchase */
   licenseEmail?: string;
+  /**
+   * If this user arrived via an affiliate referral link, the affiliate's
+   * code (e.g. "DAN123") is stamped here at signup and stays forever.
+   * Every commission record this user generates (signups + renewals) is
+   * attributed back to this affiliate.
+   */
+  affiliateId?: string;
+  /** Timestamp when the affiliate attribution was recorded. */
+  affiliateAttributedAt?: number;
 }
 
 /* ---------------- Feature flags (admin-controlled) ---------------- */

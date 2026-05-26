@@ -7,6 +7,7 @@ import {
   upsertUserDoc,
 } from "./firestore";
 import { createDefaultProfile } from "@/lib/defaults";
+import { clearRefCookies, getRefCookie } from "@/lib/referral";
 import { slugify } from "@/lib/utils";
 import type { AccountUser } from "@/types";
 
@@ -23,6 +24,11 @@ async function uniqueUsername(base: string, ownerId: string): Promise<string> {
 /**
  * Loads the account record for a signed-in user, creating the user
  * doc + a starter profile on first sign-in (e.g. via Google).
+ *
+ * Also handles affiliate referral attribution: if a `cred_ref` cookie
+ * is present (dropped earlier by `/r/<code>`), the code is stamped onto
+ * the new user doc as `affiliateId` and the cookie is cleared so a
+ * second signup in the same browser doesn't get re-attributed.
  */
 export async function ensureAccount(user: User): Promise<AccountUser> {
   const existing = await getUserDoc(user.uid);
@@ -32,6 +38,11 @@ export async function ensureAccount(user: User): Promise<AccountUser> {
   const displayName = user.displayName || fallbackName;
   const username = await uniqueUsername(displayName, user.uid);
   const now = Date.now();
+
+  /* Check the referral cookie BEFORE we create the user doc so we can
+     stamp the affiliateId on the initial write. Reading it once also
+     lets us avoid clearing the cookie if there was nothing to attribute. */
+  const refCode = getRefCookie();
 
   const account: AccountUser = {
     uid: user.uid,
@@ -44,9 +55,19 @@ export async function ensureAccount(user: User): Promise<AccountUser> {
     onboardingComplete: false,
     createdAt: now,
     updatedAt: now,
+    ...(refCode
+      ? { affiliateId: refCode, affiliateAttributedAt: now }
+      : {}),
   };
 
   await upsertUserDoc(account);
+
+  if (refCode) {
+    /* One-shot — once we've successfully written the attribution, drop the
+       cookies so subsequent signups (e.g. someone else using the same
+       browser) aren't accidentally credited to the original affiliate. */
+    clearRefCookies();
+  }
 
   const profile = await getProfile(user.uid);
   if (!profile) {
