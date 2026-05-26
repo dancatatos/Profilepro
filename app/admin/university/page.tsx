@@ -17,6 +17,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   GraduationCap,
+  GripVertical,
   ImagePlus,
   Loader2,
   Plus,
@@ -24,6 +25,24 @@ import {
   Save,
   Trash2,
 } from "lucide-react";
+import {
+  DndContext,
+  PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -178,6 +197,56 @@ export default function AdminUniversityPage() {
      what users see on the front-end. */
   const sorted = [...topics].sort((a, b) => a.sortOrder - b.sortOrder);
 
+  /* ── Drag-and-drop reorder ──
+     Pointer = desktop mouse + trackpad; Touch = mobile/tablet; Keyboard
+     = accessibility (Space to pick up, Arrow to move, Space to drop).
+     A small activation distance prevents the drag from firing on
+     accidental clicks (e.g. when the admin meant to click a field). */
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 8 },
+    }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = sorted.findIndex((t) => t.id === active.id);
+    const newIndex = sorted.findIndex((t) => t.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+
+    /* Reorder the visual list, then re-assign sortOrder as 10, 20, 30…
+       so there's always room to insert a topic between two existing
+       ones later without re-rolling the whole list. */
+    const next = arrayMove(sorted, oldIndex, newIndex).map((t, i) => ({
+      ...t,
+      sortOrder: (i + 1) * 10,
+    }));
+
+    /* Apply locally first for snappy UI. */
+    setTopics(next);
+
+    /* Persist every topic whose sortOrder changed. The set is bounded
+       by the visible topic count (admin scale: dozens not thousands),
+       so parallel single-doc writes are fine — no batch needed. */
+    const changed = next.filter((t, i) => t.sortOrder !== sorted[i]?.sortOrder
+      || t.id !== sorted[i]?.id);
+    try {
+      await Promise.all(
+        changed.map((t) =>
+          upsertUniversityTopic({ ...t, updatedAt: Date.now() }),
+        ),
+      );
+      toast.success("Order saved.");
+    } catch {
+      toast.error("Couldn't save the new order — try again.");
+      /* Roll back the local change on failure. */
+      setTopics(sorted);
+    }
+  };
+
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
@@ -219,21 +288,32 @@ export default function AdminUniversityPage() {
           </p>
         </Card>
       ) : (
-        <div className="space-y-4">
-          {sorted.map((topic) => (
-            <TopicEditor
-              key={topic.id}
-              topic={topic}
-              plans={plans}
-              dirty={dirtyIds.has(topic.id)}
-              saving={savingId === topic.id}
-              onChange={(patch) => patchTopic(topic.id, patch)}
-              onSave={() => saveTopic(topic)}
-              onDelete={() => removeTopic(topic)}
-              ownerUid={account?.uid ?? "admin"}
-            />
-          ))}
-        </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={sorted.map((t) => t.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="space-y-4">
+              {sorted.map((topic) => (
+                <TopicEditor
+                  key={topic.id}
+                  topic={topic}
+                  plans={plans}
+                  dirty={dirtyIds.has(topic.id)}
+                  saving={savingId === topic.id}
+                  onChange={(patch) => patchTopic(topic.id, patch)}
+                  onSave={() => saveTopic(topic)}
+                  onDelete={() => removeTopic(topic)}
+                  ownerUid={account?.uid ?? "admin"}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       )}
     </div>
   );
@@ -263,6 +343,25 @@ function TopicEditor({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
+  /* Make the whole card draggable, but only the GripVertical icon is
+     the listener target — clicks elsewhere (text inputs, the banner
+     button, plan pills) work normally. */
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: topic.id });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+    zIndex: isDragging ? 10 : "auto",
+  };
+
   const onBannerFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -291,14 +390,54 @@ function TopicEditor({
   };
 
   return (
-    <Card
-      className={cn(
-        "p-5",
-        topic.active
-          ? "border border-white/[0.06]"
-          : "border border-gold-400/30 bg-gold-400/[0.02]",
-      )}
-    >
+    <div ref={setNodeRef} style={style}>
+      <Card
+        className={cn(
+          "p-5",
+          topic.active
+            ? "border border-white/[0.06]"
+            : "border border-gold-400/30 bg-gold-400/[0.02]",
+          isDragging && "ring-2 ring-electric-500/50",
+        )}
+      >
+        {/* Drag handle row — full-width strip across the top with the
+            grip icon, sort-order chip, and badges. The grip + chip area
+            is the drag listener target. */}
+        <div
+          {...attributes}
+          {...listeners}
+          className="-mx-5 -mt-5 mb-4 flex cursor-grab items-center gap-2 rounded-t-2xl border-b border-white/[0.06] bg-white/[0.02] px-4 py-2 active:cursor-grabbing"
+          aria-label="Drag to reorder"
+        >
+          <GripVertical className="h-4 w-4 shrink-0 text-white/35" />
+          <span className="rounded-md bg-white/[0.06] px-2 py-0.5 font-mono text-[10px] text-white/55">
+            #{topic.sortOrder}
+          </span>
+          <Badge tone={topic.active ? "jade" : "gold"}>
+            {topic.active ? "Active" : "Draft"}
+          </Badge>
+          {dirty && (
+            <span className="rounded-md bg-electric-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-electric-300">
+              Unsaved
+            </span>
+          )}
+          <span className="ml-auto hidden text-[10px] text-white/35 sm:inline">
+            Drag to reorder
+          </span>
+          {/* Delete button — onPointerDown stops the drag listener from
+              treating this as a drag start, so the click registers. */}
+          <button
+            type="button"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={onDelete}
+            disabled={saving}
+            aria-label="Delete topic"
+            className="rounded-md p-1 text-white/30 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+
       <div className="grid gap-5 lg:grid-cols-[280px,1fr]">
         {/* Banner uploader */}
         <div>
@@ -349,31 +488,6 @@ function TopicEditor({
 
         {/* Fields */}
         <div className="space-y-3">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-md bg-white/[0.06] px-2 py-0.5 font-mono text-[10px] text-white/55">
-                #{topic.sortOrder}
-              </span>
-              <Badge tone={topic.active ? "jade" : "gold"}>
-                {topic.active ? "Active" : "Draft"}
-              </Badge>
-              {dirty && (
-                <span className="rounded-md bg-electric-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-electric-300">
-                  Unsaved
-                </span>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={onDelete}
-              disabled={saving}
-              aria-label="Delete topic"
-              className="rounded-md p-1.5 text-white/30 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
-          </div>
-
           <Input
             label="Title"
             value={topic.title}
@@ -394,24 +508,13 @@ function TopicEditor({
             />
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Input
-              label="Category"
-              value={topic.category}
-              onChange={(e) => onChange({ category: e.target.value })}
-              placeholder="Getting Started"
-              hint="Topics are grouped by category on the user page."
-            />
-            <Input
-              label="Sort order"
-              type="number"
-              value={String(topic.sortOrder)}
-              onChange={(e) =>
-                onChange({ sortOrder: Number(e.target.value) || 0 })
-              }
-              hint="Lower numbers appear first within a category."
-            />
-          </div>
+          <Input
+            label="Category"
+            value={topic.category}
+            onChange={(e) => onChange({ category: e.target.value })}
+            placeholder="Getting Started"
+            hint="Topics are grouped by category on the user page."
+          />
 
           <div className="grid gap-3 sm:grid-cols-2">
             <Input
@@ -484,6 +587,7 @@ function TopicEditor({
           </div>
         </div>
       </div>
-    </Card>
+      </Card>
+    </div>
   );
 }
