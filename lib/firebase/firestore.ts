@@ -394,6 +394,99 @@ export async function deletePipeline(id: string): Promise<void> {
 }
 
 /**
+ * Generate a short, shareable code for a pipeline (e.g. "PIPE-AB12CD").
+ * Persists onto the pipeline doc; downline team members can paste this
+ * code on /pipelines to clone the leader's stage configuration.
+ * Cloning the pipeline does NOT clone the leader's leads — each team
+ * member captures their own leads through their own Credibly profile.
+ */
+export async function ensurePipelineShareCode(
+  pipelineId: string,
+): Promise<string> {
+  if (!isFirebaseConfigured) return "PIPE-DEMO00";
+  const existing = await getPipeline(pipelineId);
+  if (!existing) throw new Error("Pipeline not found.");
+  if (existing.shareCode) return existing.shareCode;
+  /* 6-char suffix: uppercase letters + digits, excluding ambiguous I/0/O/1. */
+  const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const suffix = Array.from(
+    { length: 6 },
+    () => ALPHABET[Math.floor(Math.random() * ALPHABET.length)],
+  ).join("");
+  const code = `PIPE-${suffix}`;
+  await updateDoc(doc(db, COL.pipelines, pipelineId), {
+    shareCode: code,
+    updatedAt: Date.now(),
+  });
+  return code;
+}
+
+/**
+ * Look up a pipeline by its share code. Used by the clone-from-code
+ * flow on /pipelines. Anyone signed in can read by code — Firestore
+ * rules need to allow this lookup (it's already permitted because the
+ * pipeline owner doc is readable to any signed-in user via the
+ * "where shareCode == X" query path).
+ */
+export async function lookupPipelineByShareCode(
+  code: string,
+): Promise<Pipeline | null> {
+  if (!isFirebaseConfigured) return null;
+  const q = query(
+    collection(db, COL.pipelines),
+    where("shareCode", "==", code.toUpperCase().trim()),
+    fsLimit(1),
+  );
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  return { ...(snap.docs[0].data() as Pipeline), id: snap.docs[0].id };
+}
+
+/**
+ * Clone a shared pipeline into the caller's account. Generates fresh
+ * pipeline + stage ids so the team member can modify their copy
+ * without affecting the leader's. Bumps the original's cloneCount
+ * for the leader's analytics.
+ */
+export async function clonePipelineFromShareCode(
+  code: string,
+  ownerId: string,
+): Promise<Pipeline | null> {
+  if (!isFirebaseConfigured) return null;
+  const original = await lookupPipelineByShareCode(code);
+  if (!original) return null;
+  const now = Date.now();
+  /* Build a fresh pipeline doc for the cloner — new ids on the
+     pipeline AND every stage so future edits don't collide. */
+  const cloned: Pipeline = {
+    ...original,
+    id: `pipe_${now}_${Math.random().toString(36).slice(2, 8)}`,
+    ownerId,
+    isDefault: false,
+    shareCode: undefined,
+    cloneCount: undefined,
+    stages: original.stages.map((s) => ({
+      ...s,
+      id: `stage_${now}_${Math.random().toString(36).slice(2, 8)}`,
+    })),
+    createdAt: now,
+    updatedAt: now,
+  };
+  await upsertPipeline(cloned);
+  /* Increment cloneCount on the source for the leader's analytics —
+     best-effort, ignore failures (source owner can recompute later). */
+  try {
+    await updateDoc(doc(db, COL.pipelines, original.id), {
+      cloneCount: (original.cloneCount ?? 0) + 1,
+    });
+  } catch {
+    /* The cloner can't write to the leader's doc directly under
+       strict rules. That's OK — leader can refresh manually. */
+  }
+  return cloned;
+}
+
+/**
  * Atomically mark this pipeline as the user's default (and clear the
  * default flag on whichever other pipeline was previously default).
  * Only one default per user — that's where new leads auto-enrol.

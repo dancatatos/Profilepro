@@ -17,7 +17,7 @@
  * Week 3 adds: team duplication via share codes + analytics.
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   CalendarClock,
@@ -28,11 +28,14 @@ import {
   Pin,
   Plus,
   Settings,
+  Share2,
   Sparkles,
   Star,
+  Ticket,
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlanAccess } from "@/components/providers/PlanProvider";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -52,6 +55,10 @@ import {
 import { LeadDetailModal } from "@/components/pipelines/LeadDetailModal";
 import { StageEditor } from "@/components/pipelines/StageEditor";
 import {
+  ClonePipelineModal,
+  SharePipelineModal,
+} from "@/components/pipelines/SharePipelineModal";
+import {
   emptyCustomPipeline,
   PIPELINE_TEMPLATES,
   pipelineFromTemplate,
@@ -60,15 +67,36 @@ import { cn, timeAgo } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 import type { Lead, Pipeline, PipelineStage } from "@/types";
 
-export default function PipelinesPage() {
+/* Next.js 15 requires useSearchParams to be inside a Suspense boundary
+   when the page might be statically pre-rendered. Wrap the page body. */
+export default function PipelinesPageWrapper() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-[40vh] items-center justify-center">
+          <Loader2 className="h-5 w-5 animate-spin text-white/40" />
+        </div>
+      }
+    >
+      <PipelinesPage />
+    </Suspense>
+  );
+}
+
+function PipelinesPage() {
   const { account, loading: authLoading } = useAuth();
   const { hasFeature } = usePlanAccess();
   const isPaid = hasFeature("follow_up_pipeline");
+  const search = useSearchParams();
+  /* When the URL is /pipelines?clone=PIPE-XXX, auto-open the clone
+     modal pre-filled with the code. Used for shareable links. */
+  const cloneCodeFromUrl = search.get("clone")?.toUpperCase() ?? null;
 
   const [pipelines, setPipelines] = useState<Pipeline[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [cloneOpen, setCloneOpen] = useState(false);
 
   const load = useCallback(async () => {
     if (!account) return;
@@ -104,6 +132,13 @@ export default function PipelinesPage() {
   useEffect(() => {
     if (account && isPaid) load();
   }, [account, isPaid, load]);
+
+  /* Auto-open the clone modal when ?clone=PIPE-XXX is in the URL. */
+  useEffect(() => {
+    if (cloneCodeFromUrl && account && isPaid) {
+      setCloneOpen(true);
+    }
+  }, [cloneCodeFromUrl, account, isPaid]);
 
   /* ── Loading / gate states ── */
 
@@ -222,6 +257,14 @@ export default function PipelinesPage() {
           >
             New pipeline
           </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setCloneOpen(true)}
+            leftIcon={<Ticket className="h-3.5 w-3.5" />}
+          >
+            Use a code
+          </Button>
         </div>
       </div>
 
@@ -257,8 +300,30 @@ export default function PipelinesPage() {
               prev.map((p) => (p.id === next.id ? next : p)),
             );
           }}
+          onShareCodeGenerated={(code) => {
+            /* Patch the pipeline in local state so the share badge
+               shows on next open. */
+            setPipelines((prev) =>
+              prev.map((p) =>
+                p.id === active.id ? { ...p, shareCode: code } : p,
+              ),
+            );
+          }}
         />
       )}
+
+      {/* Clone-by-code modal — page-level so it works from the header
+          button AND from the ?clone=PIPE-XXX URL param auto-open. */}
+      <ClonePipelineModal
+        open={cloneOpen}
+        onClose={() => setCloneOpen(false)}
+        ownerId={account.uid}
+        prefilledCode={cloneCodeFromUrl ?? undefined}
+        onCloned={(cloned) => {
+          setPipelines((prev) => [...prev, cloned]);
+          setActiveId(cloned.id);
+        }}
+      />
 
       {/* Add-pipeline modal — only opens for already-onboarded users. */}
       <Modal
@@ -407,11 +472,13 @@ function PipelineBoard({
   onSetDefault,
   onDelete,
   onStagesEdited,
+  onShareCodeGenerated,
 }: {
   pipeline: Pipeline;
   onSetDefault: () => void;
   onDelete: () => void;
   onStagesEdited: (next: Pipeline) => void;
+  onShareCodeGenerated: (code: string) => void;
 }) {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(false);
@@ -419,6 +486,8 @@ function PipelineBoard({
   const [openLead, setOpenLead] = useState<Lead | null>(null);
   /* Stage editor modal state. */
   const [stageEditorOpen, setStageEditorOpen] = useState(false);
+  /* Share modal state. */
+  const [shareOpen, setShareOpen] = useState(false);
 
   const loadLeads = useCallback(async () => {
     setLoading(true);
@@ -508,6 +577,14 @@ function PipelineBoard({
           >
             Edit stages
           </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            leftIcon={<Share2 className="h-3.5 w-3.5" />}
+            onClick={() => setShareOpen(true)}
+          >
+            Share
+          </Button>
           {!pipeline.isDefault && (
             <Button
               size="sm"
@@ -578,6 +655,13 @@ function PipelineBoard({
         pipeline={pipeline}
         leadsInPipeline={leads}
         onSaved={onStagesEdited}
+      />
+
+      <SharePipelineModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        pipeline={pipeline}
+        onCodeGenerated={onShareCodeGenerated}
       />
     </div>
   );
