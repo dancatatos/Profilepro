@@ -438,6 +438,19 @@ export async function listLeadsInPipeline(
 }
 
 /**
+ * Patch arbitrary fields on a lead doc. Used by the lead detail view
+ * for task notes, snooze actions, etc. Auth is enforced by Firestore
+ * rules — only the lead's owner can write.
+ */
+export async function updateLead(
+  id: string,
+  patch: Partial<Lead>,
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await updateDoc(doc(db, COL.leads, id), patch);
+}
+
+/**
  * Move a lead to a new stage in its pipeline. Updates stageEnteredAt
  * and computes the next-task timestamp from the stage's
  * daysBeforeNextTask hint.
@@ -488,6 +501,47 @@ export async function autoEnrollLeadInDefaultPipeline(
   } catch (err) {
     console.warn("[Credibly] Auto-enrollment failed:", err);
   }
+}
+
+/**
+ * Back-fill enrollment for any leads the owner has that don't yet
+ * belong to a pipeline (e.g. captured before the pipeline existed, or
+ * captured by an anonymous visitor who couldn't write the pipeline
+ * fields themselves due to Firestore rules).
+ *
+ * Returns the number of leads enrolled. Safe to call repeatedly —
+ * already-enrolled leads are skipped.
+ */
+export async function backfillOrphanLeads(ownerId: string): Promise<number> {
+  if (!isFirebaseConfigured) return 0;
+  const pipelines = await listPipelinesForUser(ownerId);
+  const def = pipelines.find((p) => p.isDefault);
+  if (!def || def.stages.length === 0) return 0;
+  const firstStage = [...def.stages].sort((a, b) => a.sortOrder - b.sortOrder)[0];
+
+  /* Fetch all leads owned by user. We need to skip ones already in a
+     pipeline — Firestore can't "where field == null" reliably, so we
+     filter client-side. At a user's typical lead volume this is fine. */
+  const snap = await getDocs(
+    query(collection(db, COL.leads), where("ownerId", "==", ownerId)),
+  );
+  let enrolled = 0;
+  for (const docSnap of snap.docs) {
+    const data = docSnap.data() as Lead;
+    if (data.pipelineId) continue; // already enrolled
+    try {
+      await moveLeadToStage(
+        docSnap.id,
+        def.id,
+        firstStage.id,
+        firstStage.daysBeforeNextTask,
+      );
+      enrolled += 1;
+    } catch {
+      /* Continue with next lead — partial backfill is acceptable. */
+    }
+  }
+  return enrolled;
 }
 
 /* ---------------- Commissions ---------------- */

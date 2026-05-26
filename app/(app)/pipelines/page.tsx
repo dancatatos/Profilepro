@@ -39,6 +39,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
 import {
+  backfillOrphanLeads,
   deletePipeline,
   listLeadsInPipeline,
   listPipelinesForUser,
@@ -46,6 +47,7 @@ import {
   setDefaultPipeline,
   upsertPipeline,
 } from "@/lib/firebase/firestore";
+import { LeadDetailModal } from "@/components/pipelines/LeadDetailModal";
 import {
   emptyCustomPipeline,
   PIPELINE_TEMPLATES,
@@ -75,6 +77,19 @@ export default function PipelinesPage() {
       if (!activeId && all.length > 0) {
         const def = all.find((p) => p.isDefault) ?? all[0];
         setActiveId(def.id);
+      }
+      /* Back-fill any orphan leads into the default pipeline's first
+         stage. This is the workaround for: anonymous visitors who
+         capture a lead via the public profile can't write the
+         pipelineId field themselves (Firestore rules block it). Done
+         silently — only toasts when leads were actually enrolled. */
+      if (all.some((p) => p.isDefault)) {
+        const enrolled = await backfillOrphanLeads(account.uid).catch(() => 0);
+        if (enrolled > 0) {
+          toast.success(
+            `Enrolled ${enrolled} new lead${enrolled === 1 ? "" : "s"} into your pipeline.`,
+          );
+        }
       }
     } catch {
       toast.error("Couldn't load pipelines.");
@@ -381,6 +396,8 @@ function PipelineBoard({
 }) {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(false);
+  /* The lead currently open in the detail modal (null = closed). */
+  const [openLead, setOpenLead] = useState<Lead | null>(null);
 
   const loadLeads = useCallback(async () => {
     setLoading(true);
@@ -501,11 +518,30 @@ function PipelineBoard({
                 leads={leadsByStage.get(stage.id) ?? []}
                 allStages={sortedStages}
                 onMove={moveLead}
+                onOpen={(lead) => setOpenLead(lead)}
               />
             ))}
           </div>
         </div>
       )}
+
+      <LeadDetailModal
+        open={!!openLead}
+        onClose={() => setOpenLead(null)}
+        lead={openLead}
+        pipeline={pipeline}
+        onUpdated={(patch) => {
+          if (!openLead) return;
+          /* Patch local state so the board reflects changes immediately
+             — saves an extra Firestore read on close. */
+          setLeads((prev) =>
+            prev.map((l) =>
+              l.id === openLead.id ? { ...l, ...patch } : l,
+            ),
+          );
+          setOpenLead((cur) => (cur ? { ...cur, ...patch } : cur));
+        }}
+      />
     </div>
   );
 }
@@ -517,11 +553,13 @@ function StageColumn({
   leads,
   allStages,
   onMove,
+  onOpen,
 }: {
   stage: PipelineStage;
   leads: Lead[];
   allStages: PipelineStage[];
   onMove: (lead: Lead, targetStageId: string) => void;
+  onOpen: (lead: Lead) => void;
 }) {
   return (
     <div
@@ -549,6 +587,7 @@ function StageColumn({
               allStages={allStages}
               currentStageId={stage.id}
               onMove={(target) => onMove(lead, target)}
+              onOpen={() => onOpen(lead)}
             />
           ))
         )}
@@ -564,17 +603,30 @@ function LeadCard({
   allStages,
   currentStageId,
   onMove,
+  onOpen,
 }: {
   lead: Lead;
   allStages: PipelineStage[];
   currentStageId: string;
   onMove: (targetStageId: string) => void;
+  onOpen: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const otherStages = allStages.filter((s) => s.id !== currentStageId);
 
   return (
-    <div className="rounded-lg border border-white/[0.07] bg-ink-950/40 p-3">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpen();
+        }
+      }}
+      className="cursor-pointer rounded-lg border border-white/[0.07] bg-ink-950/40 p-3 transition-colors hover:border-electric-500/40 hover:bg-ink-950/60"
+    >
       <p className="text-sm font-medium text-white">{lead.name}</p>
       {lead.email && (
         <p className="mt-0.5 truncate text-[11px] text-white/45">
@@ -591,7 +643,12 @@ function LeadCard({
         <div className="relative">
           <button
             type="button"
-            onClick={() => setOpen((o) => !o)}
+            onClick={(e) => {
+              /* Don't bubble — clicking Move shouldn't open the detail
+                 modal, just the move dropdown. */
+              e.stopPropagation();
+              setOpen((o) => !o);
+            }}
             className="flex items-center gap-1 rounded-md border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[11px] font-medium text-white/65 hover:bg-white/[0.08]"
           >
             <ArrowLeft className="h-3 w-3 -rotate-90" />
@@ -601,14 +658,18 @@ function LeadCard({
             <>
               <div
                 className="fixed inset-0 z-10"
-                onClick={() => setOpen(false)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpen(false);
+                }}
               />
               <div className="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded-xl border border-white/10 bg-ink-900 shadow-xl">
                 {otherStages.map((s) => (
                   <button
                     key={s.id}
                     type="button"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       onMove(s.id);
                       setOpen(false);
                     }}
