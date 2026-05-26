@@ -309,48 +309,92 @@ export default function FunnelBuilderPage() {
 
   return (
     <>
-      {/* Action bar */}
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <Link
-          href="/funnels"
-          aria-label="Back to Funnels"
-          className="rounded-lg p-1.5 text-white/40 hover:bg-white/5 hover:text-white"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
-        <div className="mr-auto min-w-0">
-          <h1 className="truncate font-display text-xl font-bold text-white">
-            {funnel.name}
-          </h1>
-          <p className="text-xs text-white/45">
-            {dirty ? "Unsaved changes" : "All changes saved"}
-          </p>
+      {/*
+        Action bar — restructured for mobile:
+          - Mobile: title row (back arrow + name + status) on its own
+            line; action buttons in a horizontal scroll row below so
+            Preview / Share / Save all stay visible without wrapping.
+          - Desktop (sm+): single row, actions right-aligned.
+      */}
+      <div className="mb-3 space-y-2 sm:space-y-0">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Link
+            href="/funnels"
+            aria-label="Back to Funnels"
+            className="rounded-lg p-1.5 text-white/40 hover:bg-white/5 hover:text-white"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate font-display text-xl font-bold text-white">
+              {funnel.name}
+            </h1>
+            <p className="text-xs text-white/45">
+              {dirty ? "Unsaved changes" : "All changes saved"}
+            </p>
+          </div>
+          {/* On sm+ the action buttons sit inline with the title. */}
+          <div className="hidden shrink-0 items-center gap-2 sm:flex">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPreviewOpen(true)}
+              leftIcon={<Eye className="h-4 w-4" />}
+              className="lg:hidden"
+            >
+              Preview
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShareOpen(true)}
+              leftIcon={<Send className="h-4 w-4" />}
+            >
+              Share
+            </Button>
+            <Button
+              size="sm"
+              onClick={save}
+              loading={saving}
+              leftIcon={<Save className="h-4 w-4" />}
+            >
+              Save{dirty ? "" : "d"}
+            </Button>
+          </div>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setPreviewOpen(true)}
-          leftIcon={<Eye className="h-4 w-4" />}
-          className="lg:hidden"
-        >
-          Preview
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShareOpen(true)}
-          leftIcon={<Send className="h-4 w-4" />}
-        >
-          Share
-        </Button>
-        <Button
-          size="sm"
-          onClick={save}
-          loading={saving}
-          leftIcon={<Save className="h-4 w-4" />}
-        >
-          Save{dirty ? "" : "d"}
-        </Button>
+        {/* Mobile-only action row: horizontal scroll so every button
+            is always reachable, even on the narrowest phones. */}
+        <div className="-mx-4 overflow-x-auto px-4 pb-0.5 sm:hidden">
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPreviewOpen(true)}
+              leftIcon={<Eye className="h-4 w-4" />}
+              className="shrink-0"
+            >
+              Preview
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShareOpen(true)}
+              leftIcon={<Send className="h-4 w-4" />}
+              className="shrink-0"
+            >
+              Share
+            </Button>
+            <Button
+              size="sm"
+              onClick={save}
+              loading={saving}
+              leftIcon={<Save className="h-4 w-4" />}
+              className="shrink-0"
+            >
+              Save{dirty ? "" : "d"}
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Split-pane: editor + live preview */}

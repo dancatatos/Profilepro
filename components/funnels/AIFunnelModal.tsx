@@ -225,12 +225,19 @@ export function AIFunnelModal({
       ) : null}
 
       {!generating && (
-        <div className="mt-4 flex gap-2">
+        /* Smaller buttons (size="sm") + sm: prefix on padding/spacing
+           so the Back + Generate combo never overflows the modal
+           on the narrowest phones. Back is shrink-0 to keep its
+           "Back" label visible — the main button takes the remaining
+           space and truncates if absolutely needed. */
+        <div className="mt-4 flex items-stretch gap-2">
           {step > 0 && (
             <Button
               variant="outline"
+              size="sm"
               onClick={() => setStep((s) => s - 1)}
               leftIcon={<ArrowLeft className="h-4 w-4" />}
+              className="shrink-0"
             >
               Back
             </Button>
@@ -238,6 +245,7 @@ export function AIFunnelModal({
           {isStyleStep ? (
             <Button
               fullWidth
+              size="sm"
               onClick={generate}
               leftIcon={<Sparkles className="h-4 w-4" />}
             >
@@ -246,6 +254,7 @@ export function AIFunnelModal({
           ) : (
             <Button
               fullWidth
+              size="sm"
               onClick={() => setStep((s) => s + 1)}
               rightIcon={<ArrowRight className="h-4 w-4" />}
             >

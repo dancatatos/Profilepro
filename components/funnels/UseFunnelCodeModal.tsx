@@ -100,7 +100,10 @@ export function UseFunnelCodeModal({
       description="Paste a code to clone someone's funnel into your account."
     >
       <div className="space-y-3 pb-2">
-        <div className="flex gap-2">
+        {/* Mobile: input on top, full-width Find button below. The
+            previous side-by-side layout squeezed the input down to
+            ~140px on narrow phones, hiding the placeholder. */}
+        <div className="flex flex-col gap-2 sm:flex-row">
           <input
             value={code}
             onChange={(e) => setCode(e.target.value.toUpperCase())}
@@ -108,12 +111,14 @@ export function UseFunnelCodeModal({
               if (e.key === "Enter") find();
             }}
             placeholder="FNL-XXXXXX"
-            className="h-11 flex-1 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 text-sm tracking-widest text-white outline-none placeholder:text-white/25 focus:border-electric-500/60"
+            className="h-11 w-full flex-1 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 text-sm tracking-widest text-white outline-none placeholder:text-white/25 focus:border-electric-500/60"
           />
           <Button
             onClick={find}
             loading={looking}
             leftIcon={<Search className="h-4 w-4" />}
+            fullWidth
+            className="sm:w-auto sm:flex-none"
           >
             Find
           </Button>

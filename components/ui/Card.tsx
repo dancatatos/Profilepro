@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from "react";
+import { forwardRef, type HTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
@@ -6,10 +6,19 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
   inset?: boolean;
 }
 
-/** Glassmorphism surface used across the dashboard. */
-export function Card({ inset, className, children, ...rest }: CardProps) {
+/**
+ * Glassmorphism surface used across the dashboard. forwardRef so
+ * callers can measure or animate the underlying div (e.g. the QR page
+ * uses a ResizeObserver to compute a responsive QR size from the
+ * card's actual width).
+ */
+export const Card = forwardRef<HTMLDivElement, CardProps>(function Card(
+  { inset, className, children, ...rest },
+  ref,
+) {
   return (
     <div
+      ref={ref}
       className={cn(
         "rounded-2xl",
         inset ? "border border-white/[0.05] bg-white/[0.02]" : "glass-card",
@@ -20,7 +29,7 @@ export function Card({ inset, className, children, ...rest }: CardProps) {
       {children}
     </div>
   );
-}
+});
 
 export function CardHeader({
   title,

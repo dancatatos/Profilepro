@@ -145,58 +145,72 @@ export default function FunnelsPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-start justify-between gap-3">
+      {/*
+        Header layout:
+          - Mobile: title row on top, action row scrolls horizontally
+            below so all 4 buttons stay reachable without wrapping
+            into a messy multi-row layout.
+          - Desktop (sm+): title + buttons share one row, buttons
+            right-aligned without scrolling.
+      */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <PageHeader
           title="Funnels"
           subtitle={`Your mini sales funnels · ${funnels.length}/${limit}`}
         />
-        <div className="flex shrink-0 flex-wrap justify-end gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={load}
-            loading={loading}
-            leftIcon={<RefreshCw className="h-3.5 w-3.5" />}
-          >
-            Refresh
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              if (atLimit) {
-                toast.error(`Your plan allows ${limit} funnels.`);
-                return;
-              }
-              setName("");
-              setTemplateId(FUNNEL_TEMPLATES[0].id);
-              setCreateOpen(true);
-            }}
-            leftIcon={<Plus className="h-3.5 w-3.5" />}
-          >
-            New funnel
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setUseCodeOpen(true)}
-            leftIcon={<Ticket className="h-3.5 w-3.5" />}
-          >
-            Use a code
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => {
-              if (atLimit) {
-                toast.error(`Your plan allows ${limit} funnels.`);
-                return;
-              }
-              setAiOpen(true);
-            }}
-            leftIcon={<Sparkles className="h-3.5 w-3.5" />}
-          >
-            AI funnel
-          </Button>
+        <div className="-mx-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0 sm:pb-0">
+          <div className="flex shrink-0 justify-start gap-2 sm:flex-wrap sm:justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={load}
+              loading={loading}
+              leftIcon={<RefreshCw className="h-3.5 w-3.5" />}
+              className="shrink-0"
+            >
+              Refresh
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (atLimit) {
+                  toast.error(`Your plan allows ${limit} funnels.`);
+                  return;
+                }
+                setName("");
+                setTemplateId(FUNNEL_TEMPLATES[0].id);
+                setCreateOpen(true);
+              }}
+              leftIcon={<Plus className="h-3.5 w-3.5" />}
+              className="shrink-0"
+            >
+              New funnel
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setUseCodeOpen(true)}
+              leftIcon={<Ticket className="h-3.5 w-3.5" />}
+              className="shrink-0"
+            >
+              Use a code
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => {
+                if (atLimit) {
+                  toast.error(`Your plan allows ${limit} funnels.`);
+                  return;
+                }
+                setAiOpen(true);
+              }}
+              leftIcon={<Sparkles className="h-3.5 w-3.5" />}
+              className="shrink-0"
+            >
+              AI funnel
+            </Button>
+          </div>
         </div>
       </div>
 
