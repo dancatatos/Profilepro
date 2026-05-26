@@ -28,6 +28,7 @@ import type {
   FeatureFlags,
   Funnel,
   Lead,
+  Pipeline,
   Plan,
   PlanId,
   Profile,
@@ -61,6 +62,8 @@ export const COL = {
   commissions: "commissions",
   /* Credibly University — training cards curated by admin. */
   universityTopics: "university_topics",
+  /* Follow-Up Pipelines — per-user pipeline definitions. */
+  pipelines: "pipelines",
 } as const;
 
 /** Subcollection name for a user's saved-build locker. */
@@ -348,6 +351,143 @@ export async function upsertUniversityTopic(
 export async function deleteUniversityTopic(id: string): Promise<void> {
   if (!isFirebaseConfigured) return;
   await deleteDoc(doc(db, COL.universityTopics, id));
+}
+
+/* ---------------- Follow-Up Pipelines ---------------- */
+/* Per-user pipeline definitions. Owner-only access enforced by rules.
+   Pipelines hold their stages inline (small, bounded list) — leads
+   reference a pipelineId + stageId on the lead doc. */
+
+/** List all pipelines for a given user, default first then newest. */
+export async function listPipelinesForUser(uid: string): Promise<Pipeline[]> {
+  if (!isFirebaseConfigured) return [];
+  const q = query(
+    collection(db, COL.pipelines),
+    where("ownerId", "==", uid),
+  );
+  const snap = await getDocs(q);
+  const list = snap.docs.map((d) => ({ ...(d.data() as Pipeline), id: d.id }));
+  /* Sort: default first, then newest. Done client-side to avoid
+     needing a composite index for this small per-user list. */
+  list.sort((a, b) => {
+    if (a.isDefault !== b.isDefault) return a.isDefault ? -1 : 1;
+    return b.createdAt - a.createdAt;
+  });
+  return list;
+}
+
+export async function getPipeline(id: string): Promise<Pipeline | null> {
+  if (!isFirebaseConfigured) return null;
+  const snap = await getDoc(doc(db, COL.pipelines, id));
+  return snap.exists() ? ({ ...(snap.data() as Pipeline), id: snap.id }) : null;
+}
+
+/** Create or replace a pipeline. Doc id matches Pipeline.id. */
+export async function upsertPipeline(pipeline: Pipeline): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await setDoc(doc(db, COL.pipelines, pipeline.id), pipeline);
+}
+
+export async function deletePipeline(id: string): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await deleteDoc(doc(db, COL.pipelines, id));
+}
+
+/**
+ * Atomically mark this pipeline as the user's default (and clear the
+ * default flag on whichever other pipeline was previously default).
+ * Only one default per user — that's where new leads auto-enrol.
+ */
+export async function setDefaultPipeline(
+  ownerId: string,
+  pipelineId: string,
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  const all = await listPipelinesForUser(ownerId);
+  await Promise.all(
+    all.map(async (p) => {
+      const shouldBeDefault = p.id === pipelineId;
+      if (p.isDefault === shouldBeDefault) return; // no-op
+      await updateDoc(doc(db, COL.pipelines, p.id), {
+        isDefault: shouldBeDefault,
+        updatedAt: Date.now(),
+      });
+    }),
+  );
+}
+
+/**
+ * List leads currently enrolled in a given pipeline. Used to render
+ * the kanban board. Newest-first within each stage.
+ */
+export async function listLeadsInPipeline(
+  ownerId: string,
+  pipelineId: string,
+): Promise<Lead[]> {
+  if (!isFirebaseConfigured) return [];
+  const q = query(
+    collection(db, COL.leads),
+    where("ownerId", "==", ownerId),
+    where("pipelineId", "==", pipelineId),
+  );
+  const snap = await getDocs(q);
+  const leads = snap.docs.map((d) => ({ ...(d.data() as Lead), id: d.id }));
+  /* Sort client-side: newest first. */
+  leads.sort((a, b) => (b.stageEnteredAt ?? b.createdAt) - (a.stageEnteredAt ?? a.createdAt));
+  return leads;
+}
+
+/**
+ * Move a lead to a new stage in its pipeline. Updates stageEnteredAt
+ * and computes the next-task timestamp from the stage's
+ * daysBeforeNextTask hint.
+ */
+export async function moveLeadToStage(
+  leadId: string,
+  pipelineId: string,
+  stageId: string,
+  daysBeforeNextTask?: number,
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  const now = Date.now();
+  const patch: Record<string, unknown> = {
+    pipelineId,
+    stageId,
+    stageEnteredAt: now,
+  };
+  if (daysBeforeNextTask && daysBeforeNextTask > 0) {
+    patch.nextTaskAt = now + daysBeforeNextTask * 24 * 60 * 60 * 1000;
+  } else {
+    patch.nextTaskAt = null; // no follow-up due — terminal stage
+  }
+  await updateDoc(doc(db, COL.leads, leadId), patch);
+}
+
+/**
+ * Auto-enrol a freshly-captured lead into the user's default pipeline.
+ * Called from the lead-capture endpoints right after the lead is
+ * written. Fails open (no enrolment) when the user has no default
+ * pipeline yet — they can still see the lead in /leads.
+ */
+export async function autoEnrollLeadInDefaultPipeline(
+  leadId: string,
+  ownerId: string,
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  try {
+    const pipelines = await listPipelinesForUser(ownerId);
+    const def = pipelines.find((p) => p.isDefault);
+    if (!def || def.stages.length === 0) return;
+    const firstStage = [...def.stages].sort((a, b) => a.sortOrder - b.sortOrder)[0];
+    await moveLeadToStage(
+      leadId,
+      def.id,
+      firstStage.id,
+      firstStage.daysBeforeNextTask,
+    );
+  } catch (err) {
+    console.warn("[Credibly] Auto-enrollment failed:", err);
+  }
 }
 
 /* ---------------- Commissions ---------------- */

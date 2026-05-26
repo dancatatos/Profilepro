@@ -493,6 +493,65 @@ export interface Lead {
   phone?: string;
   source: string; // section id or "lead-capture"
   createdAt: number;
+  /* Follow-up pipeline tracking. Set when the lead is enrolled in a
+     pipeline (either auto-enrolled on capture or manually added). The
+     daily task system surfaces leads whose nextTaskAt is in the past. */
+  pipelineId?: string;
+  stageId?: string;
+  /** When the lead entered the current stage. Used to compute "stuck" leads. */
+  stageEnteredAt?: number;
+  /** When the next follow-up task is due — surfaced in daily task list. */
+  nextTaskAt?: number;
+  /** Free-text task note the user can add when scheduling next follow-up. */
+  taskNotes?: string;
+}
+
+/* ---------------- Follow-Up Pipeline ---------------- */
+
+/** Industry presets used to seed a new pipeline with sensible defaults. */
+export type PipelineIndustry =
+  | "recruiting"
+  | "insurance"
+  | "real_estate"
+  | "coaching"
+  | "sales"
+  | "custom";
+
+/** One column in a pipeline (e.g. "Cold", "Interested", "Joined"). */
+export interface PipelineStage {
+  id: string;
+  name: string;
+  /** Optional tailwind color class (e.g. "bg-electric-500/15") — drives the column tint. */
+  color?: string;
+  sortOrder: number;
+  /** Suggested days between this stage and the next — used to set default
+   *  nextTaskAt when a lead moves into this stage. */
+  daysBeforeNextTask?: number;
+  /** Optional AI-prompt context unique to this stage, used by the message
+   *  generator (e.g. "the lead just watched the intro video"). */
+  aiContext?: string;
+}
+
+/**
+ * A user's follow-up pipeline definition. Pipelines are user-owned —
+ * each user can have multiple (one for each niche / use case). The
+ * default pipeline is where new leads auto-enroll.
+ */
+export interface Pipeline {
+  id: string;
+  ownerId: string;
+  name: string;
+  description?: string;
+  industry: PipelineIndustry;
+  /** When true, new leads automatically enrol here. Only one default per user. */
+  isDefault: boolean;
+  stages: PipelineStage[];
+  /** Shareable code (e.g. "PIPE-AB12CD") — present once the user "Shares" the pipeline. */
+  shareCode?: string;
+  /** Tracking: how many other users have cloned this via the share code. */
+  cloneCount?: number;
+  createdAt: number;
+  updatedAt: number;
 }
 
 /* ---------------- Analytics ---------------- */

@@ -167,6 +167,13 @@ export const FEATURE_CATALOG: readonly CatalogFeature[] = [
     category: "Leads",
     hint: "Export captured leads as CSV.",
   },
+  {
+    key: "follow_up_pipeline",
+    label: "Follow-up pipeline",
+    category: "Leads",
+    hint:
+      "Daily task dashboard, pipeline stages and AI-assisted message scripts for nurturing leads.",
+  },
 ] as const;
 
 /** Look up a catalog entry by its stable key. */
@@ -287,6 +294,7 @@ export function defaultFeatureKeysForPlan(planId: string): string[] {
       "premium_templates",
       "premium_themes",
       "appointments",
+      "follow_up_pipeline",
     ];
   }
   if (planId === "team") {
@@ -310,6 +318,7 @@ export function defaultFeatureKeysForPlan(planId: string): string[] {
       "team_management",
       "lead_export",
       "appointments",
+      "follow_up_pipeline",
     ];
   }
   /* Custom plan — admin picks features explicitly. */
