@@ -20,6 +20,7 @@
     "@tiptap/starter-kit": "^3.23.6",
     "clsx": "^2.1.1",
     "firebase": "^11.6.0",
+    "firebase-admin": "^13.10.0",
     "framer-motion": "^11.18.2",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.469.0",
