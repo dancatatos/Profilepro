@@ -10,6 +10,7 @@ import {
   LayoutTemplate,
   BarChart3,
   LogOut,
+  Mail,
   ShieldCheck,
   Handshake,
   Wallet,
@@ -26,6 +27,7 @@ const NAV = [
   { href: "/admin/affiliates", label: "Affiliates", icon: Handshake, exact: false },
   { href: "/admin/commissions", label: "Commissions", icon: Wallet, exact: false },
   { href: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard, exact: false },
+  { href: "/admin/email", label: "Email", icon: Mail, exact: false },
   { href: "/admin/templates", label: "Templates", icon: LayoutTemplate, exact: false },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3, exact: false },
 ];
