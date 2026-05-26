@@ -50,6 +50,7 @@ import { toast } from "@/store/uiStore";
 
 export function InstallButton() {
   const {
+    canInstall,
     isInstalled,
     inAppName,
     platform,
@@ -59,6 +60,11 @@ export function InstallButton() {
     cancelPending,
   } = useInstall();
   const [openModal, setOpenModal] = useState<InstallPlatform | null>(null);
+  /* Tracks whether we've already attempted the native prompt on
+     platforms where the API is unreliable (Huawei especially). If a
+     first attempt resolved as "unavailable" we skip straight to the
+     instructions modal next time so the user isn't stuck in a loop. */
+  const [promptFailed, setPromptFailed] = useState(false);
 
   /* Pending state lasts until the browser fires beforeinstallprompt OR
      the user cancels. Add a 30s timeout so the spinner doesn't spin
@@ -97,15 +103,47 @@ export function InstallButton() {
   }
 
   const onClickInstall = async () => {
-    /* Platforms with no programmatic API → straight to instructions. */
+    /* Platforms with NO programmatic install path → straight to
+       instructions. These never fire beforeinstallprompt no matter
+       how long we wait, so we don't bother trying. */
     if (
       platform === "inapp" ||
       platform === "ios" ||
       platform === "ipados" ||
-      platform === "huawei" ||
       platform === "safari" ||
       platform === "firefox"
     ) {
+      setOpenModal(platform);
+      return;
+    }
+
+    /* HUAWEI Browser is the awkward middle case: most builds don't
+       fire beforeinstallprompt, but a small fraction do. We try the
+       native prompt FIRST when a deferred event was captured, and
+       only fall back to instructions when nothing's available. If
+       we previously confirmed it's unavailable on this device, we
+       skip the round-trip and go straight to the modal. */
+    if (platform === "huawei") {
+      if (canInstall) {
+        const outcome = await promptInstall();
+        if (outcome === "accepted") {
+          toast.success("Credibly installed.");
+          return;
+        }
+        if (outcome === "dismissed") {
+          toast.error("You can install anytime from this button.");
+          return;
+        }
+        /* queued / unavailable → fall through to instructions. */
+      }
+      setPromptFailed(true);
+      setOpenModal("huawei");
+      return;
+    }
+
+    /* If we've already learned the native prompt is unavailable on
+       this browser, skip straight to instructions. */
+    if (promptFailed) {
       setOpenModal(platform);
       return;
     }
@@ -125,7 +163,8 @@ export function InstallButton() {
       toast.success("Preparing install — keep this page open.");
       return;
     }
-    /* "unavailable" — fall through to instructions modal. */
+    /* "unavailable" — remember so we don't loop, then show steps. */
+    setPromptFailed(true);
     setOpenModal(platform);
   };
 
@@ -332,46 +371,98 @@ export function InstallButton() {
         </ol>
       </Modal>
 
-      {/* HUAWEI Browser — 3-dot menu doesn't say "Install app", it
-          says "Add to home screen" (and there's NO native install
-          prompt event on Huawei Chromium). */}
+      {/* HUAWEI Browser — Chromium fork that mostly doesn't fire the
+          install prompt. Modal explains the manual 3-dot menu flow,
+          BUT also offers a "Try install anyway" button so users on
+          newer HUAWEI Browser builds (which DO sometimes fire the
+          event) can install in one tap if it works. Plus a direct
+          AppGallery link to download Edge as a guaranteed escape
+          hatch — Edge installs PWAs reliably on Huawei. */}
       <Modal
         open={openModal === "huawei"}
         onClose={() => setOpenModal(null)}
         title="Install on HUAWEI"
-        description="HUAWEI Browser doesn't show a native install button — use the 3-dot menu instead."
+        description="HUAWEI Browser doesn't show a native install button — use the 3-dot menu, or open in Edge."
       >
-        <ol className="space-y-3 pb-3 text-sm text-white/80">
-          <StepRow n={1}>
-            Make sure you&apos;re in <strong>HUAWEI Browser</strong> (the
-            blue compass icon) — not Facebook, Messenger or any other
-            in-app browser.
-          </StepRow>
-          <StepRow n={2}>
-            <span className="flex flex-wrap items-center gap-1.5">
-              Tap the
-              <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.06] px-1.5 py-0.5 text-xs text-white">
-                <MoreVertical className="h-3 w-3" />
+        <div className="space-y-3 pb-3">
+          {/* Tap-to-try install button — works on the small fraction
+              of HUAWEI Browser builds that actually fire the event. */}
+          <Button
+            fullWidth
+            onClick={async () => {
+              const outcome = await promptInstall();
+              if (outcome === "accepted") {
+                toast.success("Credibly installed.");
+                setOpenModal(null);
+              } else if (outcome === "dismissed") {
+                toast.error("You can try again any time.");
+              } else if (outcome === "queued") {
+                toast.success(
+                  "Waiting for the browser — scroll/tap around for a few seconds.",
+                );
+              } else {
+                toast.error(
+                  "HUAWEI Browser blocked the install prompt — use the 3-dot menu below.",
+                );
+              }
+            }}
+            leftIcon={<Download className="h-4 w-4" />}
+          >
+            Try install anyway
+          </Button>
+
+          <ol className="space-y-3 text-sm text-white/80">
+            <StepRow n={1}>
+              Make sure you&apos;re in <strong>HUAWEI Browser</strong> (the
+              blue compass icon) — not Facebook, Messenger or any other
+              in-app browser.
+            </StepRow>
+            <StepRow n={2}>
+              <span className="flex flex-wrap items-center gap-1.5">
+                Tap the
+                <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.06] px-1.5 py-0.5 text-xs text-white">
+                  <MoreVertical className="h-3 w-3" />
+                </span>
+                menu at the bottom-right of the browser.
               </span>
-              menu at the bottom-right of the browser.
-            </span>
-          </StepRow>
-          <StepRow n={3}>
-            Tap <strong>&ldquo;Add to home screen&rdquo;</strong> (sometimes
-            shown as <strong>&ldquo;Add shortcut&rdquo;</strong>).
-          </StepRow>
-          <StepRow n={4}>
-            Confirm <strong>Add</strong>. Credibly lands on your home
-            screen — tap it like any other app.
-          </StepRow>
-        </ol>
-        <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3 text-xs text-white/65">
-          <p className="font-medium text-white">No HUAWEI Browser?</p>
-          <p className="mt-1">
-            Open <strong>AppGallery</strong> or <strong>Petal Search</strong>
-            and download <strong>Google Chrome</strong> or <strong>Microsoft
-            Edge</strong> — both fire a proper install prompt on Credibly.
-          </p>
+            </StepRow>
+            <StepRow n={3}>
+              Tap <strong>&ldquo;Add to home screen&rdquo;</strong> (sometimes
+              shown as <strong>&ldquo;Add shortcut&rdquo;</strong>).
+            </StepRow>
+            <StepRow n={4}>
+              Confirm <strong>Add</strong>. Credibly lands on your home
+              screen — tap it like any other app.
+            </StepRow>
+          </ol>
+
+          {/* Guaranteed escape hatch — Microsoft Edge installs PWAs
+              cleanly on HarmonyOS / EMUI and is available on
+              AppGallery without Google Play services. Direct
+              AppGallery link saves the user from searching. */}
+          <div className="space-y-2 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3 text-xs text-white/70">
+            <p className="font-medium text-white">
+              Steps not working? Use Microsoft Edge.
+            </p>
+            <p>
+              Edge installs PWAs reliably on HUAWEI devices and is on
+              AppGallery — no Google Play needed.
+            </p>
+            <a
+              href="https://appgallery.huawei.com/app/C103761023"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 flex items-center justify-center gap-1.5 rounded-lg border border-electric-500/40 bg-electric-500/10 px-3 py-2 text-xs font-semibold text-electric-300 no-tap-highlight active:scale-[0.98]"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              Open Microsoft Edge on AppGallery
+            </a>
+            <p className="pt-1 text-[11px] text-white/40">
+              After Edge is installed, open <strong>crediblyai.com</strong>
+              {" "}in Edge → 3-dot menu → <strong>Apps → Install this
+              site</strong>.
+            </p>
+          </div>
         </div>
       </Modal>
 
