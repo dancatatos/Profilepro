@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/Badge";
 import { FullScreenLoader } from "@/components/ui/Spinner";
 import { AIFunnelModal } from "@/components/funnels/AIFunnelModal";
 import { UseFunnelCodeModal } from "@/components/funnels/UseFunnelCodeModal";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   deleteFunnel,
   listFunnels,
@@ -55,6 +56,11 @@ export default function FunnelsPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [aiOpen, setAiOpen] = useState(false);
   const [useCodeOpen, setUseCodeOpen] = useState(false);
+  /* The funnel pending deletion — null when no confirm dialog is
+     open. Holding the whole Funnel (not just the id) lets the
+     dialog show the name so the user double-checks they're deleting
+     the right one before confirming. */
+  const [pendingDelete, setPendingDelete] = useState<Funnel | null>(null);
 
   const load = useCallback(async () => {
     if (!account || !isPaid) return;
@@ -100,12 +106,17 @@ export default function FunnelsPage() {
     }
   };
 
-  const remove = async (f: Funnel) => {
+  /* Actual deletion — called only after the user confirms via the
+     ConfirmDialog. The trash icon now just opens the dialog. */
+  const confirmRemove = async () => {
+    const f = pendingDelete;
+    if (!f) return;
     setBusyId(f.id);
     try {
       await deleteFunnel(f.id);
       setFunnels((prev) => prev.filter((x) => x.id !== f.id));
       toast.success("Funnel deleted");
+      setPendingDelete(null);
     } catch {
       toast.error("Couldn't delete the funnel.");
     } finally {
@@ -258,7 +269,7 @@ export default function FunnelsPage() {
                   </p>
                 </div>
                 <button
-                  onClick={() => remove(f)}
+                  onClick={() => setPendingDelete(f)}
                   disabled={busyId === f.id}
                   aria-label="Delete funnel"
                   className="shrink-0 rounded-lg p-2 text-white/30 transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
@@ -363,6 +374,35 @@ export default function FunnelsPage() {
         takenSlugs={funnels.map((f) => f.slug)}
         atLimit={atLimit}
         limit={limit}
+      />
+
+      {/* Delete confirmation — guards against accidental taps on the
+          trash icon. Shows the funnel's name so the user double-checks
+          they're nuking the right one. Loading state disables the
+          buttons during the Firestore call. */}
+      <ConfirmDialog
+        open={!!pendingDelete}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={confirmRemove}
+        loading={!!pendingDelete && busyId === pendingDelete.id}
+        title="Delete this funnel?"
+        confirmLabel="Delete funnel"
+        body={
+          pendingDelete ? (
+            <>
+              <p>
+                <strong className="text-white">{pendingDelete.name}</strong>{" "}
+                will be permanently deleted, along with its{" "}
+                {pendingDelete.steps.length} step
+                {pendingDelete.steps.length === 1 ? "" : "s"}.
+              </p>
+              <p className="mt-1 text-xs text-white/45">
+                This can&apos;t be undone. Existing leads stay in your account
+                — only the funnel itself is removed.
+              </p>
+            </>
+          ) : null
+        }
       />
     </div>
   );
