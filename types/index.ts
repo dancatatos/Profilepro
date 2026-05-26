@@ -645,7 +645,22 @@ export interface Plan {
   price: number;
   billingPeriod: BillingPeriod;
   tagline: string;
+  /**
+   * Display-only feature rows shown on the pricing card. Legacy free-text
+   * format kept for plans created before the canonical catalogue was
+   * introduced. New plans should prefer `featureKeys` for both display
+   * AND functional gating; this field becomes a vestigial fallback that
+   * the pricing display merges in.
+   */
   features: PlanFeature[];
+  /**
+   * Canonical feature flags this plan includes — references stable keys
+   * from FEATURE_CATALOG (lib/features.ts). Source of truth for both
+   * pricing display AND code-level access checks via userHasFeature().
+   * When the catalogue gains a new feature, every plan defaults to it
+   * being off; admins flip it on per plan in /admin/subscriptions.
+   */
+  featureKeys?: string[];
   highlighted?: boolean;
   /**
    * Where this plan is sold:

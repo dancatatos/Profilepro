@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
 import { toast } from "@/store/uiStore";
 import { PLANS } from "@/lib/constants";
+import { planDisplayFeatures } from "@/lib/features";
 import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/lib/utils";
 import type { Plan, PlanId } from "@/types";
@@ -162,7 +163,7 @@ export default function BillingPage() {
               )}
 
               <ul className="mt-5 space-y-2">
-                {plan.features.map((f, i) => (
+                {planDisplayFeatures(plan).map((f, i) => (
                   <li
                     key={i}
                     className={cn(

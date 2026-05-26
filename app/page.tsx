@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/Badge";
 import { PublicProfileView } from "@/components/public-profile/PublicProfileView";
 import { DEMO_PROFILE } from "@/lib/defaults";
 import { PLANS } from "@/lib/constants";
+import { planDisplayFeatures } from "@/lib/features";
 import { getPlansConfig } from "@/lib/firebase/firestore";
 import type { Plan } from "@/types";
 
@@ -294,7 +295,7 @@ export default function LandingPage() {
                 Get {plan.name}
               </Button>
               <ul className="mt-5 space-y-2">
-                {plan.features.map((f) => (
+                {planDisplayFeatures(plan).map((f) => (
                   <li
                     key={f.label}
                     className={`flex items-center gap-2 text-sm ${

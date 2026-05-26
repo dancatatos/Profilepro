@@ -24,6 +24,11 @@ import {
   setPlansConfig,
 } from "@/lib/firebase/firestore";
 import { PLANS } from "@/lib/constants";
+import {
+  defaultFeatureKeysForPlan,
+  groupCatalogByCategory,
+  type CatalogFeature,
+} from "@/lib/features";
 import { cn, slugify } from "@/lib/utils";
 import type {
   AccountUser,
@@ -73,6 +78,11 @@ function Switch({
  * Deep-clone plans so editing never mutates the bundled defaults.
  * Carefully omits `undefined` keys (Firestore rejects them when the client
  * isn't configured with ignoreUndefinedProperties).
+ *
+ * Plans saved before the canonical featureKeys catalogue was introduced
+ * get a default set seeded by their plan id (free / pro / team) — that
+ * way an admin opening the editor for the first time sees a sensible
+ * pre-populated set instead of every toggle off.
  */
 function clonePlans(src: Plan[]): Plan[] {
   return src.map((p) => {
@@ -83,6 +93,10 @@ function clonePlans(src: Plan[]): Plan[] {
       billingPeriod: p.billingPeriod,
       tagline: p.tagline,
       features: p.features.map((f) => ({ ...f })),
+      featureKeys:
+        p.featureKeys && p.featureKeys.length > 0
+          ? [...p.featureKeys]
+          : defaultFeatureKeysForPlan(p.id),
       highlighted: p.highlighted ?? false,
       visibility: p.visibility ?? "public",
       checkoutUrl: p.checkoutUrl ?? "",
@@ -113,6 +127,9 @@ function blankPlan(existingIds: string[]): Plan {
     billingPeriod: "monthly",
     tagline: "",
     features: [],
+    /* Custom plans start with an empty feature set — admin opts in
+       per-feature so they don't accidentally include everything. */
+    featureKeys: [],
     highlighted: false,
     visibility: "affiliate",
     checkoutUrl: "",
@@ -232,6 +249,26 @@ export default function AdminSubscriptionsPage() {
       if (clash) return ps;
       return ps.map((p, i) => (i === pIdx ? { ...p, id: next } : p));
     });
+    setDirty(true);
+  };
+
+  /**
+   * Flip a canonical feature key on/off for a given plan. The admin
+   * UI maps every catalog entry to one of these toggles; this is the
+   * source of truth for both pricing-page display and code-level
+   * feature gating (see lib/features.ts → planHasFeature).
+   */
+  const toggleFeatureKey = (pIdx: number, key: string) => {
+    setPlans((ps) =>
+      ps.map((p, i) => {
+        if (i !== pIdx) return p;
+        const current = p.featureKeys ?? [];
+        const next = current.includes(key)
+          ? current.filter((k) => k !== key)
+          : [...current, key];
+        return { ...p, featureKeys: next };
+      }),
+    );
     setDirty(true);
   };
 
@@ -677,12 +714,30 @@ export default function AdminSubscriptionsPage() {
                 </p>
               </div>
 
-              {/* Features */}
-              <div>
-                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-white/40">
-                  Features
-                </label>
-                <div className="space-y-1.5">
+              {/* Canonical features — driven by the FEATURE_CATALOG in
+                  lib/features.ts. Toggle a row on to grant that feature
+                  to users on this plan. New features added to the
+                  catalogue automatically appear here. */}
+              <PlanFeatureToggles
+                planFeatureKeys={plan.featureKeys ?? []}
+                onToggle={(key) => toggleFeatureKey(pIdx, key)}
+              />
+
+              {/* Optional custom display rows — free-text labels shown
+                  on the pricing card alongside the canonical features.
+                  Useful for marketing copy ("Everything in Free", etc).
+                  These do NOT gate functionality — they're display only. */}
+              <details className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
+                <summary className="cursor-pointer text-[11px] font-medium uppercase tracking-wider text-white/40 hover:text-white/65">
+                  Custom display lines{" "}
+                  {plan.features.length > 0 && `(${plan.features.length})`}
+                </summary>
+                <p className="mt-2 text-[10px] text-white/35">
+                  Display-only — shown on the pricing card, doesn&apos;t
+                  affect feature gating. Use for marketing lines like
+                  &ldquo;Everything in Free&rdquo;.
+                </p>
+                <div className="mt-2 space-y-1.5">
                   {plan.features.map((f, fIdx) => (
                     <div key={fIdx} className="flex items-center gap-2">
                       <Switch
@@ -692,7 +747,7 @@ export default function AdminSubscriptionsPage() {
                             included: !f.included,
                           })
                         }
-                        label="Toggle whether this feature is included"
+                        label="Toggle whether this row is shown as included"
                       />
                       <input
                         className={cn(inputCls, "h-8 flex-1 text-xs")}
@@ -720,9 +775,9 @@ export default function AdminSubscriptionsPage() {
                   onClick={() => addFeature(pIdx)}
                   className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-white/[0.12] py-1.5 text-[11px] font-medium text-white/45 transition-colors hover:border-white/25 hover:text-white/70"
                 >
-                  <Plus className="h-3.5 w-3.5" /> Add feature
+                  <Plus className="h-3.5 w-3.5" /> Add custom line
                 </button>
-              </div>
+              </details>
             </Card>
             );
           })}
@@ -744,5 +799,110 @@ export default function AdminSubscriptionsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+/* ── Canonical feature toggle grid ──
+ *
+ * Renders every entry from FEATURE_CATALOG grouped by category, each
+ * as a toggleable row. When the catalogue grows (e.g. a new feature
+ * key is added in lib/features.ts), this list updates automatically —
+ * existing plans see the new row defaulting to off until the admin
+ * decides which tier(s) to grant it to.
+ */
+function PlanFeatureToggles({
+  planFeatureKeys,
+  onToggle,
+}: {
+  planFeatureKeys: string[];
+  onToggle: (key: string) => void;
+}) {
+  const grouped = groupCatalogByCategory();
+  const enabledCount = planFeatureKeys.length;
+
+  return (
+    <div>
+      <div className="mb-1.5 flex items-baseline justify-between">
+        <label className="text-[11px] font-medium uppercase tracking-wider text-white/40">
+          Features
+        </label>
+        <span className="text-[10px] text-white/30">
+          {enabledCount} of {grouped.reduce((s, g) => s + g.features.length, 0)}{" "}
+          enabled
+        </span>
+      </div>
+      <div className="space-y-3">
+        {grouped.map(({ category, features }) => (
+          <div key={category}>
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-white/35">
+              {category}
+            </p>
+            <div className="space-y-1">
+              {features.map((f) => (
+                <FeatureToggleRow
+                  key={f.key}
+                  feature={f}
+                  enabled={planFeatureKeys.includes(f.key)}
+                  onToggle={() => onToggle(f.key)}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FeatureToggleRow({
+  feature,
+  enabled,
+  onToggle,
+}: {
+  feature: CatalogFeature;
+  enabled: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      title={feature.hint}
+      className={cn(
+        "flex w-full items-start gap-2.5 rounded-lg border px-2.5 py-1.5 text-left transition-colors",
+        enabled
+          ? "border-jade-500/30 bg-jade-500/[0.06]"
+          : "border-white/[0.06] bg-white/[0.015] hover:bg-white/[0.04]",
+      )}
+    >
+      <span
+        className={cn(
+          "mt-0.5 flex h-4 w-7 shrink-0 items-center rounded-full transition-colors",
+          enabled ? "bg-jade-500" : "bg-white/15",
+        )}
+      >
+        <span
+          className={cn(
+            "h-3 w-3 rounded-full bg-white transition-transform",
+            enabled ? "ml-3.5" : "ml-0.5",
+          )}
+        />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span
+          className={cn(
+            "block text-xs font-medium",
+            enabled ? "text-white" : "text-white/65",
+          )}
+        >
+          {feature.label}
+        </span>
+        {feature.hint && (
+          <span className="mt-0.5 block text-[10px] text-white/35">
+            {feature.hint}
+          </span>
+        )}
+      </span>
+    </button>
   );
 }

@@ -154,6 +154,9 @@ function normalizePlan(raw: Record<string, unknown>): Plan {
           )
           .map((f) => ({ label: str(f.label), included: f.included === true }))
       : [],
+    featureKeys: Array.isArray(raw.featureKeys)
+      ? raw.featureKeys.filter((k): k is string => typeof k === "string")
+      : undefined,
     highlighted: raw.highlighted === true,
     /* New affiliate-system fields. All optional with sensible defaults so a
        plan saved before this schema was introduced still behaves as before. */
