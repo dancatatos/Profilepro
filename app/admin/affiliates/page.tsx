@@ -33,21 +33,13 @@ import {
   INVITE_EXPIRY_MS,
   inviteAcceptUrl,
   isValidAffiliateCodeFormat,
+  maskEmail,
   referralShareUrl,
   suggestAffiliateCode,
 } from "@/lib/affiliate";
 import { normalizeRefCode } from "@/lib/referral";
 import { copyToClipboard, isValidEmail, timeAgo } from "@/lib/utils";
 import type { Affiliate, AffiliateInvite } from "@/types";
-
-/* ── Helpers ── */
-
-function maskEmail(email: string): string {
-  const [local, domain] = email.split("@");
-  if (!domain) return email;
-  if (local.length <= 2) return `${local[0] ?? ""}*@${domain}`;
-  return `${local[0]}${"*".repeat(Math.max(local.length - 2, 1))}${local.slice(-1)}@${domain}`;
-}
 
 function CodeBadge({ code }: { code: string }) {
   return (

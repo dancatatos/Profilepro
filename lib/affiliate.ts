@@ -93,3 +93,19 @@ export function referralShareUrl(code: string): string {
       : (process.env.NEXT_PUBLIC_APP_URL || "https://www.crediblyai.com");
   return `${origin}/r/${code}`;
 }
+
+/**
+ * Privacy-preserving display version of an email — used everywhere an
+ * affiliate sees their referred customer's contact info. The first and
+ * last characters of the local part are kept, the rest is masked.
+ *   "maria.santos@gmail.com" → "m**********s@gmail.com"
+ *   "jp@gmail.com"           → "j*@gmail.com"
+ *   "a@gmail.com"            → "a*@gmail.com"
+ */
+export function maskEmail(email: string): string {
+  if (!email) return "";
+  const [local, domain] = email.split("@");
+  if (!domain) return email;
+  if (local.length <= 2) return `${local[0] ?? ""}*@${domain}`;
+  return `${local[0]}${"*".repeat(Math.max(local.length - 2, 1))}${local.slice(-1)}@${domain}`;
+}

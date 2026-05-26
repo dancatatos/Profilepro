@@ -59,11 +59,17 @@ function PlanDropdown({
     setSaving(true);
     setOpen(false);
     try {
-      await adminSetUserPlan(user.uid, planId);
+      const result = await adminSetUserPlan(user.uid, planId);
       onChanged(user.uid, planId);
-      toast.success(
-        `Plan set to ${planLabel(planId, plans)} for ${user.email}`,
-      );
+      if (result.commissionCreated) {
+        toast.success(
+          `Plan set to ${planLabel(planId, plans)} for ${user.email} — ₱${(result.amount ?? 0).toLocaleString()} credited to ${result.affiliateCode}.`,
+        );
+      } else {
+        toast.success(
+          `Plan set to ${planLabel(planId, plans)} for ${user.email}`,
+        );
+      }
     } catch {
       toast.error("Failed to update plan.");
     } finally {

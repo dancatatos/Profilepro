@@ -563,16 +563,208 @@ export async function listAllUsers(): Promise<AccountUser[]> {
   return snap.docs.map((d) => d.data() as AccountUser);
 }
 
-/** Manually set a user's plan (admin only). */
+/**
+ * Manually set a user's plan (admin only).
+ *
+ * Side effects beyond updating the user doc:
+ *   1. If the user has an `affiliateId` AND the new plan has a non-zero
+ *      `commission`, a Commission record is auto-created (signup vs
+ *      renewal is determined by whether they were already on this plan).
+ *   2. The affiliate's cached `stats` rollup is recomputed.
+ *
+ * Resolving the affiliate by code happens client-side here (one extra
+ * Firestore read) — it's only invoked on admin upgrade actions which
+ * are rare, so the cost is negligible.
+ *
+ * Returns whether a commission was created so the caller can show a
+ * toast like "Plan set + ₱499 commission credited to DAN123".
+ */
 export async function adminSetUserPlan(
   uid: string,
   plan: AccountUser["plan"],
-): Promise<void> {
-  if (!isFirebaseConfigured) return;
+): Promise<{ commissionCreated: boolean; amount?: number; affiliateCode?: string }> {
+  if (!isFirebaseConfigured) {
+    return { commissionCreated: false };
+  }
+
+  /* Step 1 — read the user BEFORE updating so we can compare old plan
+     (renewal vs first-time-upgrade) and look up their affiliateId. */
+  const before = await getUserDoc(uid);
+  const previousPlan = before?.plan;
+  const affiliateCode = before?.affiliateId;
+
+  /* Step 2 — update the user doc unconditionally. */
   await updateDoc(doc(db, COL.users, uid), {
     plan,
     updatedAt: Date.now(),
   });
+
+  /* Step 3 — try to generate a commission. Any failure here is logged
+     but doesn't roll back the plan update — admins can manually create
+     a commission later if attribution genuinely matters. */
+  if (!affiliateCode) return { commissionCreated: false };
+
+  try {
+    /* Resolve plan + affiliate in parallel. */
+    const [planConfig, affiliate] = await Promise.all([
+      getPlansConfig(),
+      getAffiliateByCode(affiliateCode),
+    ]);
+    const planRecord =
+      planConfig?.find((p) => p.id === plan) ?? null;
+    if (!planRecord || !planRecord.commission || planRecord.commission <= 0) {
+      return { commissionCreated: false };
+    }
+    if (!affiliate) {
+      console.warn(
+        `[Credibly] Cannot create commission — no affiliate found for code "${affiliateCode}".`,
+      );
+      return { commissionCreated: false };
+    }
+
+    /* Classification:
+         - "signup"  → this is the first time the user has been on this plan
+         - "renewal" → they're already on this plan and getting re-upgraded */
+    const type: Commission["type"] =
+      previousPlan === plan ? "renewal" : "signup";
+
+    /* Build a stable id so an accidental double-click doesn't double-bill.
+       Hour-bucket the timestamp so a deliberate "I really did mean to
+       renew them twice today" still works after an hour. */
+    const hourBucket = Math.floor(Date.now() / (60 * 60 * 1000));
+    const id = `${affiliate.uid}_${uid}_${plan}_${type}_${hourBucket}`;
+
+    const commission: Commission = {
+      id,
+      affiliateId: affiliate.uid,
+      affiliateCode: affiliate.code,
+      userId: uid,
+      userDisplayName: before?.displayName ?? "Customer",
+      userEmailMasked: maskEmailLocal(before?.email ?? ""),
+      planId: plan,
+      planName: planRecord.name,
+      amount: planRecord.commission,
+      type,
+      status: "pending",
+      earnedAt: Date.now(),
+    };
+
+    await setDoc(doc(db, COL.commissions, id), commission);
+
+    /* Recompute the affiliate's cached stats from the full commission list. */
+    await recomputeAffiliateStats(affiliate.uid);
+
+    return {
+      commissionCreated: true,
+      amount: commission.amount,
+      affiliateCode: affiliate.code,
+    };
+  } catch (err) {
+    console.warn("[Credibly] Commission creation failed:", err);
+    return { commissionCreated: false };
+  }
+}
+
+/**
+ * Local mask helper used inside adminSetUserPlan — duplicated from
+ * lib/affiliate.ts to avoid a client → server circular import here.
+ * Stays in sync with the lib/affiliate.ts version.
+ */
+function maskEmailLocal(email: string): string {
+  if (!email) return "";
+  const [local, domain] = email.split("@");
+  if (!domain) return email;
+  if (local.length <= 2) return `${local[0] ?? ""}*@${domain}`;
+  return `${local[0]}${"*".repeat(Math.max(local.length - 2, 1))}${local.slice(-1)}@${domain}`;
+}
+
+/**
+ * Recompute and cache an affiliate's stats from their full commission
+ * history. Called after any commission write so the affiliate dashboard
+ * always sees consistent numbers without expensive client-side rollups.
+ *
+ * "activeReferrals" is approximated as the count of unique referred
+ * users (any commission = active enough). Step 6 will refine this when
+ * we add subscription expiry tracking.
+ */
+export async function recomputeAffiliateStats(uid: string): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  const commissions = await listCommissionsForAffiliate(uid);
+  const uniqueUsers = new Set(commissions.map((c) => c.userId));
+  const stats: Affiliate["stats"] = {
+    totalReferrals: uniqueUsers.size,
+    activeReferrals: uniqueUsers.size,
+    totalEarned: commissions
+      .filter((c) => c.status !== "reversed")
+      .reduce((sum, c) => sum + c.amount, 0),
+    pendingPayout: commissions
+      .filter((c) => c.status === "pending")
+      .reduce((sum, c) => sum + c.amount, 0),
+    paidOut: commissions
+      .filter((c) => c.status === "paid")
+      .reduce((sum, c) => sum + c.amount, 0),
+  };
+  await updateDoc(doc(db, COL.affiliates, uid), {
+    stats,
+    updatedAt: Date.now(),
+  });
+}
+
+/* ---------------- Commission admin helpers ---------------- */
+
+/** All commissions across all affiliates (admin only). Newest first. */
+export async function listAllCommissions(): Promise<Commission[]> {
+  if (!isFirebaseConfigured) return [];
+  const snap = await getDocs(
+    query(collection(db, COL.commissions), orderBy("earnedAt", "desc"), fsLimit(500)),
+  );
+  return snap.docs.map((d) => ({ ...(d.data() as Commission), id: d.id }));
+}
+
+/**
+ * Mark a single commission as paid (or back to pending). Triggers a
+ * stats recompute for the affected affiliate so their dashboard
+ * "Pending" + "Paid out" totals stay accurate.
+ */
+export async function setCommissionStatus(
+  id: string,
+  status: Commission["status"],
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  const snap = await getDoc(doc(db, COL.commissions, id));
+  if (!snap.exists()) return;
+  const commission = snap.data() as Commission;
+  await updateDoc(doc(db, COL.commissions, id), {
+    status,
+    paidAt: status === "paid" ? Date.now() : undefined,
+  });
+  await recomputeAffiliateStats(commission.affiliateId);
+}
+
+/**
+ * Batch-mark a list of commission ids to a given status. Used by the
+ * admin "Mark selected as paid" action. Recomputes stats once per
+ * affected affiliate to avoid redundant writes.
+ */
+export async function batchSetCommissionStatus(
+  ids: string[],
+  status: Commission["status"],
+): Promise<void> {
+  if (!isFirebaseConfigured || ids.length === 0) return;
+  const affectedAffiliates = new Set<string>();
+  for (const id of ids) {
+    const snap = await getDoc(doc(db, COL.commissions, id));
+    if (!snap.exists()) continue;
+    const commission = snap.data() as Commission;
+    affectedAffiliates.add(commission.affiliateId);
+    await updateDoc(doc(db, COL.commissions, id), {
+      status,
+      paidAt: status === "paid" ? Date.now() : undefined,
+    });
+  }
+  await Promise.all(
+    Array.from(affectedAffiliates).map((uid) => recomputeAffiliateStats(uid)),
+  );
 }
 
 /** Count all profiles (admin overview). */
