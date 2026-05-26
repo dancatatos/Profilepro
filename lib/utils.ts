@@ -99,6 +99,28 @@ export function timeAgo(ts: number): string {
   return new Date(ts).toLocaleDateString();
 }
 
+/**
+ * Human-readable "time until" for a future timestamp. Returns "expired"
+ * for past timestamps, "today" / "tomorrow" / "in N days" otherwise, and
+ * falls back to a date for things further out than 90 days.
+ */
+export function timeUntil(ts: number): string {
+  const diff = ts - Date.now();
+  if (diff <= 0) return "expired";
+  const days = Math.ceil(diff / (24 * 60 * 60 * 1000));
+  if (days === 1) return "tomorrow";
+  if (days <= 1) return "today";
+  if (days <= 90) return `in ${days} days`;
+  return new Date(ts).toLocaleDateString();
+}
+
+/** Days remaining until a future timestamp, clamped to 0 if past. */
+export function daysUntil(ts: number): number {
+  const diff = ts - Date.now();
+  if (diff <= 0) return 0;
+  return Math.ceil(diff / (24 * 60 * 60 * 1000));
+}
+
 /** Build a YouTube/TikTok/Facebook embeddable URL. */
 export function toEmbedUrl(
   provider: "youtube" | "tiktok" | "facebook",

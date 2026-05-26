@@ -29,10 +29,12 @@ import type {
   Funnel,
   Lead,
   Plan,
+  PlanId,
   Profile,
   SavedBuild,
   SharedBuild,
   SharedFunnel,
+  UserSubscription,
 } from "@/types";
 
 /* Firestore collection names — kept in one place. */
@@ -94,6 +96,27 @@ export async function setFeatureFlags(
 
 /* ---------------- Subscription plans ---------------- */
 /* Admin-editable plan pricing/features stored in settings/plans. */
+
+/**
+ * Convert a plan's duration (or billingPeriod fallback) to milliseconds.
+ * Used when computing a user's subscription expiry on upgrade.
+ *
+ * Months / years use rough day-count averages (30 / 365) — calendar-exact
+ * "same day next month" math isn't necessary for renewal reminders, and
+ * it keeps the helper pure with no Date arithmetic surprises around DST
+ * or month-length variation. If the plan has no explicit `duration` we
+ * fall back to its billingPeriod (monthly → 30d, annual → 365d).
+ */
+export function planDurationToMs(plan: Plan): number {
+  const ONE_DAY = 24 * 60 * 60 * 1000;
+  if (plan.duration) {
+    const { value, unit } = plan.duration;
+    if (unit === "days") return value * ONE_DAY;
+    if (unit === "months") return value * 30 * ONE_DAY;
+    if (unit === "years") return value * 365 * ONE_DAY;
+  }
+  return (plan.billingPeriod === "annual" ? 365 : 30) * ONE_DAY;
+}
 
 /**
  * Coerce one stored plan record into a well-formed Plan. Tolerates older
@@ -295,6 +318,86 @@ export async function listCommissionsForAffiliate(
   );
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ ...(d.data() as Commission), id: d.id }));
+}
+
+/**
+ * A compact "upcoming renewal" view derived from a user doc. Strips
+ * the full AccountUser so the affiliate dashboard only sees the
+ * minimum needed for the renewal-opportunity panel: masked email +
+ * plan + expiry. Used by listUpcomingRenewalsForAffiliate below.
+ */
+export interface UpcomingRenewal {
+  userId: string;
+  displayName: string;
+  emailMasked: string;
+  planId: PlanId;
+  planName: string;
+  commission: number;
+  expiresAt: number;
+}
+
+/**
+ * List upcoming renewal opportunities for a given affiliate code,
+ * within the next `windowDays` (defaults to 30). Sorted soonest-first.
+ *
+ * The query reads `users` where `affiliateId == code`, which is the
+ * affiliate's CODE — admin/affiliate Firestore rules don't currently
+ * permit affiliates to read raw user docs, so this fn is intended to
+ * be called from the affiliate dashboard via an admin endpoint OR
+ * from admin code paths. For now we expose it for admin use; Phase 6C
+ * will route it through the cron job.
+ */
+export async function listUpcomingRenewalsForAffiliate(
+  affiliateCode: string,
+  windowDays: number = 30,
+): Promise<UpcomingRenewal[]> {
+  if (!isFirebaseConfigured || !affiliateCode) return [];
+  const now = Date.now();
+  const windowEnd = now + windowDays * 24 * 60 * 60 * 1000;
+  /* Query users referred by this affiliate. The expiresAt filter is
+     applied client-side (Firestore supports compound where, but
+     filtering on a nested field requires an index and our scale here
+     is tiny — at 500 referrals per affiliate this still fits in memory
+     trivially). */
+  const usersQuery = query(
+    collection(db, COL.users),
+    where("affiliateId", "==", affiliateCode),
+  );
+  const [usersSnap, planConfig] = await Promise.all([
+    getDocs(usersQuery),
+    getPlansConfig(),
+  ]);
+  const planMap = new Map<string, Plan>(
+    (planConfig ?? []).map((p) => [p.id, p]),
+  );
+  const rows: UpcomingRenewal[] = [];
+  for (const docSnap of usersSnap.docs) {
+    const user = docSnap.data() as AccountUser;
+    const expiresAt = user.subscription?.expiresAt;
+    if (!expiresAt || expiresAt < now || expiresAt > windowEnd) continue;
+    const plan = planMap.get(user.plan);
+    if (!plan || !plan.commission || plan.commission <= 0) continue;
+    rows.push({
+      userId: user.uid,
+      displayName: user.displayName || "Customer",
+      emailMasked: maskEmailLocalForRenewal(user.email || ""),
+      planId: user.plan,
+      planName: plan.name,
+      commission: plan.commission,
+      expiresAt,
+    });
+  }
+  rows.sort((a, b) => a.expiresAt - b.expiresAt);
+  return rows;
+}
+
+/** Private mask helper — local copy avoids a client-only-utils circular dep. */
+function maskEmailLocalForRenewal(email: string): string {
+  if (!email) return "";
+  const [local, domain] = email.split("@");
+  if (!domain) return email;
+  if (local.length <= 2) return `${local[0] ?? ""}*@${domain}`;
+  return `${local[0]}${"*".repeat(Math.max(local.length - 2, 1))}${local.slice(-1)}@${domain}`;
 }
 
 /* ---------------- Users ---------------- */
@@ -591,27 +694,58 @@ export async function adminSetUserPlan(
      (renewal vs first-time-upgrade) and look up their affiliateId. */
   const before = await getUserDoc(uid);
   const previousPlan = before?.plan;
+  const previousSubscription = before?.subscription;
   const affiliateCode = before?.affiliateId;
 
-  /* Step 2 — update the user doc unconditionally. */
+  /* Step 2 — resolve the plan record up-front so we can compute the
+     subscription expiry AND look up commission together. */
+  const planConfig = await getPlansConfig();
+  const planRecord = planConfig?.find((p) => p.id === plan) ?? null;
+
+  /* Step 3 — build the subscription metadata.
+     - Downgrade to free → clear the subscription entirely.
+     - Same plan + still active → extend from the existing expiresAt
+       (so a renewal mid-cycle doesn't waste remaining days).
+     - New plan / lapsed plan → start a fresh cycle from now. */
+  const now = Date.now();
+  const isFreePlan = plan === "free" || (planRecord?.price ?? 0) === 0;
+  let nextSubscription: UserSubscription | null = null;
+  if (!isFreePlan && planRecord) {
+    const durationMs = planDurationToMs(planRecord);
+    const isSamePlanRenewal =
+      previousPlan === plan &&
+      previousSubscription?.expiresAt != null &&
+      previousSubscription.expiresAt > now;
+    const startFrom = isSamePlanRenewal
+      ? previousSubscription!.expiresAt
+      : now;
+    nextSubscription = {
+      planId: plan,
+      activatedAt: now,
+      expiresAt: startFrom + durationMs,
+      renewalCount: isSamePlanRenewal
+        ? (previousSubscription!.renewalCount ?? 0) + 1
+        : 0,
+    };
+  }
+
+  /* Step 4 — update the user doc unconditionally. ignoreUndefinedProperties
+     on the Firestore client strips out `subscription: undefined`, so the
+     free-plan path correctly leaves the field unset; passing null
+     explicitly removes any existing value. */
   await updateDoc(doc(db, COL.users, uid), {
     plan,
-    updatedAt: Date.now(),
+    subscription: nextSubscription ?? null,
+    updatedAt: now,
   });
 
-  /* Step 3 — try to generate a commission. Any failure here is logged
+  /* Step 5 — try to generate a commission. Any failure here is logged
      but doesn't roll back the plan update — admins can manually create
      a commission later if attribution genuinely matters. */
   if (!affiliateCode) return { commissionCreated: false };
 
   try {
-    /* Resolve plan + affiliate in parallel. */
-    const [planConfig, affiliate] = await Promise.all([
-      getPlansConfig(),
-      getAffiliateByCode(affiliateCode),
-    ]);
-    const planRecord =
-      planConfig?.find((p) => p.id === plan) ?? null;
+    const affiliate = await getAffiliateByCode(affiliateCode);
     if (!planRecord || !planRecord.commission || planRecord.commission <= 0) {
       return { commissionCreated: false };
     }

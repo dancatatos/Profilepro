@@ -14,7 +14,7 @@ import {
   getPlansConfig,
 } from "@/lib/firebase/firestore";
 import { PLANS as DEFAULT_PLANS } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import { cn, daysUntil, timeUntil } from "@/lib/utils";
 import type { AccountUser, Plan, PlanId } from "@/types";
 
 type BadgeTone = "jade" | "blue" | "gold";
@@ -323,52 +323,72 @@ export default function AdminUsersPage() {
                   <th className="pb-3 text-left font-medium">User</th>
                   <th className="pb-3 text-left font-medium">Username</th>
                   <th className="pb-3 text-left font-medium">Joined</th>
-                  <th className="pb-3 text-left font-medium">Onboarded</th>
+                  <th className="pb-3 text-left font-medium">Plan expires</th>
                   <th className="pb-3 text-right font-medium">Plan</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.04]">
-                {filtered.map((u) => (
-                  <tr key={u.uid} className="group">
-                    <td className="py-3 pr-4">
-                      <div className="flex items-center gap-2.5">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-bold text-white uppercase">
-                          {(u.displayName || u.email)[0]}
+                {filtered.map((u) => {
+                  const expiresAt = u.subscription?.expiresAt;
+                  /* Highlight rows that need attention:
+                       - red    when expired (days = 0 + has subscription)
+                       - amber  when 14 days or less remaining
+                       - muted  when comfortably in the future */
+                  const expiryTone = (() => {
+                    if (expiresAt == null) return "text-white/30";
+                    const days = daysUntil(expiresAt);
+                    if (days === 0) return "text-red-300";
+                    if (days <= 14) return "text-gold-300";
+                    return "text-white/55";
+                  })();
+                  return (
+                    <tr key={u.uid} className="group">
+                      <td className="py-3 pr-4">
+                        <div className="flex items-center gap-2.5">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-bold text-white uppercase">
+                            {(u.displayName || u.email)[0]}
+                          </div>
+                          <div>
+                            <p className="font-medium text-white">
+                              {u.displayName || "—"}
+                            </p>
+                            <p className="text-xs text-white/40">{u.email}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium text-white">
-                            {u.displayName || "—"}
-                          </p>
-                          <p className="text-xs text-white/40">{u.email}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-3 pr-4 text-white/50">
-                      {u.username ? `@${u.username}` : "—"}
-                    </td>
-                    <td className="py-3 pr-4 text-white/50">
-                      {new Date(u.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="py-3 pr-4">
-                      <span
-                        className={
-                          u.onboardingComplete
-                            ? "text-jade-400 text-xs"
-                            : "text-white/30 text-xs"
-                        }
-                      >
-                        {u.onboardingComplete ? "Yes" : "No"}
-                      </span>
-                    </td>
-                    <td className="py-3 text-right">
-                      <PlanDropdown
-                        user={u}
-                        plans={plans}
-                        onChanged={handlePlanChanged}
-                      />
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="py-3 pr-4 text-white/50">
+                        {u.username ? `@${u.username}` : "—"}
+                      </td>
+                      <td className="py-3 pr-4 text-white/50">
+                        {new Date(u.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className={cn("py-3 pr-4 text-xs", expiryTone)}>
+                        {expiresAt == null ? (
+                          "—"
+                        ) : (
+                          <div>
+                            <p className="font-medium">
+                              {new Date(expiresAt).toLocaleDateString()}
+                            </p>
+                            <p className="text-[10px] opacity-70">
+                              {timeUntil(expiresAt)}
+                              {u.subscription?.renewalCount
+                                ? ` · renewed ${u.subscription.renewalCount}×`
+                                : ""}
+                            </p>
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-3 text-right">
+                        <PlanDropdown
+                          user={u}
+                          plans={plans}
+                          onChanged={handlePlanChanged}
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

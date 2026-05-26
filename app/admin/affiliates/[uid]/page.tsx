@@ -14,6 +14,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
   ArrowLeft,
+  CalendarClock,
   Check,
   Copy,
   Handshake,
@@ -29,10 +30,12 @@ import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import {
   getAffiliate,
+  listUpcomingRenewalsForAffiliate,
   updateAffiliate,
+  type UpcomingRenewal,
 } from "@/lib/firebase/firestore";
 import { referralShareUrl } from "@/lib/affiliate";
-import { copyToClipboard, timeAgo } from "@/lib/utils";
+import { copyToClipboard, timeAgo, timeUntil } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 import type {
   Affiliate,
@@ -53,6 +56,7 @@ export default function AffiliateDetailPage() {
   const uid = params?.uid as string;
 
   const [affiliate, setAffiliate] = useState<Affiliate | null>(null);
+  const [renewals, setRenewals] = useState<UpcomingRenewal[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -74,6 +78,14 @@ export default function AffiliateDetailPage() {
         setPayoutDetails(aff.payout?.details ?? "");
         setAdminNotes(aff.adminNotes ?? "");
         setDirty(false);
+        /* Load upcoming renewals in parallel — soft-fail so a missing
+           subscription field on legacy users doesn't break the page. */
+        try {
+          const rows = await listUpcomingRenewalsForAffiliate(aff.code, 30);
+          setRenewals(rows);
+        } catch {
+          setRenewals([]);
+        }
       }
     } catch {
       toast.error("Couldn't load this affiliate.");
@@ -280,6 +292,73 @@ export default function AffiliateDetailPage() {
           </Card>
         ))}
       </div>
+
+      {/* Upcoming renewals — soft-fails to nothing if there are none */}
+      <Card className="p-5">
+        <div className="mb-3 flex items-center gap-2">
+          <CalendarClock className="h-4 w-4 text-electric-300" />
+          <h2 className="font-display text-sm font-semibold text-white">
+            Upcoming renewals (next 30 days)
+          </h2>
+          {renewals.length > 0 && (
+            <Badge tone="blue">{renewals.length}</Badge>
+          )}
+        </div>
+        {renewals.length === 0 ? (
+          <p className="text-xs text-white/45">
+            No referrals are up for renewal in the next 30 days. Renewals
+            appear here once you upgrade a referred user to a paid plan.
+          </p>
+        ) : (
+          <>
+            <p className="mb-3 text-xs text-white/45">
+              Reach out to these customers (or coordinate with{" "}
+              {affiliate.displayName.split(" ")[0]}) to renew them before
+              their cycle ends. Each renewal credits another commission to
+              this affiliate.
+            </p>
+            <div className="space-y-2">
+              {renewals.map((r) => {
+                const expiresSoon =
+                  r.expiresAt - Date.now() <= 7 * 24 * 60 * 60 * 1000;
+                return (
+                  <div
+                    key={r.userId}
+                    className={
+                      expiresSoon
+                        ? "flex items-center justify-between gap-3 rounded-xl border border-gold-400/30 bg-gold-400/[0.05] p-3"
+                        : "flex items-center justify-between gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3"
+                    }
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-white">
+                        {r.displayName}
+                      </p>
+                      <p className="truncate text-[11px] text-white/45">
+                        {r.emailMasked} · {r.planName}
+                      </p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="text-sm font-bold text-white">
+                        ₱{r.commission.toLocaleString()}
+                      </p>
+                      <p
+                        className={
+                          expiresSoon
+                            ? "text-[11px] text-gold-300"
+                            : "text-[11px] text-white/45"
+                        }
+                      >
+                        {timeUntil(r.expiresAt)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </Card>
 
       {/* Payout */}
       <Card className="space-y-4 p-5">

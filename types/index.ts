@@ -46,6 +46,28 @@ export interface AccountUser {
   affiliateId?: string;
   /** Timestamp when the affiliate attribution was recorded. */
   affiliateAttributedAt?: number;
+  /**
+   * Subscription metadata for paid plans. Set when the admin upgrades
+   * the user via /admin/users; `expiresAt` is computed from the plan's
+   * `duration` (or billingPeriod as a fallback). Used by:
+   *   - Admin users table: shows days-until-expiry per row.
+   *   - Affiliate dashboard: surfaces upcoming renewal opportunities.
+   *   - Renewal reminder cron (Phase 6C): emails customer + affiliate
+   *     when expiry is approaching.
+   * Absent for users on the free plan.
+   */
+  subscription?: UserSubscription;
+}
+
+/** Per-user subscription state — only present on paid plans. */
+export interface UserSubscription {
+  planId: PlanId;
+  /** When the current cycle was activated (set on signup OR renewal). */
+  activatedAt: number;
+  /** When this cycle ends and a renewal becomes due. */
+  expiresAt: number;
+  /** How many times this user has been renewed (0 = original signup). */
+  renewalCount: number;
 }
 
 /* ---------------- Feature flags (admin-controlled) ---------------- */
