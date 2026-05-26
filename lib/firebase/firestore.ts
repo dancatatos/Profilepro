@@ -504,6 +504,35 @@ export async function autoEnrollLeadInDefaultPipeline(
 }
 
 /**
+ * Return all of the user's leads with their next-task due date within
+ * the next `daysAhead` days (or already overdue). Used to power the
+ * /pipelines/today daily-task dashboard.
+ *
+ * Filters client-side because Firestore can't easily query "where
+ * field exists" — at a typical user's lead count (hundreds, not
+ * thousands) this is fine.
+ */
+export async function listLeadsWithUpcomingTasks(
+  ownerId: string,
+  daysAhead: number = 2,
+): Promise<Lead[]> {
+  if (!isFirebaseConfigured) return [];
+  const horizon = Date.now() + daysAhead * 24 * 60 * 60 * 1000;
+  const snap = await getDocs(
+    query(collection(db, COL.leads), where("ownerId", "==", ownerId)),
+  );
+  const leads = snap.docs
+    .map((d) => ({ ...(d.data() as Lead), id: d.id }))
+    .filter((l) => {
+      if (!l.pipelineId || !l.nextTaskAt) return false;
+      return l.nextTaskAt <= horizon;
+    });
+  /* Soonest-due first (overdue items naturally sort to the top). */
+  leads.sort((a, b) => (a.nextTaskAt ?? 0) - (b.nextTaskAt ?? 0));
+  return leads;
+}
+
+/**
  * Back-fill enrollment for any leads the owner has that don't yet
  * belong to a pipeline (e.g. captured before the pipeline existed, or
  * captured by an anonymous visitor who couldn't write the pipeline

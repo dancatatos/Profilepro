@@ -20,12 +20,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
+  CalendarClock,
   Crown,
   KanbanSquare,
   Loader2,
   MoreVertical,
   Pin,
   Plus,
+  Settings,
   Sparkles,
   Star,
   Trash2,
@@ -48,6 +50,7 @@ import {
   upsertPipeline,
 } from "@/lib/firebase/firestore";
 import { LeadDetailModal } from "@/components/pipelines/LeadDetailModal";
+import { StageEditor } from "@/components/pipelines/StageEditor";
 import {
   emptyCustomPipeline,
   PIPELINE_TEMPLATES,
@@ -195,7 +198,15 @@ export default function PipelinesPage() {
               : "Your pipelines"
           }
         />
-        <div className="flex shrink-0 gap-2">
+        <div className="flex shrink-0 flex-wrap gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            href="/pipelines/today"
+            leftIcon={<CalendarClock className="h-3.5 w-3.5" />}
+          >
+            Today
+          </Button>
           {pipelines.length > 1 && (
             <PipelineSwitcher
               pipelines={pipelines}
@@ -239,6 +250,12 @@ export default function PipelinesPage() {
             setPipelines(remaining);
             setActiveId(remaining[0]?.id ?? null);
             toast.success("Pipeline deleted.");
+          }}
+          onStagesEdited={(next) => {
+            /* StageEditor already persisted; reflect locally. */
+            setPipelines((prev) =>
+              prev.map((p) => (p.id === next.id ? next : p)),
+            );
           }}
         />
       )}
@@ -389,15 +406,19 @@ function PipelineBoard({
   pipeline,
   onSetDefault,
   onDelete,
+  onStagesEdited,
 }: {
   pipeline: Pipeline;
   onSetDefault: () => void;
   onDelete: () => void;
+  onStagesEdited: (next: Pipeline) => void;
 }) {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(false);
   /* The lead currently open in the detail modal (null = closed). */
   const [openLead, setOpenLead] = useState<Lead | null>(null);
+  /* Stage editor modal state. */
+  const [stageEditorOpen, setStageEditorOpen] = useState(false);
 
   const loadLeads = useCallback(async () => {
     setLoading(true);
@@ -478,7 +499,15 @@ function PipelineBoard({
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            leftIcon={<Settings className="h-3.5 w-3.5" />}
+            onClick={() => setStageEditorOpen(true)}
+          >
+            Edit stages
+          </Button>
           {!pipeline.isDefault && (
             <Button
               size="sm"
@@ -541,6 +570,14 @@ function PipelineBoard({
           );
           setOpenLead((cur) => (cur ? { ...cur, ...patch } : cur));
         }}
+      />
+
+      <StageEditor
+        open={stageEditorOpen}
+        onClose={() => setStageEditorOpen(false)}
+        pipeline={pipeline}
+        leadsInPipeline={leads}
+        onSaved={onStagesEdited}
       />
     </div>
   );
