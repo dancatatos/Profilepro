@@ -30,7 +30,7 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     shortcuts: [
       { name: "My Profile", url: "/profile" },
-      { name: "AI Assistant", url: "/ai-assistant" },
+      { name: "Credibly University", url: "/university" },
       { name: "QR Code", url: "/qr" },
     ],
   };

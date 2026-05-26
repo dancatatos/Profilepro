@@ -21,7 +21,8 @@ export async function uploadImage(
     | "gallery"
     | "products"
     | "media"
-    | "hero" = "media",
+    | "hero"
+    | "university" = "media",
 ): Promise<string> {
   if (!isFirebaseConfigured) {
     return URL.createObjectURL(file);

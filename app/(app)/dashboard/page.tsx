@@ -27,7 +27,7 @@ const DEMO_SUMMARY: AnalyticsSummary = {
 
 const QUICK = [
   { label: "Edit Profile", icon: "UserRound", href: "/profile", accent: "blue" },
-  { label: "AI Assistant", icon: "Sparkles", href: "/ai-assistant", accent: "jade" },
+  { label: "Credibly U.", icon: "GraduationCap", href: "/university", accent: "jade" },
   { label: "QR Code", icon: "QrCode", href: "/qr", accent: "gold" },
   { label: "Analytics", icon: "BarChart3", href: "/analytics", accent: "white" },
 ] as const;
@@ -96,8 +96,8 @@ export default function DashboardPage() {
               <Button href="/profile" size="sm" rightIcon={<ArrowRight className="h-3.5 w-3.5" />}>
                 Continue building
               </Button>
-              <Button href="/ai-assistant" size="sm" variant="outline" leftIcon={<Sparkles className="h-3.5 w-3.5" />}>
-                Generate with AI
+              <Button href="/university" size="sm" variant="outline" leftIcon={<Sparkles className="h-3.5 w-3.5" />}>
+                Learn how
               </Button>
             </div>
           </div>

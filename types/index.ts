@@ -676,6 +676,44 @@ export interface Plan {
   duration?: PlanDuration;
 }
 
+/* ---------------- Credibly University ---------------- */
+
+/**
+ * One topic card on the Credibly University page. Admins curate the
+ * library via /admin/university; users browse via /university.
+ * Each card links out to a funnel (or any URL) the admin specifies.
+ *
+ * Plan-gating: an empty `allowedPlans` array means the topic is
+ * visible to every user. A non-empty array restricts visibility to
+ * users on one of the listed plan ids — useful for "Pro-only" deep
+ * dives or affiliate-only training material.
+ */
+export interface UniversityTopic {
+  id: string;
+  title: string;
+  description: string;
+  /** Public storage URL of the banner image (16:9 recommended). */
+  bannerUrl: string;
+  /** Free-text grouping label, e.g. "Getting Started", "Funnels". */
+  category: string;
+  /** Lower numbers appear first within their category. */
+  sortOrder: number;
+  /** CTA button label — defaults to "Start Lessons" via the admin form. */
+  buttonText: string;
+  /** Where the CTA points — typically a funnel URL. */
+  buttonUrl: string;
+  /**
+   * Plan ids this topic is visible to. Empty = visible to all plans
+   * (the typical case for general training). Admins can scope deeper
+   * lessons to paid tiers by listing those plan ids here.
+   */
+  allowedPlans: PlanId[];
+  /** Off = hidden from the user page without losing the record. */
+  active: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
 /* ---------------- Affiliate system ---------------- */
 
 /** Lifecycle status for an affiliate account. */

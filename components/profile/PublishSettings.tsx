@@ -12,8 +12,8 @@ import { getAppOrigin, slugify } from "@/lib/utils";
 
 const RESERVED = new Set([
   "login", "signup", "dashboard", "profile", "admin", "api", "settings",
-  "billing", "templates", "qr", "card", "leads", "analytics", "ai-assistant",
-  "media", "demo", "forgot-password", "u", "app",
+  "billing", "templates", "qr", "card", "leads", "analytics", "university",
+  "media", "demo", "forgot-password", "u", "app", "affiliate", "r",
 ]);
 
 type Availability = "idle" | "checking" | "ok" | "taken" | "reserved";

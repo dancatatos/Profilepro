@@ -39,7 +39,7 @@ export const DASHBOARD_NAV: NavItem[] = [
   { key: "appointments", label: "Appointments", href: "/appointments", icon: "CalendarDays" },
   { key: "leads", label: "Leads", href: "/leads", icon: "Users" },
   { key: "analytics", label: "Analytics", href: "/analytics", icon: "BarChart3" },
-  { key: "ai", label: "AI Assistant", href: "/ai-assistant", icon: "Sparkles" },
+  { key: "university", label: "Credibly University", href: "/university", icon: "GraduationCap" },
   { key: "media", label: "Media Library", href: "/media", icon: "Images" },
   { key: "settings", label: "Settings", href: "/settings", icon: "Settings" },
   { key: "billing", label: "Billing", href: "/billing", icon: "CreditCard" },

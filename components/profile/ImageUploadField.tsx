@@ -7,7 +7,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/store/uiStore";
 import { cn } from "@/lib/utils";
 
-type Folder = "avatars" | "covers" | "gallery" | "products" | "media" | "hero";
+type Folder =
+  | "avatars"
+  | "covers"
+  | "gallery"
+  | "products"
+  | "media"
+  | "hero"
+  | "university";
 
 export function ImageUploadField({
   value,

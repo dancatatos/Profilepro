@@ -34,6 +34,7 @@ import type {
   SavedBuild,
   SharedBuild,
   SharedFunnel,
+  UniversityTopic,
   UserSubscription,
 } from "@/types";
 
@@ -58,6 +59,8 @@ export const COL = {
   affiliateInvites: "affiliate_invites",
   affiliateClicks: "affiliate_clicks",
   commissions: "commissions",
+  /* Credibly University — training cards curated by admin. */
+  universityTopics: "university_topics",
 } as const;
 
 /** Subcollection name for a user's saved-build locker. */
@@ -299,6 +302,35 @@ export async function listAffiliateInvites(): Promise<AffiliateInvite[]> {
   );
   const snap = await getDocs(q);
   return snap.docs.map((d) => d.data() as AffiliateInvite);
+}
+
+/* ---------------- Credibly University ---------------- */
+/* Public-read, admin-write. Order returned is by sortOrder asc — the
+   user-facing page groups by category and respects this ordering
+   within each category. */
+
+export async function listUniversityTopics(): Promise<UniversityTopic[]> {
+  if (!isFirebaseConfigured) return [];
+  const snap = await getDocs(
+    query(collection(db, COL.universityTopics), orderBy("sortOrder", "asc")),
+  );
+  return snap.docs.map((d) => ({
+    ...(d.data() as UniversityTopic),
+    id: d.id,
+  }));
+}
+
+/** Create-or-update a topic. Doc id matches the topic id. */
+export async function upsertUniversityTopic(
+  topic: UniversityTopic,
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await setDoc(doc(db, COL.universityTopics, topic.id), topic);
+}
+
+export async function deleteUniversityTopic(id: string): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await deleteDoc(doc(db, COL.universityTopics, id));
 }
 
 /* ---------------- Commissions ---------------- */
