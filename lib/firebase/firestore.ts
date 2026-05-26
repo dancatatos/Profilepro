@@ -682,10 +682,28 @@ export async function listAllUsers(): Promise<AccountUser[]> {
  * Returns whether a commission was created so the caller can show a
  * toast like "Plan set + ₱499 commission credited to DAN123".
  */
+export interface AdminSetUserPlanResult {
+  commissionCreated: boolean;
+  /** Commission amount (PHP) — present iff commissionCreated. */
+  amount?: number;
+  /** Affiliate's referral code — present iff commissionCreated. */
+  affiliateCode?: string;
+  /** Affiliate's account email — for the commission-earned notification. */
+  affiliateEmail?: string;
+  /** Affiliate's display name — for the email's greeting. */
+  affiliateName?: string;
+  /** Customer's display name — snapshotted for the email body. */
+  customerName?: string;
+  /** Plan name — snapshotted for the email body. */
+  planName?: string;
+  /** "signup" vs "renewal" — drives subject + copy variations. */
+  type?: Commission["type"];
+}
+
 export async function adminSetUserPlan(
   uid: string,
   plan: AccountUser["plan"],
-): Promise<{ commissionCreated: boolean; amount?: number; affiliateCode?: string }> {
+): Promise<AdminSetUserPlanResult> {
   if (!isFirebaseConfigured) {
     return { commissionCreated: false };
   }
@@ -792,6 +810,11 @@ export async function adminSetUserPlan(
       commissionCreated: true,
       amount: commission.amount,
       affiliateCode: affiliate.code,
+      affiliateEmail: affiliate.email,
+      affiliateName: affiliate.displayName,
+      customerName: commission.userDisplayName,
+      planName: commission.planName,
+      type: commission.type,
     };
   } catch (err) {
     console.warn("[Credibly] Commission creation failed:", err);

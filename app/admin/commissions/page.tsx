@@ -31,9 +31,35 @@ import {
   listAllCommissions,
   setCommissionStatus,
 } from "@/lib/firebase/firestore";
+import { auth as firebaseAuth } from "@/lib/firebase/client";
 import { timeAgo } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 import type { Commission, CommissionStatus, CommissionType } from "@/types";
+
+/**
+ * Best-effort POST to /api/notify/commission-paid. The route handles
+ * grouping commissions by affiliate and sending one summary email per
+ * affiliate, so we just pass the full list of IDs that were marked paid.
+ * Non-blocking — toast already fired by the caller.
+ */
+async function notifyCommissionsPaid(commissionIds: string[]): Promise<void> {
+  if (commissionIds.length === 0) return;
+  try {
+    const user = firebaseAuth.currentUser;
+    if (!user) return;
+    const idToken = await user.getIdToken();
+    await fetch("/api/notify/commission-paid", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${idToken}`,
+      },
+      body: JSON.stringify({ commissionIds }),
+    });
+  } catch {
+    /* swallow — email is best-effort */
+  }
+}
 
 type StatusFilter = "all" | CommissionStatus;
 type TypeFilter = "all" | CommissionType;
@@ -158,11 +184,18 @@ export default function AdminCommissionsPage() {
     )
       return;
     setBusy(true);
+    const ids = Array.from(selected);
     try {
-      await batchSetCommissionStatus(Array.from(selected), status);
+      await batchSetCommissionStatus(ids, status);
       toast.success(
         `${selected.size} commission${selected.size === 1 ? "" : "s"} marked ${verb}.`,
       );
+      /* Send commission-paid emails after a paid-status flip. Grouped
+         per-affiliate by the API route so each affiliate gets a single
+         summary email, never N spam messages. */
+      if (status === "paid") {
+        notifyCommissionsPaid(ids);
+      }
       await load();
     } catch {
       toast.error("Couldn't update those commissions.");
@@ -188,6 +221,10 @@ export default function AdminCommissionsPage() {
             : row,
         ),
       );
+      /* Same notification path as the batch action — one paid row → one email. */
+      if (status === "paid") {
+        notifyCommissionsPaid([c.id]);
+      }
     } catch {
       toast.error("Couldn't update.");
     } finally {

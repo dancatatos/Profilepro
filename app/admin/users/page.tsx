@@ -12,10 +12,51 @@ import {
   listAllUsers,
   adminSetUserPlan,
   getPlansConfig,
+  type AdminSetUserPlanResult,
 } from "@/lib/firebase/firestore";
+import { auth as firebaseAuth } from "@/lib/firebase/client";
 import { PLANS as DEFAULT_PLANS } from "@/lib/constants";
 import { cn, daysUntil, timeUntil } from "@/lib/utils";
 import type { AccountUser, Plan, PlanId } from "@/types";
+
+/**
+ * Fire-and-forget the commission-earned notification email to the
+ * affiliate. Never blocks the plan-change toast — if the email send
+ * fails for any reason (Resend down, env var missing, etc.) we silently
+ * skip it. The commission record itself is already written, which is
+ * the part that matters for accounting.
+ */
+async function notifyCommissionEarned(result: AdminSetUserPlanResult): Promise<void> {
+  if (
+    !result.commissionCreated ||
+    !result.affiliateEmail ||
+    !result.amount
+  ) {
+    return;
+  }
+  try {
+    const user = firebaseAuth.currentUser;
+    if (!user) return;
+    const idToken = await user.getIdToken();
+    await fetch("/api/notify/commission-earned", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${idToken}`,
+      },
+      body: JSON.stringify({
+        affiliateEmail: result.affiliateEmail,
+        affiliateName: result.affiliateName,
+        customerName: result.customerName,
+        planName: result.planName,
+        amount: result.amount,
+        type: result.type,
+      }),
+    });
+  } catch {
+    /* swallow — email is best-effort */
+  }
+}
 
 type BadgeTone = "jade" | "blue" | "gold";
 
@@ -65,6 +106,8 @@ function PlanDropdown({
         toast.success(
           `Plan set to ${planLabel(planId, plans)} for ${user.email} — ₱${(result.amount ?? 0).toLocaleString()} credited to ${result.affiliateCode}.`,
         );
+        /* Fire the commission-earned email — non-blocking. */
+        notifyCommissionEarned(result);
       } else {
         toast.success(
           `Plan set to ${planLabel(planId, plans)} for ${user.email}`,

@@ -28,6 +28,7 @@ import {
   listAffiliates,
   revokeAffiliateInvite,
 } from "@/lib/firebase/firestore";
+import { auth as firebaseAuth } from "@/lib/firebase/client";
 import {
   generateInviteToken,
   INVITE_EXPIRY_MS,
@@ -69,6 +70,12 @@ function InviteAffiliateModal({
   const [submitting, setSubmitting] = useState(false);
   const [invite, setInvite] = useState<AffiliateInvite | null>(null);
   const [copied, setCopied] = useState(false);
+  /* Tracks whether the auto-send email arrived at Resend successfully.
+     Affects the success copy in the share step — "Invite emailed to X"
+     vs "Couldn't auto-send, copy the link below". */
+  const [emailStatus, setEmailStatus] = useState<"pending" | "sent" | "failed">(
+    "pending",
+  );
 
   /* Reset when reopened */
   useEffect(() => {
@@ -80,6 +87,7 @@ function InviteAffiliateModal({
       setAdminNotes("");
       setInvite(null);
       setCopied(false);
+      setEmailStatus("pending");
     }
   }, [open]);
 
@@ -132,7 +140,35 @@ function InviteAffiliateModal({
       setInvite(newInvite);
       setStep("share");
       onCreated(newInvite);
-      toast.success("Invite created — share the link below.");
+      toast.success("Invite created — emailing the link…");
+      /* Auto-send invite email — non-blocking. We still keep the
+         copyable link in the share step as a backup, so the admin can
+         resend it manually if the email gets filtered. */
+      void (async () => {
+        try {
+          const user = firebaseAuth.currentUser;
+          if (!user) {
+            setEmailStatus("failed");
+            return;
+          }
+          const idToken = await user.getIdToken();
+          const res = await fetch("/api/notify/invite-sent", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${idToken}`,
+            },
+            body: JSON.stringify({
+              token: newInvite.token,
+              acceptUrl: inviteAcceptUrl(newInvite.token),
+            }),
+          });
+          const data = (await res.json()) as { ok: boolean };
+          setEmailStatus(data.ok ? "sent" : "failed");
+        } catch {
+          setEmailStatus("failed");
+        }
+      })();
     } catch {
       toast.error("Couldn't create invite. Check Firestore rules and try again.");
     } finally {
@@ -214,11 +250,22 @@ function InviteAffiliateModal({
             <div className="flex items-center gap-2 text-jade-300">
               <Check className="h-4 w-4" />
               <p className="text-sm font-medium">
-                Invite created for {invite.displayName}
+                {emailStatus === "sent"
+                  ? `Invite emailed to ${invite.email}`
+                  : emailStatus === "failed"
+                    ? `Invite created — email auto-send failed`
+                    : `Invite created for ${invite.displayName}`}
               </p>
             </div>
             <p className="mt-1 text-xs text-jade-300/70">
               Code reserved: <span className="font-mono">{invite.code}</span>
+              {emailStatus === "failed" && (
+                <>
+                  {" "}
+                  · share the link below manually
+                </>
+              )}
+              {emailStatus === "pending" && <> · sending email…</>}
             </p>
           </div>
 
