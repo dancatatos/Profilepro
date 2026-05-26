@@ -13,6 +13,7 @@ import { Card, CardHeader } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { InstallButton } from "@/components/pwa/InstallButton";
 import { copyToClipboard, getAppOrigin } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 
@@ -121,6 +122,12 @@ export default function SettingsPage() {
           </Button>
         </div>
       </Card>
+
+      {/* Install Credibly — surfaces a manual install action so users
+          who dismissed the bottom banner (or whose browser never fired
+          beforeinstallprompt) can still install from here. Self-hides
+          on platforms where install isn't possible. */}
+      <InstallButton />
 
       {!isFirebaseConfigured && (
         <Card className="border border-gold-400/20 bg-gold-400/[0.04] p-4">

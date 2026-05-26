@@ -1,49 +1,50 @@
 "use client";
 
+/**
+ * Bottom "Add to Home Screen" banner.
+ *
+ * Subscribes to the shared InstallProvider so it picks up the captured
+ * beforeinstallprompt event from the single root listener. Dismissals
+ * are remembered per-browser via localStorage so this never nags after
+ * the user has said no.
+ *
+ * The manual install button on /settings exists as a fallback for when
+ * the user has dismissed this banner — see components/pwa/InstallButton.
+ */
+
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Download, X } from "lucide-react";
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
+import { useInstall } from "@/components/providers/InstallProvider";
 
 const DISMISS_KEY = "credibly:install-dismissed";
 
-/**
- * Custom "Add to Home Screen" banner. Captures the browser's
- * beforeinstallprompt event and surfaces an app-style install CTA.
- */
 export default function InstallPrompt() {
-  const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(
-    null,
-  );
-  const [visible, setVisible] = useState(false);
+  const { canInstall, isInstalled, promptInstall } = useInstall();
+  const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    if (localStorage.getItem(DISMISS_KEY)) return;
-
-    const onPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferred(e as BeforeInstallPromptEvent);
-      setVisible(true);
-    };
-    window.addEventListener("beforeinstallprompt", onPrompt);
-    return () => window.removeEventListener("beforeinstallprompt", onPrompt);
+    if (typeof window === "undefined") return;
+    if (localStorage.getItem(DISMISS_KEY)) setDismissed(true);
   }, []);
 
+  const visible = canInstall && !isInstalled && !dismissed;
+
   const dismiss = () => {
-    setVisible(false);
-    localStorage.setItem(DISMISS_KEY, "1");
+    setDismissed(true);
+    try {
+      localStorage.setItem(DISMISS_KEY, "1");
+    } catch {
+      /* localStorage may be unavailable in private mode — fail silent */
+    }
   };
 
   const install = async () => {
-    if (!deferred) return;
-    await deferred.prompt();
-    await deferred.userChoice;
-    setVisible(false);
-    setDeferred(null);
+    const outcome = await promptInstall();
+    /* On dismiss the prompt closes but the user might still want to
+       install later from /settings — don't permanently dismiss the
+       banner in that case, only on accepted. */
+    if (outcome === "accepted") dismiss();
   };
 
   return (

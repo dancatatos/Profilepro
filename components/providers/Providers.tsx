@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { AuthProvider } from "./AuthProvider";
+import { InstallProvider } from "./InstallProvider";
 import { ToastViewport } from "@/components/ui/Toast";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
 import ServiceWorkerRegister from "@/components/pwa/ServiceWorkerRegister";
@@ -9,10 +10,12 @@ import ServiceWorkerRegister from "@/components/pwa/ServiceWorkerRegister";
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <AuthProvider>
-      {children}
-      <ToastViewport />
-      <InstallPrompt />
-      <ServiceWorkerRegister />
+      <InstallProvider>
+        {children}
+        <ToastViewport />
+        <InstallPrompt />
+        <ServiceWorkerRegister />
+      </InstallProvider>
     </AuthProvider>
   );
 }
