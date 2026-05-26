@@ -69,13 +69,30 @@ function Switch({
   );
 }
 
-/** Deep-clone plans so editing never mutates the bundled defaults. */
+/**
+ * Deep-clone plans so editing never mutates the bundled defaults.
+ * Carefully omits `undefined` keys (Firestore rejects them when the client
+ * isn't configured with ignoreUndefinedProperties).
+ */
 function clonePlans(src: Plan[]): Plan[] {
-  return src.map((p) => ({
-    ...p,
-    features: p.features.map((f) => ({ ...f })),
-    duration: p.duration ? { ...p.duration } : undefined,
-  }));
+  return src.map((p) => {
+    const cloned: Plan = {
+      id: p.id,
+      name: p.name,
+      price: p.price,
+      billingPeriod: p.billingPeriod,
+      tagline: p.tagline,
+      features: p.features.map((f) => ({ ...f })),
+      highlighted: p.highlighted ?? false,
+      visibility: p.visibility ?? "public",
+      checkoutUrl: p.checkoutUrl ?? "",
+      commission: p.commission ?? 0,
+    };
+    if (p.duration) {
+      cloned.duration = { ...p.duration };
+    }
+    return cloned;
+  });
 }
 
 /**
