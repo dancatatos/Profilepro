@@ -28,7 +28,7 @@ import {
   saveFunnel,
 } from "@/lib/firebase/firestore";
 import { createFunnel, FUNNEL_TEMPLATES } from "@/lib/funnels";
-import { getFunnelLimit } from "@/lib/constants";
+import { resolveUserFunnelLimit } from "@/lib/constants";
 import { cn, timeAgo } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 import type { Funnel } from "@/types";
@@ -37,11 +37,13 @@ export default function FunnelsPage() {
   const router = useRouter();
   const { account, loading: authLoading } = useAuth();
 
-  const plan = account?.plan ?? "free";
-  const { hasAnyFeature } = usePlanAccess();
+  const { hasAnyFeature, plans } = usePlanAccess();
   /* Access to funnels at all = either tier of funnels enabled. */
   const isPaid = hasAnyFeature(["funnels_5", "funnels_15"]);
-  const limit = getFunnelLimit(plan);
+  /* Limit lookup respects: per-user override → plan.limits.funnels →
+     legacy hardcoded FUNNEL_LIMITS map. The admin can grant individual
+     users extra capacity in /admin/users without touching their plan. */
+  const limit = resolveUserFunnelLimit(account, plans);
 
   const [funnels, setFunnels] = useState<Funnel[]>([]);
   const [loading, setLoading] = useState(false);

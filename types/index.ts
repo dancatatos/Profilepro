@@ -52,11 +52,26 @@ export interface AccountUser {
    * `duration` (or billingPeriod as a fallback). Used by:
    *   - Admin users table: shows days-until-expiry per row.
    *   - Affiliate dashboard: surfaces upcoming renewal opportunities.
-   *   - Renewal reminder cron (Phase 6C): emails customer + affiliate
-   *     when expiry is approaching.
+   *   - Renewal reminder cron (Phase 6C): emails customer + assistant.
    * Absent for users on the free plan.
    */
   subscription?: UserSubscription;
+  /**
+   * Per-user limit overrides — admin can grant extra funnel slots or
+   * shared-build slots to a specific user without changing their plan.
+   * Used for team members (e.g. a hired funnel-builder), beta testers,
+   * or one-off arrangements. Override wins over plan default; absence
+   * means "use whatever the plan grants".
+   */
+  limitOverrides?: UserLimitOverrides;
+}
+
+/** Per-user numeric overrides on top of plan-level limits. */
+export interface UserLimitOverrides {
+  /** Override the funnel count limit (0 = no funnels, undefined = use plan default). */
+  funnels?: number;
+  /** Override the shared-builds locker slot count. */
+  sharedBuilds?: number;
 }
 
 /** Per-user subscription state — only present on paid plans. */
@@ -637,6 +652,14 @@ export interface PlanDuration {
   unit: PlanDurationUnit;
 }
 
+/** Numeric caps granted by a plan. Admin-editable in /admin/subscriptions. */
+export interface PlanLimits {
+  /** Maximum number of funnels a user on this plan can create. */
+  funnels?: number;
+  /** Number of saved-build slots in the shared-build locker. */
+  sharedBuilds?: number;
+}
+
 export interface Plan {
   /** Plan id — built-ins are "free" / "pro" / "team", custom ones are arbitrary slugs. */
   id: PlanId;
@@ -689,6 +712,13 @@ export interface Plan {
    * `billingPeriod` (monthly → 1 month, annual → 1 year) when absent.
    */
   duration?: PlanDuration;
+  /**
+   * Numeric caps for the plan (funnel count, shared-build slots, etc.).
+   * Admin-editable in /admin/subscriptions. When unset, the legacy
+   * FUNNEL_LIMITS / TEMPLATE_LOCKER_SLOTS hardcoded maps are used as
+   * fallback so existing plans don't break before being re-saved.
+   */
+  limits?: PlanLimits;
 }
 
 /* ---------------- Credibly University ---------------- */

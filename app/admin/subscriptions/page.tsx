@@ -101,6 +101,7 @@ function clonePlans(src: Plan[]): Plan[] {
       visibility: p.visibility ?? "public",
       checkoutUrl: p.checkoutUrl ?? "",
       commission: p.commission ?? 0,
+      limits: p.limits ? { ...p.limits } : undefined,
     };
     if (p.duration) {
       cloned.duration = { ...p.duration };
@@ -267,6 +268,33 @@ export default function AdminSubscriptionsPage() {
           ? current.filter((k) => k !== key)
           : [...current, key];
         return { ...p, featureKeys: next };
+      }),
+    );
+    setDirty(true);
+  };
+
+  /**
+   * Patch a plan's numeric limits (funnel count, shared-build slots).
+   * Values are floored to non-negative integers — a limit of 0 means
+   * "users on this plan cannot use this feature even if the feature
+   * flag is on", which is a useful escape hatch.
+   */
+  const updateLimits = (
+    pIdx: number,
+    patch: Partial<NonNullable<Plan["limits"]>>,
+  ) => {
+    setPlans((ps) =>
+      ps.map((p, i) => {
+        if (i !== pIdx) return p;
+        const current = p.limits ?? {};
+        const next: NonNullable<Plan["limits"]> = { ...current };
+        if (patch.funnels !== undefined) {
+          next.funnels = Math.max(0, Math.floor(patch.funnels));
+        }
+        if (patch.sharedBuilds !== undefined) {
+          next.sharedBuilds = Math.max(0, Math.floor(patch.sharedBuilds));
+        }
+        return { ...p, limits: next };
       }),
     );
     setDirty(true);
@@ -711,6 +739,55 @@ export default function AdminSubscriptionsPage() {
                 </div>
                 <p className="mt-1 text-[10px] text-white/30">
                   How long an activation lasts before renewal is due.
+                </p>
+              </div>
+
+              {/* Numeric limits — funnel count + shared-build slots. The
+                  feature flags above control IF the user can access these
+                  modules; these inputs control HOW MUCH capacity they get.
+                  A user can also be granted per-user overrides in
+                  /admin/users that beat these values. */}
+              <div>
+                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-white/40">
+                  Plan limits
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <p className="mb-1 text-[10px] text-white/45">
+                      Funnel cap
+                    </p>
+                    <input
+                      type="number"
+                      min={0}
+                      className={inputCls}
+                      value={plan.limits?.funnels ?? 0}
+                      onChange={(e) =>
+                        updateLimits(pIdx, {
+                          funnels: Number(e.target.value) || 0,
+                        })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <p className="mb-1 text-[10px] text-white/45">
+                      Shared-build slots
+                    </p>
+                    <input
+                      type="number"
+                      min={0}
+                      className={inputCls}
+                      value={plan.limits?.sharedBuilds ?? 0}
+                      onChange={(e) =>
+                        updateLimits(pIdx, {
+                          sharedBuilds: Number(e.target.value) || 0,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+                <p className="mt-1 text-[10px] text-white/35">
+                  0 means &ldquo;none&rdquo;. Per-user overrides in{" "}
+                  <code>/admin/users</code> can grant individuals more.
                 </p>
               </div>
 

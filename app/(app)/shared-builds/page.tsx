@@ -35,7 +35,7 @@ import {
 } from "@/lib/firebase/firestore";
 import { applyExactBuild } from "@/lib/sharedBuilds";
 import { applyGeneratedContent } from "@/lib/ai/generators";
-import { getTemplateLockerSlots, THEMES } from "@/lib/constants";
+import { resolveUserSharedBuildSlots, THEMES } from "@/lib/constants";
 import { cn, copyToClipboard, timeAgo } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 import type {
@@ -62,13 +62,14 @@ function themeBackground(themeId: ThemeId): string {
 export default function SharedBuildsPage() {
   const router = useRouter();
   const { account, loading: authLoading } = useAuth();
-  const { hasFeature } = usePlanAccess();
+  const { hasFeature, plans } = usePlanAccess();
   const profile = useProfileStore((s) => s.profile);
   const setProfile = useProfileStore((s) => s.setProfile);
 
-  const plan = account?.plan ?? "free";
   const isPaid = hasFeature("shared_builds");
-  const slots = getTemplateLockerSlots(plan);
+  /* Respects per-user override → plan.limits.sharedBuilds → legacy
+     TEMPLATE_LOCKER_SLOTS hardcoded map. */
+  const slots = resolveUserSharedBuildSlots(account, plans);
 
   const [saved, setSaved] = useState<SavedBuild[]>([]);
   const [published, setPublished] = useState<SharedBuild[]>([]);

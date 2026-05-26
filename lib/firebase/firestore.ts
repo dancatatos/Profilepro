@@ -139,6 +139,19 @@ function normalizePlan(raw: Record<string, unknown>): Plan {
     if (unit !== "days" && unit !== "months" && unit !== "years") return undefined;
     return { value, unit };
   };
+  /* Normalise the optional limits map — only keeps numeric values. */
+  const normalizeLimits = (v: unknown): Plan["limits"] => {
+    if (!v || typeof v !== "object") return undefined;
+    const l = v as Record<string, unknown>;
+    const limits: NonNullable<Plan["limits"]> = {};
+    if (typeof l.funnels === "number" && l.funnels >= 0) {
+      limits.funnels = Math.floor(l.funnels);
+    }
+    if (typeof l.sharedBuilds === "number" && l.sharedBuilds >= 0) {
+      limits.sharedBuilds = Math.floor(l.sharedBuilds);
+    }
+    return Object.keys(limits).length > 0 ? limits : undefined;
+  };
   return {
     id: str(raw.id),
     name: str(raw.name),
@@ -164,6 +177,7 @@ function normalizePlan(raw: Record<string, unknown>): Plan {
     checkoutUrl: str(raw.checkoutUrl) || undefined,
     commission: num(raw.commission) ?? 0,
     duration: normalizeDuration(raw.duration),
+    limits: normalizeLimits(raw.limits),
   };
 }
 
@@ -699,6 +713,40 @@ export async function listAllUsers(): Promise<AccountUser[]> {
     query(collection(db, COL.users), orderBy("createdAt", "desc"), fsLimit(500)),
   );
   return snap.docs.map((d) => d.data() as AccountUser);
+}
+
+/**
+ * Set or clear per-user limit overrides (admin only).
+ *
+ * Pass numeric values to override the plan defaults — undefined or
+ * null clears the override so the user falls back to their plan's
+ * limits. Useful for granting individual users extra capacity (e.g.
+ * a hired funnel-builder needs 50 funnels even though they're on Pro
+ * which only includes 5).
+ */
+export async function adminSetUserLimitOverrides(
+  uid: string,
+  overrides: { funnels?: number | null; sharedBuilds?: number | null },
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  /* Build a patch that uses null to clear fields (Firestore-compatible
+     "delete this field" sentinel when stored, paired with the client's
+     ignoreUndefinedProperties so the user can clear cleanly). */
+  const patch: Record<string, number | null> = {};
+  if (overrides.funnels === null) patch["limitOverrides.funnels"] = null;
+  else if (typeof overrides.funnels === "number")
+    patch["limitOverrides.funnels"] = Math.max(0, Math.floor(overrides.funnels));
+  if (overrides.sharedBuilds === null) patch["limitOverrides.sharedBuilds"] = null;
+  else if (typeof overrides.sharedBuilds === "number")
+    patch["limitOverrides.sharedBuilds"] = Math.max(
+      0,
+      Math.floor(overrides.sharedBuilds),
+    );
+  if (Object.keys(patch).length === 0) return;
+  await updateDoc(doc(db, COL.users, uid), {
+    ...patch,
+    updatedAt: Date.now(),
+  });
 }
 
 /**

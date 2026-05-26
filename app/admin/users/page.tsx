@@ -1,21 +1,35 @@
 "use client";
 
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { Search, Check, ChevronDown, RefreshCw, Lock, Coins } from "lucide-react";
+import {
+  Search,
+  Check,
+  ChevronDown,
+  RefreshCw,
+  Lock,
+  Coins,
+  Sliders,
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { Modal } from "@/components/ui/Modal";
 import { toast } from "@/store/uiStore";
 import {
   listAllUsers,
   adminSetUserPlan,
+  adminSetUserLimitOverrides,
   getPlansConfig,
   type AdminSetUserPlanResult,
 } from "@/lib/firebase/firestore";
 import { auth as firebaseAuth } from "@/lib/firebase/client";
-import { PLANS as DEFAULT_PLANS } from "@/lib/constants";
+import {
+  PLANS as DEFAULT_PLANS,
+  resolveUserFunnelLimit,
+  resolveUserSharedBuildSlots,
+} from "@/lib/constants";
 import { cn, daysUntil, timeUntil } from "@/lib/utils";
 import type { AccountUser, Plan, PlanId } from "@/types";
 
@@ -232,6 +246,9 @@ export default function AdminUsersPage() {
   const [filtered, setFiltered] = useState<AccountUser[]>([]);
   const [search, setSearch] = useState("");
   const [fetching, setFetching] = useState(false);
+  /* Per-user limit-overrides modal — null when closed, holds the user
+     being edited when open. */
+  const [editingLimits, setEditingLimits] = useState<AccountUser | null>(null);
 
   const loadAll = useCallback(async () => {
     setFetching(true);
@@ -287,6 +304,30 @@ export default function AdminUsersPage() {
 
   const handlePlanChanged = (uid: string, plan: PlanId) => {
     setUsers((prev) => prev.map((u) => (u.uid === uid ? { ...u, plan } : u)));
+  };
+
+  /* Apply a limit-override change locally + persist to Firestore. */
+  const handleLimitsChanged = (
+    uid: string,
+    overrides: { funnels?: number | null; sharedBuilds?: number | null },
+  ) => {
+    setUsers((prev) =>
+      prev.map((u) => {
+        if (u.uid !== uid) return u;
+        const nextOverrides = { ...(u.limitOverrides ?? {}) };
+        if (overrides.funnels === null) delete nextOverrides.funnels;
+        else if (typeof overrides.funnels === "number")
+          nextOverrides.funnels = overrides.funnels;
+        if (overrides.sharedBuilds === null) delete nextOverrides.sharedBuilds;
+        else if (typeof overrides.sharedBuilds === "number")
+          nextOverrides.sharedBuilds = overrides.sharedBuilds;
+        return {
+          ...u,
+          limitOverrides:
+            Object.keys(nextOverrides).length > 0 ? nextOverrides : undefined,
+        };
+      }),
+    );
   };
 
   return (
@@ -423,11 +464,30 @@ export default function AdminUsersPage() {
                         )}
                       </td>
                       <td className="py-3 text-right">
-                        <PlanDropdown
-                          user={u}
-                          plans={plans}
-                          onChanged={handlePlanChanged}
-                        />
+                        <div className="flex items-center justify-end gap-1.5">
+                          {/* Per-user limit overrides — small icon button.
+                              Chip indicator below the row when overrides
+                              are active is handled in the limits cell. */}
+                          <button
+                            type="button"
+                            onClick={() => setEditingLimits(u)}
+                            aria-label="Edit per-user limits"
+                            title="Edit per-user limits"
+                            className={cn(
+                              "rounded-lg p-1.5 transition-colors",
+                              u.limitOverrides
+                                ? "bg-electric-500/15 text-electric-300"
+                                : "text-white/30 hover:bg-white/[0.06] hover:text-white",
+                            )}
+                          >
+                            <Sliders className="h-3.5 w-3.5" />
+                          </button>
+                          <PlanDropdown
+                            user={u}
+                            plans={plans}
+                            onChanged={handlePlanChanged}
+                          />
+                        </div>
                       </td>
                     </tr>
                   );
@@ -450,6 +510,166 @@ export default function AdminUsersPage() {
           plan on their next page load or sign-in.
         </p>
       </Card>
+
+      {/* Per-user limit overrides modal */}
+      <LimitOverridesModal
+        user={editingLimits}
+        plans={plans}
+        onClose={() => setEditingLimits(null)}
+        onSaved={handleLimitsChanged}
+      />
     </div>
+  );
+}
+
+/* ── Per-user limit overrides modal ──
+ *
+ * Lets the admin grant individual users extra funnel slots / shared-build
+ * slots beyond what their plan includes. Blank input = "use plan default";
+ * a number overrides the plan value. Common use cases:
+ *   - A hired funnel-builder needs 50 funnels on the Pro plan (default 5).
+ *   - A beta tester gets unlimited shared builds.
+ *   - A specific customer gets only 1 funnel even on Pro (rare edge case).
+ *
+ * Pressing Save persists to /users/{uid}.limitOverrides; pressing the
+ * Clear button next to a field clears just that override (returning to
+ * the plan default).
+ */
+function LimitOverridesModal({
+  user,
+  plans,
+  onClose,
+  onSaved,
+}: {
+  user: AccountUser | null;
+  plans: Plan[];
+  onClose: () => void;
+  onSaved: (
+    uid: string,
+    patch: { funnels?: number | null; sharedBuilds?: number | null },
+  ) => void;
+}) {
+  /* Track edit state as strings so an empty input means "use default". */
+  const [funnels, setFunnels] = useState<string>("");
+  const [sharedBuilds, setSharedBuilds] = useState<string>("");
+  const [saving, setSaving] = useState(false);
+
+  /* Re-seed local state every time a different user is opened. */
+  useEffect(() => {
+    if (!user) return;
+    setFunnels(
+      user.limitOverrides?.funnels !== undefined
+        ? String(user.limitOverrides.funnels)
+        : "",
+    );
+    setSharedBuilds(
+      user.limitOverrides?.sharedBuilds !== undefined
+        ? String(user.limitOverrides.sharedBuilds)
+        : "",
+    );
+    setSaving(false);
+  }, [user]);
+
+  if (!user) return null;
+
+  /* The effective limits the user has right now — used as placeholders
+     on the inputs to show what they'll get without an override. */
+  const planFunnelLimit = resolveUserFunnelLimit(
+    { plan: user.plan, limitOverrides: {} },
+    plans,
+  );
+  const planSharedLimit = resolveUserSharedBuildSlots(
+    { plan: user.plan, limitOverrides: {} },
+    plans,
+  );
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const parsed = (s: string): number | null | undefined => {
+        if (s.trim() === "") return null; // clear override
+        const n = Number(s);
+        if (!Number.isFinite(n) || n < 0) return undefined; // skip invalid
+        return Math.floor(n);
+      };
+      const fn = parsed(funnels);
+      const sb = parsed(sharedBuilds);
+      await adminSetUserLimitOverrides(user.uid, {
+        funnels: fn,
+        sharedBuilds: sb,
+      });
+      onSaved(user.uid, { funnels: fn, sharedBuilds: sb });
+      toast.success(`Limits updated for ${user.displayName || user.email}.`);
+      onClose();
+    } catch {
+      toast.error("Couldn't save the overrides.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const clearAll = async () => {
+    setFunnels("");
+    setSharedBuilds("");
+  };
+
+  return (
+    <Modal
+      open={!!user}
+      onClose={() => !saving && onClose()}
+      title={`Limit overrides — ${user.displayName || user.email}`}
+      description="Leave a field blank to use the plan default."
+    >
+      <div className="space-y-4 pb-3">
+        <div>
+          <label className="mb-1.5 block text-xs font-medium text-white/55">
+            Funnel limit
+          </label>
+          <Input
+            type="number"
+            min={0}
+            value={funnels}
+            onChange={(e) => setFunnels(e.target.value)}
+            placeholder={`Plan default: ${planFunnelLimit}`}
+            hint={
+              funnels.trim() === ""
+                ? `Will use the plan's default (${planFunnelLimit}).`
+                : `Override active — this user gets ${Math.max(
+                    0,
+                    Math.floor(Number(funnels) || 0),
+                  )} funnels regardless of plan.`
+            }
+          />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-xs font-medium text-white/55">
+            Shared-build slots
+          </label>
+          <Input
+            type="number"
+            min={0}
+            value={sharedBuilds}
+            onChange={(e) => setSharedBuilds(e.target.value)}
+            placeholder={`Plan default: ${planSharedLimit}`}
+            hint={
+              sharedBuilds.trim() === ""
+                ? `Will use the plan's default (${planSharedLimit}).`
+                : `Override active — this user gets ${Math.max(
+                    0,
+                    Math.floor(Number(sharedBuilds) || 0),
+                  )} slots regardless of plan.`
+            }
+          />
+        </div>
+      </div>
+      <div className="flex gap-2 border-t border-white/[0.06] p-4 pb-safe">
+        <Button variant="outline" onClick={clearAll} disabled={saving}>
+          Clear both
+        </Button>
+        <Button fullWidth onClick={save} loading={saving} disabled={saving}>
+          Save overrides
+        </Button>
+      </div>
+    </Modal>
   );
 }

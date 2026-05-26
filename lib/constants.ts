@@ -322,6 +322,7 @@ export const PLANS: Plan[] = [
        at display time. */
     features: [{ label: "Core profile sections", included: true }],
     featureKeys: ["profile_basic", "qr_standard"],
+    limits: { funnels: 0, sharedBuilds: 0 },
     visibility: "public",
     checkoutUrl: "",
     commission: 0,
@@ -349,6 +350,7 @@ export const PLANS: Plan[] = [
       "premium_themes",
       "appointments",
     ],
+    limits: { funnels: 5, sharedBuilds: 5 },
     visibility: "public",
     checkoutUrl: DEFAULT_GUMROAD_URL,
     commission: 0,
@@ -382,6 +384,7 @@ export const PLANS: Plan[] = [
       "lead_export",
       "appointments",
     ],
+    limits: { funnels: 15, sharedBuilds: 15 },
     visibility: "public",
     checkoutUrl: DEFAULT_GUMROAD_URL,
     commission: 0,
@@ -436,4 +439,44 @@ export function getTemplateLockerSlots(planId: PlanId): number {
 /** Resolve a plan's funnel limit, defaulting to the Pro tier for custom plans. */
 export function getFunnelLimit(planId: PlanId): number {
   return FUNNEL_LIMITS[planId] ?? FUNNEL_LIMITS.pro;
+}
+
+/**
+ * Resolve a user's effective funnel limit, taking into account both
+ * per-user overrides AND per-plan limits (with the legacy hardcoded
+ * map as a final fallback).
+ *
+ * Lookup priority:
+ *   1. user.limitOverrides.funnels  — admin-set per-user grant
+ *   2. plan.limits.funnels          — admin-set per-plan setting
+ *   3. FUNNEL_LIMITS[planId]        — legacy hardcoded default
+ */
+export function resolveUserFunnelLimit(
+  user: { plan?: PlanId; limitOverrides?: { funnels?: number } } | null | undefined,
+  plans: Plan[] | null | undefined,
+): number {
+  if (user?.limitOverrides?.funnels !== undefined) {
+    return user.limitOverrides.funnels;
+  }
+  const planId = user?.plan ?? "free";
+  const plan = plans?.find((p) => p.id === planId);
+  if (plan?.limits?.funnels !== undefined) return plan.limits.funnels;
+  return getFunnelLimit(planId);
+}
+
+/**
+ * Same lookup priority as resolveUserFunnelLimit, but for shared-build
+ * locker slots. Per-user override → per-plan setting → legacy default.
+ */
+export function resolveUserSharedBuildSlots(
+  user: { plan?: PlanId; limitOverrides?: { sharedBuilds?: number } } | null | undefined,
+  plans: Plan[] | null | undefined,
+): number {
+  if (user?.limitOverrides?.sharedBuilds !== undefined) {
+    return user.limitOverrides.sharedBuilds;
+  }
+  const planId = user?.plan ?? "free";
+  const plan = plans?.find((p) => p.id === planId);
+  if (plan?.limits?.sharedBuilds !== undefined) return plan.limits.sharedBuilds;
+  return getTemplateLockerSlots(planId);
 }
