@@ -1,51 +1,80 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { Search, Check, ChevronDown, RefreshCw } from "lucide-react";
+import { useEffect, useMemo, useState, useCallback } from "react";
+import { Search, Check, ChevronDown, RefreshCw, Lock, Coins } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { toast } from "@/store/uiStore";
-import { listAllUsers, adminSetUserPlan } from "@/lib/firebase/firestore";
-import type { AccountUser, PlanId } from "@/types";
+import {
+  listAllUsers,
+  adminSetUserPlan,
+  getPlansConfig,
+} from "@/lib/firebase/firestore";
+import { PLANS as DEFAULT_PLANS } from "@/lib/constants";
+import { cn } from "@/lib/utils";
+import type { AccountUser, Plan, PlanId } from "@/types";
 
-const PLANS: PlanId[] = ["free", "pro", "team"];
+type BadgeTone = "jade" | "blue" | "gold";
 
-const planTone: Record<PlanId, "jade" | "blue" | "gold"> = {
-  free: "jade",
-  pro: "blue",
-  team: "gold",
-};
+/** Map plan id → a badge tone. Built-ins keep their existing colours,
+ *  custom plans inherit "blue" as the catch-all. */
+function planTone(planId: PlanId): BadgeTone {
+  if (planId === "free") return "jade";
+  if (planId === "team") return "gold";
+  return "blue";
+}
+
+/** Human-readable display label for a plan id, falling back to the raw id. */
+function planLabel(planId: PlanId, plans: Plan[]): string {
+  return plans.find((p) => p.id === planId)?.name ?? planId.toUpperCase();
+}
+
+/** Format a plan's price as e.g. "₱499/mo" or "₱1,499/yr". Free returns "Free". */
+function priceLabel(plan: Plan): string {
+  if (plan.price === 0) return "Free";
+  const suffix = plan.billingPeriod === "annual" ? "/yr" : "/mo";
+  return `₱${plan.price.toLocaleString()}${suffix}`;
+}
 
 function PlanDropdown({
   user,
+  plans,
   onChanged,
 }: {
   user: AccountUser;
+  plans: Plan[];
   onChanged: (uid: string, plan: PlanId) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const select = async (plan: PlanId) => {
-    if (plan === user.plan) {
+  const select = async (planId: PlanId) => {
+    if (planId === user.plan) {
       setOpen(false);
       return;
     }
     setSaving(true);
     setOpen(false);
     try {
-      await adminSetUserPlan(user.uid, plan);
-      onChanged(user.uid, plan);
-      toast.success(`Plan set to ${plan.toUpperCase()} for ${user.email}`);
+      await adminSetUserPlan(user.uid, planId);
+      onChanged(user.uid, planId);
+      toast.success(
+        `Plan set to ${planLabel(planId, plans)} for ${user.email}`,
+      );
     } catch {
       toast.error("Failed to update plan.");
     } finally {
       setSaving(false);
     }
   };
+
+  /* Group plans into Public + Affiliate sections so the admin can scan
+     them quickly and never accidentally pick the wrong tier. */
+  const publicPlans = plans.filter((p) => p.visibility !== "affiliate");
+  const affiliatePlans = plans.filter((p) => p.visibility === "affiliate");
 
   return (
     <div className="relative">
@@ -57,8 +86,8 @@ function PlanDropdown({
         {saving ? (
           <RefreshCw className="h-3 w-3 animate-spin text-white/50" />
         ) : (
-          <Badge tone={planTone[user.plan] ?? "jade"}>
-            {user.plan.toUpperCase()}
+          <Badge tone={planTone(user.plan)}>
+            {planLabel(user.plan, plans)}
           </Badge>
         )}
         <ChevronDown className="h-3 w-3 text-white/40" />
@@ -67,19 +96,42 @@ function PlanDropdown({
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 z-20 mt-1 w-32 overflow-hidden rounded-xl border border-white/10 bg-ink-900 shadow-xl">
-            {PLANS.map((p) => (
-              <button
-                key={p}
-                onClick={() => select(p)}
-                className="flex w-full items-center justify-between px-3 py-2.5 text-xs font-medium text-white hover:bg-white/10 transition-colors"
-              >
-                {p.toUpperCase()}
-                {p === user.plan && (
-                  <Check className="h-3.5 w-3.5 text-jade-400" />
-                )}
-              </button>
-            ))}
+          <div className="absolute right-0 z-20 mt-1 w-72 overflow-hidden rounded-xl border border-white/10 bg-ink-900 shadow-xl">
+            {/* Public plans */}
+            {publicPlans.length > 0 && (
+              <div>
+                <div className="border-b border-white/[0.06] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-white/35">
+                  Public plans
+                </div>
+                {publicPlans.map((p) => (
+                  <PlanOption
+                    key={p.id}
+                    plan={p}
+                    current={p.id === user.plan}
+                    onSelect={() => select(p.id)}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Affiliate plans */}
+            {affiliatePlans.length > 0 && (
+              <div>
+                <div className="flex items-center gap-1 border-y border-electric-500/20 bg-electric-500/[0.04] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-electric-300">
+                  <Lock className="h-2.5 w-2.5" />
+                  Affiliate plans
+                </div>
+                {affiliatePlans.map((p) => (
+                  <PlanOption
+                    key={p.id}
+                    plan={p}
+                    current={p.id === user.plan}
+                    onSelect={() => select(p.id)}
+                    affiliate
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </>
       )}
@@ -87,19 +139,61 @@ function PlanDropdown({
   );
 }
 
+/** One row in the plan picker dropdown. */
+function PlanOption({
+  plan,
+  current,
+  onSelect,
+  affiliate,
+}: {
+  plan: Plan;
+  current: boolean;
+  onSelect: () => void;
+  affiliate?: boolean;
+}) {
+  return (
+    <button
+      onClick={onSelect}
+      className={cn(
+        "flex w-full flex-col items-stretch gap-0.5 px-3 py-2.5 text-left transition-colors hover:bg-white/[0.06]",
+        affiliate && "hover:bg-electric-500/10",
+      )}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-semibold text-white">{plan.name}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] text-white/45">{priceLabel(plan)}</span>
+          {current && <Check className="h-3.5 w-3.5 text-jade-400" />}
+        </div>
+      </div>
+      {affiliate && plan.commission && plan.commission > 0 ? (
+        <div className="flex items-center gap-1 text-[10px] text-electric-300/80">
+          <Coins className="h-2.5 w-2.5" />
+          ₱{plan.commission.toLocaleString()} commission per signup &amp; renewal
+        </div>
+      ) : null}
+    </button>
+  );
+}
+
 export default function AdminUsersPage() {
   const { account } = useAuth();
   const [users, setUsers] = useState<AccountUser[]>([]);
+  const [plans, setPlans] = useState<Plan[]>(DEFAULT_PLANS);
   const [filtered, setFiltered] = useState<AccountUser[]>([]);
   const [search, setSearch] = useState("");
   const [fetching, setFetching] = useState(false);
 
-  const loadUsers = useCallback(async () => {
+  const loadAll = useCallback(async () => {
     setFetching(true);
     try {
-      const all = await listAllUsers();
+      const [all, savedPlans] = await Promise.all([
+        listAllUsers(),
+        getPlansConfig(),
+      ]);
       setUsers(all);
       setFiltered(all);
+      if (savedPlans && savedPlans.length > 0) setPlans(savedPlans);
     } catch {
       toast.error("Could not load users. Check Firestore admin rules.");
     } finally {
@@ -108,8 +202,24 @@ export default function AdminUsersPage() {
   }, []);
 
   useEffect(() => {
-    if (account?.role === "admin") loadUsers();
-  }, [account, loadUsers]);
+    if (account?.role === "admin") loadAll();
+  }, [account, loadAll]);
+
+  /**
+   * One stats tile per plan, plus a "Total" tile at the front. Computes
+   * counts live so newly created custom plans show up automatically.
+   */
+  const planStats = useMemo(() => {
+    const tiles = plans.map((p) => ({
+      label: p.name,
+      value: users.filter((u) => u.plan === p.id).length,
+      affiliate: p.visibility === "affiliate",
+    }));
+    return [
+      { label: "Total", value: users.length, affiliate: false },
+      ...tiles,
+    ];
+  }, [users, plans]);
 
   /* Live search */
   useEffect(() => {
@@ -142,7 +252,7 @@ export default function AdminUsersPage() {
         </div>
         <Button
           variant="outline"
-          onClick={loadUsers}
+          onClick={loadAll}
           loading={fetching}
           leftIcon={<RefreshCw className="h-3.5 w-3.5" />}
         >
@@ -150,20 +260,26 @@ export default function AdminUsersPage() {
         </Button>
       </div>
 
-      {/* Quick stats row */}
+      {/* Quick stats row — one tile per plan, affiliate plans tinted */}
       <div className="flex gap-3 flex-wrap">
-        {[
-          { label: "Total", value: users.length },
-          { label: "Free", value: users.filter((u) => u.plan === "free").length },
-          { label: "Pro", value: users.filter((u) => u.plan === "pro").length },
-          { label: "Team", value: users.filter((u) => u.plan === "team").length },
-        ].map((s) => (
+        {planStats.map((s) => (
           <div
             key={s.label}
-            className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-2 text-sm"
+            className={cn(
+              "rounded-xl border px-4 py-2 text-sm",
+              s.affiliate
+                ? "border-electric-500/30 bg-electric-500/[0.05]"
+                : "border-white/[0.06] bg-white/[0.03]",
+            )}
           >
-            <span className="text-white/40">{s.label}: </span>
-            <span className="font-semibold text-white">{fetching ? "…" : s.value}</span>
+            <span
+              className={s.affiliate ? "text-electric-300/80" : "text-white/40"}
+            >
+              {s.label}:{" "}
+            </span>
+            <span className="font-semibold text-white">
+              {fetching ? "…" : s.value}
+            </span>
           </div>
         ))}
       </div>
@@ -239,7 +355,11 @@ export default function AdminUsersPage() {
                       </span>
                     </td>
                     <td className="py-3 text-right">
-                      <PlanDropdown user={u} onChanged={handlePlanChanged} />
+                      <PlanDropdown
+                        user={u}
+                        plans={plans}
+                        onChanged={handlePlanChanged}
+                      />
                     </td>
                   </tr>
                 ))}
