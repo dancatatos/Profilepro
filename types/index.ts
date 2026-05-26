@@ -3,7 +3,19 @@
    Shared across client, server, AI layer and Firestore models.
    ============================================================ */
 
-export type PlanId = "free" | "pro" | "team";
+/**
+ * Plan identifier. The three built-in IDs ("free" / "pro" / "team") are
+ * baked into the app and used as fallbacks for limits + Gumroad mapping.
+ * Admins can additionally create custom plan IDs (e.g. "annual-special",
+ * "affiliate-pro") via the admin subscriptions page, so anywhere this
+ * type appears it should be treated as an open string with the three
+ * built-ins as well-known constants.
+ */
+export type PlanId = string;
+/** The three built-in plan IDs used as type-safe fallbacks. */
+export const BUILT_IN_PLAN_IDS = ["free", "pro", "team"] as const;
+export type BuiltInPlanId = (typeof BUILT_IN_PLAN_IDS)[number];
+
 export type UserRole = "user" | "admin";
 
 /* ---------------- Account user ---------------- */
@@ -14,6 +26,7 @@ export interface AccountUser {
   displayName: string;
   photoURL?: string;
   role: UserRole;
+  /** Plan identifier — usually one of BUILT_IN_PLAN_IDS, but custom plans are allowed. */
   plan: PlanId;
   /** username of the user's primary profile, for quick links */
   username?: string;
@@ -585,7 +598,16 @@ export interface PlanFeature {
   included: boolean;
 }
 
+/** Where this plan can be purchased / who can see it. */
+export type PlanVisibility = "public" | "affiliate";
+export type PlanDurationUnit = "days" | "months" | "years";
+export interface PlanDuration {
+  value: number;
+  unit: PlanDurationUnit;
+}
+
 export interface Plan {
+  /** Plan id — built-ins are "free" / "pro" / "team", custom ones are arbitrary slugs. */
   id: PlanId;
   name: string;
   /** Price for one billing period — monthly amount, or yearly amount when annual. */
@@ -594,6 +616,33 @@ export interface Plan {
   tagline: string;
   features: PlanFeature[];
   highlighted?: boolean;
+  /**
+   * Where this plan is sold:
+   *   "public"    — shown on the website / billing page
+   *   "affiliate" — hidden from the public, only assignable via admin / affiliate flow
+   * Defaults to "public" if unset.
+   */
+  visibility?: PlanVisibility;
+  /**
+   * External checkout URL (e.g. Gumroad). When the user clicks "Buy" on the
+   * billing page they're sent here. Each plan can point to its own Gumroad
+   * product, so changing a URL never needs a code deploy.
+   * Optional — affiliate plans usually have no checkout URL because the
+   * affiliate collects payment manually.
+   */
+  checkoutUrl?: string;
+  /**
+   * How much the referring affiliate earns per sale AND per renewal of this
+   * plan, in the same currency as `price` (PHP). 0 / undefined = no
+   * affiliate commission.
+   */
+  commission?: number;
+  /**
+   * How long an activation lasts before renewal is due. Used to compute
+   * upcoming-renewal reminders for affiliates. Optional — falls back to
+   * `billingPeriod` (monthly → 1 month, annual → 1 year) when absent.
+   */
+  duration?: PlanDuration;
 }
 
 /* ---------------- AI layer ---------------- */

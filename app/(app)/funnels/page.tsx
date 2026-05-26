@@ -27,7 +27,7 @@ import {
   saveFunnel,
 } from "@/lib/firebase/firestore";
 import { createFunnel, FUNNEL_TEMPLATES } from "@/lib/funnels";
-import { FUNNEL_LIMITS } from "@/lib/constants";
+import { getFunnelLimit } from "@/lib/constants";
 import { cn, timeAgo } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 import type { Funnel } from "@/types";
@@ -38,7 +38,7 @@ export default function FunnelsPage() {
 
   const plan = account?.plan ?? "free";
   const isPaid = plan === "pro" || plan === "team";
-  const limit = FUNNEL_LIMITS[plan];
+  const limit = getFunnelLimit(plan);
 
   const [funnels, setFunnels] = useState<Funnel[]>([]);
   const [loading, setLoading] = useState(false);

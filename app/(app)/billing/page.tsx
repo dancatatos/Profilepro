@@ -15,8 +15,6 @@ import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/lib/utils";
 import type { Plan, PlanId } from "@/types";
 
-const GUMROAD_URL = "https://danzbiz.gumroad.com/l/profileproplan";
-
 export default function BillingPage() {
   const { account } = useAuth();
   const setAccount = useAuthStore((s) => s.setAccount);
@@ -34,6 +32,10 @@ export default function BillingPage() {
       })
       .catch(() => null);
   }, []);
+
+  /* Affiliate-only plans are hidden from the public billing page —
+     they're sold manually by affiliates and granted via the admin. */
+  const visiblePlans = plans.filter((p) => p.visibility !== "affiliate");
 
   const activateLicense = async () => {
     if (!licenseKey.trim()) {
@@ -106,8 +108,9 @@ export default function BillingPage() {
 
       {/* Plan cards */}
       <div className="grid gap-4 lg:grid-cols-3">
-        {plans.map((plan) => {
+        {visiblePlans.map((plan) => {
           const isCurrent = plan.id === currentPlan;
+          const hasCheckout = !!plan.checkoutUrl;
           return (
             <Card
               key={plan.id}
@@ -138,19 +141,23 @@ export default function BillingPage() {
                 <Button fullWidth className="mt-4" variant="outline" disabled>
                   Current plan
                 </Button>
-              ) : plan.id === "free" ? (
+              ) : plan.id === "free" || plan.price === 0 ? (
                 <Button fullWidth className="mt-4" variant="outline" disabled>
                   Free forever
                 </Button>
-              ) : (
+              ) : hasCheckout ? (
                 <Button
-                  href={GUMROAD_URL}
+                  href={plan.checkoutUrl}
                   fullWidth
                   className="mt-4"
                   variant={plan.highlighted ? "primary" : "outline"}
                   rightIcon={<ExternalLink className="h-3.5 w-3.5" />}
                 >
                   Buy on Gumroad
+                </Button>
+              ) : (
+                <Button fullWidth className="mt-4" variant="outline" disabled>
+                  Checkout unavailable
                 </Button>
               )}
 

@@ -95,8 +95,18 @@ export async function setFeatureFlags(
 function normalizePlan(raw: Record<string, unknown>): Plan {
   const str = (v: unknown) => (typeof v === "string" ? v : "");
   const num = (v: unknown) => (typeof v === "number" ? v : undefined);
+  /* Normalise the optional duration map — tolerates missing fields, bad units. */
+  const normalizeDuration = (v: unknown): Plan["duration"] => {
+    if (!v || typeof v !== "object") return undefined;
+    const d = v as Record<string, unknown>;
+    const value = num(d.value);
+    const unit = d.unit;
+    if (typeof value !== "number" || value <= 0) return undefined;
+    if (unit !== "days" && unit !== "months" && unit !== "years") return undefined;
+    return { value, unit };
+  };
   return {
-    id: str(raw.id) as Plan["id"],
+    id: str(raw.id),
     name: str(raw.name),
     // `priceMonthly` is the legacy field name — fall back to it.
     price: num(raw.price) ?? num(raw.priceMonthly) ?? 0,
@@ -111,6 +121,12 @@ function normalizePlan(raw: Record<string, unknown>): Plan {
           .map((f) => ({ label: str(f.label), included: f.included === true }))
       : [],
     highlighted: raw.highlighted === true,
+    /* New affiliate-system fields. All optional with sensible defaults so a
+       plan saved before this schema was introduced still behaves as before. */
+    visibility: raw.visibility === "affiliate" ? "affiliate" : "public",
+    checkoutUrl: str(raw.checkoutUrl) || undefined,
+    commission: num(raw.commission) ?? 0,
+    duration: normalizeDuration(raw.duration),
   };
 }
 

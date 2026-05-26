@@ -259,7 +259,9 @@ export default function LandingPage() {
           </p>
         </div>
         <div className="mt-10 grid gap-4 lg:grid-cols-3">
-          {plans.map((plan) => (
+          {plans
+            .filter((plan) => plan.visibility !== "affiliate")
+            .map((plan) => (
             <div
               key={plan.id}
               className={`rounded-2xl border p-6 ${

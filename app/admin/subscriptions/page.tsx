@@ -8,6 +8,11 @@ import {
   Save,
   Star,
   RotateCcw,
+  Globe,
+  Lock,
+  Link2,
+  Coins,
+  Clock,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/Card";
@@ -19,8 +24,15 @@ import {
   setPlansConfig,
 } from "@/lib/firebase/firestore";
 import { PLANS } from "@/lib/constants";
-import { cn } from "@/lib/utils";
-import type { AccountUser, Plan, PlanFeature } from "@/types";
+import { cn, slugify } from "@/lib/utils";
+import type {
+  AccountUser,
+  Plan,
+  PlanDuration,
+  PlanDurationUnit,
+  PlanFeature,
+  PlanVisibility,
+} from "@/types";
 
 const inputCls =
   "h-9 w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 text-sm text-white outline-none transition-colors focus:border-electric-500/50";
@@ -62,8 +74,38 @@ function clonePlans(src: Plan[]): Plan[] {
   return src.map((p) => ({
     ...p,
     features: p.features.map((f) => ({ ...f })),
+    duration: p.duration ? { ...p.duration } : undefined,
   }));
 }
+
+/**
+ * Create a fresh blank plan with a unique id slug. Used by the
+ * "Add new plan" button — admins flesh it out from there.
+ */
+function blankPlan(existingIds: string[]): Plan {
+  const base = "new-plan";
+  let id = base;
+  let n = 2;
+  while (existingIds.includes(id)) {
+    id = `${base}-${n++}`;
+  }
+  return {
+    id,
+    name: "New Plan",
+    price: 0,
+    billingPeriod: "monthly",
+    tagline: "",
+    features: [],
+    highlighted: false,
+    visibility: "affiliate",
+    checkoutUrl: "",
+    commission: 0,
+    duration: { value: 1, unit: "months" },
+  };
+}
+
+/** Built-in plan IDs that we never let admins delete (the app falls back to "free"). */
+const PROTECTED_PLAN_IDS = ["free"];
 
 export default function AdminSubscriptionsPage() {
   const { account } = useAuth();
@@ -138,6 +180,52 @@ export default function AdminSubscriptionsPage() {
           ? { ...p, features: p.features.filter((_, j) => j !== fIdx) }
           : p,
       ),
+    );
+    setDirty(true);
+  };
+
+  const addPlan = () => {
+    setPlans((ps) => [...ps, blankPlan(ps.map((p) => p.id))]);
+    setDirty(true);
+  };
+
+  const removePlan = (pIdx: number) => {
+    const plan = plans[pIdx];
+    if (!plan) return;
+    if (PROTECTED_PLAN_IDS.includes(plan.id)) {
+      toast.error(`"${plan.name}" is a built-in plan and cannot be removed.`);
+      return;
+    }
+    if (!confirm(`Delete "${plan.name}"? Users on this plan will fall back to Free.`)) return;
+    setPlans((ps) => ps.filter((_, i) => i !== pIdx));
+    setDirty(true);
+  };
+
+  /**
+   * Update a plan's id slug. Re-runs slugify to keep it URL-safe, dedups
+   * against other plans, and refuses changes that would clash with a
+   * protected built-in.
+   */
+  const renamePlanId = (pIdx: number, raw: string) => {
+    const next = slugify(raw) || "plan";
+    setPlans((ps) => {
+      // If another plan already uses this id, leave the input unchanged
+      // (the user will see no visual change — they need to pick a unique slug).
+      const clash = ps.some((p, i) => i !== pIdx && p.id === next);
+      if (clash) return ps;
+      return ps.map((p, i) => (i === pIdx ? { ...p, id: next } : p));
+    });
+    setDirty(true);
+  };
+
+  const updateDuration = (pIdx: number, patch: Partial<PlanDuration>) => {
+    setPlans((ps) =>
+      ps.map((p, i) => {
+        if (i !== pIdx) return p;
+        const current = p.duration ?? { value: 1, unit: "months" as const };
+        const next: PlanDuration = { ...current, ...patch };
+        return { ...p, duration: next };
+      }),
     );
     setDirty(true);
   };
@@ -282,13 +370,42 @@ export default function AdminSubscriptionsPage() {
         </div>
 
         <div className="grid gap-4 lg:grid-cols-3">
-          {plans.map((plan, pIdx) => (
-            <Card key={plan.id} className="space-y-4 p-5">
-              {/* id chip + popular toggle */}
+          {plans.map((plan, pIdx) => {
+            const isProtected = PROTECTED_PLAN_IDS.includes(plan.id);
+            const visibility: PlanVisibility = plan.visibility ?? "public";
+            const isAffiliate = visibility === "affiliate";
+            return (
+            <Card
+              key={plan.id}
+              className={cn(
+                "space-y-4 p-5",
+                isAffiliate &&
+                  "border-electric-500/30 bg-electric-500/[0.03]",
+              )}
+            >
+              {/* id chip + popular toggle + delete */}
               <div className="flex items-center justify-between gap-2">
-                <span className="rounded-md bg-white/[0.06] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white/45">
-                  {plan.id}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className={cn(
+                      "rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
+                      isAffiliate
+                        ? "bg-electric-500/15 text-electric-300"
+                        : "bg-white/[0.06] text-white/45",
+                    )}
+                  >
+                    {plan.id}
+                  </span>
+                  {isAffiliate && (
+                    <span
+                      className="inline-flex items-center gap-1 rounded-md bg-electric-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-electric-300"
+                      title="Hidden from the public website"
+                    >
+                      <Lock className="h-2.5 w-2.5" />
+                      Affiliate
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center gap-1.5 text-[11px] font-medium text-white/50">
                   <Star
                     className={cn(
@@ -306,7 +423,80 @@ export default function AdminSubscriptionsPage() {
                     }
                     label={`Mark ${plan.name} as popular`}
                   />
+                  {!isProtected && (
+                    <button
+                      type="button"
+                      onClick={() => removePlan(pIdx)}
+                      aria-label={`Delete ${plan.name}`}
+                      className="ml-1 rounded-md p-1 text-white/30 transition-colors hover:bg-red-500/10 hover:text-red-400"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                 </div>
+              </div>
+
+              {/* Plan id slug — editable only for non-protected plans */}
+              <div>
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/40">
+                  Plan ID (slug)
+                </label>
+                <input
+                  className={cn(inputCls, isProtected && "opacity-50")}
+                  value={plan.id}
+                  disabled={isProtected}
+                  onChange={(e) => renamePlanId(pIdx, e.target.value)}
+                />
+                {isProtected ? (
+                  <p className="mt-1 text-[10px] text-white/30">
+                    Built-in plan — id is locked
+                  </p>
+                ) : (
+                  <p className="mt-1 text-[10px] text-white/30">
+                    URL-safe slug, e.g. <code>annual-special</code>
+                  </p>
+                )}
+              </div>
+
+              {/* Visibility — public vs affiliate-only */}
+              <div>
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/40">
+                  Visibility
+                </label>
+                <div className="flex gap-1.5">
+                  {(
+                    [
+                      { id: "public", label: "Public", icon: Globe },
+                      { id: "affiliate", label: "Affiliate only", icon: Lock },
+                    ] as const
+                  ).map((opt) => {
+                    const Icon = opt.icon;
+                    const active = visibility === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() =>
+                          updatePlan(pIdx, { visibility: opt.id })
+                        }
+                        className={cn(
+                          "flex flex-1 items-center justify-center gap-1.5 rounded-lg border py-1.5 text-xs font-medium capitalize transition-colors",
+                          active
+                            ? "border-electric-500/50 bg-electric-500/15 text-electric-300"
+                            : "border-white/10 bg-white/[0.04] text-white/50 hover:bg-white/[0.08]",
+                        )}
+                      >
+                        <Icon className="h-3.5 w-3.5" />
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="mt-1 text-[10px] text-white/30">
+                  {isAffiliate
+                    ? "Hidden from the website. Granted manually after the affiliate forwards payment."
+                    : "Shown on the public website and billing page."}
+                </p>
               </div>
 
               {/* Name */}
@@ -382,6 +572,94 @@ export default function AdminSubscriptionsPage() {
                 />
               </div>
 
+              {/* Checkout URL — per-plan Gumroad link */}
+              <div>
+                <label className="mb-1 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-white/40">
+                  <Link2 className="h-3 w-3" />
+                  Checkout URL
+                </label>
+                <input
+                  className={inputCls}
+                  placeholder={
+                    isAffiliate
+                      ? "(usually empty for affiliate plans)"
+                      : "https://your.gumroad.com/l/..."
+                  }
+                  value={plan.checkoutUrl ?? ""}
+                  onChange={(e) =>
+                    updatePlan(pIdx, { checkoutUrl: e.target.value })
+                  }
+                />
+                <p className="mt-1 text-[10px] text-white/30">
+                  The &ldquo;Buy&rdquo; button on the billing page sends users here.
+                </p>
+              </div>
+
+              {/* Affiliate commission */}
+              <div>
+                <label className="mb-1 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-white/40">
+                  <Coins className="h-3 w-3" />
+                  Affiliate commission
+                </label>
+                <div className="relative">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-white/40">
+                    ₱
+                  </span>
+                  <input
+                    type="number"
+                    min={0}
+                    className={cn(inputCls, "pl-7")}
+                    value={plan.commission ?? 0}
+                    onChange={(e) =>
+                      updatePlan(pIdx, {
+                        commission: Math.max(0, Number(e.target.value) || 0),
+                      })
+                    }
+                  />
+                </div>
+                <p className="mt-1 text-[10px] text-white/30">
+                  Paid to the affiliate on signup AND on every renewal. 0 = no
+                  commission.
+                </p>
+              </div>
+
+              {/* Activation duration */}
+              <div>
+                <label className="mb-1 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-white/40">
+                  <Clock className="h-3 w-3" />
+                  Activation duration
+                </label>
+                <div className="flex gap-1.5">
+                  <input
+                    type="number"
+                    min={1}
+                    className={cn(inputCls, "w-20")}
+                    value={plan.duration?.value ?? 1}
+                    onChange={(e) =>
+                      updateDuration(pIdx, {
+                        value: Math.max(1, Number(e.target.value) || 1),
+                      })
+                    }
+                  />
+                  <select
+                    className={cn(inputCls, "flex-1 capitalize")}
+                    value={plan.duration?.unit ?? "months"}
+                    onChange={(e) =>
+                      updateDuration(pIdx, {
+                        unit: e.target.value as PlanDurationUnit,
+                      })
+                    }
+                  >
+                    <option value="days">days</option>
+                    <option value="months">months</option>
+                    <option value="years">years</option>
+                  </select>
+                </div>
+                <p className="mt-1 text-[10px] text-white/30">
+                  How long an activation lasts before renewal is due.
+                </p>
+              </div>
+
               {/* Features */}
               <div>
                 <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-white/40">
@@ -429,7 +707,23 @@ export default function AdminSubscriptionsPage() {
                 </button>
               </div>
             </Card>
-          ))}
+            );
+          })}
+
+          {/* Add new plan tile */}
+          <button
+            type="button"
+            onClick={addPlan}
+            className="flex min-h-[18rem] flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-white/[0.12] p-5 text-sm font-medium text-white/45 transition-colors hover:border-electric-500/40 hover:bg-electric-500/[0.04] hover:text-electric-300"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.06]">
+              <Plus className="h-5 w-5" />
+            </span>
+            Add new plan
+            <span className="text-[11px] font-normal text-white/30">
+              Create a custom plan (affiliate or public)
+            </span>
+          </button>
         </div>
       </div>
     </div>

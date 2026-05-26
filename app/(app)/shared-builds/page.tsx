@@ -34,7 +34,7 @@ import {
 } from "@/lib/firebase/firestore";
 import { applyExactBuild } from "@/lib/sharedBuilds";
 import { applyGeneratedContent } from "@/lib/ai/generators";
-import { TEMPLATE_LOCKER_SLOTS, THEMES } from "@/lib/constants";
+import { getTemplateLockerSlots, THEMES } from "@/lib/constants";
 import { cn, copyToClipboard, timeAgo } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 import type {
@@ -66,7 +66,7 @@ export default function SharedBuildsPage() {
 
   const plan = account?.plan ?? "free";
   const isPaid = plan === "pro" || plan === "team";
-  const slots = TEMPLATE_LOCKER_SLOTS[plan];
+  const slots = getTemplateLockerSlots(plan);
 
   const [saved, setSaved] = useState<SavedBuild[]>([]);
   const [published, setPublished] = useState<SharedBuild[]>([]);

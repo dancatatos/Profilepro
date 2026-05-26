@@ -303,6 +303,13 @@ export const AI_COPY_MODES: CopyModeMeta[] = [
 
 /* ---------------- Subscription plans ---------------- */
 
+/**
+ * Default Gumroad checkout URL used as a fallback for the paid plans before
+ * the admin sets per-plan URLs in the subscriptions page. Once saved in
+ * Firestore, `plan.checkoutUrl` overrides this.
+ */
+const DEFAULT_GUMROAD_URL = "https://danzbiz.gumroad.com/l/profileproplan";
+
 export const PLANS: Plan[] = [
   {
     id: "free",
@@ -319,6 +326,9 @@ export const PLANS: Plan[] = [
       { label: "Analytics dashboard", included: false },
       { label: "Clone profile system", included: false },
     ],
+    visibility: "public",
+    checkoutUrl: "",
+    commission: 0,
   },
   {
     id: "pro",
@@ -337,6 +347,10 @@ export const PLANS: Plan[] = [
       { label: "Shared build templates", included: true },
       { label: "Remove Credibly branding", included: true },
     ],
+    visibility: "public",
+    checkoutUrl: DEFAULT_GUMROAD_URL,
+    commission: 0,
+    duration: { value: 1, unit: "months" },
   },
   {
     id: "team",
@@ -353,6 +367,10 @@ export const PLANS: Plan[] = [
       { label: "Priority AI generation", included: true },
       { label: "Team member management", included: true },
     ],
+    visibility: "public",
+    checkoutUrl: DEFAULT_GUMROAD_URL,
+    commission: 0,
+    duration: { value: 1, unit: "years" },
   },
 ];
 
@@ -373,16 +391,34 @@ export const QR_BG_DEFAULT = "#ffffff";
 
 /* ---------------- Shared build locker ---------------- */
 
-/** How many shared builds each plan can keep saved in their locker. */
-export const TEMPLATE_LOCKER_SLOTS: Record<PlanId, number> = {
+/**
+ * How many shared builds each plan can keep saved in their locker.
+ * Unknown plan IDs (custom admin-created plans) inherit the "pro" tier
+ * by default — use `getTemplateLockerSlots(planId)` instead of indexing
+ * this map directly so the fallback applies.
+ */
+export const TEMPLATE_LOCKER_SLOTS: Record<string, number> = {
   free: 0,
   pro: 5,
   team: 15,
 };
 
-/** How many funnels each plan can create. */
-export const FUNNEL_LIMITS: Record<PlanId, number> = {
+/**
+ * How many funnels each plan can create.
+ * Unknown plan IDs default to the "pro" tier — use `getFunnelLimit(planId)`.
+ */
+export const FUNNEL_LIMITS: Record<string, number> = {
   free: 0,
   pro: 5,
   team: 15,
 };
+
+/** Resolve a plan's locker slots, defaulting to the Pro tier for custom plans. */
+export function getTemplateLockerSlots(planId: PlanId): number {
+  return TEMPLATE_LOCKER_SLOTS[planId] ?? TEMPLATE_LOCKER_SLOTS.pro;
+}
+
+/** Resolve a plan's funnel limit, defaulting to the Pro tier for custom plans. */
+export function getFunnelLimit(planId: PlanId): number {
+  return FUNNEL_LIMITS[planId] ?? FUNNEL_LIMITS.pro;
+}
