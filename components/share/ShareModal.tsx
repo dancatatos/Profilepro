@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Check, Copy, Share2 } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
 import { QRBlock } from "@/components/qr/QRBlock";
 import { SocialIcon } from "@/components/ui/SocialIcon";
 import { copyToClipboard } from "@/lib/utils";
@@ -61,6 +62,10 @@ export function ShareModal({
 }) {
   const [copied, setCopied] = useState(false);
   const shareText = `Check out ${title} on Credibly`;
+  /* Web Share API isn't everywhere (notably most desktop browsers).
+     Tracking this lets the primary CTA gracefully fall back to copy. */
+  const canNativeShare =
+    typeof navigator !== "undefined" && typeof navigator.share === "function";
 
   const copyLink = async () => {
     const ok = await copyToClipboard(url);
@@ -113,6 +118,18 @@ export function ShareModal({
             {copied ? "Copied" : "Copy"}
           </button>
         </div>
+
+        {/* Primary share CTA — Web Share API opens the OS share sheet
+            on mobile so picking Messenger / WhatsApp jumps straight
+            into the app with the link prefilled (the "modern share"
+            flow). Desktop browsers fall back to a clipboard copy. */}
+        <Button
+          fullWidth
+          onClick={nativeShare}
+          leftIcon={<Share2 className="h-4 w-4" />}
+        >
+          {canNativeShare ? "Share via…" : "Copy profile link"}
+        </Button>
 
         {/* Social targets */}
         <div>

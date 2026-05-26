@@ -7,7 +7,9 @@ import {
   ArrowLeft,
   ChevronDown,
   ChevronUp,
+  Copy,
   Eye,
+  Link2,
   Plus,
   RefreshCw,
   Save,
@@ -23,6 +25,7 @@ import { Modal } from "@/components/ui/Modal";
 import { FullScreenLoader } from "@/components/ui/Spinner";
 import { SectionsManager } from "@/components/profile/SectionsManager";
 import { ShareFunnelModal } from "@/components/funnels/ShareFunnelModal";
+import { FunnelLinkModal } from "@/components/funnels/FunnelLinkModal";
 import { FunnelPhonePreview } from "@/components/funnels/FunnelPhonePreview";
 import { FunnelThemeModal } from "@/components/funnels/FunnelThemeModal";
 import { ThemeMiniPreview } from "@/components/profile/ThemeMiniPreview";
@@ -38,7 +41,7 @@ import {
 } from "@/lib/firebase/firestore";
 import { createFunnelStep } from "@/lib/funnels";
 import { createSection } from "@/lib/defaults";
-import { cn, getAppOrigin, slugify } from "@/lib/utils";
+import { cn, copyToClipboard, getAppOrigin, slugify } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 import type {
   Funnel,
@@ -136,6 +139,7 @@ export default function FunnelBuilderPage() {
   const [analytics, setAnalytics] = useState<Record<number, number>>({});
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
 
@@ -347,6 +351,14 @@ export default function FunnelBuilderPage() {
             <Button
               variant="outline"
               size="sm"
+              onClick={() => setLinkOpen(true)}
+              leftIcon={<Link2 className="h-4 w-4" />}
+            >
+              Link
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setShareOpen(true)}
               leftIcon={<Send className="h-4 w-4" />}
             >
@@ -374,6 +386,15 @@ export default function FunnelBuilderPage() {
               className="shrink-0"
             >
               Preview
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setLinkOpen(true)}
+              leftIcon={<Link2 className="h-4 w-4" />}
+              className="shrink-0"
+            >
+              Link
             </Button>
             <Button
               variant="outline"
@@ -425,9 +446,34 @@ export default function FunnelBuilderPage() {
               onChange={(e) => patchFunnel({ slug: slugify(e.target.value) })}
               className={FIELD}
             />
-            <p className="mt-1 truncate text-[11px] text-white/35">
-              {publicPath}
-            </p>
+            {/* URL preview + quick-copy + share shortcut so the user
+                can grab the link without opening any modal. The Link
+                button opens the full share sheet (native share / QR). */}
+            <div className="mt-1.5 flex items-center gap-1.5">
+              <p className="min-w-0 flex-1 truncate text-[11px] text-white/35">
+                {publicPath}
+              </p>
+              <button
+                type="button"
+                onClick={async () => {
+                  const ok = await copyToClipboard(publicPath);
+                  if (ok) toast.success("Link copied");
+                  else toast.error("Couldn't copy — long-press to copy.");
+                }}
+                aria-label="Copy funnel link"
+                className="shrink-0 rounded-md p-1 text-white/40 hover:bg-white/5 hover:text-white"
+              >
+                <Copy className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setLinkOpen(true)}
+                aria-label="Open share sheet"
+                className="shrink-0 rounded-md p-1 text-white/40 hover:bg-white/5 hover:text-electric-300"
+              >
+                <Link2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
           <div>
             <p className="mb-1.5 text-xs font-medium text-white/65">Theme</p>
@@ -678,6 +724,15 @@ export default function FunnelBuilderPage() {
         open={shareOpen}
         onClose={() => setShareOpen(false)}
         funnel={funnel}
+      />
+
+      <FunnelLinkModal
+        open={linkOpen}
+        onClose={() => setLinkOpen(false)}
+        url={publicPath}
+        funnelName={funnel.name}
+        isPublished={funnel.status === "published"}
+        fileName={`credibly-${funnel.slug || "funnel"}-qr`}
       />
 
       <FunnelThemeModal
