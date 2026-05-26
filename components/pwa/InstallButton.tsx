@@ -22,7 +22,14 @@
  */
 
 import { useEffect, useState } from "react";
-import { CheckCircle2, Download, MoreVertical, Share, Smartphone } from "lucide-react";
+import {
+  CheckCircle2,
+  Download,
+  Loader2,
+  MoreVertical,
+  Share,
+  Smartphone,
+} from "lucide-react";
 import { useInstall } from "@/components/providers/InstallProvider";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -32,7 +39,14 @@ import { toast } from "@/store/uiStore";
 type Platform = "ios" | "android" | "desktop";
 
 export function InstallButton() {
-  const { canInstall, isInstalled, isIos, promptInstall } = useInstall();
+  const {
+    isInstalled,
+    isIos,
+    wasInstalledBefore,
+    installPending,
+    promptInstall,
+    cancelPending,
+  } = useInstall();
   const [openModal, setOpenModal] = useState<Platform | null>(null);
   const [isAndroid, setIsAndroid] = useState(false);
 
@@ -40,6 +54,26 @@ export function InstallButton() {
     if (typeof navigator === "undefined") return;
     setIsAndroid(/Android/i.test(navigator.userAgent || ""));
   }, []);
+
+  /* Pending state lasts until the browser fires beforeinstallprompt OR
+     the user cancels. Add a 30s timeout so the spinner doesn't spin
+     forever on devices that will never fire the event. */
+  useEffect(() => {
+    if (!installPending) return;
+    const timeoutId = setTimeout(() => {
+      cancelPending();
+      toast.error(
+        "Couldn't trigger the install prompt — please try the manual steps below.",
+      );
+      const platform: Platform = isIos
+        ? "ios"
+        : isAndroid
+          ? "android"
+          : "desktop";
+      setOpenModal(platform);
+    }, 30_000);
+    return () => clearTimeout(timeoutId);
+  }, [installPending, cancelPending, isAndroid, isIos]);
 
   /* Already installed → render a confirmation tile that stays visible
      so the user knows the install actually took. */
@@ -69,32 +103,54 @@ export function InstallButton() {
       : "desktop";
 
   const onClickInstall = async () => {
-    /* If we have a native prompt available, USE IT regardless of
-       platform detection — that's always the best UX. */
-    if (canInstall) {
-      const outcome = await promptInstall();
-      if (outcome === "accepted") {
-        toast.success("Credibly installed.");
-        return;
-      }
-      if (outcome === "dismissed") {
-        /* User said no this time — leave them an instructions path
-           to come back to. */
-        toast.error("You can install anytime from this button.");
-        return;
-      }
-      /* "unavailable" — fall through to instructions modal. */
+    /* iOS has no programmatic install API — must use Share menu. */
+    if (isIos) {
+      setOpenModal("ios");
+      return;
     }
-    /* No native prompt → open platform-specific instructions. */
+    /* Attempt the install. promptInstall returns "queued" if the
+       browser hasn't yet fired beforeinstallprompt — in that case
+       the provider auto-fires the prompt as soon as the event arrives
+       (typically within a few seconds of engagement), so we just
+       show a spinner state instead of blocking on instructions. */
+    const outcome = await promptInstall();
+    if (outcome === "accepted") {
+      toast.success("Credibly installed.");
+      return;
+    }
+    if (outcome === "dismissed") {
+      toast.error("You can install anytime from this button.");
+      return;
+    }
+    if (outcome === "queued") {
+      /* Provider will auto-fire when ready. Spinner shows via installPending. */
+      toast.success("Preparing install — keep this page open.");
+      return;
+    }
+    /* "unavailable" — fall through to instructions modal. */
     setOpenModal(platform);
+  };
+
+  /* Cancel a pending install when the user clicks the button again
+     (so the spinner doesn't trap them). */
+  const onClickWhilePending = () => {
+    cancelPending();
+    toast.success("Install cancelled.");
   };
 
   const subtitleByPlatform: Record<Platform, string> = {
     ios: "Add Credibly to your iPhone home screen for app-like access.",
-    android:
-      "Install Credibly on your Android home screen for app-like access.",
-    desktop: "Install Credibly on your computer for a dedicated app window.",
+    android: wasInstalledBefore
+      ? "Welcome back — reinstall Credibly on your home screen."
+      : "Install Credibly on your Android home screen for app-like access.",
+    desktop: wasInstalledBefore
+      ? "Welcome back — reinstall the Credibly desktop app."
+      : "Install Credibly on your computer for a dedicated app window.",
   };
+
+  /* Title morphs slightly when we know the user previously had it
+     installed — feels personal instead of generic. */
+  const title = wasInstalledBefore ? "Reinstall Credibly" : "Install Credibly";
 
   return (
     <>
@@ -103,22 +159,41 @@ export function InstallButton() {
           <Download className="h-5 w-5 text-white" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-white">Install Credibly</p>
-          <p className="text-xs text-white/55">{subtitleByPlatform[platform]}</p>
+          <p className="text-sm font-semibold text-white">{title}</p>
+          <p className="text-xs text-white/55">
+            {installPending
+              ? "Preparing install — interact with the page for a moment if it doesn't pop up."
+              : subtitleByPlatform[platform]}
+          </p>
         </div>
-        <Button
-          size="sm"
-          onClick={onClickInstall}
-          leftIcon={
-            platform === "ios" ? (
-              <Smartphone className="h-3.5 w-3.5" />
-            ) : (
-              <Download className="h-3.5 w-3.5" />
-            )
-          }
-        >
-          {canInstall ? "Install" : "How to install"}
-        </Button>
+        {installPending ? (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onClickWhilePending}
+            leftIcon={<Loader2 className="h-3.5 w-3.5 animate-spin" />}
+          >
+            Cancel
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            onClick={onClickInstall}
+            leftIcon={
+              platform === "ios" ? (
+                <Smartphone className="h-3.5 w-3.5" />
+              ) : (
+                <Download className="h-3.5 w-3.5" />
+              )
+            }
+          >
+            {/* On iOS we always show instructions, so the label
+                signals that. Everywhere else we just say Install —
+                the queued flow handles the "no event yet" case
+                seamlessly behind the spinner. */}
+            {platform === "ios" ? "How to install" : "Install"}
+          </Button>
+        )}
       </Card>
 
       {/* iOS Safari instructions */}

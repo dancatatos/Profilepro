@@ -33,5 +33,18 @@ export default function manifest(): MetadataRoute.Manifest {
       { name: "Credibly University", url: "/university" },
       { name: "QR Code", url: "/qr" },
     ],
+    /* "related_applications" + "prefer_related_applications: false"
+       enables navigator.getInstalledRelatedApps() on Chromium browsers
+       so we can detect "already installed" more reliably than
+       display-mode alone. The webapp URL refers to this PWA itself —
+       Chrome matches the platform "webapp" entry to the WebAPK once
+       installed. */
+    related_applications: [
+      {
+        platform: "webapp",
+        url: "https://www.crediblyai.com/manifest.webmanifest",
+      },
+    ],
+    prefer_related_applications: false,
   };
 }

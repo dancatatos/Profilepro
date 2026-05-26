@@ -38,18 +38,42 @@ interface InstallState {
   /** True when this is an iOS device that requires the manual Share → Add to Home Screen flow. */
   isIos: boolean;
   /**
-   * Show the native install prompt. Returns "accepted" / "dismissed"
-   * if a prompt was shown, "unavailable" when there's no captured event.
+   * True when this device has installed Credibly before (we recorded the
+   * appinstalled event in localStorage) but is NOT currently installed.
+   * Suggests the user deleted the app — we surface different copy so
+   * they know we recognise them.
    */
-  promptInstall: () => Promise<"accepted" | "dismissed" | "unavailable">;
+  wasInstalledBefore: boolean;
+  /**
+   * True when the user has clicked "Install" but the browser hasn't yet
+   * fired beforeinstallprompt. We auto-fire the prompt as soon as it
+   * arrives so they don't have to click twice — meanwhile the button
+   * shows a spinner so it doesn't look broken.
+   */
+  installPending: boolean;
+  /**
+   * Show the native install prompt. Returns "accepted" / "dismissed"
+   * if a prompt was shown, "queued" when no event is available yet
+   * (we'll auto-fire when the browser fires beforeinstallprompt),
+   * "unavailable" only for platforms that have no install path.
+   */
+  promptInstall: () => Promise<"accepted" | "dismissed" | "queued" | "unavailable">;
+  /** Reset the queued state — used when the user closes the install flow. */
+  cancelPending: () => void;
 }
 
 const InstallContext = createContext<InstallState>({
   canInstall: false,
   isInstalled: false,
   isIos: false,
+  wasInstalledBefore: false,
+  installPending: false,
   promptInstall: async () => "unavailable",
+  cancelPending: () => {},
 });
+
+/** localStorage flag set when `appinstalled` event fires. */
+const INSTALLED_BEFORE_KEY = "credibly:was-installed";
 
 export function InstallProvider({ children }: { children: ReactNode }) {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(
@@ -57,6 +81,12 @@ export function InstallProvider({ children }: { children: ReactNode }) {
   );
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIos, setIsIos] = useState(false);
+  const [wasInstalledBefore, setWasInstalledBefore] = useState(false);
+  /* When user clicks Install before the event has arrived, we set this
+     to true. The useEffect that listens for beforeinstallprompt then
+     auto-fires the prompt the moment Chrome sends the event — saving
+     the user a second click. */
+  const [installPending, setInstallPending] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -75,6 +105,17 @@ export function InstallProvider({ children }: { children: ReactNode }) {
     };
     checkInstalled();
 
+    /* "Previously installed" flag — read from localStorage. We set it
+       when the appinstalled event fires; it persists across delete →
+       reinstall flows so we can tailor the reinstall UX. */
+    try {
+      if (localStorage.getItem(INSTALLED_BEFORE_KEY) === "1") {
+        setWasInstalledBefore(true);
+      }
+    } catch {
+      /* private mode / sandbox — silently degrade */
+    }
+
     /* iOS detection — userAgent sniffing is the most reliable signal
        given that there's no proper feature detection for "device that
        needs the Share menu". `MSStream` rule-out keeps old IE/Edge
@@ -90,6 +131,16 @@ export function InstallProvider({ children }: { children: ReactNode }) {
     const onInstalled = () => {
       setIsInstalled(true);
       setDeferred(null);
+      setInstallPending(false);
+      /* Mark "previously installed" so future reinstall flows recognise
+         the device — sticks across uninstalls (Chrome doesn't clear
+         localStorage when the PWA is removed). */
+      try {
+        localStorage.setItem(INSTALLED_BEFORE_KEY, "1");
+        setWasInstalledBefore(true);
+      } catch {
+        /* private mode */
+      }
     };
     window.addEventListener("beforeinstallprompt", onPrompt);
     window.addEventListener("appinstalled", onInstalled);
@@ -100,6 +151,24 @@ export function InstallProvider({ children }: { children: ReactNode }) {
     const onMode = () => checkInstalled();
     mq.addEventListener?.("change", onMode);
 
+    /* Best-effort accurate detection via the modern API. Only works on
+       Chromium-based browsers with `related_applications` in the
+       manifest, but when supported it's more reliable than display-mode
+       alone (e.g. catches "installed but launched in regular tab" cases). */
+    const nav = navigator as unknown as {
+      getInstalledRelatedApps?: () => Promise<unknown[]>;
+    };
+    if (typeof nav.getInstalledRelatedApps === "function") {
+      nav
+        .getInstalledRelatedApps()
+        .then((apps) => {
+          if (apps && apps.length > 0) setIsInstalled(true);
+        })
+        .catch(() => {
+          /* API unavailable / no related_applications in manifest */
+        });
+    }
+
     return () => {
       window.removeEventListener("beforeinstallprompt", onPrompt);
       window.removeEventListener("appinstalled", onInstalled);
@@ -107,22 +176,74 @@ export function InstallProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const promptInstall = useCallback(async () => {
-    if (!deferred) return "unavailable" as const;
-    await deferred.prompt();
-    const choice = await deferred.userChoice;
-    setDeferred(null);
-    return choice.outcome;
+  /* When a deferred prompt finally arrives AND we have a pending
+     install request from an earlier click, auto-fire the prompt so
+     the user doesn't have to click again. This is the core fix for
+     "I uninstalled then came back and the button doesn't trigger
+     anything immediately" — the click triggers a pending state, and
+     within a few seconds of engagement Chrome fires the event and
+     we surface the native prompt automatically. */
+  useEffect(() => {
+    if (!deferred || !installPending) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        await deferred.prompt();
+        await deferred.userChoice;
+      } catch {
+        /* User-gesture window may have expired — fail quietly. */
+      }
+      if (!cancelled) {
+        setDeferred(null);
+        setInstallPending(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [deferred, installPending]);
+
+  const promptInstall = useCallback(async (): Promise<
+    "accepted" | "dismissed" | "queued" | "unavailable"
+  > => {
+    if (deferred) {
+      await deferred.prompt();
+      const choice = await deferred.userChoice;
+      setDeferred(null);
+      setInstallPending(false);
+      return choice.outcome;
+    }
+    /* No event captured yet — set the pending flag so the useEffect
+       above auto-fires the prompt as soon as the event arrives. The
+       button caller shows a "preparing install" state until either
+       cancelPending() is called or the event arrives. */
+    setInstallPending(true);
+    return "queued";
   }, [deferred]);
+
+  const cancelPending = useCallback(() => {
+    setInstallPending(false);
+  }, []);
 
   const value = useMemo<InstallState>(
     () => ({
       canInstall: !!deferred,
       isInstalled,
       isIos,
+      wasInstalledBefore,
+      installPending,
       promptInstall,
+      cancelPending,
     }),
-    [deferred, isInstalled, isIos, promptInstall],
+    [
+      deferred,
+      isInstalled,
+      isIos,
+      wasInstalledBefore,
+      installPending,
+      promptInstall,
+      cancelPending,
+    ],
   );
 
   return (
