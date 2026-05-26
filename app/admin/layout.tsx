@@ -11,6 +11,7 @@ import {
   BarChart3,
   LogOut,
   ShieldCheck,
+  Handshake,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { logout } from "@/lib/firebase/auth";
@@ -21,6 +22,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/users", label: "Users", icon: Users, exact: false },
+  { href: "/admin/affiliates", label: "Affiliates", icon: Handshake, exact: false },
   { href: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard, exact: false },
   { href: "/admin/templates", label: "Templates", icon: LayoutTemplate, exact: false },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3, exact: false },

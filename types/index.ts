@@ -16,7 +16,7 @@ export type PlanId = string;
 export const BUILT_IN_PLAN_IDS = ["free", "pro", "team"] as const;
 export type BuiltInPlanId = (typeof BUILT_IN_PLAN_IDS)[number];
 
-export type UserRole = "user" | "admin";
+export type UserRole = "user" | "admin" | "affiliate";
 
 /* ---------------- Account user ---------------- */
 
@@ -652,6 +652,82 @@ export interface Plan {
    * `billingPeriod` (monthly → 1 month, annual → 1 year) when absent.
    */
   duration?: PlanDuration;
+}
+
+/* ---------------- Affiliate system ---------------- */
+
+/** Lifecycle status for an affiliate account. */
+export type AffiliateStatus = "active" | "paused";
+
+/** How the affiliate wants to receive their payouts. */
+export type AffiliatePayoutMethod = "gcash" | "bank" | "paypal" | "other";
+
+export interface AffiliatePayout {
+  type: AffiliatePayoutMethod;
+  /** Free-text payout destination (e.g. account number, GCash mobile). */
+  details: string;
+}
+
+/**
+ * Affiliate account record. Doc id matches the affiliate's Firebase Auth
+ * uid — i.e. /affiliates/{uid} mirrors /users/{uid} for users who have
+ * `role: "affiliate"`. Stats are cached for cheap dashboard reads and
+ * recomputed on commission events.
+ */
+export interface Affiliate {
+  uid: string;
+  /**
+   * Unique referral code (e.g. "DAN123") shared in their `/r/<code>`
+   * link. Uppercase, 3-32 chars, alphanumeric + dash/underscore.
+   */
+  code: string;
+  email: string;
+  displayName: string;
+  status: AffiliateStatus;
+  payout?: AffiliatePayout;
+  /** Admin-only notes — not visible to the affiliate. */
+  adminNotes?: string;
+  createdAt: number;
+  updatedAt: number;
+  /**
+   * Cached rollups so the dashboard doesn't have to scan the commissions
+   * collection on every page load. Maintained by the commission helpers
+   * in Step 5.
+   */
+  stats?: {
+    totalReferrals: number;
+    activeReferrals: number;
+    totalEarned: number;
+    pendingPayout: number;
+    paidOut: number;
+  };
+}
+
+/**
+ * Pending invite token. Admin creates one of these per new affiliate;
+ * the prospective affiliate clicks the link, sets a password, and the
+ * invite is consumed (deleted or marked used).
+ */
+export interface AffiliateInvite {
+  /** Random token used as the invite link's slug — also the doc id. */
+  token: string;
+  /** Email the invite was issued for (the affiliate's signup email). */
+  email: string;
+  /** Display name the admin entered when sending the invite. */
+  displayName: string;
+  /** Referral code reserved for this affiliate on accept. */
+  code: string;
+  /** Status — "pending" until accepted, then we delete the doc. */
+  status: "pending" | "accepted" | "revoked";
+  /** Optional admin note carried over to the affiliate's adminNotes. */
+  adminNotes?: string;
+  /** When this invite was issued. */
+  createdAt: number;
+  /** Optional expiry — invites older than this can't be accepted. */
+  expiresAt?: number;
+  /** When the invite was consumed (Firebase Auth uid of the new affiliate). */
+  acceptedAt?: number;
+  acceptedByUid?: string;
 }
 
 /* ---------------- AI layer ---------------- */

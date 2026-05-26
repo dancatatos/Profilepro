@@ -17,6 +17,8 @@ import {
 import { db, isFirebaseConfigured } from "./client";
 import type {
   AccountUser,
+  Affiliate,
+  AffiliateInvite,
   AIGenerationRecord,
   AnalyticsEvent,
   AnalyticsSummary,
@@ -158,6 +160,121 @@ export async function getPlansConfig(): Promise<Plan[] | null> {
 export async function setPlansConfig(plans: Plan[]): Promise<void> {
   if (!isFirebaseConfigured) return;
   await setDoc(doc(db, COL.settings, "plans"), { plans }, { merge: true });
+}
+
+/* ---------------- Affiliate accounts ---------------- */
+/* /affiliates/{uid} mirrors /users/{uid} for users with role=affiliate.
+   Code uniqueness is enforced via a query check in the admin invite UI
+   before each new affiliate is created. */
+
+export async function getAffiliate(uid: string): Promise<Affiliate | null> {
+  if (!isFirebaseConfigured) return null;
+  const snap = await getDoc(doc(db, COL.affiliates, uid));
+  return snap.exists() ? (snap.data() as Affiliate) : null;
+}
+
+/** Find an affiliate by their referral code (case-insensitive). */
+export async function getAffiliateByCode(
+  code: string,
+): Promise<Affiliate | null> {
+  if (!isFirebaseConfigured) return null;
+  const q = query(
+    collection(db, COL.affiliates),
+    where("code", "==", code.toUpperCase()),
+    fsLimit(1),
+  );
+  const snap = await getDocs(q);
+  return snap.empty ? null : (snap.docs[0].data() as Affiliate);
+}
+
+/** True if no affiliate currently uses this code. */
+export async function isAffiliateCodeAvailable(
+  code: string,
+): Promise<boolean> {
+  if (!isFirebaseConfigured) return true;
+  const existing = await getAffiliateByCode(code);
+  return !existing;
+}
+
+/** Upsert an affiliate record. Used during accept-invite + admin edits. */
+export async function upsertAffiliate(affiliate: Affiliate): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await setDoc(doc(db, COL.affiliates, affiliate.uid), affiliate, {
+    merge: true,
+  });
+}
+
+/** Patch an affiliate doc with the given partial. */
+export async function updateAffiliate(
+  uid: string,
+  patch: Partial<Affiliate>,
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await updateDoc(doc(db, COL.affiliates, uid), {
+    ...patch,
+    updatedAt: Date.now(),
+  });
+}
+
+/** List all affiliates (admin only). Sorted newest-first. */
+export async function listAffiliates(): Promise<Affiliate[]> {
+  if (!isFirebaseConfigured) return [];
+  const q = query(
+    collection(db, COL.affiliates),
+    orderBy("createdAt", "desc"),
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => d.data() as Affiliate);
+}
+
+/* ---------------- Affiliate invites ---------------- */
+/* Magic-link tokens. Anyone with the token can read the invite (needed
+   for the accept page), but only admins can create/delete (enforced by
+   rules in /affiliate_invites). */
+
+export async function createAffiliateInvite(
+  invite: AffiliateInvite,
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await setDoc(doc(db, COL.affiliateInvites, invite.token), invite);
+}
+
+export async function getAffiliateInvite(
+  token: string,
+): Promise<AffiliateInvite | null> {
+  if (!isFirebaseConfigured) return null;
+  const snap = await getDoc(doc(db, COL.affiliateInvites, token));
+  return snap.exists() ? (snap.data() as AffiliateInvite) : null;
+}
+
+/** Mark an invite as accepted — does NOT delete so admins can audit. */
+export async function markInviteAccepted(
+  token: string,
+  uid: string,
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await updateDoc(doc(db, COL.affiliateInvites, token), {
+    status: "accepted",
+    acceptedAt: Date.now(),
+    acceptedByUid: uid,
+  });
+}
+
+/** Revoke (cancel) a pending invite. */
+export async function revokeAffiliateInvite(token: string): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await deleteDoc(doc(db, COL.affiliateInvites, token));
+}
+
+/** List all invites (admin only). Sorted newest-first. */
+export async function listAffiliateInvites(): Promise<AffiliateInvite[]> {
+  if (!isFirebaseConfigured) return [];
+  const q = query(
+    collection(db, COL.affiliateInvites),
+    orderBy("createdAt", "desc"),
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => d.data() as AffiliateInvite);
 }
 
 /* ---------------- Users ---------------- */
