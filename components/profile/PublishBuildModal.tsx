@@ -6,6 +6,7 @@ import { Check, Copy, Crown, Package } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/hooks/useAuth";
+import { usePlanAccess } from "@/components/providers/PlanProvider";
 import { useProfileStore } from "@/store/profileStore";
 import { publishSharedBuild } from "@/lib/firebase/firestore";
 import { buildSnapshotFromProfile, generateShareCode } from "@/lib/sharedBuilds";
@@ -20,13 +21,14 @@ export function PublishBuildModal({
   onClose: () => void;
 }) {
   const { account } = useAuth();
+  const { hasFeature } = usePlanAccess();
   const profile = useProfileStore((s) => s.profile);
 
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [code, setCode] = useState<string | null>(null);
 
-  const isPaid = account?.plan === "pro" || account?.plan === "team";
+  const isPaid = hasFeature("shared_builds");
 
   /* Reset + seed the form each time the modal opens. */
   useEffect(() => {

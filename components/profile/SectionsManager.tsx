@@ -9,7 +9,7 @@ import {
   useDragControls,
 } from "framer-motion";
 import { ChevronDown, GripVertical, Lock, Plus, Trash2 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { usePlanAccess } from "@/components/providers/PlanProvider";
 import { useSections } from "./SectionsContext";
 import { SectionEditor } from "./SectionEditor";
 import { Switch } from "@/components/ui/Switch";
@@ -123,10 +123,12 @@ function SectionCard({ section }: { section: ProfileSection }) {
 
 export function SectionsManager() {
   const { sections, setSections, addSection } = useSections();
-  const { account } = useAuth();
+  const { hasFeature } = usePlanAccess();
   const [addOpen, setAddOpen] = useState(false);
 
-  const isPro = account?.plan === "pro" || account?.plan === "team";
+  /* The only gated section type in this picker is the appointment
+     scheduler — name kept as isPro to minimise churn in the JSX below. */
+  const isPro = hasFeature("appointments");
 
   return (
     <div className="space-y-2.5">

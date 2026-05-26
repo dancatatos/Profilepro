@@ -16,6 +16,7 @@ import {
   Wand2,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { usePlanAccess } from "@/components/providers/PlanProvider";
 import { useProfileStore } from "@/store/profileStore";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card } from "@/components/ui/Card";
@@ -61,11 +62,12 @@ function themeBackground(themeId: ThemeId): string {
 export default function SharedBuildsPage() {
   const router = useRouter();
   const { account, loading: authLoading } = useAuth();
+  const { hasFeature } = usePlanAccess();
   const profile = useProfileStore((s) => s.profile);
   const setProfile = useProfileStore((s) => s.setProfile);
 
   const plan = account?.plan ?? "free";
-  const isPaid = plan === "pro" || plan === "team";
+  const isPaid = hasFeature("shared_builds");
   const slots = getTemplateLockerSlots(plan);
 
   const [saved, setSaved] = useState<SavedBuild[]>([]);

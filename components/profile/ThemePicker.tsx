@@ -20,7 +20,7 @@ import {
 } from "@/lib/themes";
 import { ThemeMiniPreview } from "@/components/profile/ThemeMiniPreview";
 import { useProfileStore } from "@/store/profileStore";
-import { useAuth } from "@/hooks/useAuth";
+import { usePlanAccess } from "@/components/providers/PlanProvider";
 import { cn } from "@/lib/utils";
 import type { ThemeId } from "@/types";
 
@@ -308,7 +308,6 @@ function ThemeGalleryCard({
 export function ThemePicker() {
   const profile = useProfileStore((s) => s.profile);
   const setTheme = useProfileStore((s) => s.setTheme);
-  const { account } = useAuth();
 
   // All hooks before any early return
   const [category, setCategory] = useState("All");
@@ -317,7 +316,10 @@ export function ThemePicker() {
   const [showAllFree, setShowAllFree] = useState(false);
   const [showAllPremium, setShowAllPremium] = useState(false);
 
-  const isPro = account?.plan === "pro" || account?.plan === "team";
+  const { hasFeature } = usePlanAccess();
+  /* "isPro" name preserved — semantically the gate is now
+     "user has access to premium themes" via feature toggle. */
+  const isPro = hasFeature("premium_themes");
   const isLocked = (tc: ThemeConfig) => tc.tier === "premium" && !isPro;
 
   const handleSelect = (tc: ThemeConfig) => {

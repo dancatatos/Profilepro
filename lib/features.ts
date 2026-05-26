@@ -126,10 +126,24 @@ export const FEATURE_CATALOG: readonly CatalogFeature[] = [
     hint: "Curated premium template marketplace.",
   },
   {
+    key: "premium_themes",
+    label: "Premium themes",
+    category: "Templates",
+    hint: "Access the premium-tier visual themes in the theme picker.",
+  },
+  {
     key: "team_templates",
     label: "Team templates",
     category: "Templates",
     hint: "Templates designed for cloning to a downline.",
+  },
+
+  /* ── Appointments ────────────────────────────────────────────────── */
+  {
+    key: "appointments",
+    label: "Appointment scheduling",
+    category: "Appointments",
+    hint: "Booking calendar on the profile + admin booking management.",
   },
 
   /* ── Team / scale ───────────────────────────────────────────────── */
@@ -240,6 +254,14 @@ export function planHasFeature(
   );
 }
 
+/** Helper: true when the plan has at least one of the listed feature keys. */
+export function planHasAnyFeature(
+  plan: { featureKeys?: string[]; features?: { label: string; included: boolean }[] } | null | undefined,
+  keys: string[],
+): boolean {
+  return keys.some((k) => planHasFeature(plan, k));
+}
+
 /**
  * Default featureKeys assigned to a freshly-created plan based on its
  * id. The three built-in plans (free / pro / team) get sensible
@@ -263,6 +285,8 @@ export function defaultFeatureKeysForPlan(planId: string): string[] {
       "funnels_5",
       "shared_builds",
       "premium_templates",
+      "premium_themes",
+      "appointments",
     ];
   }
   if (planId === "team") {
@@ -280,10 +304,12 @@ export function defaultFeatureKeysForPlan(planId: string): string[] {
       "funnels_15",
       "shared_builds",
       "premium_templates",
+      "premium_themes",
       "team_templates",
       "clone_profile",
       "team_management",
       "lead_export",
+      "appointments",
     ];
   }
   /* Custom plan — admin picks features explicitly. */

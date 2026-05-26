@@ -13,6 +13,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { usePlanAccess } from "@/components/providers/PlanProvider";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -37,7 +38,9 @@ export default function FunnelsPage() {
   const { account, loading: authLoading } = useAuth();
 
   const plan = account?.plan ?? "free";
-  const isPaid = plan === "pro" || plan === "team";
+  const { hasAnyFeature } = usePlanAccess();
+  /* Access to funnels at all = either tier of funnels enabled. */
+  const isPaid = hasAnyFeature(["funnels_5", "funnels_15"]);
   const limit = getFunnelLimit(plan);
 
   const [funnels, setFunnels] = useState<Funnel[]>([]);

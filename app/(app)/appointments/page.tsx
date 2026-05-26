@@ -11,6 +11,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { usePlanAccess } from "@/components/providers/PlanProvider";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -115,7 +116,11 @@ function BookingCard({
 
 export default function AppointmentsPage() {
   const { account, loading: authLoading } = useAuth();
-  const isPro = account?.plan === "pro" || account?.plan === "team";
+  const { hasFeature } = usePlanAccess();
+  /* "isPro" preserved as a variable name — the gate is now feature-key
+     driven instead of plan-id-equality, so the user can toggle the
+     "appointments" feature on a custom plan if they want. */
+  const isPro = hasFeature("appointments");
 
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);
