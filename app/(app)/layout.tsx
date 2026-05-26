@@ -22,7 +22,16 @@ export default function AppLayout({
   const setProfile = useProfileStore((s) => s.setProfile);
 
   useEffect(() => {
-    if (!loading && !account) router.replace("/login");
+    if (loading) return;
+    if (!account) {
+      router.replace("/login");
+      return;
+    }
+    /* Affiliates have their own dashboard — bounce them out of the
+       regular customer app so they don't see an empty profile builder. */
+    if (account.role === "affiliate") {
+      router.replace("/affiliate");
+    }
   }, [loading, account, router]);
 
   useEffect(() => {

@@ -40,10 +40,19 @@ export default function AdminLayout({
   const isLoginPage = pathname === "/admin/login";
 
   useEffect(() => {
-    if (!loading && !isLoginPage) {
-      if (!account || account.role !== "admin") {
-        router.replace("/admin/login");
-      }
+    if (loading || isLoginPage) return;
+    if (!account) {
+      router.replace("/admin/login");
+      return;
+    }
+    if (account.role === "affiliate") {
+      /* Affiliates have a dashboard of their own — send them there
+         rather than the admin login (which they'd never pass anyway). */
+      router.replace("/affiliate");
+      return;
+    }
+    if (account.role !== "admin") {
+      router.replace("/admin/login");
     }
   }, [loading, account, isLoginPage, router]);
 

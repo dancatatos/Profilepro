@@ -730,6 +730,48 @@ export interface AffiliateInvite {
   acceptedByUid?: string;
 }
 
+/* ---------------- Commission ledger ---------------- */
+
+/** What kind of event generated this commission. */
+export type CommissionType = "signup" | "renewal" | "adjustment";
+
+/** Whether the affiliate has been paid out for this commission yet. */
+export type CommissionStatus = "pending" | "paid" | "reversed";
+
+/**
+ * One row in the commission ledger. Created when an admin upgrades or
+ * renews a user on a plan with a non-zero commission. Snapshots most
+ * display fields (plan name, masked user email) so the affiliate's
+ * dashboard can render the row without needing a Firestore join AND
+ * without needing read access to other users' docs.
+ *
+ * `affiliateId` deliberately holds the affiliate's UID (not their
+ * referral code) so Firestore rules can use
+ * `resource.data.affiliateId == request.auth.uid` for read auth.
+ * `affiliateCode` is the snapshot of the code at sale time, for display.
+ */
+export interface Commission {
+  id: string;
+  affiliateId: string;
+  affiliateCode: string;
+  /** The referred user this commission is for. */
+  userId: string;
+  /** Masked display fields snapshotted at write time. */
+  userDisplayName: string;
+  userEmailMasked: string;
+  /** Plan that triggered this commission. */
+  planId: PlanId;
+  planName: string;
+  /** Commission amount in PHP. */
+  amount: number;
+  type: CommissionType;
+  status: CommissionStatus;
+  earnedAt: number;
+  paidAt?: number;
+  /** Free-text note (e.g. admin reason for an adjustment). */
+  notes?: string;
+}
+
 /* ---------------- AI layer ---------------- */
 
 export type AICopyMode =

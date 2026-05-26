@@ -24,6 +24,7 @@ import type {
   AnalyticsSummary,
   Booking,
   BookingAnswer,
+  Commission,
   FeatureFlags,
   Funnel,
   Lead,
@@ -275,6 +276,25 @@ export async function listAffiliateInvites(): Promise<AffiliateInvite[]> {
   );
   const snap = await getDocs(q);
   return snap.docs.map((d) => d.data() as AffiliateInvite);
+}
+
+/* ---------------- Commissions ---------------- */
+/* Affiliate-readable only for their own commissions (enforced by rules).
+   Admin-writable. Step 5 will auto-create rows when admin upgrades a
+   referred user. */
+
+/** All commission records for a given affiliate, newest-first. */
+export async function listCommissionsForAffiliate(
+  affiliateUid: string,
+): Promise<Commission[]> {
+  if (!isFirebaseConfigured) return [];
+  const q = query(
+    collection(db, COL.commissions),
+    where("affiliateId", "==", affiliateUid),
+    orderBy("earnedAt", "desc"),
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ ...(d.data() as Commission), id: d.id }));
 }
 
 /* ---------------- Users ---------------- */
