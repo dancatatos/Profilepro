@@ -25,10 +25,22 @@ interface Props {
   profile: Profile;
   /** Live mode wires real analytics + lead capture. */
   live?: boolean;
+  /**
+   * Whether the "Made with Credibly" footer should be visible.
+   * Defaults to true (the safe / open path). Set to false only when
+   * the profile owner's plan grants the `remove_branding` feature —
+   * the public profile page resolves this server-side before render.
+   */
+  showBranding?: boolean;
   className?: string;
 }
 
-export function PublicProfileView({ profile, live = false, className }: Props) {
+export function PublicProfileView({
+  profile,
+  live = false,
+  showBranding = true,
+  className,
+}: Props) {
   const tc = getThemeConfig(profile.themeId);
   const themeStyle = buildThemeStyle(profile.themeId);
   const effectClasses = buildThemeEffectClasses(profile.themeId);
@@ -264,21 +276,27 @@ export function PublicProfileView({ profile, live = false, className }: Props) {
           ))}
         </div>
 
-        {/* Branding footer */}
-        <Link
-          href="/"
-          className="mt-10 flex items-center justify-center gap-1.5 text-xs"
-          style={{ color: isLight ? "rgba(0,0,0,0.25)" : "rgba(255,255,255,0.28)" }}
-        >
-          <LogoMark className="h-4 w-4" />
-          Made with{" "}
-          <span
-            className="font-semibold"
-            style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.45)" }}
+        {/* Branding footer — only shown when the owner's plan doesn't
+            include the `remove_branding` feature. The flag is resolved
+            server-side in app/[username]/page.tsx to keep the gating
+            on the trusted side instead of relying on the client doing
+            the lookup. */}
+        {showBranding && (
+          <Link
+            href="/"
+            className="mt-10 flex items-center justify-center gap-1.5 text-xs"
+            style={{ color: isLight ? "rgba(0,0,0,0.25)" : "rgba(255,255,255,0.28)" }}
           >
-            Credibly
-          </span>
-        </Link>
+            <LogoMark className="h-4 w-4" />
+            Made with{" "}
+            <span
+              className="font-semibold"
+              style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.45)" }}
+            >
+              Credibly
+            </span>
+          </Link>
+        )}
       </div>
     </div>
   );
