@@ -101,7 +101,10 @@ export function AIFunnelModal({
       if (!res.ok) throw new Error(json.error || "Generation failed");
 
       const content = json.data as GeneratedFunnelContent;
-      const funnel = funnelFromGenerated(account.uid, content);
+      /* Pass funnelType through so funnelFromGenerated picks the
+         matching V2 template as the starting structure — the user
+         gets the polished layout PLUS AI-personalised copy. */
+      const funnel = funnelFromGenerated(account.uid, content, funnelType);
       /* Keep the slug unique among the user's existing funnels. */
       const taken = new Set(takenSlugs);
       let slug = funnel.slug;

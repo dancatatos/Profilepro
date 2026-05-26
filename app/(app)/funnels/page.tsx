@@ -28,6 +28,7 @@ import {
   saveFunnel,
 } from "@/lib/firebase/firestore";
 import { createFunnel, FUNNEL_TEMPLATES } from "@/lib/funnels";
+import { THEME_CONFIGS } from "@/lib/themes";
 import { resolveUserFunnelLimit } from "@/lib/constants";
 import { cn, timeAgo } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
@@ -297,22 +298,52 @@ export default function FunnelsPage() {
           </div>
           <div className="space-y-2">
             <p className="text-xs font-medium text-white/65">Starting layout</p>
-            {FUNNEL_TEMPLATES.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setTemplateId(t.id)}
-                className={cn(
-                  "w-full rounded-xl border p-3 text-left transition-colors",
-                  templateId === t.id
-                    ? "border-electric-500 bg-electric-500/10"
-                    : "border-white/10 hover:border-white/20",
-                )}
-              >
-                <p className="text-sm font-semibold text-white">{t.name}</p>
-                <p className="mt-0.5 text-xs text-white/45">{t.description}</p>
-              </button>
-            ))}
+            {FUNNEL_TEMPLATES.map((t) => {
+              const theme = THEME_CONFIGS.find((c) => c.id === t.themeId);
+              const selected = templateId === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setTemplateId(t.id)}
+                  className={cn(
+                    "flex w-full items-start gap-3 rounded-xl border p-3 text-left transition-colors",
+                    selected
+                      ? "border-electric-500 bg-electric-500/10"
+                      : "border-white/10 hover:border-white/20",
+                  )}
+                >
+                  {/* Theme swatch — tiny preview of the colours the
+                      template uses, so the user can see the visual
+                      mood at a glance without opening the funnel. */}
+                  <span
+                    className="mt-0.5 h-10 w-10 shrink-0 rounded-lg ring-1 ring-white/10"
+                    style={{
+                      background:
+                        theme?.previewGradient ??
+                        "linear-gradient(135deg,#2e6bff,#1a52e0)",
+                    }}
+                    aria-hidden
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <p className="text-sm font-semibold text-white">
+                        {t.name}
+                      </p>
+                      <span className="rounded-full bg-white/[0.06] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider text-white/55">
+                        {t.category}
+                      </span>
+                      <span className="rounded-full bg-electric-500/15 px-1.5 py-0.5 text-[9px] font-medium text-electric-300">
+                        {t.stepCount} steps
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-xs leading-relaxed text-white/45">
+                      {t.description}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
           </div>
           <Button fullWidth onClick={create} loading={creating}>
             Create funnel

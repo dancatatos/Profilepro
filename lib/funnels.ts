@@ -7,6 +7,12 @@
 import { createSection } from "@/lib/defaults";
 import { snapshotSections } from "@/lib/sharedBuilds";
 import { slugify, uid } from "@/lib/utils";
+import {
+  FUNNEL_TEMPLATES_V2,
+  getTemplate,
+  templateForAiFunnelType,
+  type FunnelTemplateV2,
+} from "@/lib/funnel-templates";
 import type {
   Funnel,
   FunnelStep,
@@ -70,40 +76,17 @@ export function createFunnelStep(type: FunnelStepType): FunnelStep {
   }
 }
 
-export interface FunnelTemplate {
-  id: string;
-  name: string;
-  description: string;
-  steps: FunnelStepType[];
-}
+/**
+ * Re-export the V2 template type as `FunnelTemplate` so the rest of
+ * the app can keep importing `{ FunnelTemplate } from "@/lib/funnels"`
+ * without churn. The V2 shape carries a themeId, category, and a
+ * builder function instead of a bare list of step types — so each
+ * template ships as a fully-fleshed-out funnel.
+ */
+export type FunnelTemplate = FunnelTemplateV2;
 
 /** Starter funnel layouts shown when creating a new funnel. */
-export const FUNNEL_TEMPLATES: FunnelTemplate[] = [
-  {
-    id: "blank",
-    name: "Blank Funnel",
-    description: "A simple opt-in and thank-you to start from.",
-    steps: ["optin", "thankyou"],
-  },
-  {
-    id: "lead-capture",
-    name: "Lead Capture",
-    description: "Landing page → opt-in form → thank you.",
-    steps: ["content", "optin", "thankyou"],
-  },
-  {
-    id: "opportunity",
-    name: "Opportunity (MLM)",
-    description: "Why extra income → presentation → call to action.",
-    steps: ["content", "content", "thankyou"],
-  },
-  {
-    id: "webinar",
-    name: "Webinar",
-    description: "Registration → countdown → replay.",
-    steps: ["optin", "content", "content"],
-  },
-];
+export const FUNNEL_TEMPLATES: FunnelTemplate[] = FUNNEL_TEMPLATES_V2;
 
 /** Build a fresh funnel from a template. */
 export function createFunnel(
@@ -113,18 +96,23 @@ export function createFunnel(
 ): Funnel {
   const now = Date.now();
   const trimmed = name.trim() || "My Funnel";
+  /* Template.build() returns fresh ids on every call — safe to use
+     directly without an extra deep-clone. */
   return {
     id: uid("funnel"),
     ownerId,
     name: trimmed,
     slug: slugify(trimmed) || `funnel-${now.toString(36)}`,
-    themeId: "navy-glass",
+    themeId: template.themeId,
     status: "draft",
-    steps: template.steps.map(createFunnelStep),
+    steps: template.build(),
     createdAt: now,
     updatedAt: now,
   };
 }
+
+/** Convenience for direct id lookup — used by the AI generator. */
+export { getTemplate, templateForAiFunnelType };
 
 /* ---------------- AI funnel generator ---------------- */
 
@@ -189,40 +177,118 @@ function richTextBlock(headline: string, body: string): TextSection {
   };
 }
 
-/** Assemble a real funnel from AI-generated funnel content. */
+/**
+ * Assemble a real funnel from AI-generated funnel content.
+ *
+ * When `aiFunnelTypeId` is supplied (e.g. "opportunity", "webinar"),
+ * we use the matching V2 template as a STARTING STRUCTURE and only
+ * overlay the AI's copy on top of it — so the user gets the proven
+ * section layout (hero + benefits + FAQ + lead form + etc.) with
+ * headlines / subtext / step names personalised by AI.
+ *
+ * Without an aiFunnelTypeId we fall back to the legacy path: a single
+ * text block per step. Kept for back-compat with any callers that
+ * haven't been updated.
+ */
 export function funnelFromGenerated(
   ownerId: string,
   content: GeneratedFunnelContent,
+  aiFunnelTypeId?: string,
 ): Funnel {
   const now = Date.now();
   const name = content.funnelName.trim() || "AI Funnel";
-  const steps: FunnelStep[] = content.steps.map((gs) => {
-    const type: FunnelStepType = isFunnelStepType(gs.type)
-      ? gs.type
-      : "content";
-    const sections: ProfileSection[] = [richTextBlock(gs.headline, gs.body)];
-    if (type === "optin") sections.push(createSection("leadCapture"));
-    const step: FunnelStep = {
-      id: uid("fstep"),
-      type,
-      name: gs.name.trim() || type,
-      sections,
-    };
-    if (type !== "thankyou") {
-      step.cta = {
-        label: gs.ctaLabel.trim() || "Continue",
-        action: type === "offer" ? "url" : "next",
-        ...(type === "offer" ? { url: "" } : {}),
+  const template = aiFunnelTypeId
+    ? templateForAiFunnelType(aiFunnelTypeId)
+    : null;
+
+  let steps: FunnelStep[];
+
+  if (template) {
+    /* Template-driven path — keep the polished section layout, only
+       overlay AI's headline/body onto each step's hero section, plus
+       the step name + CTA label. Extra AI steps beyond the template
+       length are appended as plain content steps so we never silently
+       drop AI output. */
+    const templateSteps = template.build();
+    steps = templateSteps.map((tStep, i) => {
+      const aiStep = content.steps[i];
+      if (!aiStep) return tStep;
+
+      const sections: ProfileSection[] = tStep.sections.map((sec) => {
+        if (sec.type === "hero" && (aiStep.headline || aiStep.body)) {
+          return {
+            ...sec,
+            headline: aiStep.headline?.trim() || sec.headline,
+            subtext: aiStep.body?.trim() || sec.subtext,
+          };
+        }
+        return sec;
+      });
+
+      const merged: FunnelStep = {
+        ...tStep,
+        name: aiStep.name?.trim() || tStep.name,
+        sections,
       };
+      if (tStep.cta && aiStep.ctaLabel?.trim()) {
+        merged.cta = { ...tStep.cta, label: aiStep.ctaLabel.trim() };
+      }
+      return merged;
+    });
+
+    /* AI generated more steps than the template? Tack them on so we
+       don't lose its output. They get a plain text block layout. */
+    if (content.steps.length > templateSteps.length) {
+      for (let i = templateSteps.length; i < content.steps.length; i++) {
+        const gs = content.steps[i];
+        const type: FunnelStepType = isFunnelStepType(gs.type) ? gs.type : "content";
+        const extra: FunnelStep = {
+          id: uid("fstep"),
+          type,
+          name: gs.name.trim() || type,
+          sections: [richTextBlock(gs.headline, gs.body)],
+        };
+        if (type !== "thankyou") {
+          extra.cta = {
+            label: gs.ctaLabel.trim() || "Continue",
+            action: type === "offer" ? "url" : "next",
+            ...(type === "offer" ? { url: "" } : {}),
+          };
+        }
+        steps.push(extra);
+      }
     }
-    return step;
-  });
+  } else {
+    /* Legacy path — no template, one text block per step. */
+    steps = content.steps.map((gs) => {
+      const type: FunnelStepType = isFunnelStepType(gs.type)
+        ? gs.type
+        : "content";
+      const sections: ProfileSection[] = [richTextBlock(gs.headline, gs.body)];
+      if (type === "optin") sections.push(createSection("leadCapture"));
+      const step: FunnelStep = {
+        id: uid("fstep"),
+        type,
+        name: gs.name.trim() || type,
+        sections,
+      };
+      if (type !== "thankyou") {
+        step.cta = {
+          label: gs.ctaLabel.trim() || "Continue",
+          action: type === "offer" ? "url" : "next",
+          ...(type === "offer" ? { url: "" } : {}),
+        };
+      }
+      return step;
+    });
+  }
+
   return {
     id: uid("funnel"),
     ownerId,
     name,
     slug: slugify(name) || `funnel-${now.toString(36)}`,
-    themeId: "navy-glass",
+    themeId: template?.themeId ?? "navy-glass",
     status: "draft",
     steps:
       steps.length > 0
