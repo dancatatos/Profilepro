@@ -3,57 +3,62 @@
 /**
  * Manual "Install App" card — drop-in for any settings/profile page.
  *
- * The previous version hid itself when the browser hadn't fired
- * `beforeinstallprompt` yet (e.g. Chrome before the engagement
- * heuristic kicks in). That left mobile Android users with no visible
- * install path even though their browser fully supports PWA install.
+ * The previous version handled only three buckets (ios / android /
+ * desktop), which left Huawei phones, iPads (which UA-spoof as macOS),
+ * in-app browsers (Messenger / Facebook / Instagram / TikTok) and
+ * desktop Safari / Firefox users with no working install path. The
+ * "Install" button just spun forever on those devices.
  *
- * New behaviour: the card is always visible when the app isn't already
- * installed. It adapts what happens on click based on what the device
- * actually supports:
+ * Behaviour now:
  *
- *   - iOS Safari → 4-step Add to Home Screen modal
- *   - Android Chrome (event fired) → native install prompt
- *   - Android Chrome (event NOT fired yet) → "Open Chrome menu →
- *     Install app" instructions modal
- *   - Desktop with event → native prompt
- *   - Desktop without event → "Look for the install icon in the address
- *     bar" instructions modal
+ *   inapp     → "Open in your real browser first" with a Copy URL
+ *               button + a tap-to-open chip per major host. Most
+ *               critical fix — these users CANNOT install from the
+ *               in-app webview, period.
+ *   ios       → 4-step Safari Share → Add to Home Screen modal
+ *   ipados    → same Share-menu flow (iPadOS hides as macOS Safari)
+ *   android   → native install prompt where the event fired, otherwise
+ *               Chrome 3-dot-menu instructions
+ *   huawei    → HUAWEI Browser 3-dot-menu → Add to home screen, plus
+ *               an "open in Chrome via Petal Search" fallback
+ *   safari    → File → Add to Dock (macOS Sonoma+)
+ *   firefox   → Honest "Firefox doesn't install PWAs — try Chrome or
+ *               bookmark" message so users don't keep spinning
+ *   desktop   → Chrome / Edge install icon in the address bar
  */
 
 import { useEffect, useState } from "react";
 import {
+  AlertCircle,
   CheckCircle2,
+  Compass,
+  Copy,
   Download,
+  ExternalLink,
   Loader2,
   MoreVertical,
   Share,
   Smartphone,
 } from "lucide-react";
 import { useInstall } from "@/components/providers/InstallProvider";
+import type { InstallPlatform } from "@/components/providers/InstallProvider";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { copyToClipboard, getAppOrigin } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
-
-type Platform = "ios" | "android" | "desktop";
 
 export function InstallButton() {
   const {
     isInstalled,
-    isIos,
+    inAppName,
+    platform,
     wasInstalledBefore,
     installPending,
     promptInstall,
     cancelPending,
   } = useInstall();
-  const [openModal, setOpenModal] = useState<Platform | null>(null);
-  const [isAndroid, setIsAndroid] = useState(false);
-
-  useEffect(() => {
-    if (typeof navigator === "undefined") return;
-    setIsAndroid(/Android/i.test(navigator.userAgent || ""));
-  }, []);
+  const [openModal, setOpenModal] = useState<InstallPlatform | null>(null);
 
   /* Pending state lasts until the browser fires beforeinstallprompt OR
      the user cancels. Add a 30s timeout so the spinner doesn't spin
@@ -65,15 +70,10 @@ export function InstallButton() {
       toast.error(
         "Couldn't trigger the install prompt — please try the manual steps below.",
       );
-      const platform: Platform = isIos
-        ? "ios"
-        : isAndroid
-          ? "android"
-          : "desktop";
       setOpenModal(platform);
     }, 30_000);
     return () => clearTimeout(timeoutId);
-  }, [installPending, cancelPending, isAndroid, isIos]);
+  }, [installPending, cancelPending, platform]);
 
   /* Already installed → render a confirmation tile that stays visible
      so the user knows the install actually took. */
@@ -96,23 +96,21 @@ export function InstallButton() {
     );
   }
 
-  const platform: Platform = isIos
-    ? "ios"
-    : isAndroid
-      ? "android"
-      : "desktop";
-
   const onClickInstall = async () => {
-    /* iOS has no programmatic install API — must use Share menu. */
-    if (isIos) {
-      setOpenModal("ios");
+    /* Platforms with no programmatic API → straight to instructions. */
+    if (
+      platform === "inapp" ||
+      platform === "ios" ||
+      platform === "ipados" ||
+      platform === "huawei" ||
+      platform === "safari" ||
+      platform === "firefox"
+    ) {
+      setOpenModal(platform);
       return;
     }
-    /* Attempt the install. promptInstall returns "queued" if the
-       browser hasn't yet fired beforeinstallprompt — in that case
-       the provider auto-fires the prompt as soon as the event arrives
-       (typically within a few seconds of engagement), so we just
-       show a spinner state instead of blocking on instructions. */
+
+    /* Android / desktop Chromium → try the native prompt. */
     const outcome = await promptInstall();
     if (outcome === "accepted") {
       toast.success("Credibly installed.");
@@ -138,25 +136,67 @@ export function InstallButton() {
     toast.success("Install cancelled.");
   };
 
-  const subtitleByPlatform: Record<Platform, string> = {
+  const subtitleByPlatform: Record<InstallPlatform, string> = {
+    inapp: `${inAppName || "This in-app browser"} can't install apps — open Credibly in your browser to continue.`,
     ios: "Add Credibly to your iPhone home screen for app-like access.",
+    ipados: "Add Credibly to your iPad home screen for app-like access.",
     android: wasInstalledBefore
       ? "Welcome back — reinstall Credibly on your home screen."
       : "Install Credibly on your Android home screen for app-like access.",
+    huawei: wasInstalledBefore
+      ? "Welcome back — reinstall Credibly on your HUAWEI home screen."
+      : "Install Credibly on your HUAWEI device for app-like access.",
+    safari: "Add Credibly to your Dock from Safari's File menu.",
+    firefox:
+      "Firefox doesn't install PWAs — open in Chrome or Edge to install, or bookmark this page.",
     desktop: wasInstalledBefore
       ? "Welcome back — reinstall the Credibly desktop app."
       : "Install Credibly on your computer for a dedicated app window.",
+    unknown:
+      "Your browser doesn't expose an install button — try Chrome, Edge or Safari.",
   };
 
   /* Title morphs slightly when we know the user previously had it
-     installed — feels personal instead of generic. */
-  const title = wasInstalledBefore ? "Reinstall Credibly" : "Install Credibly";
+     installed — feels personal instead of generic. The in-app case
+     gets its own urgent title so the user notices it's a blocker. */
+  const title =
+    platform === "inapp"
+      ? "Open in your browser to install"
+      : wasInstalledBefore
+        ? "Reinstall Credibly"
+        : "Install Credibly";
+
+  const ButtonIcon =
+    platform === "inapp"
+      ? Compass
+      : platform === "ios" || platform === "ipados"
+        ? Smartphone
+        : Download;
+
+  const ctaLabel =
+    platform === "inapp"
+      ? "Show me how"
+      : platform === "ios" || platform === "ipados"
+        ? "How to install"
+        : platform === "huawei" || platform === "safari" || platform === "firefox"
+          ? "How to install"
+          : "Install";
 
   return (
     <>
       <Card className="flex items-center gap-3 p-4">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-gradient shadow-glow-blue">
-          <Download className="h-5 w-5 text-white" />
+        <div
+          className={
+            platform === "inapp"
+              ? "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/15"
+              : "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-gradient shadow-glow-blue"
+          }
+        >
+          {platform === "inapp" ? (
+            <AlertCircle className="h-5 w-5 text-amber-300" />
+          ) : (
+            <Download className="h-5 w-5 text-white" />
+          )}
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-white">{title}</p>
@@ -179,22 +219,19 @@ export function InstallButton() {
           <Button
             size="sm"
             onClick={onClickInstall}
-            leftIcon={
-              platform === "ios" ? (
-                <Smartphone className="h-3.5 w-3.5" />
-              ) : (
-                <Download className="h-3.5 w-3.5" />
-              )
-            }
+            leftIcon={<ButtonIcon className="h-3.5 w-3.5" />}
           >
-            {/* On iOS we always show instructions, so the label
-                signals that. Everywhere else we just say Install —
-                the queued flow handles the "no event yet" case
-                seamlessly behind the spinner. */}
-            {platform === "ios" ? "How to install" : "Install"}
+            {ctaLabel}
           </Button>
         )}
       </Card>
+
+      {/* In-app browser — open in real browser first */}
+      <InAppBrowserModal
+        open={openModal === "inapp"}
+        host={inAppName}
+        onClose={() => setOpenModal(null)}
+      />
 
       {/* iOS Safari instructions */}
       <Modal
@@ -225,6 +262,39 @@ export function InstallButton() {
           <StepRow n={4}>
             Tap <strong>Add</strong> in the top-right. The Credibly icon
             appears on your home screen.
+          </StepRow>
+        </ol>
+      </Modal>
+
+      {/* iPad — same Share-menu flow, position copy is different */}
+      <Modal
+        open={openModal === "ipados"}
+        onClose={() => setOpenModal(null)}
+        title="Install on iPad"
+        description="iPadOS uses Safari's Share menu — same as iPhone."
+      >
+        <ol className="space-y-3 pb-2 text-sm text-white/80">
+          <StepRow n={1}>
+            Make sure you&apos;re using <strong>Safari</strong> (not Chrome
+            or another in-app browser).
+          </StepRow>
+          <StepRow n={2}>
+            <span className="flex flex-wrap items-center gap-1.5">
+              Tap the
+              <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.06] px-1.5 py-0.5 text-xs text-white">
+                <Share className="h-3 w-3" />
+                Share
+              </span>
+              button in the top-right of the address bar.
+            </span>
+          </StepRow>
+          <StepRow n={3}>
+            Scroll down and tap{" "}
+            <strong>&ldquo;Add to Home Screen&rdquo;</strong>.
+          </StepRow>
+          <StepRow n={4}>
+            Tap <strong>Add</strong>. The Credibly icon lands on your iPad
+            home screen.
           </StepRow>
         </ol>
       </Modal>
@@ -262,7 +332,111 @@ export function InstallButton() {
         </ol>
       </Modal>
 
-      {/* Desktop fallback */}
+      {/* HUAWEI Browser — 3-dot menu doesn't say "Install app", it
+          says "Add to home screen" (and there's NO native install
+          prompt event on Huawei Chromium). */}
+      <Modal
+        open={openModal === "huawei"}
+        onClose={() => setOpenModal(null)}
+        title="Install on HUAWEI"
+        description="HUAWEI Browser doesn't show a native install button — use the 3-dot menu instead."
+      >
+        <ol className="space-y-3 pb-3 text-sm text-white/80">
+          <StepRow n={1}>
+            Make sure you&apos;re in <strong>HUAWEI Browser</strong> (the
+            blue compass icon) — not Facebook, Messenger or any other
+            in-app browser.
+          </StepRow>
+          <StepRow n={2}>
+            <span className="flex flex-wrap items-center gap-1.5">
+              Tap the
+              <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.06] px-1.5 py-0.5 text-xs text-white">
+                <MoreVertical className="h-3 w-3" />
+              </span>
+              menu at the bottom-right of the browser.
+            </span>
+          </StepRow>
+          <StepRow n={3}>
+            Tap <strong>&ldquo;Add to home screen&rdquo;</strong> (sometimes
+            shown as <strong>&ldquo;Add shortcut&rdquo;</strong>).
+          </StepRow>
+          <StepRow n={4}>
+            Confirm <strong>Add</strong>. Credibly lands on your home
+            screen — tap it like any other app.
+          </StepRow>
+        </ol>
+        <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3 text-xs text-white/65">
+          <p className="font-medium text-white">No HUAWEI Browser?</p>
+          <p className="mt-1">
+            Open <strong>AppGallery</strong> or <strong>Petal Search</strong>
+            and download <strong>Google Chrome</strong> or <strong>Microsoft
+            Edge</strong> — both fire a proper install prompt on Credibly.
+          </p>
+        </div>
+      </Modal>
+
+      {/* Desktop Safari (macOS Sonoma+) */}
+      <Modal
+        open={openModal === "safari"}
+        onClose={() => setOpenModal(null)}
+        title="Add Credibly to your Dock"
+        description="Safari 17 / macOS Sonoma added 'Add to Dock' — older Safari users should use Chrome or Edge instead."
+      >
+        <ol className="space-y-3 pb-2 text-sm text-white/80">
+          <StepRow n={1}>
+            In the macOS menu bar, click <strong>File</strong>.
+          </StepRow>
+          <StepRow n={2}>
+            Choose <strong>&ldquo;Add to Dock…&rdquo;</strong>.
+          </StepRow>
+          <StepRow n={3}>
+            Confirm <strong>Add</strong>. Credibly opens in its own window
+            and stays in your Dock like a native Mac app.
+          </StepRow>
+        </ol>
+      </Modal>
+
+      {/* Firefox — be honest, it doesn't install PWAs on desktop or
+          iOS. Best alternative: use Chrome / Edge, or bookmark. */}
+      <Modal
+        open={openModal === "firefox"}
+        onClose={() => setOpenModal(null)}
+        title="Firefox doesn't install PWAs"
+        description="Firefox dropped its install-as-app feature on desktop. Use Chrome / Edge, or bookmark Credibly."
+      >
+        <div className="space-y-3 pb-2 text-sm text-white/80">
+          <p>
+            Mozilla removed the install button from Firefox in 2021. The
+            quickest workarounds:
+          </p>
+          <ul className="space-y-2 pl-1 text-sm">
+            <li className="flex gap-2">
+              <span className="text-electric-300">•</span>
+              <span>
+                Open Credibly in <strong>Chrome</strong>, <strong>Edge</strong>
+                {" "}or <strong>Brave</strong> and use the install icon in
+                the address bar.
+              </span>
+            </li>
+            <li className="flex gap-2">
+              <span className="text-electric-300">•</span>
+              <span>
+                In Firefox, press <strong>Ctrl/Cmd + D</strong> to bookmark
+                Credibly so it&apos;s one tap away.
+              </span>
+            </li>
+            <li className="flex gap-2">
+              <span className="text-electric-300">•</span>
+              <span>
+                On Firefox <strong>Android</strong>: tap the 3-dot menu →
+                <strong> &ldquo;Add to Home screen&rdquo;</strong>.
+              </span>
+            </li>
+          </ul>
+        </div>
+      </Modal>
+
+      {/* Desktop Chrome / Edge fallback */}
       <Modal
         open={openModal === "desktop"}
         onClose={() => setOpenModal(null)}
@@ -294,6 +468,128 @@ export function InstallButton() {
         </ol>
       </Modal>
     </>
+  );
+}
+
+/* ── In-app browser modal ─────────────────────────────────────────── */
+
+/**
+ * Most installs that "don't work" on Android are actually users tapping
+ * a Credibly link from inside Messenger / Facebook / Instagram. Those
+ * are sandboxed webviews — they can't install ANY PWA. Best move is to
+ * get the user into their real browser, fast.
+ *
+ * We give them three options ranked by friction:
+ *   1) Copy the link — works everywhere, paste into Chrome
+ *   2) "Open in Chrome" via intent URL (Android only) — one tap
+ *   3) Show the host-specific "3-dot menu → Open in browser" steps
+ */
+function InAppBrowserModal({
+  open,
+  host,
+  onClose,
+}: {
+  open: boolean;
+  host: string;
+  onClose: () => void;
+}) {
+  const url =
+    typeof window !== "undefined"
+      ? window.location.href
+      : `${getAppOrigin()}/settings`;
+  const [copied, setCopied] = useState(false);
+
+  const copy = async () => {
+    const ok = await copyToClipboard(url);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast.success("Link copied — paste it into Chrome / Safari.");
+    } else {
+      toast.error("Couldn't copy — long-press the address bar to copy.");
+    }
+  };
+
+  /* Android intent URL — when tapped from inside a WebView this asks
+     the OS to open the link in Chrome rather than the in-app browser.
+     Falls back gracefully on iOS (becomes a regular link). */
+  const intentHref = (() => {
+    if (typeof window === "undefined") return url;
+    const clean = url.replace(/^https?:\/\//, "");
+    return `intent://${clean}#Intent;scheme=https;package=com.android.chrome;end`;
+  })();
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Open in your browser"
+      description={
+        host
+          ? `${host}'s in-app browser can't install apps. Open Credibly in your real browser first.`
+          : "This in-app browser can't install apps. Open Credibly in your real browser first."
+      }
+    >
+      <div className="space-y-3 pb-3">
+        {/* URL + Copy */}
+        <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-1.5 pl-3">
+          <span className="flex-1 truncate text-xs text-white/65">{url}</span>
+          <Button size="sm" onClick={copy} leftIcon={<Copy className="h-3.5 w-3.5" />}>
+            {copied ? "Copied" : "Copy"}
+          </Button>
+        </div>
+
+        {/* Android: one-tap Chrome intent */}
+        <a
+          href={intentHref}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-gradient px-4 py-3 text-sm font-semibold text-white shadow-glow-blue no-tap-highlight active:scale-[0.98]"
+        >
+          <ExternalLink className="h-4 w-4" />
+          Open in Chrome (Android)
+        </a>
+
+        {/* Instructions per host so we name the right button */}
+        <div className="space-y-2 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3 text-xs text-white/70">
+          <p className="font-medium text-white">Or manually:</p>
+          {host === "Facebook" || host === "Messenger" ? (
+            <p>
+              Tap the <MoreVertical className="inline h-3 w-3" /> 3-dot menu
+              at the top-right → <strong>&ldquo;Open in external
+              browser&rdquo;</strong>.
+            </p>
+          ) : host === "Instagram" ? (
+            <p>
+              Tap the <MoreVertical className="inline h-3 w-3" /> 3-dot menu
+              at the top-right → <strong>&ldquo;Open in Chrome&rdquo;</strong>
+              {" "}or <strong>&ldquo;Open in browser&rdquo;</strong>.
+            </p>
+          ) : host === "TikTok" ? (
+            <p>
+              Tap the <MoreVertical className="inline h-3 w-3" /> 3-dot icon
+              → <strong>&ldquo;Open in browser&rdquo;</strong>.
+            </p>
+          ) : host === "LINE" ? (
+            <p>
+              Tap the <Share className="inline h-3 w-3" /> share icon at the
+              bottom → <strong>&ldquo;Open in other app&rdquo;</strong> →
+              pick <strong>Chrome</strong> or <strong>Safari</strong>.
+            </p>
+          ) : (
+            <p>
+              Look for an <strong>&ldquo;Open in browser&rdquo;</strong>
+              {" "}option in this app&apos;s menu, or copy the link above
+              and paste it into Chrome / Safari.
+            </p>
+          )}
+        </div>
+
+        <p className="text-[11px] text-white/40">
+          Once Credibly is open in your real browser, come back to{" "}
+          <strong>Settings → Install Credibly</strong> — the install button
+          will work.
+        </p>
+      </div>
+    </Modal>
   );
 }
 

@@ -30,6 +30,34 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+/**
+ * Platform-specific install path. We carry this through context so the
+ * Install button can show the right instructions modal without each
+ * consumer having to re-derive it.
+ *
+ *   ios       — iPhone / iPod (Safari Share → Add to Home Screen)
+ *   ipados    — iPad (same flow as iOS, but UA hides as macOS)
+ *   android   — generic Android Chrome
+ *   huawei    — HUAWEI Browser (Chromium fork without install prompt)
+ *   inapp     — Facebook / Messenger / Instagram / TikTok / Line / etc.
+ *               in-app browsers that can't install PWAs at all; user
+ *               must open in their system browser first
+ *   safari    — desktop Safari (File → Add to Dock on Safari 17+)
+ *   firefox   — desktop Firefox (no PWA install support; bookmark)
+ *   desktop   — Chrome / Edge / Brave / Arc on desktop
+ *   unknown   — fall-back when we can't classify the UA
+ */
+export type InstallPlatform =
+  | "ios"
+  | "ipados"
+  | "android"
+  | "huawei"
+  | "inapp"
+  | "safari"
+  | "firefox"
+  | "desktop"
+  | "unknown";
+
 interface InstallState {
   /** True when the browser has fired beforeinstallprompt and we have a usable event. */
   canInstall: boolean;
@@ -37,6 +65,14 @@ interface InstallState {
   isInstalled: boolean;
   /** True when this is an iOS device that requires the manual Share → Add to Home Screen flow. */
   isIos: boolean;
+  /** True for iPadOS (which masquerades as macOS but uses the Safari Share menu flow). */
+  isIpad: boolean;
+  /** True when running inside an in-app browser (Facebook, IG, Messenger, TikTok…) that can't install PWAs. */
+  isInApp: boolean;
+  /** Name of the detected in-app host (Facebook / Messenger / Instagram / …) — empty string when not in-app. */
+  inAppName: string;
+  /** Final classified install path for this device + browser. */
+  platform: InstallPlatform;
   /**
    * True when this device has installed Credibly before (we recorded the
    * appinstalled event in localStorage) but is NOT currently installed.
@@ -66,11 +102,78 @@ const InstallContext = createContext<InstallState>({
   canInstall: false,
   isInstalled: false,
   isIos: false,
+  isIpad: false,
+  isInApp: false,
+  inAppName: "",
+  platform: "unknown",
   wasInstalledBefore: false,
   installPending: false,
   promptInstall: async () => "unavailable",
   cancelPending: () => {},
 });
+
+/* ── UA classifiers ─────────────────────────────────────────────────
+   Centralised so the InstallButton + provider stay in sync. Pure
+   functions, easy to unit-test if we ever add Jest. */
+
+/** True when running inside an embedded webview (Messenger, FB, IG…). */
+export function detectInAppHost(ua: string): string {
+  /* These all ship outdated WebViews that can't install PWAs. We name
+     them so the install modal can say "Open in Chrome instead of
+     Messenger" rather than a generic warning. Patterns are ordered
+     from most-specific to most-generic so we report the right host. */
+  if (/FBAN|FBAV|FB_IAB|FB4A/i.test(ua)) return "Facebook";
+  if (/MessengerForiOS|Messenger\//i.test(ua)) return "Messenger";
+  if (/Instagram/i.test(ua)) return "Instagram";
+  if (/TikTok|musical_ly|Bytedance/i.test(ua)) return "TikTok";
+  if (/Line\//i.test(ua)) return "LINE";
+  if (/Twitter|TwitterAndroid/i.test(ua)) return "X (Twitter)";
+  if (/Snapchat/i.test(ua)) return "Snapchat";
+  if (/MicroMessenger|WeChat/i.test(ua)) return "WeChat";
+  /* Generic WebView signals — only flag when accompanied by an app
+     wrapper so we don't mis-classify Chrome on Android (which has
+     "wv" in some flavours). */
+  if (/; wv\)/i.test(ua) && /Android/i.test(ua)) return "in-app browser";
+  return "";
+}
+
+/** True for HUAWEI Browser (Chromium fork that doesn't fire beforeinstallprompt). */
+export function detectHuawei(ua: string): boolean {
+  /* HUAWEI Browser UA contains "HuaweiBrowser". Petal Search and HMS
+     based shells include "HMSCore" / "HMS-Search". Older EMUI shells
+     leak "huawei" anywhere in the UA. */
+  return /HuaweiBrowser|HMSCore|HMS-Search|HuaweiSearch/i.test(ua);
+}
+
+/** True for iPad on iPadOS 13+ that masquerades as macOS Safari. */
+export function detectIpad(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  /* Classic iPad — UA still says "iPad" on older devices. */
+  if (/iPad/.test(ua)) return true;
+  /* iPadOS 13+ — UA reports "Macintosh; Intel Mac OS X" but the
+     device has touch support. macOS Macs have maxTouchPoints === 0
+     (or === 1 for trackpads). iPads report 5. */
+  const nav = navigator as Navigator & { maxTouchPoints?: number };
+  const touchPoints = nav.maxTouchPoints ?? 0;
+  return /Macintosh/.test(ua) && touchPoints > 1;
+}
+
+/** True for desktop Safari (not iOS Safari — that's caught upstream). */
+export function detectDesktopSafari(ua: string): boolean {
+  /* Safari UA contains "Safari" but NOT "Chrome", "Edg", "OPR" etc.
+     Also rule out mobile so iOS doesn't fall through here. */
+  return (
+    /Safari/i.test(ua) &&
+    !/Chrome|Chromium|Edg|OPR|Opera/i.test(ua) &&
+    !/Mobile|iPhone|iPad|iPod/i.test(ua)
+  );
+}
+
+/** True for desktop Firefox (no PWA install support). */
+export function detectFirefox(ua: string): boolean {
+  return /Firefox|FxiOS/i.test(ua);
+}
 
 /** localStorage flag set when `appinstalled` event fires. */
 const INSTALLED_BEFORE_KEY = "credibly:was-installed";
@@ -81,6 +184,13 @@ export function InstallProvider({ children }: { children: ReactNode }) {
   );
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIos, setIsIos] = useState(false);
+  const [isIpad, setIsIpad] = useState(false);
+  const [isInApp, setIsInApp] = useState(false);
+  const [inAppName, setInAppName] = useState("");
+  const [isHuawei, setIsHuawei] = useState(false);
+  const [isSafariDesktop, setIsSafariDesktop] = useState(false);
+  const [isFirefox, setIsFirefox] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
   const [wasInstalledBefore, setWasInstalledBefore] = useState(false);
   /* When user clicks Install before the event has arrived, we set this
      to true. The useEffect that listens for beforeinstallprompt then
@@ -116,13 +226,27 @@ export function InstallProvider({ children }: { children: ReactNode }) {
       /* private mode / sandbox — silently degrade */
     }
 
-    /* iOS detection — userAgent sniffing is the most reliable signal
-       given that there's no proper feature detection for "device that
-       needs the Share menu". `MSStream` rule-out keeps old IE/Edge
-       on Windows Phone from being mis-classified. */
+    /* Platform classification.
+       - iOS (iPhone / iPod) → Share-menu instructions
+       - iPadOS → same flow even though UA pretends to be macOS
+       - In-app browsers (Facebook, IG, Messenger, TikTok…) → can't
+         install at all; need to open in system browser first
+       - HUAWEI Browser → Chromium fork that doesn't fire the prompt
+         event; needs its own bespoke 3-dot-menu instructions
+       - Desktop Safari / Firefox → no install prompt, special copy
+       The `MSStream` rule-out keeps old IE/Edge on Windows Phone
+       from being mis-classified as iOS. */
     const ua = window.navigator.userAgent || "";
     const win = window as unknown as { MSStream?: unknown };
-    setIsIos(/iPad|iPhone|iPod/.test(ua) && !win.MSStream);
+    setIsIos(/iPhone|iPod/.test(ua) && !win.MSStream);
+    setIsIpad(detectIpad());
+    const inApp = detectInAppHost(ua);
+    setInAppName(inApp);
+    setIsInApp(!!inApp);
+    setIsHuawei(detectHuawei(ua));
+    setIsAndroid(/Android/i.test(ua));
+    setIsSafariDesktop(detectDesktopSafari(ua));
+    setIsFirefox(detectFirefox(ua));
 
     const onPrompt = (e: Event) => {
       e.preventDefault();
@@ -225,11 +349,40 @@ export function InstallProvider({ children }: { children: ReactNode }) {
     setInstallPending(false);
   }, []);
 
+  /* Resolve the install platform with a strict priority order:
+       in-app browsers FIRST (must be solved before any install path),
+       then iPadOS / iOS (no programmatic API),
+       then Huawei (Chromium fork without the prompt),
+       then generic Android,
+       then desktop variants (Safari / Firefox / Chromium).
+     `unknown` is the safety net — its modal links to the docs. */
+  const platform: InstallPlatform = isInApp
+    ? "inapp"
+    : isIpad
+      ? "ipados"
+      : isIos
+        ? "ios"
+        : isHuawei
+          ? "huawei"
+          : isAndroid
+            ? "android"
+            : isFirefox
+              ? "firefox"
+              : isSafariDesktop
+                ? "safari"
+                : typeof window !== "undefined"
+                  ? "desktop"
+                  : "unknown";
+
   const value = useMemo<InstallState>(
     () => ({
       canInstall: !!deferred,
       isInstalled,
       isIos,
+      isIpad,
+      isInApp,
+      inAppName,
+      platform,
       wasInstalledBefore,
       installPending,
       promptInstall,
@@ -239,6 +392,10 @@ export function InstallProvider({ children }: { children: ReactNode }) {
       deferred,
       isInstalled,
       isIos,
+      isIpad,
+      isInApp,
+      inAppName,
+      platform,
       wasInstalledBefore,
       installPending,
       promptInstall,
