@@ -25,10 +25,12 @@ import {
   Copy,
   Languages,
   Mail,
+  MessageSquare,
   Phone,
   Save,
   Send,
   Sparkles,
+  Target,
 } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
@@ -66,6 +68,8 @@ export function LeadDetailModal({
   const [taskNotes, setTaskNotes] = useState("");
   const [notesDirty, setNotesDirty] = useState(false);
   const [savingNotes, setSavingNotes] = useState(false);
+  /** "templates" tab = pre-written stage messages; "ai" tab = AI generator. */
+  const [msgTab, setMsgTab] = useState<"templates" | "ai">("templates");
 
   /* Re-seed local UI whenever a new lead is opened. */
   useEffect(() => {
@@ -74,7 +78,14 @@ export function LeadDetailModal({
     setCopiedIdx(null);
     setTaskNotes(lead.taskNotes ?? "");
     setNotesDirty(false);
-  }, [open, lead]);
+    /* Default to pre-written templates when the stage has them in EITHER
+       language — AI tab otherwise so the button is immediately visible. */
+    const currentStage = pipeline.stages.find((s) => s.id === lead.stageId);
+    const hasAnyTemplate =
+      (currentStage?.followUpMessages?.length ?? 0) > 0 ||
+      (currentStage?.followUpMessagesTaglish?.length ?? 0) > 0;
+    setMsgTab(hasAnyTemplate ? "templates" : "ai");
+  }, [open, lead, pipeline.stages]);
 
   if (!lead) return null;
 
@@ -121,8 +132,23 @@ export function LeadDetailModal({
     }
   };
 
+  /**
+   * Replace common {placeholders} with the lead's actual data so the
+   * copied message is already personalised — no manual find/replace.
+   * Unmatched placeholders are left as-is so the user can spot any they
+   * forgot to swap (e.g. {video_link} stays visible to remind them).
+   */
+  const personalize = (text: string): string => {
+    const firstName = lead.name.split(/\s+/)[0] || lead.name;
+    return text
+      .replace(/\{name\}/gi, firstName)
+      .replace(/\{fullname\}/gi, lead.name)
+      .replace(/\{email\}/gi, lead.email ?? "")
+      .replace(/\{phone\}/gi, lead.phone ?? "");
+  };
+
   const copyVariant = async (text: string, idx: number) => {
-    if (await copyToClipboard(text)) {
+    if (await copyToClipboard(personalize(text))) {
       setCopiedIdx(idx);
       toast.success("Message copied — paste it in Messenger/Viber.");
       setTimeout(() => setCopiedIdx(null), 2000);
@@ -248,15 +274,15 @@ export function LeadDetailModal({
           </div>
         </div>
 
-        {/* AI message generator */}
-        <Card className="space-y-3 border border-electric-500/15 bg-electric-500/[0.03] p-4">
+        {/* Follow-up messages — tabbed: pre-written templates | AI writer.
+            Language toggle is HOISTED to this card's header so it controls
+            both tabs at once — pick EN/TL once, applies everywhere. */}
+        <Card className="space-y-3 p-4">
+          {/* Header row 1 — title + EN/TL language toggle */}
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-electric-300" />
-              <p className="text-sm font-semibold text-white">
-                AI Message Writer
-              </p>
-            </div>
+            <p className="text-sm font-semibold text-white">
+              Follow-up Messages
+            </p>
             <div className="flex items-center gap-1.5">
               <Languages className="h-3 w-3 text-white/40" />
               <div className="flex rounded-md bg-white/[0.04] p-0.5">
@@ -278,47 +304,205 @@ export function LeadDetailModal({
               </div>
             </div>
           </div>
-          <p className="text-xs text-white/55">
-            3 personalised message variants based on the current stage and
-            your profile. Tap to copy → paste into Messenger / Viber / SMS.
-          </p>
-          <Button
-            size="sm"
-            onClick={generate}
-            loading={generating}
-            disabled={generating}
-            leftIcon={<Sparkles className="h-3.5 w-3.5" />}
-          >
-            {variants.length > 0 ? "Regenerate messages" : "Generate messages"}
-          </Button>
-          {variants.length > 0 && (
-            <div className="space-y-2">
-              {variants.map((v, i) => (
-                <div
-                  key={i}
-                  className="rounded-xl border border-white/[0.07] bg-ink-950/40 p-3"
-                >
-                  <p className="whitespace-pre-wrap text-sm text-white/80">
-                    {v}
-                  </p>
-                  <div className="mt-2 flex justify-end">
-                    <Button
-                      size="sm"
-                      variant={copiedIdx === i ? "outline" : "primary"}
-                      leftIcon={
-                        copiedIdx === i ? (
-                          <Check className="h-3.5 w-3.5" />
-                        ) : (
-                          <Copy className="h-3.5 w-3.5" />
-                        )
-                      }
-                      onClick={() => copyVariant(v, i)}
-                    >
-                      {copiedIdx === i ? "Copied" : "Copy"}
-                    </Button>
+
+          {/* Header row 2 — Templates / AI Write tab toggle */}
+          <div className="flex w-full rounded-lg bg-white/[0.04] p-0.5">
+            <button
+              type="button"
+              onClick={() => setMsgTab("templates")}
+              className={cn(
+                "flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-[11px] font-medium transition-colors",
+                msgTab === "templates"
+                  ? "bg-white/10 text-white"
+                  : "text-white/40 hover:text-white/70",
+              )}
+            >
+              <MessageSquare className="h-3 w-3" />
+              Templates
+              {(() => {
+                const active =
+                  language === "taglish"
+                    ? stage.followUpMessagesTaglish
+                    : stage.followUpMessages;
+                return (active?.length ?? 0) > 0 ? (
+                  <span className="rounded-full bg-electric-500/20 px-1.5 text-electric-300">
+                    {active!.length}
+                  </span>
+                ) : null;
+              })()}
+            </button>
+            <button
+              type="button"
+              onClick={() => setMsgTab("ai")}
+              className={cn(
+                "flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-[11px] font-medium transition-colors",
+                msgTab === "ai"
+                  ? "bg-electric-500/20 text-electric-300"
+                  : "text-white/40 hover:text-white/70",
+              )}
+            >
+              <Sparkles className="h-3 w-3" />
+              AI Write
+            </button>
+          </div>
+
+          {/* Goal / target banner — shown on both tabs when set */}
+          {stage.followUpGoal && (
+            <div className="flex items-start gap-2 rounded-lg bg-jade-500/10 px-3 py-2">
+              <Target className="mt-0.5 h-3.5 w-3.5 shrink-0 text-jade-300" />
+              <p className="text-xs text-jade-200">
+                <span className="font-semibold">Goal:</span>{" "}
+                {stage.followUpGoal}
+              </p>
+            </div>
+          )}
+
+          {/* ── Templates tab ── */}
+          {msgTab === "templates" &&
+            (() => {
+              /* Pick the array for the currently selected language.
+                 If it's empty but the OTHER language has templates,
+                 the empty state offers a one-tap switch. */
+              const activeMessages =
+                language === "taglish"
+                  ? stage.followUpMessagesTaglish
+                  : stage.followUpMessages;
+              const otherMessages =
+                language === "taglish"
+                  ? stage.followUpMessages
+                  : stage.followUpMessagesTaglish;
+              const otherLangLabel =
+                language === "taglish" ? "English" : "Taglish";
+
+              if ((activeMessages?.length ?? 0) > 0) {
+                return (
+                  <div className="space-y-2">
+                    {activeMessages!.map((msg, idx) => (
+                      <div
+                        key={msg.id}
+                        className="rounded-xl border border-white/[0.07] bg-ink-950/40 p-3"
+                      >
+                        <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-white/40">
+                          {msg.label}
+                        </p>
+                        <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/80">
+                          {personalize(msg.body)}
+                        </p>
+                        <div className="mt-2.5 flex justify-end">
+                          <Button
+                            size="sm"
+                            variant={copiedIdx === idx ? "outline" : "primary"}
+                            leftIcon={
+                              copiedIdx === idx ? (
+                                <Check className="h-3.5 w-3.5" />
+                              ) : (
+                                <Copy className="h-3.5 w-3.5" />
+                              )
+                            }
+                            onClick={() => copyVariant(msg.body, idx)}
+                          >
+                            {copiedIdx === idx ? "Copied" : "Copy"}
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
+                );
+              }
+
+              return (
+                <div className="rounded-xl border border-dashed border-white/10 py-6 text-center">
+                  <MessageSquare className="mx-auto mb-2 h-6 w-6 text-white/20" />
+                  <p className="text-sm font-medium text-white/40">
+                    No {language === "taglish" ? "Taglish" : "English"}{" "}
+                    templates for this stage
+                  </p>
+                  {(otherMessages?.length ?? 0) > 0 ? (
+                    <>
+                      <p className="mt-1 text-xs text-white/25">
+                        {otherMessages!.length} {otherLangLabel} template
+                        {otherMessages!.length === 1 ? "" : "s"} available.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setLanguage(
+                            language === "taglish" ? "english" : "taglish",
+                          )
+                        }
+                        className="mt-3 text-[11px] text-electric-400 hover:text-electric-300"
+                      >
+                        Switch to {otherLangLabel} →
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <p className="mt-1 text-xs text-white/25">
+                        Open the Stage Editor and add pre-written messages for{" "}
+                        <span className="italic">{stage.name}</span>.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setMsgTab("ai")}
+                        className="mt-3 text-[11px] text-electric-400 hover:text-electric-300"
+                      >
+                        Use AI writer instead →
+                      </button>
+                    </>
+                  )}
                 </div>
-              ))}
+              );
+            })()}
+
+          {/* ── AI Write tab ── */}
+          {msgTab === "ai" && (
+            <div className="space-y-3">
+              <p className="text-xs text-white/55">
+                3 personalised message variants in{" "}
+                <span className="font-semibold capitalize text-white/75">
+                  {language}
+                </span>{" "}
+                — based on the current stage and your profile. Tap to copy.
+              </p>
+              <Button
+                size="sm"
+                onClick={generate}
+                loading={generating}
+                disabled={generating}
+                leftIcon={<Sparkles className="h-3.5 w-3.5" />}
+              >
+                {variants.length > 0 ? "Regenerate" : "Generate messages"}
+              </Button>
+              {variants.length > 0 && (
+                <div className="space-y-2">
+                  {variants.map((v, i) => (
+                    <div
+                      key={i}
+                      className="rounded-xl border border-white/[0.07] bg-ink-950/40 p-3"
+                    >
+                      <p className="whitespace-pre-wrap text-sm text-white/80">
+                        {v}
+                      </p>
+                      <div className="mt-2 flex justify-end">
+                        <Button
+                          size="sm"
+                          variant={copiedIdx === i ? "outline" : "primary"}
+                          leftIcon={
+                            copiedIdx === i ? (
+                              <Check className="h-3.5 w-3.5" />
+                            ) : (
+                              <Copy className="h-3.5 w-3.5" />
+                            )
+                          }
+                          onClick={() => copyVariant(v, i)}
+                        >
+                          {copiedIdx === i ? "Copied" : "Copy"}
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </Card>

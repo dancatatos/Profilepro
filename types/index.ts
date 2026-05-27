@@ -517,6 +517,19 @@ export type PipelineIndustry =
   | "sales"
   | "custom";
 
+/**
+ * One pre-written follow-up message in a stage's sequence.
+ * The pipeline owner writes these once; users copy them when
+ * a follow-up task comes due.
+ */
+export interface FollowUpMessage {
+  id: string;
+  /** Short label for this message — e.g. "Day 1", "Day 3 check-in". */
+  label: string;
+  /** The full message body the user will copy and paste. */
+  body: string;
+}
+
 /** One column in a pipeline (e.g. "Cold", "Interested", "Joined"). */
 export interface PipelineStage {
   id: string;
@@ -530,6 +543,25 @@ export interface PipelineStage {
   /** Optional AI-prompt context unique to this stage, used by the message
    *  generator (e.g. "the lead just watched the intro video"). */
   aiContext?: string;
+  /**
+   * The desired outcome for this stage — shown as a goal banner in the
+   * lead detail modal so the user knows what they're trying to achieve.
+   * e.g. "Book a discovery call", "Get them to watch the intro video".
+   */
+  followUpGoal?: string;
+  /**
+   * Pre-written follow-up message sequence for this stage (English).
+   * Pipeline owners write these once; users copy the relevant message
+   * when a follow-up task comes due — no AI needed.
+   * Ordered: first message is the earliest in the sequence (Day 1, etc.).
+   */
+  followUpMessages?: FollowUpMessage[];
+  /**
+   * Parallel Taglish sequence — same purpose as `followUpMessages` but
+   * in Tagalog-English code-switched copy. Users toggle between EN/TL
+   * in the lead modal; each stage can have either, both, or neither.
+   */
+  followUpMessagesTaglish?: FollowUpMessage[];
 }
 
 /**
