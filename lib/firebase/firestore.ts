@@ -8,6 +8,7 @@ import {
   addDoc,
   deleteDoc,
   runTransaction,
+  writeBatch,
   query,
   where,
   orderBy,
@@ -567,6 +568,47 @@ export async function moveLeadToStage(
     patch.nextTaskAt = null; // no follow-up due — terminal stage
   }
   await updateDoc(doc(db, COL.leads, leadId), patch);
+}
+
+/**
+ * Bulk move many leads into the same pipeline + starting stage in one
+ * atomic write. Used by the Leads tab's "Add to pipeline" action so a
+ * user can import 50 orphan leads in a single tap.
+ *
+ * Firestore batches max out at 500 writes; we chunk to stay safely
+ * under that. All leads in a chunk commit together (or none do).
+ */
+export async function enrollLeadsInPipeline(
+  leadIds: string[],
+  pipelineId: string,
+  stageId: string,
+  daysBeforeNextTask?: number,
+): Promise<void> {
+  if (!isFirebaseConfigured || leadIds.length === 0) return;
+
+  const now = Date.now();
+  const nextTaskAt =
+    daysBeforeNextTask && daysBeforeNextTask > 0
+      ? now + daysBeforeNextTask * 24 * 60 * 60 * 1000
+      : null;
+  const patch = {
+    pipelineId,
+    stageId,
+    stageEnteredAt: now,
+    nextTaskAt,
+  };
+
+  /* Chunk into 450 so each batch stays comfortably below Firestore's
+     500-op ceiling (includes any internal index updates the SDK adds). */
+  const CHUNK = 450;
+  for (let i = 0; i < leadIds.length; i += CHUNK) {
+    const slice = leadIds.slice(i, i + CHUNK);
+    const batch = writeBatch(db);
+    for (const id of slice) {
+      batch.update(doc(db, COL.leads, id), patch);
+    }
+    await batch.commit();
+  }
 }
 
 /**
