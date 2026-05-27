@@ -34,6 +34,7 @@ import type {
   PlanId,
   Profile,
   SavedBuild,
+  SentMessageLog,
   SharedBuild,
   SharedFunnel,
   UniversityTopic,
@@ -568,6 +569,48 @@ export async function moveLeadToStage(
     patch.nextTaskAt = null; // no follow-up due — terminal stage
   }
   await updateDoc(doc(db, COL.leads, leadId), patch);
+}
+
+/**
+ * Toggle a follow-up message's "sent" status on a lead.
+ *
+ * Behaviour:
+ *   - If a log entry for this (stageId, messageId) already exists, this
+ *     call REPLACES its timestamp (so the latest send wins).
+ *   - If none exists, it appends a new entry.
+ *   - When `sent` is false, the entry is removed entirely — the user
+ *     decided they didn't actually send it.
+ *
+ * Uses a transaction so concurrent sends from two devices don't clobber
+ * each other's log writes.
+ */
+export async function setMessageSentState(
+  leadId: string,
+  stageId: string,
+  messageId: string,
+  language: "english" | "taglish",
+  sent: boolean,
+): Promise<SentMessageLog[]> {
+  if (!isFirebaseConfigured) return [];
+  const ref = doc(db, COL.leads, leadId);
+  return await runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) return [];
+    const data = snap.data() as Lead;
+    const existing: SentMessageLog[] = data.sentMessages ?? [];
+
+    /* Drop any entry that matches the (stage, message) key — we'll
+       either re-append a fresh one (sent=true) or simply leave it
+       removed (sent=false). */
+    const filtered = existing.filter(
+      (m) => !(m.stageId === stageId && m.messageId === messageId),
+    );
+    const next: SentMessageLog[] = sent
+      ? [...filtered, { stageId, messageId, language, sentAt: Date.now() }]
+      : filtered;
+    tx.update(ref, { sentMessages: next });
+    return next;
+  });
 }
 
 /**

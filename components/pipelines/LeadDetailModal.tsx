@@ -18,9 +18,10 @@
  * even at heavy usage.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Check,
+  CheckCircle2,
   Clock,
   Copy,
   Languages,
@@ -31,17 +32,22 @@ import {
   Send,
   Sparkles,
   Target,
+  Undo2,
 } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { updateLead, moveLeadToStage } from "@/lib/firebase/firestore";
+import {
+  setMessageSentState,
+  updateLead,
+  moveLeadToStage,
+} from "@/lib/firebase/firestore";
 import { useProfileStore } from "@/store/profileStore";
 import { copyToClipboard, timeAgo, timeUntil } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 import { cn } from "@/lib/utils";
-import type { Lead, Pipeline, PipelineStage } from "@/types";
+import type { Lead, Pipeline, PipelineStage, SentMessageLog } from "@/types";
 
 interface Props {
   open: boolean;
@@ -70,6 +76,15 @@ export function LeadDetailModal({
   const [savingNotes, setSavingNotes] = useState(false);
   /** "templates" tab = pre-written stage messages; "ai" tab = AI generator. */
   const [msgTab, setMsgTab] = useState<"templates" | "ai">("templates");
+  /**
+   * Local copy of the lead's sent-message log. Kept in component state
+   * (rather than reading lead.sentMessages directly each render) so
+   * optimistic updates on toggle feel instant — the parent gets
+   * notified via onUpdated for persistence.
+   */
+  const [sentMessages, setSentMessages] = useState<SentMessageLog[]>([]);
+  /** Which (stageId, messageId) is mid-toggle — used to disable the button. */
+  const [togglingKey, setTogglingKey] = useState<string | null>(null);
 
   /* Re-seed local UI whenever a new lead is opened. */
   useEffect(() => {
@@ -78,6 +93,7 @@ export function LeadDetailModal({
     setCopiedIdx(null);
     setTaskNotes(lead.taskNotes ?? "");
     setNotesDirty(false);
+    setSentMessages(lead.sentMessages ?? []);
     /* Default to pre-written templates when the stage has them in EITHER
        language — AI tab otherwise so the button is immediately visible. */
     const currentStage = pipeline.stages.find((s) => s.id === lead.stageId);
@@ -86,6 +102,16 @@ export function LeadDetailModal({
       (currentStage?.followUpMessagesTaglish?.length ?? 0) > 0;
     setMsgTab(hasAnyTemplate ? "templates" : "ai");
   }, [open, lead, pipeline.stages]);
+
+  /* Quick lookup: composite key "{stageId}:{messageId}" → log entry.
+     Avoids O(n*m) array scans when rendering large message lists. */
+  const sentLookup = useMemo(() => {
+    const map = new Map<string, SentMessageLog>();
+    for (const m of sentMessages) {
+      map.set(`${m.stageId}:${m.messageId}`, m);
+    }
+    return map;
+  }, [sentMessages]);
 
   if (!lead) return null;
 
@@ -154,6 +180,60 @@ export function LeadDetailModal({
       setTimeout(() => setCopiedIdx(null), 2000);
     } else {
       toast.error("Couldn't copy — long-press to copy manually.");
+    }
+  };
+
+  /**
+   * Toggle the "sent" flag on a pre-written template message for this
+   * lead. The Templates tab renders a green "Sent X ago" badge whenever
+   * the log has an entry; tapping the badge unmarks; tapping "Mark sent"
+   * marks. Persists optimistically — UI updates instantly, Firestore
+   * write happens in the background.
+   */
+  const toggleSent = async (
+    stageIdForLog: string,
+    messageId: string,
+    nextSent: boolean,
+  ) => {
+    const key = `${stageIdForLog}:${messageId}`;
+    setTogglingKey(key);
+    /* Optimistic: update local state right away. If the write fails
+       we'll restore on catch. */
+    const prevLog = sentMessages;
+    const optimistic: SentMessageLog[] = nextSent
+      ? [
+          ...prevLog.filter(
+            (m) => !(m.stageId === stageIdForLog && m.messageId === messageId),
+          ),
+          {
+            stageId: stageIdForLog,
+            messageId,
+            language,
+            sentAt: Date.now(),
+          },
+        ]
+      : prevLog.filter(
+          (m) => !(m.stageId === stageIdForLog && m.messageId === messageId),
+        );
+    setSentMessages(optimistic);
+    try {
+      const persisted = await setMessageSentState(
+        lead.id,
+        stageIdForLog,
+        messageId,
+        language,
+        nextSent,
+      );
+      /* Trust the server's response in case our optimistic value
+         drifted (e.g. another device wrote concurrently). */
+      setSentMessages(persisted);
+      onUpdated({ sentMessages: persisted });
+    } catch {
+      /* Revert + tell the user. */
+      setSentMessages(prevLog);
+      toast.error("Couldn't update sent status.");
+    } finally {
+      setTogglingKey(null);
     }
   };
 
@@ -375,37 +455,126 @@ export function LeadDetailModal({
                 language === "taglish" ? "English" : "Taglish";
 
               if ((activeMessages?.length ?? 0) > 0) {
+                /* Find the index of the first unsent message in the
+                   current language. That's what the user should send
+                   next — surfaced with a subtle "Next →" chip so they
+                   never have to remember "wait, did I send Day 3?". */
+                const nextUpIdx = activeMessages!.findIndex(
+                  (m) => !sentLookup.has(`${stage.id}:${m.id}`),
+                );
                 return (
                   <div className="space-y-2">
-                    {activeMessages!.map((msg, idx) => (
-                      <div
-                        key={msg.id}
-                        className="rounded-xl border border-white/[0.07] bg-ink-950/40 p-3"
-                      >
-                        <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-white/40">
-                          {msg.label}
-                        </p>
-                        <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/80">
-                          {personalize(msg.body)}
-                        </p>
-                        <div className="mt-2.5 flex justify-end">
-                          <Button
-                            size="sm"
-                            variant={copiedIdx === idx ? "outline" : "primary"}
-                            leftIcon={
-                              copiedIdx === idx ? (
-                                <Check className="h-3.5 w-3.5" />
-                              ) : (
-                                <Copy className="h-3.5 w-3.5" />
-                              )
-                            }
-                            onClick={() => copyVariant(msg.body, idx)}
-                          >
-                            {copiedIdx === idx ? "Copied" : "Copy"}
-                          </Button>
+                    {activeMessages!.map((msg, idx) => {
+                      /* Sent-log lookup. The log keys on (stageId, messageId)
+                         so we use the CURRENT stage id — re-arranging stages
+                         later wouldn't break the link since both ids are
+                         carried in the log entry. */
+                      const logKey = `${stage.id}:${msg.id}`;
+                      const sentEntry = sentLookup.get(logKey);
+                      const isSent = !!sentEntry;
+                      const isToggling = togglingKey === logKey;
+                      const isNextUp = idx === nextUpIdx && !isSent;
+                      return (
+                        <div
+                          key={msg.id}
+                          className={cn(
+                            "rounded-xl border p-3 transition-colors",
+                            isSent
+                              ? "border-jade-500/25 bg-jade-500/[0.04]"
+                              : isNextUp
+                                ? "border-electric-500/40 bg-electric-500/[0.05] ring-1 ring-electric-500/30"
+                                : "border-white/[0.07] bg-ink-950/40",
+                          )}
+                        >
+                          <div className="mb-2 flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
+                                {msg.label}
+                              </p>
+                              {/* "Next →" hint on the first unsent message
+                                  so the user knows which one to send today. */}
+                              {isNextUp && (
+                                <span className="rounded-full bg-electric-500/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-electric-200">
+                                  Next →
+                                </span>
+                              )}
+                            </div>
+                            {/* Sent badge — tap to unmark. Carries the
+                                timestamp so the user knows exactly how
+                                fresh the touchpoint is. */}
+                            {isSent && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  !isToggling &&
+                                  toggleSent(stage.id, msg.id, false)
+                                }
+                                disabled={isToggling}
+                                aria-label="Unmark sent"
+                                className="flex items-center gap-1 rounded-full bg-jade-500/15 px-2 py-0.5 text-[10px] font-semibold text-jade-300 hover:bg-jade-500/25 disabled:opacity-50"
+                                title="Tap to unmark"
+                              >
+                                <CheckCircle2 className="h-3 w-3" />
+                                Sent {timeAgo(sentEntry.sentAt)}
+                              </button>
+                            )}
+                          </div>
+                          <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/80">
+                            {personalize(msg.body)}
+                          </p>
+                          <div className="mt-2.5 flex flex-wrap justify-end gap-1.5">
+                            {/* "Mark sent" / "Unmark" action — explicit so
+                                the user controls when the log is written.
+                                Copy stays a separate concern; tapping
+                                Copy doesn't auto-mark to avoid false
+                                positives from re-reads. */}
+                            {isSent ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                leftIcon={<Undo2 className="h-3.5 w-3.5" />}
+                                onClick={() =>
+                                  toggleSent(stage.id, msg.id, false)
+                                }
+                                loading={isToggling}
+                                disabled={isToggling}
+                              >
+                                Unmark
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                leftIcon={
+                                  <CheckCircle2 className="h-3.5 w-3.5" />
+                                }
+                                onClick={() =>
+                                  toggleSent(stage.id, msg.id, true)
+                                }
+                                loading={isToggling}
+                                disabled={isToggling}
+                              >
+                                Mark sent
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant={copiedIdx === idx ? "outline" : "primary"}
+                              leftIcon={
+                                copiedIdx === idx ? (
+                                  <Check className="h-3.5 w-3.5" />
+                                ) : (
+                                  <Copy className="h-3.5 w-3.5" />
+                                )
+                              }
+                              onClick={() => copyVariant(msg.body, idx)}
+                            >
+                              {copiedIdx === idx ? "Copied" : "Copy"}
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 );
               }

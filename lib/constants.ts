@@ -483,3 +483,42 @@ export function resolveUserSharedBuildSlots(
   if (plan?.limits?.sharedBuilds !== undefined) return plan.limits.sharedBuilds;
   return getTemplateLockerSlots(planId);
 }
+
+/**
+ * How many follow-up pipelines each plan can create. Soft cap so the
+ * pipeline-switcher stays useful and prevents accidental duplicates
+ * from re-running the template picker.
+ *
+ * Sized for typical use: most recruiters live in 1-2 pipelines; power
+ * users (multiple offers, team builders) might want 3-5. The "team"
+ * tier gets headroom for sub-teams.
+ */
+export const PIPELINE_LIMITS: Record<string, number> = {
+  free: 0,
+  pro: 3,
+  team: 10,
+};
+
+/** Resolve a plan's pipeline limit, defaulting to Pro tier for custom plans. */
+export function getPipelineLimit(planId: PlanId): number {
+  return PIPELINE_LIMITS[planId] ?? PIPELINE_LIMITS.pro;
+}
+
+/**
+ * Resolve a user's effective pipeline limit. Same lookup priority as
+ * `resolveUserFunnelLimit`: per-user override → per-plan setting →
+ * legacy hardcoded default. Admin can grant a single user extra
+ * pipelines without touching their plan.
+ */
+export function resolveUserPipelineLimit(
+  user: { plan?: PlanId; limitOverrides?: { pipelines?: number } } | null | undefined,
+  plans: Plan[] | null | undefined,
+): number {
+  if (user?.limitOverrides?.pipelines !== undefined) {
+    return user.limitOverrides.pipelines;
+  }
+  const planId = user?.plan ?? "free";
+  const plan = plans?.find((p) => p.id === planId);
+  if (plan?.limits?.pipelines !== undefined) return plan.limits.pipelines;
+  return getPipelineLimit(planId);
+}

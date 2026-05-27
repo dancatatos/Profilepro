@@ -65,6 +65,7 @@ import {
   PIPELINE_TEMPLATES,
   pipelineFromTemplate,
 } from "@/lib/pipelines";
+import { resolveUserPipelineLimit } from "@/lib/constants";
 import { cn, timeAgo } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 import type { Lead, Pipeline, PipelineStage } from "@/types";
@@ -87,8 +88,12 @@ export default function PipelinesPageWrapper() {
 
 function PipelinesPage() {
   const { account, loading: authLoading } = useAuth();
-  const { hasFeature } = usePlanAccess();
+  const { hasFeature, plans } = usePlanAccess();
   const isPaid = hasFeature("follow_up_pipeline");
+  /* Plan-driven pipeline cap: per-user override → per-plan setting →
+     legacy default. Defaults are pro=3, team=10; admin can override
+     either per user or per plan in /admin/subscriptions. */
+  const pipelineLimit = resolveUserPipelineLimit(account, plans);
   const search = useSearchParams();
   /* When the URL is /pipelines?clone=PIPE-XXX, auto-open the clone
      modal pre-filled with the code. Used for shareable links. */
@@ -182,6 +187,7 @@ function PipelinesPage() {
   }
 
   const active = pipelines.find((p) => p.id === activeId) ?? null;
+  const atPipelineLimit = pipelines.length >= pipelineLimit;
 
   /* ── Empty state: no pipelines yet ── */
   if (!loading && pipelines.length === 0) {
@@ -231,8 +237,8 @@ function PipelinesPage() {
           title="Follow-Up"
           subtitle={
             active
-              ? `${active.name} · ${active.stages.length} stages`
-              : "Your pipelines"
+              ? `${active.name} · ${active.stages.length} stages · ${pipelines.length}/${pipelineLimit} pipelines`
+              : `Your pipelines · ${pipelines.length}/${pipelineLimit}`
           }
         />
         <div className="flex shrink-0 flex-wrap gap-2">
@@ -254,16 +260,39 @@ function PipelinesPage() {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => setPickerOpen(true)}
+            onClick={() => {
+              if (atPipelineLimit) {
+                toast.error(
+                  `Your plan allows ${pipelineLimit} pipeline${pipelineLimit === 1 ? "" : "s"}. Delete one or upgrade to add more.`,
+                );
+                return;
+              }
+              setPickerOpen(true);
+            }}
             leftIcon={<Plus className="h-3.5 w-3.5" />}
+            disabled={atPipelineLimit}
+            title={
+              atPipelineLimit
+                ? `You're at your ${pipelineLimit}-pipeline cap.`
+                : undefined
+            }
           >
             New pipeline
           </Button>
           <Button
             size="sm"
             variant="outline"
-            onClick={() => setCloneOpen(true)}
+            onClick={() => {
+              if (atPipelineLimit) {
+                toast.error(
+                  `Your plan allows ${pipelineLimit} pipeline${pipelineLimit === 1 ? "" : "s"}. Delete one or upgrade to add more.`,
+                );
+                return;
+              }
+              setCloneOpen(true);
+            }}
             leftIcon={<Ticket className="h-3.5 w-3.5" />}
+            disabled={atPipelineLimit}
           >
             Use a code
           </Button>

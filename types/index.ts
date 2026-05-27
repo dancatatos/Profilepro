@@ -72,6 +72,8 @@ export interface UserLimitOverrides {
   funnels?: number;
   /** Override the shared-builds locker slot count. */
   sharedBuilds?: number;
+  /** Override the follow-up pipeline count limit. */
+  pipelines?: number;
 }
 
 /** Per-user subscription state — only present on paid plans. */
@@ -490,6 +492,27 @@ export interface Profile {
 
 /* ---------------- Leads ---------------- */
 
+/**
+ * Log entry for a follow-up template the user has marked as "sent" to a
+ * lead. Kept inline on the Lead doc as a flat list so reading the lead
+ * also tells you which messages they've received — no extra Firestore
+ * query needed for the "Sent" badge in the lead detail modal.
+ *
+ * Identity = `${stageId}:${messageId}` (composite key). A message
+ * appears at most once per lead; re-sending replaces the prior entry's
+ * timestamp so the user always sees the most recent send.
+ */
+export interface SentMessageLog {
+  /** Stage the message belongs to (so re-shuffling stages doesn't lose history). */
+  stageId: string;
+  /** ID of the FollowUpMessage that was sent. */
+  messageId: string;
+  /** Which language version was sent — for analytics + future per-lang sequencing. */
+  language: "english" | "taglish";
+  /** Epoch ms when the user marked it as sent. */
+  sentAt: number;
+}
+
 export interface Lead {
   id: string;
   profileId: string;
@@ -510,6 +533,12 @@ export interface Lead {
   nextTaskAt?: number;
   /** Free-text task note the user can add when scheduling next follow-up. */
   taskNotes?: string;
+  /**
+   * Per-message "sent" log so the user knows which template they've
+   * already pasted into Messenger for this lead. Surfaced as a green
+   * "Sent X ago" badge on each template card in the Lead Detail modal.
+   */
+  sentMessages?: SentMessageLog[];
 }
 
 /* ---------------- Follow-Up Pipeline ---------------- */
@@ -763,6 +792,12 @@ export interface PlanLimits {
   funnels?: number;
   /** Number of saved-build slots in the shared-build locker. */
   sharedBuilds?: number;
+  /**
+   * Maximum number of follow-up pipelines this plan can create. Soft cap
+   * to keep the pipeline-switcher useful and prevent accidental
+   * duplicates from the template picker. Unset = unlimited.
+   */
+  pipelines?: number;
 }
 
 export interface Plan {
