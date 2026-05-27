@@ -50,7 +50,10 @@ import { toast } from "@/store/uiStore";
 
 export function InstallButton() {
   const {
-    canInstall,
+    /* canInstall deliberately NOT destructured — every install button
+       is always tappable now. The browser's "is the prompt available"
+       check happens INSIDE promptInstall(); the user gets a clear
+       toast either way rather than a silently-hidden button. */
     isInstalled,
     inAppName,
     platform,
@@ -91,21 +94,21 @@ export function InstallButton() {
 
   /**
    * Try the native browser prompt — used as a SHORTCUT inside each
-   * instructions modal, not as the primary path anymore. Returns true
-   * if install completed so the modal can self-close.
+   * instructions modal, not as the primary path anymore.
    *
-   * The previous flow tried the native prompt FIRST and fell back to
-   * instructions when it failed — but on a lot of phones the prompt
-   * silently never fires (browser thinks it's already installed,
-   * Huawei builds without the API, etc.) and the user got stuck.
-   * Now we just show instructions immediately; if the native prompt
-   * happens to be available, the modal offers it as a one-tap option.
+   * IMPORTANT: This is now always attempted regardless of canInstall.
+   * The browser's "already installed" check is at the platform level
+   * and we can't bypass it from JavaScript — what we CAN do is always
+   * give the user something to tap and give crystal-clear guidance
+   * when the platform suppresses the prompt. Calling prompt() when
+   * no event is available is harmless (just resolves to "unavailable")
+   * — letting the user trigger it themselves removes any "stuck
+   * button" feeling.
    */
   const tryNativePrompt = async (): Promise<boolean> => {
-    if (!canInstall || promptFailed) return false;
     const outcome = await promptInstall();
     if (outcome === "accepted") {
-      toast.success("Credibly installed.");
+      toast.success("Credibly installed!");
       setOpenModal(null);
       return true;
     }
@@ -117,9 +120,15 @@ export function InstallButton() {
       toast.success("Preparing install — keep this page open.");
       return false;
     }
-    /* "unavailable" — remember so future taps don't loop. */
+    /* "unavailable" → Chrome refused. Most common cause is "app
+       is already installed on this phone" (Chrome won't fire the
+       prompt twice for the same device). Tell the user exactly
+       what's happening so they're not confused, and highlight the
+       reinstall path. */
     setPromptFailed(true);
-    toast.error("Native install isn't available — follow the steps below.");
+    toast.error(
+      "Chrome won't install — likely already on your phone. Long-press the existing Credibly icon → Uninstall, then try again.",
+    );
     return false;
   };
 
@@ -324,20 +333,24 @@ export function InstallButton() {
         description="Tap to try the native installer, or use Chrome's menu."
       >
         <div className="space-y-3 pb-3">
-          {/* Native install shortcut — only shown when Chrome has
-              actually fired the beforeinstallprompt event. The user
-              taps once and the OS dialog appears. When the prompt
-              isn't available the modal still shows the manual steps
-              below so they're never stuck. */}
-          {canInstall && !promptFailed && (
-            <Button
-              fullWidth
-              onClick={tryNativePrompt}
-              leftIcon={<Download className="h-4 w-4" />}
-            >
-              Tap to install (one-tap)
-            </Button>
-          )}
+          {/* ALWAYS-VISIBLE install button. We deliberately do NOT gate
+              this on canInstall — the user wants ONE button they can
+              tap that "just installs". Calling prompt() with no event
+              available is harmless (resolves to "unavailable") and the
+              toast tells them exactly what's wrong (most often: the
+              app is already on the phone). Removing the gate solves
+              the "I tap install but nothing happens / no button shows"
+              reports — there's now always something tappable. */}
+          <Button
+            fullWidth
+            onClick={tryNativePrompt}
+            disabled={promptFailed}
+            leftIcon={<Download className="h-4 w-4" />}
+          >
+            {promptFailed
+              ? "Already tried — use steps below"
+              : "Tap to install"}
+          </Button>
 
           <ol className="space-y-3 text-sm text-white/80">
             <StepRow n={1}>
@@ -395,19 +408,21 @@ export function InstallButton() {
         description="HUAWEI Browser doesn't show a native install button — use the 3-dot menu, or open in Edge."
       >
         <div className="space-y-3 pb-3">
-          {/* Tap-to-try install button — works on the small fraction
-              of HUAWEI Browser builds that actually fire the event.
-              When unavailable, users still have the manual 3-dot menu
-              steps below + the AppGallery Edge escape hatch. */}
-          {canInstall && !promptFailed && (
-            <Button
-              fullWidth
-              onClick={tryNativePrompt}
-              leftIcon={<Download className="h-4 w-4" />}
-            >
-              Try one-tap install
-            </Button>
-          )}
+          {/* Always-visible install button (same approach as Android +
+              desktop modals). The few HUAWEI builds that DO fire
+              beforeinstallprompt will install in one tap; the rest
+              will get the clear "Chrome refused" toast and use the
+              manual menu steps below. */}
+          <Button
+            fullWidth
+            onClick={tryNativePrompt}
+            disabled={promptFailed}
+            leftIcon={<Download className="h-4 w-4" />}
+          >
+            {promptFailed
+              ? "Already tried — use steps below"
+              : "Try one-tap install"}
+          </Button>
 
           <ol className="space-y-3 text-sm text-white/80">
             <StepRow n={1}>
@@ -533,16 +548,19 @@ export function InstallButton() {
         description="Most modern browsers let you install Credibly as a desktop app."
       >
         <div className="space-y-3 pb-3">
-          {/* Native install shortcut for desktop Chrome/Edge users. */}
-          {canInstall && !promptFailed && (
-            <Button
-              fullWidth
-              onClick={tryNativePrompt}
-              leftIcon={<Download className="h-4 w-4" />}
-            >
-              One-tap install
-            </Button>
-          )}
+          {/* Always-visible install button (same approach as Android
+              modal). Tapping triggers prompt() which either installs
+              or surfaces the "already installed / Chrome refused" toast. */}
+          <Button
+            fullWidth
+            onClick={tryNativePrompt}
+            disabled={promptFailed}
+            leftIcon={<Download className="h-4 w-4" />}
+          >
+            {promptFailed
+              ? "Already tried — use steps below"
+              : "Tap to install"}
+          </Button>
 
           <ol className="space-y-3 text-sm text-white/80">
             <StepRow n={1}>

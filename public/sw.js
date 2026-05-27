@@ -14,7 +14,7 @@
    requires PNG icons to enable install), so beforeinstallprompt
    never fired. v3 drops manifest from precache so it's always
    fetched fresh from the network. */
-const VERSION = "credibly-v3";
+const VERSION = "credibly-v4";
 const STATIC_CACHE = VERSION + "-static";
 const OFFLINE_URL = "/offline.html";
 /* Manifest deliberately NOT precached — it changes more often than
