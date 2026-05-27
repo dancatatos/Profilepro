@@ -37,17 +37,45 @@ interface ShareTarget {
   platform: SocialPlatform;
   label: string;
   color: string;
-  /** intent = open a real share dialog; copy = copy link to paste. */
-  mode: "intent" | "copy";
+  /**
+   * intent       — open a real share dialog (Facebook sharer, WhatsApp web…)
+   * copy-and-open — copy the link AND open the destination app's web inbox
+   *                 in a new tab. On mobile, opening messenger.com /
+   *                 instagram.com / tiktok.com auto-deep-links into the
+   *                 installed app via Universal Links / Android intents,
+   *                 so the user lands inside the real app, link already
+   *                 on their clipboard, one paste from done.
+   */
+  mode: "intent" | "copy-and-open";
+  /** Destination URL — used in copy-and-open mode. */
+  openUrl?: string;
 }
 
 const TARGETS: ShareTarget[] = [
   { platform: "facebook", label: "Facebook", color: "#1877F2", mode: "intent" },
   { platform: "whatsapp", label: "WhatsApp", color: "#25D366", mode: "intent" },
   { platform: "telegram", label: "Telegram", color: "#26A5E4", mode: "intent" },
-  { platform: "messenger", label: "Messenger", color: "#0084FF", mode: "copy" },
-  { platform: "instagram", label: "Instagram", color: "#E4405F", mode: "copy" },
-  { platform: "tiktok", label: "TikTok", color: "#ffffff", mode: "copy" },
+  {
+    platform: "messenger",
+    label: "Messenger",
+    color: "#0084FF",
+    mode: "copy-and-open",
+    openUrl: "https://www.messenger.com/",
+  },
+  {
+    platform: "instagram",
+    label: "Instagram",
+    color: "#E4405F",
+    mode: "copy-and-open",
+    openUrl: "https://www.instagram.com/direct/inbox/",
+  },
+  {
+    platform: "tiktok",
+    label: "TikTok",
+    color: "#ffffff",
+    mode: "copy-and-open",
+    openUrl: "https://www.tiktok.com/messages/",
+  },
 ];
 
 function intentUrl(
@@ -121,15 +149,32 @@ export function FunnelLinkModal({
     }
   };
 
-  const handleTarget = async (target: ShareTarget) => {
-    if (target.mode === "copy") {
-      const ok = await copyToClipboard(url);
-      if (ok) toast.success(`Link copied — paste it into ${target.label}`);
+  const handleTarget = (target: ShareTarget) => {
+    if (target.mode === "intent") {
+      const href = intentUrl(target.platform, url, shareText);
+      if (href)
+        window.open(href, "_blank", "noopener,noreferrer,width=600,height=540");
       return;
     }
-    const href = intentUrl(target.platform, url, shareText);
-    if (href)
-      window.open(href, "_blank", "noopener,noreferrer,width=600,height=540");
+
+    /* copy-and-open: open the destination FIRST (synchronously, in
+       the same click handler) so the browser doesn't block the popup.
+       On mobile, hitting messenger.com / instagram.com / tiktok.com
+       auto-deep-links into the installed app via Universal Links —
+       so this single code path opens the real app on phones and the
+       web inbox on desktop, no UA sniffing needed. */
+    if (target.openUrl) {
+      window.open(target.openUrl, "_blank", "noopener,noreferrer");
+    }
+    copyToClipboard(url).then((ok) => {
+      if (ok) {
+        toast.success(`Link copied — paste it into ${target.label}`);
+      } else {
+        toast.error(
+          `Couldn't copy — copy the link manually for ${target.label}.`,
+        );
+      }
+    });
   };
 
   return (
