@@ -496,7 +496,7 @@ function SortableStageRow({
                     <code className="rounded bg-white/[0.05] px-1 py-0.5 text-[10px] text-electric-300">
                       {"{phone}"}
                     </code>{" "}
-                    — they auto-fill from the lead's record on copy.
+                    — they auto-fill from the lead&apos;s record on copy.
                   </p>
                 </>
               )}
