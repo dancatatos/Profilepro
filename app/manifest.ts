@@ -14,18 +14,43 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: "#050507",
     theme_color: "#050507",
     categories: ["business", "productivity", "social"],
+    /* IMPORTANT — Chrome on Android REQUIRES at least one PNG icon of
+       192x192 AND one of 512x512 to mark the site as installable. SVG
+       icons satisfy iOS Safari but silently fail Chrome's install
+       criteria, which is why `beforeinstallprompt` was never firing
+       and "Install app" was missing from Chrome's 3-dot menu.
+       PNG icons listed FIRST so Chrome picks them; SVG kept as a
+       scalable any-size fallback for browsers that support it. */
     icons: [
+      {
+        src: "/icons/icon-192.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: "/icons/icon-512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: "/icons/icon-maskable-192.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "maskable",
+      },
+      {
+        src: "/icons/icon-maskable-512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
+      },
       {
         src: "/icons/icon.svg",
         sizes: "any",
         type: "image/svg+xml",
         purpose: "any",
-      },
-      {
-        src: "/icons/icon-maskable.svg",
-        sizes: "any",
-        type: "image/svg+xml",
-        purpose: "maskable",
       },
     ],
     shortcuts: [
