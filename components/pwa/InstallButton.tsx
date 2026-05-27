@@ -67,104 +67,71 @@ export function InstallButton() {
   const [promptFailed, setPromptFailed] = useState(false);
 
   /* Pending state lasts until the browser fires beforeinstallprompt OR
-     the user cancels. Add a 30s timeout so the spinner doesn't spin
-     forever on devices that will never fire the event. */
+     the user cancels. We aggressively timeout at 5s now (was 30s) so
+     users on phones where the event never fires aren't stuck staring
+     at a spinner — they get routed to the always-works manual steps
+     fast. */
   useEffect(() => {
     if (!installPending) return;
     const timeoutId = setTimeout(() => {
       cancelPending();
-      toast.error(
-        "Couldn't trigger the install prompt — please try the manual steps below.",
-      );
       setOpenModal(platform);
-    }, 30_000);
+    }, 5_000);
     return () => clearTimeout(timeoutId);
   }, [installPending, cancelPending, platform]);
 
-  /* Already installed → render a confirmation tile that stays visible
-     so the user knows the install actually took. */
-  if (isInstalled) {
-    return (
-      <Card className="flex items-center gap-3 p-4">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-jade-500/15">
-          <CheckCircle2 className="h-5 w-5 text-jade-300" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-white">
-            Credibly is installed
-          </p>
-          <p className="text-xs text-white/55">
-            You&apos;re using the installed app — enjoy the home-screen launch
-            experience.
-          </p>
-        </div>
-      </Card>
-    );
-  }
+  /* NOTE: We deliberately do NOT short-circuit when isInstalled is true.
+     The browser's "already installed" detection is unreliable — it can
+     report installed when the user has uninstalled and wants to redo it,
+     or when they're trying to install on a second device. Users
+     reported being locked out of the install button entirely on phones
+     where the detection misfires. We now always render the install
+     option and just show a small "currently installed" badge for
+     context. If they install twice, they can uninstall the duplicate. */
 
-  const onClickInstall = async () => {
-    /* Platforms with NO programmatic install path → straight to
-       instructions. These never fire beforeinstallprompt no matter
-       how long we wait, so we don't bother trying. */
-    if (
-      platform === "inapp" ||
-      platform === "ios" ||
-      platform === "ipados" ||
-      platform === "safari" ||
-      platform === "firefox"
-    ) {
-      setOpenModal(platform);
-      return;
-    }
-
-    /* HUAWEI Browser is the awkward middle case: most builds don't
-       fire beforeinstallprompt, but a small fraction do. We try the
-       native prompt FIRST when a deferred event was captured, and
-       only fall back to instructions when nothing's available. If
-       we previously confirmed it's unavailable on this device, we
-       skip the round-trip and go straight to the modal. */
-    if (platform === "huawei") {
-      if (canInstall) {
-        const outcome = await promptInstall();
-        if (outcome === "accepted") {
-          toast.success("Credibly installed.");
-          return;
-        }
-        if (outcome === "dismissed") {
-          toast.error("You can install anytime from this button.");
-          return;
-        }
-        /* queued / unavailable → fall through to instructions. */
-      }
-      setPromptFailed(true);
-      setOpenModal("huawei");
-      return;
-    }
-
-    /* If we've already learned the native prompt is unavailable on
-       this browser, skip straight to instructions. */
-    if (promptFailed) {
-      setOpenModal(platform);
-      return;
-    }
-
-    /* Android / desktop Chromium → try the native prompt. */
+  /**
+   * Try the native browser prompt — used as a SHORTCUT inside each
+   * instructions modal, not as the primary path anymore. Returns true
+   * if install completed so the modal can self-close.
+   *
+   * The previous flow tried the native prompt FIRST and fell back to
+   * instructions when it failed — but on a lot of phones the prompt
+   * silently never fires (browser thinks it's already installed,
+   * Huawei builds without the API, etc.) and the user got stuck.
+   * Now we just show instructions immediately; if the native prompt
+   * happens to be available, the modal offers it as a one-tap option.
+   */
+  const tryNativePrompt = async (): Promise<boolean> => {
+    if (!canInstall || promptFailed) return false;
     const outcome = await promptInstall();
     if (outcome === "accepted") {
       toast.success("Credibly installed.");
-      return;
+      setOpenModal(null);
+      return true;
     }
     if (outcome === "dismissed") {
-      toast.error("You can install anytime from this button.");
-      return;
+      toast.error("Install cancelled — you can try again anytime.");
+      return false;
     }
     if (outcome === "queued") {
-      /* Provider will auto-fire when ready. Spinner shows via installPending. */
       toast.success("Preparing install — keep this page open.");
-      return;
+      return false;
     }
-    /* "unavailable" — remember so we don't loop, then show steps. */
+    /* "unavailable" — remember so future taps don't loop. */
     setPromptFailed(true);
+    toast.error("Native install isn't available — follow the steps below.");
+    return false;
+  };
+
+  /**
+   * The main "Install" button handler. Always opens the instructions
+   * modal for the current platform — this is the new always-works
+   * default. We deliberately skip the native prompt attempt here even
+   * when it could succeed; users tap a button inside the modal to
+   * trigger it as an explicit shortcut. The previous "try native first
+   * then fall back" flow was the source of the install-stuck bugs.
+   */
+  const onClickInstall = () => {
     setOpenModal(platform);
   };
 
@@ -212,14 +179,11 @@ export function InstallButton() {
         ? Smartphone
         : Download;
 
-  const ctaLabel =
-    platform === "inapp"
-      ? "Show me how"
-      : platform === "ios" || platform === "ipados"
-        ? "How to install"
-        : platform === "huawei" || platform === "safari" || platform === "firefox"
-          ? "How to install"
-          : "Install";
+  /* Now that every tap opens the instructions modal first (which can
+     offer a native-install shortcut inside), the label is consistent
+     across platforms — "Install" everywhere except in-app browsers
+     which need a different verb because they CAN'T install at all. */
+  const ctaLabel = platform === "inapp" ? "Show me how" : "Install";
 
   return (
     <>
@@ -238,11 +202,25 @@ export function InstallButton() {
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-white">{title}</p>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <p className="text-sm font-semibold text-white">{title}</p>
+            {/* Soft indicator when the browser thinks it's already
+                installed — kept inline so the install button is still
+                available (some browsers misreport this; users may also
+                want to reinstall on a new device or after uninstalling). */}
+            {isInstalled && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-jade-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-jade-300">
+                <CheckCircle2 className="h-2.5 w-2.5" />
+                Already on this device
+              </span>
+            )}
+          </div>
           <p className="text-xs text-white/55">
             {installPending
               ? "Preparing install — interact with the page for a moment if it doesn't pop up."
-              : subtitleByPlatform[platform]}
+              : isInstalled
+                ? "Looking to reinstall? Long-press the existing icon on your home screen → Uninstall, then tap Install below."
+                : subtitleByPlatform[platform]}
           </p>
         </div>
         {installPending ? (
@@ -343,32 +321,64 @@ export function InstallButton() {
         open={openModal === "android"}
         onClose={() => setOpenModal(null)}
         title="Install on Android"
-        description="Use Chrome's menu to add Credibly to your home screen."
+        description="Tap to try the native installer, or use Chrome's menu."
       >
-        <ol className="space-y-3 pb-2 text-sm text-white/80">
-          <StepRow n={1}>
-            Make sure you&apos;re in <strong>Chrome</strong> (not Facebook,
-            Messenger or Instagram&apos;s in-app browser — those can&apos;t
-            install apps).
-          </StepRow>
-          <StepRow n={2}>
-            <span className="flex flex-wrap items-center gap-1.5">
-              Tap the
-              <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.06] px-1.5 py-0.5 text-xs text-white">
-                <MoreVertical className="h-3 w-3" />
+        <div className="space-y-3 pb-3">
+          {/* Native install shortcut — only shown when Chrome has
+              actually fired the beforeinstallprompt event. The user
+              taps once and the OS dialog appears. When the prompt
+              isn't available the modal still shows the manual steps
+              below so they're never stuck. */}
+          {canInstall && !promptFailed && (
+            <Button
+              fullWidth
+              onClick={tryNativePrompt}
+              leftIcon={<Download className="h-4 w-4" />}
+            >
+              Tap to install (one-tap)
+            </Button>
+          )}
+
+          <ol className="space-y-3 text-sm text-white/80">
+            <StepRow n={1}>
+              Make sure you&apos;re in <strong>Chrome</strong> (not Facebook,
+              Messenger or Instagram&apos;s in-app browser — those can&apos;t
+              install apps).
+            </StepRow>
+            <StepRow n={2}>
+              <span className="flex flex-wrap items-center gap-1.5">
+                Tap the
+                <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.06] px-1.5 py-0.5 text-xs text-white">
+                  <MoreVertical className="h-3 w-3" />
+                </span>
+                menu in the top-right corner.
               </span>
-              menu in the top-right corner.
-            </span>
-          </StepRow>
-          <StepRow n={3}>
-            Tap <strong>&ldquo;Install app&rdquo;</strong> (or sometimes
-            <strong> &ldquo;Add to Home screen&rdquo;</strong>).
-          </StepRow>
-          <StepRow n={4}>
-            Confirm <strong>Install</strong>. Credibly appears on your home
-            screen and launches in full-screen.
-          </StepRow>
-        </ol>
+            </StepRow>
+            <StepRow n={3}>
+              Tap <strong>&ldquo;Install app&rdquo;</strong> (or sometimes
+              <strong> &ldquo;Add to Home screen&rdquo;</strong>).
+            </StepRow>
+            <StepRow n={4}>
+              Confirm <strong>Install</strong>. Credibly appears on your home
+              screen and launches in full-screen.
+            </StepRow>
+          </ol>
+
+          {/* Reinstall tip — covers the case the user originally
+              raised: browser says "already installed" but they want
+              a fresh install. Spelled out explicitly so they don't
+              feel stuck. */}
+          <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3 text-xs text-white/65">
+            <p className="font-medium text-white">
+              Don&apos;t see &ldquo;Install app&rdquo;?
+            </p>
+            <p className="mt-1">
+              You may already have Credibly installed. To do a fresh install:
+              long-press the existing Credibly icon on your home screen →{" "}
+              <strong>Uninstall</strong>, then come back here and try again.
+            </p>
+          </div>
+        </div>
       </Modal>
 
       {/* HUAWEI Browser — Chromium fork that mostly doesn't fire the
@@ -386,30 +396,18 @@ export function InstallButton() {
       >
         <div className="space-y-3 pb-3">
           {/* Tap-to-try install button — works on the small fraction
-              of HUAWEI Browser builds that actually fire the event. */}
-          <Button
-            fullWidth
-            onClick={async () => {
-              const outcome = await promptInstall();
-              if (outcome === "accepted") {
-                toast.success("Credibly installed.");
-                setOpenModal(null);
-              } else if (outcome === "dismissed") {
-                toast.error("You can try again any time.");
-              } else if (outcome === "queued") {
-                toast.success(
-                  "Waiting for the browser — scroll/tap around for a few seconds.",
-                );
-              } else {
-                toast.error(
-                  "HUAWEI Browser blocked the install prompt — use the 3-dot menu below.",
-                );
-              }
-            }}
-            leftIcon={<Download className="h-4 w-4" />}
-          >
-            Try install anyway
-          </Button>
+              of HUAWEI Browser builds that actually fire the event.
+              When unavailable, users still have the manual 3-dot menu
+              steps below + the AppGallery Edge escape hatch. */}
+          {canInstall && !promptFailed && (
+            <Button
+              fullWidth
+              onClick={tryNativePrompt}
+              leftIcon={<Download className="h-4 w-4" />}
+            >
+              Try one-tap install
+            </Button>
+          )}
 
           <ol className="space-y-3 text-sm text-white/80">
             <StepRow n={1}>
@@ -534,29 +532,55 @@ export function InstallButton() {
         title="Install on desktop"
         description="Most modern browsers let you install Credibly as a desktop app."
       >
-        <ol className="space-y-3 pb-2 text-sm text-white/80">
-          <StepRow n={1}>
-            In <strong>Chrome</strong> or <strong>Edge</strong>, look for the
-            <span className="mx-1 inline-flex items-center gap-1 rounded-md bg-white/[0.06] px-1.5 py-0.5 text-xs text-white">
-              <Download className="h-3 w-3" />
-              install
-            </span>
-            icon at the right end of the address bar.
-          </StepRow>
-          <StepRow n={2}>
-            If you don&apos;t see it, open the browser menu (
-            <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.06] px-1.5 py-0.5 text-xs text-white">
-              <MoreVertical className="h-3 w-3" />
-            </span>
-            ) → look for <strong>&ldquo;Install Credibly&rdquo;</strong> or
-            <strong> &ldquo;Apps&rdquo; → &ldquo;Install this site as an
-            app&rdquo;</strong>.
-          </StepRow>
-          <StepRow n={3}>
-            Confirm <strong>Install</strong>. Credibly opens in its own
-            window like a native app and gets a shortcut on your desktop.
-          </StepRow>
-        </ol>
+        <div className="space-y-3 pb-3">
+          {/* Native install shortcut for desktop Chrome/Edge users. */}
+          {canInstall && !promptFailed && (
+            <Button
+              fullWidth
+              onClick={tryNativePrompt}
+              leftIcon={<Download className="h-4 w-4" />}
+            >
+              One-tap install
+            </Button>
+          )}
+
+          <ol className="space-y-3 text-sm text-white/80">
+            <StepRow n={1}>
+              In <strong>Chrome</strong> or <strong>Edge</strong>, look for the
+              <span className="mx-1 inline-flex items-center gap-1 rounded-md bg-white/[0.06] px-1.5 py-0.5 text-xs text-white">
+                <Download className="h-3 w-3" />
+                install
+              </span>
+              icon at the right end of the address bar.
+            </StepRow>
+            <StepRow n={2}>
+              If you don&apos;t see it, open the browser menu (
+              <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.06] px-1.5 py-0.5 text-xs text-white">
+                <MoreVertical className="h-3 w-3" />
+              </span>
+              ) → look for <strong>&ldquo;Install Credibly&rdquo;</strong> or
+              <strong> &ldquo;Apps&rdquo; → &ldquo;Install this site as an
+              app&rdquo;</strong>.
+            </StepRow>
+            <StepRow n={3}>
+              Confirm <strong>Install</strong>. Credibly opens in its own
+              window like a native app and gets a shortcut on your desktop.
+            </StepRow>
+          </ol>
+
+          {/* Reinstall tip — desktop equivalent of the mobile tip. */}
+          <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3 text-xs text-white/65">
+            <p className="font-medium text-white">
+              Don&apos;t see the install option?
+            </p>
+            <p className="mt-1">
+              Credibly may already be installed. In Chrome / Edge go to{" "}
+              <strong>chrome://apps</strong> (or{" "}
+              <strong>edge://apps</strong>), right-click Credibly →{" "}
+              <strong>Remove</strong>, then come back and install fresh.
+            </p>
+          </div>
+        </div>
       </Modal>
     </>
   );
