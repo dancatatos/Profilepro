@@ -37,6 +37,7 @@ import {
 import {
   getFunnelAnalytics,
   getFunnelById,
+  listPipelinesForUser,
   saveFunnel,
 } from "@/lib/firebase/firestore";
 import { createFunnelStep } from "@/lib/funnels";
@@ -48,6 +49,7 @@ import type {
   FunnelCta,
   FunnelStep,
   FunnelStepType,
+  Pipeline,
   ProfileSection,
 } from "@/types";
 
@@ -175,6 +177,25 @@ export default function FunnelBuilderPage() {
   useEffect(() => {
     loadAnalytics();
   }, [loadAnalytics]);
+
+  /* User's pipelines — needed for the "Lead destination" dropdown.
+     Lazy-loaded once per page visit; failures are silent (the dropdown
+     just shows "default pipeline" with no override option). */
+  const [pipelines, setPipelines] = useState<Pipeline[]>([]);
+  useEffect(() => {
+    if (!account) return;
+    let cancelled = false;
+    listPipelinesForUser(account.uid)
+      .then((list) => {
+        if (!cancelled) setPipelines(list);
+      })
+      .catch(() => {
+        /* no pipelines or no permission — silent fall-through */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [account]);
 
   const mutate = useCallback((fn: (f: Funnel) => Funnel) => {
     setFunnel((prev) => (prev ? { ...fn(prev), updatedAt: Date.now() } : prev));
@@ -510,6 +531,50 @@ export default function FunnelBuilderPage() {
               }
             />
           </div>
+
+          {/* Lead destination — which follow-up pipeline leads from this
+              funnel route into. Falls back to the user's default pipeline
+              when "Use my default" is selected. Only shown when the user
+              actually has pipelines set up — otherwise the dropdown would
+              be empty and confusing. */}
+          {pipelines.length > 0 && (
+            <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
+              <div className="mb-1.5 flex items-center justify-between gap-2">
+                <p className="text-sm font-medium text-white">Lead destination</p>
+                <Link
+                  href="/pipelines"
+                  className="text-[10px] text-electric-400 hover:text-electric-300"
+                >
+                  Open pipelines →
+                </Link>
+              </div>
+              <p className="mb-2 text-xs text-white/45">
+                Where new leads from this funnel will land. They start in
+                the first stage of the chosen pipeline.
+              </p>
+              <Select
+                value={funnel.pipelineId ?? ""}
+                onChange={(value) =>
+                  patchFunnel({ pipelineId: value || undefined })
+                }
+                options={[
+                  {
+                    value: "",
+                    label: (() => {
+                      const def = pipelines.find((p) => p.isDefault);
+                      return def
+                        ? `Use my default pipeline (${def.name})`
+                        : "Use my default pipeline";
+                    })(),
+                  },
+                  ...pipelines.map((p) => ({
+                    value: p.id,
+                    label: `${p.name}${p.isDefault ? " · default" : ""}`,
+                  })),
+                ]}
+              />
+            </div>
+          )}
         </div>
       </Card>
 

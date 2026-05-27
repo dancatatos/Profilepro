@@ -631,15 +631,56 @@ export async function listLeadsWithUpcomingTasks(
  * captured by an anonymous visitor who couldn't write the pipeline
  * fields themselves due to Firestore rules).
  *
+ * Routing precedence per orphan lead:
+ *   1. If the lead came from a funnel (`source` starts with "funnel:"),
+ *      and that funnel has its own `pipelineId` set, route there.
+ *   2. Else if the lead came from a profile section, and the profile has
+ *      a `pipelineId` set, route there.
+ *   3. Else fall back to the user's `isDefault` pipeline.
+ *   4. If no usable pipeline exists, leave the lead orphaned.
+ *
  * Returns the number of leads enrolled. Safe to call repeatedly —
  * already-enrolled leads are skipped.
  */
 export async function backfillOrphanLeads(ownerId: string): Promise<number> {
   if (!isFirebaseConfigured) return 0;
-  const pipelines = await listPipelinesForUser(ownerId);
+
+  /* Pre-load everything we need so the per-lead loop stays cheap and
+     doesn't re-fetch funnels / pipelines for every orphan. */
+  const [pipelines, funnels, profilesForOwner] = await Promise.all([
+    listPipelinesForUser(ownerId),
+    listFunnels(ownerId),
+    /* Profiles are needed to honor per-profile pipeline routing. */
+    (async () => {
+      const profSnap = await getDocs(
+        query(collection(db, COL.profiles), where("ownerId", "==", ownerId)),
+      );
+      return profSnap.docs.map((d) => ({ ...(d.data() as Profile), id: d.id }));
+    })(),
+  ]);
+  if (pipelines.length === 0) return 0;
   const def = pipelines.find((p) => p.isDefault);
-  if (!def || def.stages.length === 0) return 0;
-  const firstStage = [...def.stages].sort((a, b) => a.sortOrder - b.sortOrder)[0];
+
+  /* Build an O(1) lookup table: pipelineId → { pipeline, firstStage }. */
+  const enrollmentByPipelineId = new Map<
+    string,
+    { pipelineId: string; stageId: string; daysBeforeNextTask?: number }
+  >();
+  for (const p of pipelines) {
+    if (p.stages.length === 0) continue;
+    const first = [...p.stages].sort((a, b) => a.sortOrder - b.sortOrder)[0];
+    enrollmentByPipelineId.set(p.id, {
+      pipelineId: p.id,
+      stageId: first.id,
+      daysBeforeNextTask: first.daysBeforeNextTask,
+    });
+  }
+  const defaultEnrollment = def && enrollmentByPipelineId.get(def.id);
+
+  /* slug → funnel lookup for quick "funnel:{slug}" source resolution. */
+  const funnelBySlug = new Map(funnels.map((f) => [f.slug, f]));
+  /* profileId → profile lookup so we can honor profile-level routing. */
+  const profileById = new Map(profilesForOwner.map((p) => [p.id, p]));
 
   /* Fetch all leads owned by user. We need to skip ones already in a
      pipeline — Firestore can't "where field == null" reliably, so we
@@ -651,12 +692,32 @@ export async function backfillOrphanLeads(ownerId: string): Promise<number> {
   for (const docSnap of snap.docs) {
     const data = docSnap.data() as Lead;
     if (data.pipelineId) continue; // already enrolled
+
+    /* Resolve the routing target — funnel override → profile override
+       → user default. Each step falls through if its target pipeline
+       doesn't exist (e.g. owner deleted it after the funnel set it). */
+    let target = defaultEnrollment;
+    if (data.source?.startsWith("funnel:")) {
+      const slug = data.source.slice("funnel:".length);
+      const funnel = funnelBySlug.get(slug);
+      if (funnel?.pipelineId) {
+        target = enrollmentByPipelineId.get(funnel.pipelineId) ?? target;
+      }
+    } else if (data.profileId) {
+      const profile = profileById.get(data.profileId);
+      if (profile?.pipelineId) {
+        target = enrollmentByPipelineId.get(profile.pipelineId) ?? target;
+      }
+    }
+
+    if (!target) continue; // no pipeline anywhere — leave orphaned
+
     try {
       await moveLeadToStage(
         docSnap.id,
-        def.id,
-        firstStage.id,
-        firstStage.daysBeforeNextTask,
+        target.pipelineId,
+        target.stageId,
+        target.daysBeforeNextTask,
       );
       enrolled += 1;
     } catch {

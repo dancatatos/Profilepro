@@ -478,6 +478,12 @@ export interface Profile {
   clonedFrom?: string;
   /** AI audit scores, populated by the audit flow */
   audit?: ProfileAudit;
+  /**
+   * Optional override: which follow-up pipeline leads captured from
+   * this profile's lead-capture section route into. Falls back to the
+   * user's default pipeline when unset. Symmetric with `Funnel.pipelineId`.
+   */
+  pipelineId?: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -702,6 +708,14 @@ export interface Funnel {
   themeId: ThemeId;
   status: FunnelStatus;
   steps: FunnelStep[];
+  /**
+   * Optional override: which follow-up pipeline this funnel's leads
+   * route into. When unset, leads fall back to the user's default
+   * pipeline (the one marked `isDefault: true`). Lets owners run
+   * multiple funnels (e.g. "Free Training", "Insurance Quote") and
+   * have each one land in a separate, niche-appropriate pipeline.
+   */
+  pipelineId?: string;
   createdAt: number;
   updatedAt: number;
 }

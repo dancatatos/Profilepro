@@ -33,6 +33,7 @@ import {
   Star,
   Ticket,
   Trash2,
+  UserPlus,
 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -52,6 +53,7 @@ import {
   setDefaultPipeline,
   upsertPipeline,
 } from "@/lib/firebase/firestore";
+import { AddLeadModal } from "@/components/pipelines/AddLeadModal";
 import { LeadDetailModal } from "@/components/pipelines/LeadDetailModal";
 import { StageEditor } from "@/components/pipelines/StageEditor";
 import {
@@ -488,6 +490,8 @@ function PipelineBoard({
   const [stageEditorOpen, setStageEditorOpen] = useState(false);
   /* Share modal state. */
   const [shareOpen, setShareOpen] = useState(false);
+  /* "Add a lead manually" modal state — for DMs / business cards / etc. */
+  const [addLeadOpen, setAddLeadOpen] = useState(false);
 
   const loadLeads = useCallback(async () => {
     setLoading(true);
@@ -569,6 +573,14 @@ function PipelineBoard({
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
+          {/* Primary action — most-used button on this page sits first. */}
+          <Button
+            size="sm"
+            onClick={() => setAddLeadOpen(true)}
+            leftIcon={<UserPlus className="h-3.5 w-3.5" />}
+          >
+            Add lead
+          </Button>
           <Button
             size="sm"
             variant="outline"
@@ -662,6 +674,16 @@ function PipelineBoard({
         onClose={() => setShareOpen(false)}
         pipeline={pipeline}
         onCodeGenerated={onShareCodeGenerated}
+      />
+
+      <AddLeadModal
+        open={addLeadOpen}
+        onClose={() => setAddLeadOpen(false)}
+        ownerId={pipeline.ownerId}
+        /* Profile id == owner id in this app (single-profile per user). */
+        profileId={pipeline.ownerId}
+        pipeline={pipeline}
+        onAdded={(lead) => setLeads((prev) => [lead, ...prev])}
       />
     </div>
   );
