@@ -391,6 +391,30 @@ export function InstallButton() {
               <strong>Uninstall</strong>, then come back here and try again.
             </p>
           </div>
+
+          {/* Play Protect "unsafe app blocked" tip — happens when
+              installing via Samsung Internet or older browsers that
+              build WebAPKs with an outdated target SDK. The install
+              is safe (it's just the same site), Play Protect just
+              can't verify non-Chrome WebAPKs. The user almost always
+              misses the small "Install anyway" link above the "Got it"
+              button — call it out explicitly. */}
+          <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.05] p-3 text-xs text-white/65">
+            <p className="font-medium text-amber-200">
+              Saw &ldquo;Unsafe app blocked&rdquo; from Play Protect?
+            </p>
+            <p className="mt-1">
+              Tap the gray <strong>&ldquo;Install anyway&rdquo;</strong>{" "}
+              text <strong>above</strong> the &ldquo;Got it&rdquo; button —
+              it&apos;s a clickable link, not just a label. Credibly is
+              the same site you&apos;re already on; Play Protect just
+              can&apos;t verify PWAs built by Samsung Internet.
+            </p>
+            <p className="mt-1 text-amber-200/80">
+              <strong>Cleanest install:</strong> use Chrome instead of
+              Samsung Internet — no Play Protect warning, faster install.
+            </p>
+          </div>
         </div>
       </Modal>
 
