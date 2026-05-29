@@ -16,10 +16,17 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  ArrowDown,
+  ArrowUp,
+  Eye,
+  Film,
   GraduationCap,
   GripVertical,
   ImagePlus,
+  Link2,
   Loader2,
+  Lock,
+  Paperclip,
   Plus,
   RefreshCw,
   Save,
@@ -58,7 +65,14 @@ import {
 import { uploadImage } from "@/lib/firebase/storage";
 import { PLANS as DEFAULT_PLANS } from "@/lib/constants";
 import { cn, uid as makeId } from "@/lib/utils";
-import type { Plan, PlanId, UniversityTopic } from "@/types";
+import { normalizeVideoUrl } from "@/lib/video";
+import type {
+  Plan,
+  PlanId,
+  UniversityLesson,
+  UniversityResource,
+  UniversityTopic,
+} from "@/types";
 
 /** Build a brand-new blank topic with the next available sort order. */
 function blankTopic(maxSortOrder: number): UniversityTopic {
@@ -145,8 +159,12 @@ export default function AdminUniversityPage() {
       toast.error("Banner image is required.");
       return;
     }
-    if (!topic.buttonUrl.trim()) {
-      toast.error("Button URL is required.");
+    /* Either lessons OR a legacy button URL must be set — when both
+       are blank there's nothing to show the user. Lessons take
+       precedence at render time. */
+    const hasLessons = (topic.lessons?.length ?? 0) > 0;
+    if (!hasLessons && !topic.buttonUrl.trim()) {
+      toast.error("Add at least one lesson, or set a fallback button URL.");
       return;
     }
     setSavingId(topic.id);
@@ -516,20 +534,37 @@ function TopicEditor({
             hint="Topics are grouped by category on the user page."
           />
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Input
-              label="Button text"
-              value={topic.buttonText}
-              onChange={(e) => onChange({ buttonText: e.target.value })}
-              placeholder="Start Lessons"
-            />
-            <Input
-              label="Button URL"
-              value={topic.buttonUrl}
-              onChange={(e) => onChange({ buttonUrl: e.target.value })}
-              placeholder="https://www.crediblyai.com/dan/welcome-funnel"
-            />
-          </div>
+          {/* Fallback button — used only when the topic has NO lessons.
+              For new topics, leave both blank and add lessons below. */}
+          <details className="rounded-xl border border-white/[0.07] bg-white/[0.02]">
+            <summary className="cursor-pointer px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-white/40 hover:text-white/65">
+              Legacy fallback button (used only if no lessons added)
+            </summary>
+            <div className="grid gap-3 px-3 pb-3 sm:grid-cols-2">
+              <Input
+                label="Button text"
+                value={topic.buttonText}
+                onChange={(e) => onChange({ buttonText: e.target.value })}
+                placeholder="Start Lessons"
+              />
+              <Input
+                label="Button URL"
+                value={topic.buttonUrl}
+                onChange={(e) => onChange({ buttonUrl: e.target.value })}
+                placeholder="https://www.crediblyai.com/dan/welcome-funnel"
+              />
+            </div>
+          </details>
+
+          {/* Lessons editor — the heart of the in-app player UX. Each
+              lesson holds a video URL, body notes, optional downloads,
+              and a free-preview flag. Order is up/down buttons rather
+              than drag-and-drop to keep this nested editor simple (the
+              outer DnD is already drag-heavy). */}
+          <LessonsEditor
+            lessons={topic.lessons ?? []}
+            onChange={(next) => onChange({ lessons: next })}
+          />
 
           {/* Plan visibility */}
           <div>
@@ -588,6 +623,340 @@ function TopicEditor({
         </div>
       </div>
       </Card>
+    </div>
+  );
+}
+
+/* ── Lessons editor (one per topic) ─────────────────────────────── */
+
+/**
+ * Lessons live INLINE on the topic doc (no subcollection) — at the
+ * typical 5-10 lessons per topic this keeps the user-facing page to a
+ * single Firestore read for the entire course.
+ */
+function LessonsEditor({
+  lessons,
+  onChange,
+}: {
+  lessons: UniversityLesson[];
+  onChange: (next: UniversityLesson[]) => void;
+}) {
+  const addLesson = () => {
+    const maxSort = lessons.reduce(
+      (m, l) => (l.sortOrder > m ? l.sortOrder : m),
+      0,
+    );
+    const blank: UniversityLesson = {
+      id: makeId("lesson"),
+      title: "",
+      description: "",
+      videoUrl: "",
+      body: "",
+      durationMinutes: undefined,
+      resources: [],
+      /* First lesson defaults to free preview — it's the
+         conversion hook for everything else. Subsequent lessons
+         default to gated. */
+      freePreview: lessons.length === 0,
+      sortOrder: maxSort + 10,
+    };
+    onChange([...lessons, blank]);
+  };
+
+  const updateLesson = (idx: number, patch: Partial<UniversityLesson>) => {
+    onChange(lessons.map((l, i) => (i === idx ? { ...l, ...patch } : l)));
+  };
+
+  const removeLesson = (idx: number) => {
+    if (!confirm("Remove this lesson? This can't be undone.")) return;
+    onChange(lessons.filter((_, i) => i !== idx));
+  };
+
+  const moveLesson = (idx: number, direction: -1 | 1) => {
+    const target = idx + direction;
+    if (target < 0 || target >= lessons.length) return;
+    const next = [...lessons];
+    [next[idx], next[target]] = [next[target], next[idx]];
+    /* Re-stamp sortOrders to keep the saved order in sync with the UI. */
+    onChange(next.map((l, i) => ({ ...l, sortOrder: (i + 1) * 10 })));
+  };
+
+  return (
+    <div className="rounded-xl border border-electric-500/15 bg-electric-500/[0.03] p-3">
+      <div className="mb-3 flex items-center justify-between">
+        <label className="flex items-center gap-1.5 text-xs font-semibold text-white">
+          <Film className="h-3.5 w-3.5 text-electric-300" />
+          Lessons
+          {lessons.length > 0 && (
+            <span className="rounded-full bg-electric-500/15 px-1.5 text-[10px] text-electric-300">
+              {lessons.length}
+            </span>
+          )}
+        </label>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={addLesson}
+          leftIcon={<Plus className="h-3 w-3" />}
+        >
+          Add lesson
+        </Button>
+      </div>
+
+      {lessons.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-white/10 py-5 text-center">
+          <p className="text-xs text-white/45">
+            No lessons yet. Add one to enable the in-app player.
+          </p>
+          <p className="mt-1 text-[10px] text-white/30">
+            Or leave empty and rely on the legacy button URL above.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {lessons.map((lesson, idx) => (
+            <LessonRow
+              key={lesson.id}
+              lesson={lesson}
+              index={idx}
+              total={lessons.length}
+              onChange={(patch) => updateLesson(idx, patch)}
+              onRemove={() => removeLesson(idx)}
+              onMoveUp={() => moveLesson(idx, -1)}
+              onMoveDown={() => moveLesson(idx, 1)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Single lesson row ──────────────────────────────────────────── */
+
+function LessonRow({
+  lesson,
+  index,
+  total,
+  onChange,
+  onRemove,
+  onMoveUp,
+  onMoveDown,
+}: {
+  lesson: UniversityLesson;
+  index: number;
+  total: number;
+  onChange: (patch: Partial<UniversityLesson>) => void;
+  onRemove: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+}) {
+  /* Live preview of the video URL — if parse fails, hint to the admin
+     so they can fix typos before the user sees a blank player. */
+  const parsed = lesson.videoUrl ? normalizeVideoUrl(lesson.videoUrl) : null;
+  const videoStatus = lesson.videoUrl
+    ? parsed
+      ? `${parsed.provider.toUpperCase()} embed ready`
+      : "URL not recognised — paste a YouTube, Adilo, Vimeo or .mp4 link"
+    : "No video yet";
+
+  const addResource = () => {
+    const next: UniversityResource = {
+      id: makeId("res"),
+      label: "",
+      url: "",
+    };
+    onChange({ resources: [...(lesson.resources ?? []), next] });
+  };
+
+  const updateResource = (
+    rIdx: number,
+    patch: Partial<UniversityResource>,
+  ) => {
+    onChange({
+      resources: (lesson.resources ?? []).map((r, i) =>
+        i === rIdx ? { ...r, ...patch } : r,
+      ),
+    });
+  };
+
+  const removeResource = (rIdx: number) => {
+    onChange({
+      resources: (lesson.resources ?? []).filter((_, i) => i !== rIdx),
+    });
+  };
+
+  return (
+    <div className="rounded-lg border border-white/[0.07] bg-white/[0.02] p-3">
+      {/* Header row — index, title, reorder + delete */}
+      <div className="mb-2 flex items-center gap-2">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/[0.06] text-[11px] font-semibold text-white/55">
+          {index + 1}
+        </span>
+        <input
+          value={lesson.title}
+          onChange={(e) => onChange({ title: e.target.value })}
+          placeholder="Lesson title — e.g. Intro: Mindset reset"
+          className="h-8 flex-1 rounded border border-white/[0.07] bg-white/[0.03] px-2 text-xs text-white outline-none focus:border-electric-500/40"
+        />
+        <button
+          type="button"
+          onClick={onMoveUp}
+          disabled={index === 0}
+          aria-label="Move up"
+          className="rounded p-1 text-white/30 hover:text-white/65 disabled:opacity-25"
+        >
+          <ArrowUp className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={onMoveDown}
+          disabled={index === total - 1}
+          aria-label="Move down"
+          className="rounded p-1 text-white/30 hover:text-white/65 disabled:opacity-25"
+        >
+          <ArrowDown className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={onRemove}
+          aria-label="Remove lesson"
+          className="rounded p-1 text-white/25 transition-colors hover:bg-red-500/10 hover:text-red-400"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      {/* Video URL */}
+      <div className="mb-2">
+        <label className="mb-1 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-white/40">
+          <Film className="h-3 w-3" />
+          Video URL (YouTube, Adilo, Vimeo, or .mp4)
+        </label>
+        <input
+          value={lesson.videoUrl ?? ""}
+          onChange={(e) => onChange({ videoUrl: e.target.value })}
+          placeholder="https://youtu.be/… or https://adilo.bigcommand.com/watch/…"
+          className="h-8 w-full rounded border border-white/[0.07] bg-white/[0.03] px-2 text-xs text-white outline-none focus:border-electric-500/40"
+        />
+        <p
+          className={cn(
+            "mt-1 text-[10px]",
+            parsed
+              ? "text-jade-300"
+              : lesson.videoUrl
+                ? "text-amber-300"
+                : "text-white/30",
+          )}
+        >
+          {videoStatus}
+        </p>
+      </div>
+
+      {/* Description (1-liner shown next to title in player) + duration */}
+      <div className="mb-2 grid gap-2 sm:grid-cols-[1fr_120px]">
+        <input
+          value={lesson.description ?? ""}
+          onChange={(e) => onChange({ description: e.target.value })}
+          placeholder="One-line description (optional)"
+          className="h-8 w-full rounded border border-white/[0.07] bg-white/[0.03] px-2 text-xs text-white outline-none focus:border-electric-500/40"
+        />
+        <input
+          type="number"
+          min={0}
+          value={lesson.durationMinutes ?? ""}
+          onChange={(e) =>
+            onChange({
+              durationMinutes: e.target.value
+                ? Number(e.target.value)
+                : undefined,
+            })
+          }
+          placeholder="Duration (min)"
+          className="h-8 w-full rounded border border-white/[0.07] bg-white/[0.03] px-2 text-xs text-white outline-none focus:border-electric-500/40"
+        />
+      </div>
+
+      {/* Body / notes */}
+      <div className="mb-2">
+        <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/40">
+          Lesson notes (shown below the video)
+        </label>
+        <textarea
+          value={lesson.body ?? ""}
+          onChange={(e) => onChange({ body: e.target.value })}
+          placeholder="Key takeaways, action steps, anything you want learners to read…"
+          rows={4}
+          className="w-full resize-none rounded border border-white/[0.07] bg-white/[0.03] p-2 text-xs leading-relaxed text-white outline-none placeholder:text-white/25 focus:border-electric-500/40"
+        />
+      </div>
+
+      {/* Free preview toggle */}
+      <label className="mb-2 flex items-center gap-2 text-[11px] text-white/65">
+        <input
+          type="checkbox"
+          checked={lesson.freePreview}
+          onChange={(e) => onChange({ freePreview: e.target.checked })}
+          className="h-3.5 w-3.5 cursor-pointer rounded border-white/20 bg-white/[0.04] accent-electric-500"
+        />
+        {lesson.freePreview ? (
+          <span className="flex items-center gap-1 text-jade-300">
+            <Eye className="h-3 w-3" />
+            Free preview — anyone can watch
+          </span>
+        ) : (
+          <span className="flex items-center gap-1 text-white/55">
+            <Lock className="h-3 w-3" />
+            Locked — only plans listed on this topic can watch
+          </span>
+        )}
+      </label>
+
+      {/* Downloads */}
+      <details className="rounded border border-white/[0.05] bg-white/[0.02]">
+        <summary className="cursor-pointer px-2 py-1.5 text-[10px] font-medium uppercase tracking-wider text-white/40 hover:text-white/65">
+          <Paperclip className="mr-1 inline h-3 w-3" />
+          Downloads ({(lesson.resources ?? []).length})
+        </summary>
+        <div className="space-y-1.5 p-2">
+          {(lesson.resources ?? []).map((r, rIdx) => (
+            <div key={r.id} className="flex items-center gap-1.5">
+              <input
+                value={r.label}
+                onChange={(e) =>
+                  updateResource(rIdx, { label: e.target.value })
+                }
+                placeholder="Script PDF"
+                className="h-7 w-32 rounded border border-white/[0.07] bg-white/[0.03] px-2 text-[11px] text-white outline-none focus:border-electric-500/40"
+              />
+              <input
+                value={r.url}
+                onChange={(e) =>
+                  updateResource(rIdx, { url: e.target.value })
+                }
+                placeholder="https://…"
+                className="h-7 flex-1 rounded border border-white/[0.07] bg-white/[0.03] px-2 text-[11px] text-white outline-none focus:border-electric-500/40"
+              />
+              <button
+                type="button"
+                onClick={() => removeResource(rIdx)}
+                aria-label="Remove download"
+                className="rounded p-1 text-white/25 hover:text-red-400"
+              >
+                <Trash2 className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={addResource}
+            className="flex items-center gap-1 rounded px-2 py-1 text-[10px] font-medium text-electric-300 hover:bg-electric-500/10"
+          >
+            <Link2 className="h-3 w-3" />
+            Add download link
+          </button>
+        </div>
+      </details>
     </div>
   );
 }

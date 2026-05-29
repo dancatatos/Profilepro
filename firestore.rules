@@ -123,6 +123,22 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ---- Credibly University — lesson completion log (per-user) ----
+    // Each doc id is `${userId}__${lessonId}`. Users can only touch
+    // their own progress; admins can read/list for support.
+    match /university_progress/{progressId} {
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow list: if isAdmin()
+        || (isSignedIn() && request.query.limit <= 500);
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn()
+        && resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn()
+        && resource.data.userId == request.auth.uid;
+    }
+
     // ---- Appointment slot markers (public, PII-free availability) ----
     match /bookingSlots/{slotId} {
       allow read, list: if true;

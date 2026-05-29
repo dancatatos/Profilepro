@@ -37,6 +37,7 @@ import type {
   SentMessageLog,
   SharedBuild,
   SharedFunnel,
+  UniversityProgress,
   UniversityTopic,
   UserSubscription,
 } from "@/types";
@@ -64,6 +65,8 @@ export const COL = {
   commissions: "commissions",
   /* Credibly University — training cards curated by admin. */
   universityTopics: "university_topics",
+  /* Credibly University — per-user lesson completion log. */
+  universityProgress: "university_progress",
   /* Follow-Up Pipelines — per-user pipeline definitions. */
   pipelines: "pipelines",
 } as const;
@@ -353,6 +356,64 @@ export async function upsertUniversityTopic(
 export async function deleteUniversityTopic(id: string): Promise<void> {
   if (!isFirebaseConfigured) return;
   await deleteDoc(doc(db, COL.universityTopics, id));
+}
+
+/* ---------------- Credibly University — lesson progress ---------------- */
+/* Per-user completion log. Doc id = `${userId}__${lessonId}` so each
+   user/lesson pair is unique and upserts are idempotent. Stored in a
+   flat collection so the user's entire progress fetches in one query. */
+
+/** Composite doc-id builder for the progress collection. */
+function progressDocId(userId: string, lessonId: string): string {
+  return `${userId}__${lessonId}`;
+}
+
+/** Mark a lesson as completed for this user. Idempotent. */
+export async function markLessonComplete(
+  userId: string,
+  topicId: string,
+  lessonId: string,
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  const id = progressDocId(userId, lessonId);
+  await setDoc(doc(db, COL.universityProgress, id), {
+    id,
+    userId,
+    topicId,
+    lessonId,
+    completedAt: Date.now(),
+  });
+}
+
+/** Remove a completion entry — used when the user unmarks a lesson. */
+export async function unmarkLessonComplete(
+  userId: string,
+  lessonId: string,
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await deleteDoc(
+    doc(db, COL.universityProgress, progressDocId(userId, lessonId)),
+  );
+}
+
+/**
+ * All progress rows for one user. Returned as a flat list — the
+ * caller usually converts it to a `Set<lessonId>` for O(1) lookups
+ * while rendering lesson rows.
+ */
+export async function listUserLessonProgress(
+  userId: string,
+): Promise<UniversityProgress[]> {
+  if (!isFirebaseConfigured) return [];
+  const snap = await getDocs(
+    query(
+      collection(db, COL.universityProgress),
+      where("userId", "==", userId),
+    ),
+  );
+  return snap.docs.map(
+    (d) => ({ ...(d.data() as UniversityProgress), id: d.id }),
+  );
 }
 
 /* ---------------- Follow-Up Pipelines ---------------- */

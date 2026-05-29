@@ -864,14 +864,66 @@ export interface Plan {
 /* ---------------- Credibly University ---------------- */
 
 /**
+ * Optional downloadable resource attached to a lesson — script PDF,
+ * slide deck, spreadsheet template, etc. Stored as a list of typed
+ * URLs so the player can render them as a uniform group.
+ */
+export interface UniversityResource {
+  id: string;
+  label: string;
+  /** Public URL — Firebase Storage, Google Drive share link, etc. */
+  url: string;
+}
+
+/**
+ * One lesson inside a University topic. Lessons are stored inline on
+ * the topic document (not a subcollection) — at the typical 5-10
+ * lessons per topic, embedding keeps the Firestore read count to 1
+ * for the entire course, which is the right trade-off for a
+ * read-heavy / write-rare resource like training content.
+ */
+export interface UniversityLesson {
+  id: string;
+  title: string;
+  /** 1-2 line summary shown next to the lesson title. */
+  description?: string;
+  /**
+   * Video URL — YouTube, Adilo, Vimeo, or direct MP4. The player
+   * normalizes common share-URL formats into the right embed shape
+   * at render time, so admins can paste whatever the host gave them.
+   */
+  videoUrl?: string;
+  /** Lesson notes / transcript — Markdown-ish, rendered as styled text. */
+  body?: string;
+  /** Optional, drives the "[12:48]" badge next to the lesson row. */
+  durationMinutes?: number;
+  /** Optional downloads — slide deck, script PDF, swipe file. */
+  resources?: UniversityResource[];
+  /**
+   * Free-preview flag. When true, this lesson is unlocked for every
+   * user regardless of plan — even if the parent topic is gated.
+   * The convention is "lesson 1 free, rest gated" to drive upgrades.
+   */
+  freePreview: boolean;
+  /** Lower numbers appear first in the lesson list. */
+  sortOrder: number;
+}
+
+/**
  * One topic card on the Credibly University page. Admins curate the
  * library via /admin/university; users browse via /university.
- * Each card links out to a funnel (or any URL) the admin specifies.
+ *
+ * Each topic now hosts a sequence of in-app lessons (video + notes +
+ * downloads). The previous "buttonText / buttonUrl" external-link
+ * pattern is kept for backwards-compatibility with existing rows
+ * that haven't been migrated yet — when both lessons and a button
+ * URL exist, lessons win and the button URL is ignored.
  *
  * Plan-gating: an empty `allowedPlans` array means the topic is
  * visible to every user. A non-empty array restricts visibility to
  * users on one of the listed plan ids — useful for "Pro-only" deep
- * dives or affiliate-only training material.
+ * dives or affiliate-only training material. The per-lesson
+ * `freePreview` flag overrides this for individual lessons.
  */
 export interface UniversityTopic {
   id: string;
@@ -883,10 +935,16 @@ export interface UniversityTopic {
   category: string;
   /** Lower numbers appear first within their category. */
   sortOrder: number;
-  /** CTA button label — defaults to "Start Lessons" via the admin form. */
+  /**
+   * Legacy CTA — when no lessons exist, the user-facing card falls
+   * back to this external link so existing topics keep working
+   * during the rollout. New topics created via the lesson editor
+   * leave these blank.
+   */
   buttonText: string;
-  /** Where the CTA points — typically a funnel URL. */
   buttonUrl: string;
+  /** In-app lessons. When present, the card opens the player instead of buttonUrl. */
+  lessons?: UniversityLesson[];
   /**
    * Plan ids this topic is visible to. Empty = visible to all plans
    * (the typical case for general training). Admins can scope deeper
@@ -897,6 +955,22 @@ export interface UniversityTopic {
   active: boolean;
   createdAt: number;
   updatedAt: number;
+}
+
+/**
+ * Per-user lesson completion log. One doc per (user, lesson) pair,
+ * stored in a flat collection so the user's full progress can be
+ * fetched in a single query.
+ *
+ * Doc id format: `${userId}__${lessonId}` — composite key prevents
+ * duplicate completions and lets us upsert with a deterministic ref.
+ */
+export interface UniversityProgress {
+  id: string;
+  userId: string;
+  topicId: string;
+  lessonId: string;
+  completedAt: number;
 }
 
 /* ---------------- Affiliate system ---------------- */
