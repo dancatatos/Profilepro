@@ -119,10 +119,33 @@ function PipelinesPage() {
       /* Back-fill any orphan leads into the default pipeline's first
          stage. This is the workaround for: anonymous visitors who
          capture a lead via the public profile can't write the
-         pipelineId field themselves (Firestore rules block it). Done
-         silently — only toasts when leads were actually enrolled. */
-      if (all.some((p) => p.isDefault)) {
+         pipelineId field themselves (Firestore rules block it).
+
+         Throttled to once per hour per device — the backfill reads
+         ALL of the user's leads + funnels + profiles to figure out
+         routing, so running it 30 times a day (every page visit)
+         is wasteful. localStorage key holds the last successful
+         backfill timestamp; if it's < 1h old we skip. The cost of
+         skipping is: a new lead captured in the last hour might not
+         appear instantly — they show up on the next visit after the
+         hour expires, OR if the user pulls-to-refresh manually. */
+      const BACKFILL_THROTTLE_MS = 60 * 60 * 1000; // 1 hour
+      const throttleKey = `credibly:lastBackfill:${account.uid}`;
+      const lastBackfillRaw =
+        typeof window !== "undefined"
+          ? window.localStorage.getItem(throttleKey)
+          : null;
+      const lastBackfillAt = lastBackfillRaw
+        ? Number(lastBackfillRaw)
+        : 0;
+      const shouldBackfill =
+        all.some((p) => p.isDefault) &&
+        Date.now() - lastBackfillAt > BACKFILL_THROTTLE_MS;
+      if (shouldBackfill) {
         const enrolled = await backfillOrphanLeads(account.uid).catch(() => 0);
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(throttleKey, String(Date.now()));
+        }
         if (enrolled > 0) {
           toast.success(
             `Enrolled ${enrolled} new lead${enrolled === 1 ? "" : "s"} into your pipeline.`,

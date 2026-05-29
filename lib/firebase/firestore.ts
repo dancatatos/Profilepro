@@ -696,18 +696,51 @@ export async function listLeadsWithUpcomingTasks(
 ): Promise<Lead[]> {
   if (!isFirebaseConfigured) return [];
   const horizon = Date.now() + daysAhead * 24 * 60 * 60 * 1000;
-  const snap = await getDocs(
-    query(collection(db, COL.leads), where("ownerId", "==", ownerId)),
-  );
-  const leads = snap.docs
-    .map((d) => ({ ...(d.data() as Lead), id: d.id }))
-    .filter((l) => {
-      if (!l.pipelineId || !l.nextTaskAt) return false;
-      return l.nextTaskAt <= horizon;
-    });
-  /* Soonest-due first (overdue items naturally sort to the top). */
-  leads.sort((a, b) => (a.nextTaskAt ?? 0) - (b.nextTaskAt ?? 0));
-  return leads;
+
+  /* Fast path: server-side filter via the (ownerId, nextTaskAt)
+     composite index. Returns ONLY leads whose nextTaskAt window is
+     open — at 2000 users this saves ~95% of reads vs the legacy
+     "fetch everything and filter in JS" approach. */
+  try {
+    const snap = await getDocs(
+      query(
+        collection(db, COL.leads),
+        where("ownerId", "==", ownerId),
+        where("nextTaskAt", "<=", horizon),
+        orderBy("nextTaskAt", "asc"),
+        fsLimit(200),
+      ),
+    );
+    return snap.docs
+      .map((d) => ({ ...(d.data() as Lead), id: d.id }))
+      /* Defensive client filter — if a row somehow lacks pipelineId
+         (shouldn't happen, but the data model allows it) we don't
+         want to show it on the daily task board. */
+      .filter((l) => !!l.pipelineId);
+  } catch (err) {
+    /* Fallback for the first deploy where the composite index hasn't
+       finished building yet. Firestore throws "failed-precondition"
+       when the index is missing — when that happens, fall back to
+       the legacy fetch-all-then-filter path so the page still works
+       while the admin runs `firebase deploy --only firestore:indexes`.
+       Removable once the index is confirmed live in production. */
+    const code = (err as { code?: string })?.code;
+    if (code !== "failed-precondition") throw err;
+    console.warn(
+      "[listLeadsWithUpcomingTasks] composite index missing — falling back to client-side filter. Deploy firestore.indexes.json to fix.",
+    );
+    const snap = await getDocs(
+      query(collection(db, COL.leads), where("ownerId", "==", ownerId)),
+    );
+    const leads = snap.docs
+      .map((d) => ({ ...(d.data() as Lead), id: d.id }))
+      .filter((l) => {
+        if (!l.pipelineId || !l.nextTaskAt) return false;
+        return l.nextTaskAt <= horizon;
+      });
+    leads.sort((a, b) => (a.nextTaskAt ?? 0) - (b.nextTaskAt ?? 0));
+    return leads;
+  }
 }
 
 /**
