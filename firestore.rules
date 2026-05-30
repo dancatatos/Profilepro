@@ -123,6 +123,17 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ---- Credibly University — topic catalogue (admin-managed) ----
+    // Any signed-in user can read the topic list (they need it to
+    // render /university). Only admins can create / update / delete
+    // — they're the curriculum owners. This was missing in the
+    // original rules deploy, which is why "Save course" was failing
+    // with permission-denied for the admin save path.
+    match /university_topics/{topicId} {
+      allow read, list: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
     // ---- Credibly University — lesson completion log (per-user) ----
     // Each doc id is `${userId}__${lessonId}`. Users can only touch
     // their own progress; admins can read/list for support.
