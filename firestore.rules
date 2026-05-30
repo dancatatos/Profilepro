@@ -123,6 +123,66 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ---- Affiliate accounts (uid-keyed, payout-editable by self) ----
+    // Doc id = affiliate's Firebase Auth uid. The affiliate can read
+    // and update their own row (e.g. payout details, display name).
+    // Admin creates/deletes rows; admin reads everyone for the
+    // affiliate management dashboard.
+    match /affiliates/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isOwner(uid) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ---- Affiliate invites (token-keyed) ----
+    // Doc id = the random invite token. Anyone with the token (i.e.
+    // anyone who clicked the invite link) can read it to render the
+    // accept-invite page — the token IS the secret. Admin creates &
+    // deletes. The invitee marks accepted via update once signed in.
+    match /affiliate_invites/{token} {
+      allow read: if true;
+      allow list: if isAdmin();
+      allow create, delete: if isAdmin();
+      allow update: if isSignedIn() || isAdmin();
+    }
+
+    // ---- Affiliate click logs (anonymous create, admin read) ----
+    // Created when a visitor lands on /r/<code>. PII-free — just code
+    // + timestamp + landing page. Admin reads aggregated stats; nobody
+    // updates or deletes (write-once audit trail).
+    match /affiliate_clicks/{clickId} {
+      allow create: if request.resource.data.keys().hasAll(['code']);
+      allow read, list: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // ---- Commission ledger (affiliate reads own, admin manages all) ----
+    // Created by the server-side admin upgrade flow when a referred
+    // user is upgraded or renewed. The owning affiliate can read their
+    // own rows for the earnings dashboard. Admins can also mark
+    // commissions paid / reversed via update.
+    match /commissions/{commissionId} {
+      allow read, list: if isAdmin()
+        || (isSignedIn() && resource.data.affiliateId == request.auth.uid);
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ---- Follow-Up Pipelines (owner-scoped + share-code lookup) ----
+    // The owner has full CRUD on their pipelines. Any signed-in user
+    // can list/read for the "clone by share code" path — security
+    // there comes from the random share code being unguessable
+    // (same pattern as sharedBuilds and sharedFunnels). Pipelines
+    // hold their stages inline so no subcollection rule needed.
+    match /pipelines/{pipelineId} {
+      allow read, list: if isSignedIn();
+      allow create, update: if isSignedIn()
+        && request.resource.data.ownerId == request.auth.uid;
+      allow delete: if isAdmin()
+        || (isSignedIn() && resource.data.ownerId == request.auth.uid);
+    }
+
     // ---- Credibly University — topic catalogue (admin-managed) ----
     // Any signed-in user can read the topic list (they need it to
     // render /university). Only admins can create / update / delete
