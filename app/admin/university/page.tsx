@@ -268,26 +268,35 @@ export default function AdminUniversityPage() {
   };
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-white">
+    <div className="space-y-4 p-4 sm:space-y-6 sm:p-6">
+      {/* Page header — title + actions stack on mobile so neither
+          gets squeezed off-screen at narrow widths. */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="font-display text-xl font-bold text-white sm:text-2xl">
             Credibly University
           </h1>
-          <p className="text-sm text-white/45">
-            Manage training topic cards shown to users on /university.
+          <p className="text-xs text-white/45 sm:text-sm">
+            Manage training topic cards shown on /university.
           </p>
         </div>
         <div className="flex gap-2">
           <Button
             variant="outline"
+            size="sm"
             onClick={load}
             loading={loading}
             leftIcon={<RefreshCw className="h-3.5 w-3.5" />}
+            className="flex-1 sm:flex-none"
           >
             Refresh
           </Button>
-          <Button onClick={addTopic} leftIcon={<Plus className="h-4 w-4" />}>
+          <Button
+            size="sm"
+            onClick={addTopic}
+            leftIcon={<Plus className="h-4 w-4" />}
+            className="flex-1 sm:flex-none"
+          >
             New topic
           </Button>
         </div>
@@ -499,8 +508,10 @@ function TopicEditor({
             </p>
           </button>
 
-          {/* Status pills — hidden on narrow mobile to keep the row tidy. */}
-          <div className="hidden items-center gap-1.5 sm:flex">
+          {/* Status pills — Active/Draft visible on tablet+, Unsaved
+              shown as a tiny dot on mobile so the admin still knows
+              there are unsaved changes without taking row space. */}
+          <div className="hidden items-center gap-1.5 md:flex">
             <Badge tone={topic.active ? "jade" : "gold"}>
               {topic.active ? "Active" : "Draft"}
             </Badge>
@@ -510,27 +521,46 @@ function TopicEditor({
               </span>
             )}
           </div>
+          {/* Mobile-only unsaved dot — sits next to Save button. */}
+          {dirty && (
+            <span
+              className="h-2 w-2 shrink-0 rounded-full bg-electric-400 md:hidden"
+              aria-label="Unsaved changes"
+              title="Unsaved changes"
+            />
+          )}
 
-          {/* Save — available even when collapsed so the admin can
-              tap-edit-tap-save without an extra expand step. Greys out
-              when there's nothing to save. */}
-          <Button
-            size="sm"
-            variant="outline"
+          {/* Save — icon-only on mobile, with text on tablet+. Always
+              visible so the admin can save without expanding the card. */}
+          <button
+            type="button"
             onClick={onSave}
-            loading={saving}
             disabled={saving || !dirty}
-            leftIcon={<Save className="h-3.5 w-3.5" />}
+            aria-label={dirty ? "Save changes" : "Saved"}
+            title={dirty ? "Save" : "Saved"}
+            className={cn(
+              "flex shrink-0 items-center gap-1.5 rounded-md border px-2 py-1.5 text-[11px] font-semibold transition-colors disabled:opacity-40 sm:px-2.5",
+              dirty
+                ? "border-electric-500/40 bg-electric-500/15 text-electric-200 hover:bg-electric-500/25"
+                : "border-white/[0.07] bg-white/[0.03] text-white/40",
+            )}
           >
-            {dirty ? "Save" : "Saved"}
-          </Button>
+            {saving ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Save className="h-3.5 w-3.5" />
+            )}
+            <span className="hidden sm:inline">
+              {dirty ? "Save" : "Saved"}
+            </span>
+          </button>
 
           {/* Expand toggle */}
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
             aria-label={expanded ? "Collapse" : "Expand"}
-            className="rounded-md p-1.5 text-white/40 transition-colors hover:bg-white/[0.05] hover:text-white"
+            className="shrink-0 rounded-md p-1.5 text-white/40 transition-colors hover:bg-white/[0.05] hover:text-white"
           >
             {expanded ? (
               <ChevronUp className="h-4 w-4" />
@@ -546,7 +576,7 @@ function TopicEditor({
             onClick={onDelete}
             disabled={saving}
             aria-label="Delete topic"
-            className="rounded-md p-1.5 text-white/30 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
+            className="shrink-0 rounded-md p-1.5 text-white/30 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -554,8 +584,10 @@ function TopicEditor({
 
         {/* ── Expanded editor body — only rendered when open ── */}
         {expanded && (
-          <div className="grid gap-5 p-5 lg:grid-cols-[280px,1fr]">
-        {/* Banner uploader */}
+          <div className="grid gap-4 p-3 sm:gap-5 sm:p-5 lg:grid-cols-[260px,1fr]">
+        {/* Banner uploader — constrained on mobile so a wide banner
+            doesn't eat half the screen. Desktop keeps the full
+            260px column. */}
         <div>
           <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-white/40">
             Banner
@@ -563,7 +595,7 @@ function TopicEditor({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-white/[0.03] transition-colors hover:border-electric-500/40"
+            className="relative mx-auto flex aspect-video w-full max-w-[260px] items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-white/[0.03] transition-colors hover:border-electric-500/40 lg:max-w-none"
           >
             {topic.bannerUrl ? (
               <img
@@ -1009,33 +1041,40 @@ function LessonRow({
           <Paperclip className="mr-1 inline h-3 w-3" />
           Downloads ({(lesson.resources ?? []).length})
         </summary>
-        <div className="space-y-1.5 p-2">
+        <div className="space-y-2 p-2">
           {(lesson.resources ?? []).map((r, rIdx) => (
-            <div key={r.id} className="flex items-center gap-1.5">
-              <input
-                value={r.label}
-                onChange={(e) =>
-                  updateResource(rIdx, { label: e.target.value })
-                }
-                placeholder="Script PDF"
-                className="h-7 w-32 rounded border border-white/[0.07] bg-white/[0.03] px-2 text-[11px] text-white outline-none focus:border-electric-500/40"
-              />
+            /* Stack label-and-URL on mobile so the URL field doesn't
+               collapse to a 150px sliver. Side-by-side on sm+. */
+            <div
+              key={r.id}
+              className="flex flex-col gap-1.5 rounded border border-white/[0.05] bg-white/[0.02] p-1.5 sm:flex-row sm:items-center sm:border-transparent sm:bg-transparent sm:p-0"
+            >
+              <div className="flex items-center gap-1.5 sm:contents">
+                <input
+                  value={r.label}
+                  onChange={(e) =>
+                    updateResource(rIdx, { label: e.target.value })
+                  }
+                  placeholder="Script PDF"
+                  className="h-7 flex-1 rounded border border-white/[0.07] bg-white/[0.03] px-2 text-[11px] text-white outline-none focus:border-electric-500/40 sm:w-32 sm:flex-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeResource(rIdx)}
+                  aria-label="Remove download"
+                  className="rounded p-1 text-white/25 hover:text-red-400 sm:order-last"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </div>
               <input
                 value={r.url}
                 onChange={(e) =>
                   updateResource(rIdx, { url: e.target.value })
                 }
                 placeholder="https://…"
-                className="h-7 flex-1 rounded border border-white/[0.07] bg-white/[0.03] px-2 text-[11px] text-white outline-none focus:border-electric-500/40"
+                className="h-7 w-full rounded border border-white/[0.07] bg-white/[0.03] px-2 text-[11px] text-white outline-none focus:border-electric-500/40 sm:flex-1"
               />
-              <button
-                type="button"
-                onClick={() => removeResource(rIdx)}
-                aria-label="Remove download"
-                className="rounded p-1 text-white/25 hover:text-red-400"
-              >
-                <Trash2 className="h-3 w-3" />
-              </button>
             </div>
           ))}
           <button
