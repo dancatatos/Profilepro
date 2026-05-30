@@ -18,6 +18,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowDown,
   ArrowUp,
+  ChevronDown,
+  ChevronUp,
   Eye,
   Film,
   GraduationCap,
@@ -361,9 +363,19 @@ function TopicEditor({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
-  /* Make the whole card draggable, but only the GripVertical icon is
-     the listener target — clicks elsewhere (text inputs, the banner
-     button, plan pills) work normally. */
+  /* Topic cards are COLLAPSED by default so the admin can see 6-8
+     topics at a glance instead of scrolling through one huge editor
+     per topic. Newly-created topics (no title yet) auto-expand so
+     the admin can fill them in immediately — otherwise an empty
+     card with just "Untitled" would be confusing. */
+  const [expanded, setExpanded] = useState(() => !topic.title.trim());
+
+  /* When a fresh blank topic gets typed into, keep it expanded — but
+     don't force-collapse a card the admin manually opened either. */
+
+  /* Drag listener target is now ONLY the grip icon, not the whole
+     header strip — so the other buttons (expand, save, delete) in
+     the compact header are clickable. */
   const {
     attributes,
     listeners,
@@ -379,6 +391,8 @@ function TopicEditor({
     opacity: isDragging ? 0.6 : 1,
     zIndex: isDragging ? 10 : "auto",
   };
+
+  const lessonCount = topic.lessons?.length ?? 0;
 
   const onBannerFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -411,52 +425,136 @@ function TopicEditor({
     <div ref={setNodeRef} style={style}>
       <Card
         className={cn(
-          "p-5",
+          /* No vertical padding on the Card itself anymore — the
+             compact header brings its own padding so the closed
+             state stays as short as physically possible. */
+          "overflow-hidden p-0",
           topic.active
             ? "border border-white/[0.06]"
             : "border border-gold-400/30 bg-gold-400/[0.02]",
           isDragging && "ring-2 ring-electric-500/50",
         )}
       >
-        {/* Drag handle row — full-width strip across the top with the
-            grip icon, sort-order chip, and badges. The grip + chip area
-            is the drag listener target. */}
+        {/* ── Compact header row — ALWAYS visible ──
+            One-line summary of the topic so the admin can scan a list
+            of 6-8 topics without scrolling. Banner thumbnail + title +
+            lesson count + status badges + Save + expand + delete all
+            fit on a single row at desktop width. Tap anywhere in the
+            non-control area (title + thumb) to expand/collapse. */}
         <div
-          {...attributes}
-          {...listeners}
-          className="-mx-5 -mt-5 mb-4 flex cursor-grab items-center gap-2 rounded-t-2xl border-b border-white/[0.06] bg-white/[0.02] px-4 py-2 active:cursor-grabbing"
-          aria-label="Drag to reorder"
-        >
-          <GripVertical className="h-4 w-4 shrink-0 text-white/35" />
-          <span className="rounded-md bg-white/[0.06] px-2 py-0.5 font-mono text-[10px] text-white/55">
-            #{topic.sortOrder}
-          </span>
-          <Badge tone={topic.active ? "jade" : "gold"}>
-            {topic.active ? "Active" : "Draft"}
-          </Badge>
-          {dirty && (
-            <span className="rounded-md bg-electric-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-electric-300">
-              Unsaved
-            </span>
+          className={cn(
+            "flex items-center gap-2 border-b border-white/[0.06] bg-white/[0.02] px-3 py-2",
+            !expanded && "border-b-transparent",
           )}
-          <span className="ml-auto hidden text-[10px] text-white/35 sm:inline">
-            Drag to reorder
-          </span>
-          {/* Delete button — onPointerDown stops the drag listener from
-              treating this as a drag start, so the click registers. */}
+        >
+          {/* Drag handle — listener target is just this button, so the
+              other controls stay clickable. */}
           <button
             type="button"
-            onPointerDown={(e) => e.stopPropagation()}
+            {...attributes}
+            {...listeners}
+            aria-label="Drag to reorder"
+            className="cursor-grab rounded-md p-1 text-white/30 hover:text-white/65 active:cursor-grabbing"
+          >
+            <GripVertical className="h-4 w-4" />
+          </button>
+
+          {/* Banner thumbnail — small enough to scan, big enough to
+              recognize at a glance. Click to expand. */}
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="flex h-9 w-16 shrink-0 items-center justify-center overflow-hidden rounded border border-white/10 bg-white/[0.04]"
+            aria-label={expanded ? "Collapse topic" : "Expand topic"}
+          >
+            {topic.bannerUrl ? (
+              <img
+                src={topic.bannerUrl}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <ImagePlus className="h-3.5 w-3.5 text-white/30" />
+            )}
+          </button>
+
+          {/* Title + meta — clickable area to expand. Truncates so long
+              titles don't push the controls off-row. */}
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="min-w-0 flex-1 text-left"
+          >
+            <p
+              className={cn(
+                "truncate text-sm font-semibold",
+                topic.title ? "text-white" : "italic text-white/35",
+              )}
+            >
+              {topic.title || "Untitled topic"}
+            </p>
+            <p className="truncate text-[10px] text-white/40">
+              {topic.category || "Uncategorised"} · #{topic.sortOrder}
+              {lessonCount > 0 && ` · ${lessonCount} lesson${lessonCount === 1 ? "" : "s"}`}
+            </p>
+          </button>
+
+          {/* Status pills — hidden on narrow mobile to keep the row tidy. */}
+          <div className="hidden items-center gap-1.5 sm:flex">
+            <Badge tone={topic.active ? "jade" : "gold"}>
+              {topic.active ? "Active" : "Draft"}
+            </Badge>
+            {dirty && (
+              <span className="rounded-md bg-electric-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-electric-300">
+                Unsaved
+              </span>
+            )}
+          </div>
+
+          {/* Save — available even when collapsed so the admin can
+              tap-edit-tap-save without an extra expand step. Greys out
+              when there's nothing to save. */}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onSave}
+            loading={saving}
+            disabled={saving || !dirty}
+            leftIcon={<Save className="h-3.5 w-3.5" />}
+          >
+            {dirty ? "Save" : "Saved"}
+          </Button>
+
+          {/* Expand toggle */}
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            aria-label={expanded ? "Collapse" : "Expand"}
+            className="rounded-md p-1.5 text-white/40 transition-colors hover:bg-white/[0.05] hover:text-white"
+          >
+            {expanded ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </button>
+
+          {/* Delete — always visible because it's destructive enough
+              that we want it discoverable, not buried under a chevron. */}
+          <button
+            type="button"
             onClick={onDelete}
             disabled={saving}
             aria-label="Delete topic"
-            className="rounded-md p-1 text-white/30 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
+            className="rounded-md p-1.5 text-white/30 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
           >
             <Trash2 className="h-4 w-4" />
           </button>
         </div>
 
-      <div className="grid gap-5 lg:grid-cols-[280px,1fr]">
+        {/* ── Expanded editor body — only rendered when open ── */}
+        {expanded && (
+          <div className="grid gap-5 p-5 lg:grid-cols-[280px,1fr]">
         {/* Banner uploader */}
         <div>
           <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-white/40">
@@ -599,8 +697,9 @@ function TopicEditor({
             </p>
           </div>
 
-          {/* Active toggle + Save */}
-          <div className="flex items-center justify-between gap-3 border-t border-white/[0.06] pt-3">
+          {/* Active toggle — the Save button now lives in the
+              compact header so it stays reachable while collapsed. */}
+          <div className="flex items-center gap-3 border-t border-white/[0.06] pt-3">
             <label className="flex items-center gap-2 text-xs text-white/65">
               <input
                 type="checkbox"
@@ -610,18 +709,10 @@ function TopicEditor({
               />
               Show on /university (uncheck to hide without deleting)
             </label>
-            <Button
-              size="sm"
-              onClick={onSave}
-              loading={saving}
-              disabled={saving || !dirty}
-              leftIcon={<Save className="h-3.5 w-3.5" />}
-            >
-              {dirty ? "Save" : "Saved"}
-            </Button>
           </div>
         </div>
-      </div>
+        </div>
+        )}
       </Card>
     </div>
   );
