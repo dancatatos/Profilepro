@@ -136,7 +136,7 @@ function CtaEditor({ section }: { section: CtaSection }) {
             value={b.icon}
             onChange={(icon) => edit(b.id, { icon })}
           />
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <Select
               value={b.style}
               onChange={(v) =>
@@ -465,7 +465,7 @@ function PricingCardEditor({ section }: { section: PricingCardSection }) {
         placeholder="Headline (e.g. Get instant access)"
         className={FIELD}
       />
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <input
           value={section.price}
           onChange={(e) => update(section.id, { price: e.target.value })}
@@ -514,7 +514,7 @@ function PricingCardEditor({ section }: { section: PricingCardSection }) {
           />
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <input
           value={section.ctaLabel}
           onChange={(e) => update(section.id, { ctaLabel: e.target.value })}
@@ -607,7 +607,7 @@ function TestimonialsEditor({ section }: { section: TestimonialsSection }) {
             placeholder="Their testimonial quote"
             className="w-full resize-none rounded-lg border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-electric-500/60"
           />
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <input
               value={t.authorName}
               onChange={(e) => edit(t.id, { authorName: e.target.value })}
@@ -694,7 +694,7 @@ function ProductsEditor({ section }: { section: ProductsSection }) {
             placeholder="Short description"
             className="w-full resize-none rounded-lg border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-electric-500/60"
           />
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <input
               value={p.price || ""}
               onChange={(e) => edit(p.id, { price: e.target.value })}
@@ -974,7 +974,7 @@ function AppointmentEditor({ section }: { section: AppointmentSection }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <div>
           <p className="mb-1.5 text-xs font-medium text-white/65">From</p>
           <input
@@ -995,7 +995,7 @@ function AppointmentEditor({ section }: { section: AppointmentSection }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <div>
           <p className="mb-1.5 text-xs font-medium text-white/65">
             Slot length

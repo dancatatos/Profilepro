@@ -649,7 +649,7 @@ export default function FunnelBuilderPage() {
           subtitle="Step settings, button and page content"
         />
         <div className="mt-3 space-y-3">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <div>
               <label className="mb-1.5 block text-xs font-medium text-white/65">
                 Step name

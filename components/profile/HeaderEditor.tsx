@@ -53,7 +53,7 @@ export function HeaderEditor() {
         rows={3}
       />
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Input
           label="Company / brand"
           value={h.company || ""}
@@ -68,7 +68,7 @@ export function HeaderEditor() {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Input
           label="Phone"
           value={h.phone || ""}
