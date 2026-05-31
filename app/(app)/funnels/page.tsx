@@ -249,11 +249,20 @@ export default function FunnelsPage() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {funnels.map((f) => (
-            <Card key={f.id} className="flex flex-col p-4">
+            /* min-w-0 on the card itself keeps the GRID cell from
+               growing to fit the longest funnel name on mobile. Without
+               it, a single ~50-char title (e.g. "Amare Member
+               Onboarding — 10 Training Modules") forced the card past
+               the viewport edge, taking the "Open builder" button
+               with it. */
+            <Card key={f.id} className="flex min-w-0 flex-col p-4">
               <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="truncate text-sm font-semibold text-white">
+                <div className="min-w-0 flex-1">
+                  {/* min-w-0 on the inner flex so the truncate <p>
+                      knows its width can be smaller than the natural
+                      content width. Without it, truncate is a no-op. */}
+                  <div className="flex min-w-0 items-center gap-2">
+                    <p className="min-w-0 flex-1 truncate text-sm font-semibold text-white">
                       {f.name}
                     </p>
                     <Badge tone={f.status === "published" ? "blue" : "neutral"}>
