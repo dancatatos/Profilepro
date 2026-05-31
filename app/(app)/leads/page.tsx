@@ -36,12 +36,38 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
-import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/common/EmptyState";
 import { AddToPipelineModal } from "@/components/leads/AddToPipelineModal";
 import { cn, timeAgo } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 import type { Lead, Pipeline } from "@/types";
+
+/**
+ * Make a lead's `source` field human-readable in the row chip.
+ * Raw values come in three shapes:
+ *   "funnel:<slug>"   — captured via a funnel
+ *   "sec_xxxxx"       — captured via a profile section (section id)
+ *   "leadCapture"     — legacy generic profile capture
+ * Plus the manual-entry presets ("Messenger DM", "Cold list", etc.)
+ * which we leave verbatim. Returns a short, label-y string suitable
+ * for a 10px chip.
+ */
+function formatLeadSource(source: string): string {
+  if (!source) return "Unknown";
+  if (source.startsWith("funnel:")) {
+    /* Strip the prefix and the slug → human title. e.g.
+       "funnel:amare-ph-recruitment" → "Amare Ph Recruitment". */
+    const slug = source.slice("funnel:".length);
+    return slug
+      .split("-")
+      .filter(Boolean)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+  }
+  if (source.startsWith("sec_")) return "Profile";
+  if (source === "leadCapture") return "Profile";
+  return source;
+}
 
 const DEMO_LEADS: Lead[] = [
   { id: "l1", profileId: "demo", ownerId: "demo", name: "Maria Santos", email: "maria.santos@example.com", phone: "+63 917 000 1234", source: "leadCapture", createdAt: Date.now() - 2 * 3600_000 },
@@ -326,50 +352,62 @@ export default function LeadsPage() {
                 <Avatar name={lead.name} size={42} />
 
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-white">
-                    {lead.name}
-                  </p>
+                  {/* Name + relative timestamp — timestamp now sits
+                      inline with the name so the right column doesn't
+                      need to hold anything wide. Was previously stacked
+                      with the source badge, which overflowed and visually
+                      overlapped the email/phone line on long funnel
+                      sources like "funnel:amare-ph-recruitment". */}
+                  <div className="flex items-baseline gap-2">
+                    <p className="min-w-0 flex-1 truncate text-sm font-medium text-white">
+                      {lead.name}
+                    </p>
+                    <span className="shrink-0 text-[10px] text-white/35">
+                      {timeAgo(lead.createdAt)}
+                    </span>
+                  </div>
                   <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-white/45">
                     {lead.email && (
-                      <span className="flex items-center gap-1">
-                        <Mail className="h-3 w-3" />
-                        {lead.email}
+                      <span className="flex min-w-0 items-center gap-1">
+                        <Mail className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{lead.email}</span>
                       </span>
                     )}
                     {lead.phone && (
                       <span className="flex items-center gap-1">
-                        <Phone className="h-3 w-3" />
+                        <Phone className="h-3 w-3 shrink-0" />
                         {lead.phone}
                       </span>
                     )}
                   </div>
-                  {/* Pipeline / stage indicator — single source of truth
-                      for "where is this lead in my workflow". */}
+                  {/* Pipeline + stage + source chips on one wrap-friendly
+                      row. Source is now displayed inline as a tinted chip
+                      (no longer floating on the right), with the
+                      "funnel:" / "sec_" prefix stripped so the visible
+                      string is short and human-readable. */}
                   <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                     {pipeline ? (
-                      <span className="flex items-center gap-1 rounded-md bg-electric-500/12 px-1.5 py-0.5 text-[10px] font-medium text-electric-300">
-                        <KanbanSquare className="h-3 w-3" />
-                        {pipeline.name}
-                        {stageName && (
-                          <>
-                            <span className="text-electric-300/55">·</span>
-                            {stageName}
-                          </>
-                        )}
+                      <span className="flex max-w-full items-center gap-1 rounded-md bg-electric-500/12 px-1.5 py-0.5 text-[10px] font-medium text-electric-300">
+                        <KanbanSquare className="h-3 w-3 shrink-0" />
+                        <span className="truncate">
+                          {pipeline.name}
+                          {stageName && (
+                            <>
+                              <span className="text-electric-300/55"> · </span>
+                              {stageName}
+                            </>
+                          )}
+                        </span>
                       </span>
                     ) : (
                       <span className="rounded-md bg-white/[0.05] px-1.5 py-0.5 text-[10px] font-medium text-white/45">
                         Not in pipeline
                       </span>
                     )}
+                    <span className="max-w-[10rem] truncate rounded-md bg-white/[0.04] px-1.5 py-0.5 text-[10px] font-medium text-white/55">
+                      {formatLeadSource(lead.source)}
+                    </span>
                   </div>
-                </div>
-
-                <div className="text-right">
-                  <Badge tone="blue">{lead.source}</Badge>
-                  <p className="mt-1 text-[10px] text-white/35">
-                    {timeAgo(lead.createdAt)}
-                  </p>
                 </div>
               </Card>
             );
