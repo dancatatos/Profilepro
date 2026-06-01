@@ -1572,6 +1572,25 @@ export async function countAllProfiles(): Promise<number> {
   return snap.size;
 }
 
+/**
+ * Admin-only: list every published profile in the system, used by the
+ * "Featured Profile" picker on the admin dashboard. Returns full
+ * profile docs so the picker can render avatar + name + headline
+ * without an extra read per row. Capped at 200 — pickers usually
+ * surface a few standouts; admin can paginate later if needed.
+ */
+export async function listPublishedProfiles(): Promise<Profile[]> {
+  if (!isFirebaseConfigured) return [];
+  const snap = await getDocs(
+    query(
+      collection(db, COL.profiles),
+      where("status", "==", "published"),
+      fsLimit(200),
+    ),
+  );
+  return snap.docs.map((d) => ({ ...(d.data() as Profile), id: d.id }));
+}
+
 /** Count all leads (admin overview). */
 export async function countAllLeads(): Promise<number> {
   if (!isFirebaseConfigured) return 0;
