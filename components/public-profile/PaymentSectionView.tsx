@@ -306,10 +306,15 @@ export function PaymentSectionView({ section, owner, source }: Props) {
               : "border-white/15 bg-white/[0.02] hover:border-electric-500/40",
           )}
         >
+          {/* No `capture="environment"` — that attribute restricts the
+              picker to the camera only, which is wrong here. Most users
+              already paid via their banking app and have a SCREENSHOT
+              of the receipt in their gallery; they need to pick it,
+              not retake. Omitting capture lets the OS show its native
+              "Camera | Gallery | Files" picker. */}
           <input
             type="file"
             accept="image/*"
-            capture="environment"
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             className="hidden"
           />
@@ -325,10 +330,10 @@ export function PaymentSectionView({ section, owner, source }: Props) {
             <div className="flex flex-col items-center gap-1.5 text-white/40">
               <Upload className="h-6 w-6" />
               <p className="text-xs font-medium text-white/65">
-                Tap to upload your receipt screenshot
+                Tap to upload your receipt
               </p>
               <p className="text-[10px] text-white/35">
-                JPG or PNG · Max 5 MB
+                Pick from gallery or take a photo · JPG or PNG · Max 5 MB
               </p>
             </div>
           )}
