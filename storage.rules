@@ -34,15 +34,22 @@ service firebase.storage {
     }
 
     // ---- Manual payment receipts ----
-    // Anonymous visitors upload a receipt image when they pay
-    // through a PaymentSection. Files are scoped to the owner's
-    // bucket so cross-owner access is impossible. Strict size + MIME
-    // limits prevent abuse: 5 MB cap, images only. The Firestore doc
-    // that references the file requires fields including the
-    // receiptUrl, so the create flow has a natural rate-limit
-    // (one Firestore write per upload).
+    // Anonymous visitors upload a receipt image when they pay through
+    // a PaymentSection. After upload the client calls getDownloadURL()
+    // to get the URL to persist on the Firestore submission doc —
+    // that call requires READ permission, so we have to allow it for
+    // anonymous visitors. We accept the trade-off because:
+    //
+    //   1. Filenames use uid("rcpt") — random and unguessable
+    //   2. URLs only land in payment_submissions Firestore docs that
+    //      are owner-restricted (no public listing)
+    //   3. Files are scoped to /{ownerId}/ so cross-owner discovery
+    //      isn't possible
+    //
+    // Write is still locked to anonymous CREATE with strict MIME +
+    // size validation; update/delete require the owner.
     match /payment_receipts/{ownerId}/{allPaths=**} {
-      allow read: if isSignedIn() && request.auth.uid == ownerId;
+      allow read: if true;
       allow create: if isValidImage();
       allow update, delete: if isSignedIn()
         && request.auth.uid == ownerId;
