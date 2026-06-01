@@ -1134,22 +1134,51 @@ export async function createPaymentSubmission(
 /**
  * List submissions for the owner, newest first. Used by the
  * /payments dashboard page. Filtered client-side by status tab.
+ *
+ * Uses the (ownerId, submittedAt) composite index when available;
+ * falls back to a where-only query + client-side sort when the
+ * index hasn't finished building yet. This lets the page work
+ * immediately after the feature is deployed instead of being
+ * broken until the admin runs `firebase deploy --only firestore:indexes`
+ * AND the index finishes building (1-5 minute window).
  */
 export async function listPaymentSubmissions(
   ownerId: string,
 ): Promise<PaymentSubmission[]> {
   if (!isFirebaseConfigured) return [];
-  const snap = await getDocs(
-    query(
-      collection(db, COL.paymentSubmissions),
-      where("ownerId", "==", ownerId),
-      orderBy("submittedAt", "desc"),
-      fsLimit(200),
-    ),
-  );
-  return snap.docs.map(
-    (d) => ({ ...(d.data() as PaymentSubmission), id: d.id }),
-  );
+  /* Fast path: indexed compound query. */
+  try {
+    const snap = await getDocs(
+      query(
+        collection(db, COL.paymentSubmissions),
+        where("ownerId", "==", ownerId),
+        orderBy("submittedAt", "desc"),
+        fsLimit(200),
+      ),
+    );
+    return snap.docs.map(
+      (d) => ({ ...(d.data() as PaymentSubmission), id: d.id }),
+    );
+  } catch (err) {
+    /* Fallback for the index-build window. Same data, just sorted
+       client-side. Removable once the index is confirmed live. */
+    const code = (err as { code?: string })?.code;
+    if (code !== "failed-precondition") throw err;
+    console.warn(
+      "[listPaymentSubmissions] composite index missing — falling back to client-side sort. Deploy firestore.indexes.json to fix.",
+    );
+    const snap = await getDocs(
+      query(
+        collection(db, COL.paymentSubmissions),
+        where("ownerId", "==", ownerId),
+      ),
+    );
+    const subs = snap.docs.map(
+      (d) => ({ ...(d.data() as PaymentSubmission), id: d.id }),
+    );
+    subs.sort((a, b) => b.submittedAt - a.submittedAt);
+    return subs;
+  }
 }
 
 /**

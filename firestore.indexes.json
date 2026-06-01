@@ -15,6 +15,14 @@
         { "fieldPath": "ownerId", "order": "ASCENDING" },
         { "fieldPath": "nextTaskAt", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "payment_submissions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ownerId", "order": "ASCENDING" },
+        { "fieldPath": "submittedAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
