@@ -70,12 +70,14 @@ export default function LandingPage() {
       .catch(() => null);
   }, []);
 
-  /* Load the "featured profile" picked in /admin. Fails silently — if
-     the username is unset, mistyped, or the profile is private/missing,
-     we just keep showing DEMO_PROFILE. Diagnostic logs surface the
-     reason in dev tools so admins can debug why a swap isn't taking
-     effect (most common: profile is still in draft, or stale browser
-     cache after just saving the username). */
+  /* Load the "featured profile" picked in /admin. The admin deliberately
+     selected this profile to showcase on the homepage — we trust that
+     choice and render whatever they picked, draft or published.
+     Previously we gated on status === "published" but that confused
+     admins who'd toggle publish on their profile and forget to hit Save,
+     leaving the actual Firestore doc as draft. The diagnostic log
+     surfaces a soft warning for draft profiles so the admin can still
+     spot the situation in DevTools if they want to clean it up. */
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -98,10 +100,10 @@ export default function LandingPage() {
           return;
         }
         if (profile.status !== "published") {
+          /* Soft warning, not a hard block — admin's pick wins. */
           console.warn(
-            `[Credibly] Featured profile @${username} is "${profile.status}" — only published profiles render. Set status to published in the user's /profile page.`,
+            `[Credibly] Note: @${username} is currently "${profile.status}" in Firestore. Showing it anyway because you picked it from /admin. If the profile looks half-built, click "Save" on the user's /profile page to persist publish status.`,
           );
-          return;
         }
         console.info(`[Credibly] ✓ Now showcasing @${username} on the homepage.`);
         setFeatured(profile);
