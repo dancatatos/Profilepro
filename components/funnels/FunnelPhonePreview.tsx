@@ -6,6 +6,7 @@ import {
   type TrackFn,
 } from "@/components/public-profile/ProfileSections";
 import type { BookingSubmitFn } from "@/components/public-profile/AppointmentBooking";
+import { useProfileStore } from "@/store/profileStore";
 import {
   buildThemeEffectClasses,
   buildThemeStyle,
@@ -40,6 +41,10 @@ export function FunnelPhonePreview({
   currentStepId: string;
   height?: number;
 }) {
+  /* Payment sections need the owner's payment methods to render the
+     account-number chips. Pull from the profileStore (single source of
+     truth — the same store the profile editor writes to). */
+  const profile = useProfileStore((s) => s.profile);
   const tc = getThemeConfig(funnel.themeId);
   const themeStyle = buildThemeStyle(funnel.themeId);
   const effectClasses = buildThemeEffectClasses(funnel.themeId);
@@ -95,7 +100,10 @@ export function FunnelPhonePreview({
                     track={NOOP_TRACK}
                     onLead={NOOP_LEAD}
                     onBook={NOOP_BOOK}
-                    profileId="preview"
+                    profileId={profile?.id ?? "preview"}
+                    ownerId={profile?.ownerId ?? "preview"}
+                    paymentMethods={profile?.paymentMethods}
+                    source={`funnel:${funnel.slug}`}
                   />
                 ))}
                 {showCta && cta && (

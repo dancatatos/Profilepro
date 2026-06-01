@@ -760,17 +760,16 @@ export function SectionRenderer({
       );
 
     case "payment":
-      /* Defensive: if the parent didn't pass ownerId (e.g. older code
-         path that hasn't been updated), the viewer can't function —
-         skip rendering rather than show a broken form. */
-      if (!ownerId) return null;
+      /* Render even when ownerId is missing — PaymentSectionView has
+         its own empty state ("Payment methods not configured yet")
+         which is more useful than silently hiding the section. */
       return (
         <SectionShell title={section.title} narrow="md">
           <PaymentSectionView
             section={section}
             owner={{
               id: profileId,
-              ownerId,
+              ownerId: ownerId ?? profileId,
               paymentMethods: paymentMethods ?? [],
             }}
             source={source ?? "profile"}

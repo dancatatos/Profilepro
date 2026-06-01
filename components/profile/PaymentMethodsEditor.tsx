@@ -92,7 +92,7 @@ export function PaymentMethodsEditor() {
   };
 
   return (
-    <Card className="p-4">
+    <Card id="payment-methods" className="scroll-mt-20 p-4">
       <CardHeader
         title="Payment Methods"
         subtitle="Your GCash, Maya, bank accounts — used by Payment sections in funnels."

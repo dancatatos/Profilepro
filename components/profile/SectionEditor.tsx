@@ -1207,10 +1207,23 @@ function PaymentEditor({ section }: { section: PaymentSection }) {
           Show these payment methods
         </p>
         {allMethods.length === 0 ? (
-          <p className="text-[11px] text-white/45">
-            No payment methods configured yet. Add at least one on the
-            Payment Methods card in your profile builder.
-          </p>
+          <div className="rounded-lg border border-amber-500/25 bg-amber-500/[0.05] p-3 text-[11px]">
+            <p className="font-medium text-amber-200">
+              ⚠ No payment methods configured yet
+            </p>
+            <p className="mt-1 text-white/65">
+              Add your GCash / Maya / bank accounts on the{" "}
+              <a
+                href="/profile#payment-methods"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-electric-300 underline underline-offset-2 hover:text-electric-200"
+              >
+                Payment Methods card in your Profile Builder
+              </a>
+              , then come back — they&apos;ll appear here automatically.
+            </p>
+          </div>
         ) : (
           <>
             <div className="flex flex-wrap gap-1.5">
