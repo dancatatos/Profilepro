@@ -36,6 +36,7 @@ import type {
   SavedBuild,
   SentMessageLog,
   SharedBuild,
+  PaymentSubmission,
   SharedFunnel,
   UniversityProgress,
   UniversityTopic,
@@ -69,6 +70,8 @@ export const COL = {
   universityProgress: "university_progress",
   /* Follow-Up Pipelines — per-user pipeline definitions. */
   pipelines: "pipelines",
+  /* Manual payment submissions — receipts uploaded by visitors. */
+  paymentSubmissions: "payment_submissions",
 } as const;
 
 /** Subcollection name for a user's saved-build locker. */
@@ -1106,6 +1109,59 @@ export async function listLeads(ownerId: string): Promise<Lead[]> {
   );
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Lead);
+}
+
+/* ---------------- Manual Payment Submissions ---------------- */
+/* Receipt uploads + owner review flow. Anonymous visitors create
+   submissions through PaymentSection; owners review in /payments. */
+
+/**
+ * Create a submission. Called from the visitor's PaymentSection
+ * after they upload a receipt. Returns the new doc id so the
+ * caller can show a "submitted" confirmation.
+ */
+export async function createPaymentSubmission(
+  submission: Omit<PaymentSubmission, "id">,
+): Promise<string> {
+  if (!isFirebaseConfigured) return "demo";
+  const ref = await addDoc(collection(db, COL.paymentSubmissions), {
+    ...submission,
+    serverCreatedAt: serverTimestamp(),
+  });
+  return ref.id;
+}
+
+/**
+ * List submissions for the owner, newest first. Used by the
+ * /payments dashboard page. Filtered client-side by status tab.
+ */
+export async function listPaymentSubmissions(
+  ownerId: string,
+): Promise<PaymentSubmission[]> {
+  if (!isFirebaseConfigured) return [];
+  const snap = await getDocs(
+    query(
+      collection(db, COL.paymentSubmissions),
+      where("ownerId", "==", ownerId),
+      orderBy("submittedAt", "desc"),
+      fsLimit(200),
+    ),
+  );
+  return snap.docs.map(
+    (d) => ({ ...(d.data() as PaymentSubmission), id: d.id }),
+  );
+}
+
+/**
+ * Update a submission's review status + admin notes. Used by the
+ * approve / reject actions on the /payments page.
+ */
+export async function updatePaymentSubmission(
+  id: string,
+  patch: Partial<PaymentSubmission>,
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await updateDoc(doc(db, COL.paymentSubmissions, id), patch);
 }
 
 /* ---------------- Appointments / bookings ---------------- */

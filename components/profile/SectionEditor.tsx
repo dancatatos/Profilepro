@@ -7,6 +7,7 @@ import { Icon } from "@/components/ui/Icon";
 import { ImageUploadField } from "./ImageUploadField";
 import dynamic from "next/dynamic";
 import { SOCIAL_PLATFORMS } from "@/lib/constants";
+import { useProfileStore } from "@/store/profileStore";
 import { cn, uid } from "@/lib/utils";
 import type {
   AboutSection,
@@ -21,6 +22,7 @@ import type {
   GallerySection,
   LeadCaptureSection,
   LeadFieldKey,
+  PaymentSection,
   ProductsSection,
   ProfileSection,
   SocialsSection,
@@ -1126,7 +1128,159 @@ export function SectionEditor({ section }: { section: ProfileSection }) {
       return <LeadCaptureEditor section={section} />;
     case "appointment":
       return <AppointmentEditor section={section} />;
+    case "payment":
+      return <PaymentEditor section={section} />;
     default:
       return null;
   }
+}
+
+/* ── Payment section editor ─────────────────────────────────────── */
+
+function PaymentEditor({ section }: { section: PaymentSection }) {
+  const { updateSection: update } = useSections();
+  const profile = useProfileStore((s) => s.profile);
+  const allMethods = profile?.paymentMethods ?? [];
+  const patch = (p: Partial<PaymentSection>) => update(section.id, p);
+  const toggleMethod = (id: string) => {
+    const next = new Set(section.enabledMethodIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    patch({ enabledMethodIds: Array.from(next) });
+  };
+  const toggleField = (field: LeadFieldKey) => {
+    const next = new Set(section.fields);
+    if (next.has(field)) next.delete(field);
+    else next.add(field);
+    patch({ fields: Array.from(next) });
+  };
+
+  return (
+    <div className="space-y-3">
+      <input
+        value={section.headline}
+        onChange={(e) => patch({ headline: e.target.value })}
+        placeholder="Headline (e.g. Secure your seat — ₱500)"
+        className={FIELD}
+      />
+      <textarea
+        value={section.subtext ?? ""}
+        onChange={(e) => patch({ subtext: e.target.value })}
+        placeholder="Brief explanation of what they're paying for"
+        rows={2}
+        className="w-full resize-none rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-electric-500/60"
+      />
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_120px]">
+        <input
+          type="number"
+          min={0}
+          value={String(section.amount)}
+          onChange={(e) => patch({ amount: Number(e.target.value) || 0 })}
+          placeholder="Amount"
+          className={FIELD}
+        />
+        <select
+          value={section.currency}
+          onChange={(e) =>
+            patch({ currency: e.target.value as "PHP" | "USD" })
+          }
+          className={FIELD}
+        >
+          <option value="PHP">PHP (₱)</option>
+          <option value="USD">USD ($)</option>
+        </select>
+      </div>
+      <label className="flex items-center gap-2 text-xs text-white/65">
+        <input
+          type="checkbox"
+          checked={section.allowCustomAmount ?? false}
+          onChange={(e) => patch({ allowCustomAmount: e.target.checked })}
+          className="h-4 w-4 rounded border-white/20 bg-white/[0.04] accent-electric-500"
+        />
+        Allow visitor to enter a custom amount (e.g. donations)
+      </label>
+
+      {/* Methods picker — choose which of the profile's methods this
+          section shows. Empty selection = show all enabled methods. */}
+      <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
+        <p className="mb-2 text-xs font-medium text-white/65">
+          Show these payment methods
+        </p>
+        {allMethods.length === 0 ? (
+          <p className="text-[11px] text-white/45">
+            No payment methods configured yet. Add at least one on the
+            Payment Methods card in your profile builder.
+          </p>
+        ) : (
+          <>
+            <div className="flex flex-wrap gap-1.5">
+              {allMethods.map((m) => {
+                const on =
+                  section.enabledMethodIds.length === 0 ||
+                  section.enabledMethodIds.includes(m.id);
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => toggleMethod(m.id)}
+                    className={cn(
+                      "rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors",
+                      on
+                        ? "border-electric-500/50 bg-electric-500/15 text-electric-300"
+                        : "border-white/10 bg-white/[0.04] text-white/55 hover:bg-white/[0.08]",
+                    )}
+                  >
+                    {m.label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-[11px] text-white/35">
+              {section.enabledMethodIds.length === 0
+                ? "Showing ALL active payment methods. Pick specific ones to limit this section."
+                : `Showing ${section.enabledMethodIds.length} method(s).`}
+            </p>
+          </>
+        )}
+      </div>
+
+      {/* Fields to collect */}
+      <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
+        <p className="mb-2 text-xs font-medium text-white/65">
+          Collect from visitor
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {(["name", "email", "phone"] as LeadFieldKey[]).map((f) => {
+            const on = section.fields.includes(f);
+            return (
+              <button
+                key={f}
+                type="button"
+                onClick={() => toggleField(f)}
+                className={cn(
+                  "rounded-lg border px-2.5 py-1 text-xs font-medium capitalize transition-colors",
+                  on
+                    ? "border-electric-500/50 bg-electric-500/15 text-electric-300"
+                    : "border-white/10 bg-white/[0.04] text-white/55 hover:bg-white/[0.08]",
+                )}
+              >
+                {f}
+              </button>
+            );
+          })}
+        </div>
+        <p className="mt-2 text-[11px] text-white/35">
+          Receipt screenshot is always required.
+        </p>
+      </div>
+
+      <textarea
+        value={section.successMessage ?? ""}
+        onChange={(e) => patch({ successMessage: e.target.value })}
+        placeholder="Thank-you message shown after submission"
+        rows={2}
+        className="w-full resize-none rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-electric-500/60"
+      />
+    </div>
+  );
 }

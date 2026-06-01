@@ -147,7 +147,41 @@ export type SectionType =
   | "hero"
   | "benefits"
   | "faq"
-  | "pricingCard";
+  | "pricingCard"
+  | "payment";
+
+/**
+ * Manual payment method the owner accepts (GCash, Maya, BPI, etc.).
+ * Stored on the Profile so any payment section in any funnel can
+ * reuse them — set once, accept payments everywhere.
+ */
+export type PaymentMethodType =
+  | "gcash"
+  | "maya"
+  | "bpi"
+  | "bdo"
+  | "unionbank"
+  | "metrobank"
+  | "landbank"
+  | "other";
+
+export interface PaymentMethod {
+  id: string;
+  type: PaymentMethodType;
+  /** Display label, e.g. "Main GCash" or "Business BPI". */
+  label: string;
+  /** Phone number for e-wallets, account number for banks. */
+  accountNumber: string;
+  /** Name on the account — visitors verify it matches before sending. */
+  accountName: string;
+  /**
+   * Optional QR code image URL (Firebase Storage). For GCash/Maya QR
+   * codes that visitors can scan with their banking app.
+   */
+  qrImageUrl?: string;
+  enabled: boolean;
+  sortOrder: number;
+}
 
 export interface CTAButton {
   id: string;
@@ -338,6 +372,51 @@ export interface LeadCaptureSection extends SectionBase {
   channels: LeadCaptureChannels;
 }
 
+/**
+ * Manual payment collection — visitors send GCash / Maya / bank
+ * transfers externally, then upload a receipt screenshot to prove
+ * they paid. Owner reviews + approves in their /payments dashboard.
+ *
+ * Works without any payment processor — perfect for the PH market
+ * where most SMBs don't have card processing set up. The owner
+ * collects through their personal accounts, Credibly just facilitates
+ * the receipt-upload + verification workflow.
+ */
+export interface PaymentSection extends SectionBase {
+  type: "payment";
+  headline: string;
+  subtext?: string;
+  /** Fixed amount, e.g. 500 PHP. */
+  amount: number;
+  currency: "PHP" | "USD";
+  /**
+   * When true, the amount field becomes user-editable on the form
+   * (the configured `amount` becomes a default). Use for donations
+   * or pay-what-you-want scenarios.
+   */
+  allowCustomAmount?: boolean;
+  /**
+   * Which payment methods from the profile to show in this section.
+   * Empty array = show all enabled methods. Lets owners limit a
+   * specific funnel to only GCash, for example.
+   */
+  enabledMethodIds: string[];
+  /** Fields to collect from the visitor along with the receipt. */
+  fields: LeadFieldKey[];
+  /**
+   * After the owner approves the payment, auto-route the lead into
+   * this pipeline. Pulled from the owner's existing pipeline list.
+   * Optional — owner can manage manually if unset.
+   */
+  approvalPipelineId?: string;
+  /**
+   * Shown to visitor after they successfully submit. Customizable
+   * so owner can include payment instructions, expected timeline,
+   * or thank-you copy.
+   */
+  successMessage?: string;
+}
+
 export interface AppointmentQuestion {
   id: string;
   question: string;
@@ -376,7 +455,8 @@ export type ProfileSection =
   | VideoSection
   | GallerySection
   | LeadCaptureSection
-  | AppointmentSection;
+  | AppointmentSection
+  | PaymentSection;
 
 /** One answer to a custom appointment question. */
 export interface BookingAnswer {
@@ -521,6 +601,12 @@ export interface Profile {
    * user's default pipeline when unset. Symmetric with `Funnel.pipelineId`.
    */
   pipelineId?: string;
+  /**
+   * Manual payment methods (GCash, Maya, BPI, etc.) the owner accepts.
+   * Set once on the profile, reused across any payment section in any
+   * funnel. PaymentSection.enabledMethodIds references these by id.
+   */
+  paymentMethods?: PaymentMethod[];
   createdAt: number;
   updatedAt: number;
 }
@@ -574,6 +660,63 @@ export interface Lead {
    * "Sent X ago" badge on each template card in the Lead Detail modal.
    */
   sentMessages?: SentMessageLog[];
+}
+
+/* ---------------- Manual Payment Submissions ---------------- */
+
+/**
+ * A receipt-upload submitted by a visitor through a payment section.
+ * Created with status="pending"; owner reviews + approves in
+ * /payments. Approval optionally moves a derived lead into a pipeline
+ * stage and sends the visitor a confirmation email.
+ */
+export interface PaymentSubmission {
+  id: string;
+  ownerId: string;
+  profileId: string;
+  /** Where the submission came from — "funnel:<slug>" or "profile". */
+  source: string;
+  /** Section id that triggered the submission, for analytics + routing. */
+  sectionId: string;
+
+  /* ── Visitor details ── */
+  visitorName: string;
+  visitorEmail?: string;
+  visitorPhone?: string;
+
+  /* ── Payment details ── */
+  amount: number;
+  currency: "PHP" | "USD";
+  /** Which of the owner's methods the visitor used. */
+  paymentMethodId: string;
+  /** Snapshot of the method label at submit time (in case owner renames later). */
+  paymentMethodLabel: string;
+  /** Bank/e-wallet reference number the visitor typed in. */
+  referenceNumber?: string;
+  /** Optional free-text note from the visitor ("First-time customer!"). */
+  userNote?: string;
+
+  /* ── Receipt ── */
+  /** Public URL of the uploaded receipt image in Firebase Storage. */
+  receiptUrl: string;
+
+  /* ── Review state ── */
+  status: "pending" | "approved" | "rejected";
+  submittedAt: number;
+  reviewedAt?: number;
+  /** Admin / owner uid who reviewed it. */
+  reviewerId?: string;
+  /** Reason text shown to the visitor when rejected. */
+  rejectionReason?: string;
+  /** Free-text private notes from the owner. */
+  adminNotes?: string;
+
+  /**
+   * If approval routed the visitor into a pipeline, this is the lead
+   * doc id created/touched by the approval action. Lets us link
+   * back from the payment list to the corresponding lead.
+   */
+  linkedLeadId?: string;
 }
 
 /* ---------------- Follow-Up Pipeline ---------------- */

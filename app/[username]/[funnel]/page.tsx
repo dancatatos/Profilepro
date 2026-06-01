@@ -65,6 +65,7 @@ export default async function FunnelPage({
         funnel={resolved.funnel}
         profileId={resolved.profile.id}
         ownerId={resolved.profile.ownerId}
+        paymentMethods={resolved.profile.paymentMethods}
         live
       />
     </div>

@@ -34,11 +34,14 @@ export function FunnelView({
   funnel,
   profileId,
   ownerId,
+  paymentMethods,
   live = false,
 }: {
   funnel: Funnel;
   profileId: string;
   ownerId: string;
+  /** Owner's payment methods, threaded through to PaymentSection. */
+  paymentMethods?: import("@/types").PaymentMethod[];
   live?: boolean;
 }) {
   const [stepIndex, setStepIndex] = useState(0);
@@ -151,6 +154,9 @@ export function FunnelView({
               onLead={onLead}
               onBook={onBook}
               profileId={profileId}
+              ownerId={ownerId}
+              paymentMethods={paymentMethods}
+              source={`funnel:${funnel.slug}`}
             />
           ))}
 

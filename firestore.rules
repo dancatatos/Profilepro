@@ -169,6 +169,25 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    // ---- Manual Payment Submissions ----
+    // Anonymous visitors create submissions when they upload a
+    // receipt through a PaymentSection. Owner reads/updates only
+    // their own submissions. Admin sees everything for support.
+    // Required fields enforced at create-time so spam writes are
+    // shaped correctly (Firestore can't validate file size — that's
+    // enforced by Storage rules + client compression).
+    match /payment_submissions/{submissionId} {
+      allow create: if request.resource.data.keys().hasAll([
+        'ownerId', 'visitorName', 'amount', 'currency', 'receiptUrl',
+        'paymentMethodId', 'status', 'submittedAt'
+      ]) && request.resource.data.status == 'pending';
+      allow read, list: if isAdmin()
+        || (isSignedIn() && resource.data.ownerId == request.auth.uid);
+      allow update: if isAdmin()
+        || (isSignedIn() && resource.data.ownerId == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
     // ---- Follow-Up Pipelines (owner-scoped + share-code lookup) ----
     // The owner has full CRUD on their pipelines. Any signed-in user
     // can list/read for the "clone by share code" path — security

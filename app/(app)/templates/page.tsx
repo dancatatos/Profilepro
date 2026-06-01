@@ -384,6 +384,7 @@ const SECTION_LABELS: Record<SectionType, string> = {
   benefits: "Benefits",
   faq: "FAQ",
   pricingCard: "Pricing",
+  payment: "Payment",
 };
 
 const SECTION_COLORS: Record<SectionType, string> = {
@@ -403,6 +404,7 @@ const SECTION_COLORS: Record<SectionType, string> = {
   benefits: "bg-jade-500/20 text-jade-300",
   faq: "bg-white/10 text-white/60",
   pricingCard: "bg-gold-400/20 text-gold-300",
+  payment: "bg-jade-500/20 text-jade-300",
 };
 
 /* ---- Mini preview component ---- */

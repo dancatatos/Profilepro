@@ -12,6 +12,7 @@ import { HeaderEditor } from "@/components/profile/HeaderEditor";
 import { ThemePicker } from "@/components/profile/ThemePicker";
 import { ProfileSectionsManager } from "@/components/profile/ProfileSectionsManager";
 import { PublishSettings } from "@/components/profile/PublishSettings";
+import { PaymentMethodsEditor } from "@/components/profile/PaymentMethodsEditor";
 import { PhonePreview } from "@/components/profile/PhonePreview";
 import { AIGenerateModal } from "@/components/profile/AIGenerateModal";
 import { PublishBuildModal } from "@/components/profile/PublishBuildModal";
@@ -151,6 +152,11 @@ export default function ProfileBuilderPage() {
                 <PublishSettings />
               </div>
             </Card>
+
+            {/* Payment methods — set once, every Payment section in
+                any funnel reuses these. Lives here so the owner can
+                edit alongside the rest of their profile config. */}
+            <PaymentMethodsEditor />
           </div>
         </div>
 

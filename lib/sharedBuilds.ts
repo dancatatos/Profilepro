@@ -158,6 +158,22 @@ function freshSection(section: ProfileSection): ProfileSection {
         bookingWindowDays: section.bookingWindowDays,
         questions: section.questions.map((q) => ({ ...q, id: uid("q") })),
       };
+    case "payment":
+      /* Snapshot strips owner-specific data: enabledMethodIds are reset
+         (recipient picks their own methods later), amounts + copy are
+         preserved as a starting point. */
+      return {
+        ...base,
+        type: "payment",
+        headline: section.headline,
+        subtext: section.subtext,
+        amount: section.amount,
+        currency: section.currency,
+        allowCustomAmount: section.allowCustomAmount,
+        enabledMethodIds: [],
+        fields: [...section.fields],
+        successMessage: section.successMessage,
+      };
   }
 }
 

@@ -39,6 +39,7 @@ export const DASHBOARD_NAV: NavItem[] = [
   { key: "appointments", label: "Appointments", href: "/appointments", icon: "CalendarDays" },
   { key: "leads", label: "Leads", href: "/leads", icon: "Users" },
   { key: "pipelines", label: "Follow-Up", href: "/pipelines", icon: "KanbanSquare" },
+  { key: "payments", label: "Payments", href: "/payments", icon: "Wallet" },
   { key: "analytics", label: "Analytics", href: "/analytics", icon: "BarChart3" },
   { key: "university", label: "Credibly University", href: "/university", icon: "GraduationCap" },
   { key: "media", label: "Media Library", href: "/media", icon: "Images" },
@@ -160,6 +161,13 @@ export const SECTION_CATALOG: SectionMeta[] = [
     label: "Appointment Scheduler",
     description: "Let visitors book a call or meeting with you",
     icon: "CalendarClock",
+  },
+  {
+    type: "payment",
+    label: "Accept Payment",
+    description:
+      "Collect GCash / Maya / bank receipts — visitor pays, uploads proof",
+    icon: "Wallet",
   },
 ];
 

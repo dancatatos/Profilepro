@@ -5,11 +5,17 @@ import { Check, ChevronDown, MessageCircle, Send, Star } from "lucide-react";
 import { Icon } from "@/components/ui/Icon";
 import { SocialIcon } from "@/components/ui/SocialIcon";
 import { AppointmentBooking, type BookingSubmitFn } from "./AppointmentBooking";
+import { PaymentSectionView } from "./PaymentSectionView";
 import { RichTextRenderer } from "@/components/ui/RichTextRenderer";
 import { CountdownTimer } from "./CountdownTimer";
 import { ctaButtonClasses } from "@/lib/theme";
 import { cn, isValidEmail, toEmbedUrl } from "@/lib/utils";
-import type { AnalyticsEventType, FaqItem, ProfileSection } from "@/types";
+import type {
+  AnalyticsEventType,
+  FaqItem,
+  PaymentMethod,
+  ProfileSection,
+} from "@/types";
 import type { ThemeConfig } from "@/lib/themes";
 
 export type TrackFn = (type: AnalyticsEventType, target?: string) => void;
@@ -27,6 +33,16 @@ interface RendererProps {
   onLead: LeadSubmitFn;
   onBook: BookingSubmitFn;
   profileId: string;
+  /**
+   * Profile owner's uid + payment methods. Needed by the PaymentSection
+   * viewer to scope receipt uploads to the right Firebase Storage path
+   * and to display the right GCash / Maya / bank accounts. Optional so
+   * existing callers that don't render payment sections still work.
+   */
+  ownerId?: string;
+  paymentMethods?: PaymentMethod[];
+  /** Where the section is rendered — funnel slug or "profile". */
+  source?: string;
 }
 
 /* ──────────────────────────────────────────
@@ -285,6 +301,9 @@ export function SectionRenderer({
   onLead,
   onBook,
   profileId,
+  ownerId,
+  paymentMethods,
+  source,
 }: RendererProps) {
   switch (section.type) {
     case "cta":
@@ -736,6 +755,25 @@ export function SectionRenderer({
             profileId={profileId}
             onBook={onBook}
             onTrack={() => track("lead_submit", section.id)}
+          />
+        </SectionShell>
+      );
+
+    case "payment":
+      /* Defensive: if the parent didn't pass ownerId (e.g. older code
+         path that hasn't been updated), the viewer can't function —
+         skip rendering rather than show a broken form. */
+      if (!ownerId) return null;
+      return (
+        <SectionShell title={section.title} narrow="md">
+          <PaymentSectionView
+            section={section}
+            owner={{
+              id: profileId,
+              ownerId,
+              paymentMethods: paymentMethods ?? [],
+            }}
+            source={source ?? "profile"}
           />
         </SectionShell>
       );

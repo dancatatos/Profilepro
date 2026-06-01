@@ -141,6 +141,25 @@ export function createSection(type: SectionType): ProfileSection {
         fields: ["name", "email"],
         channels: {},
       };
+    case "payment":
+      return {
+        ...base,
+        type: "payment",
+        title: "Reserve Your Spot",
+        headline: "Secure your seat — one-time ₱500",
+        subtext:
+          "Send ₱500 via any of the methods below, then upload your receipt. We'll confirm within 24 hours.",
+        amount: 500,
+        currency: "PHP",
+        allowCustomAmount: false,
+        /* Empty = show all enabled methods from the profile. Owner
+           can narrow this later if a specific funnel should only
+           accept one payment channel. */
+        enabledMethodIds: [],
+        fields: ["name", "email", "phone"],
+        successMessage:
+          "Got it! We received your payment proof and will confirm within 24 hours. You'll get an email once you're enrolled.",
+      };
     case "appointment":
       return {
         ...base,

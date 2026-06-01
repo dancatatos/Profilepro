@@ -271,6 +271,9 @@ export function PublicProfileView({
                 onLead={onLead}
                 onBook={onBook}
                 profileId={profile.id}
+                ownerId={profile.ownerId}
+                paymentMethods={profile.paymentMethods}
+                source="profile"
               />
             </motion.div>
           ))}
