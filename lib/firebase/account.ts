@@ -8,6 +8,7 @@ import {
 } from "./firestore";
 import { createDefaultProfile } from "@/lib/defaults";
 import { clearRefCookies, getRefCookie } from "@/lib/referral";
+import { consumePendingConsent } from "@/lib/consent";
 import { slugify } from "@/lib/utils";
 import type { AccountUser } from "@/types";
 
@@ -44,6 +45,13 @@ export async function ensureAccount(user: User): Promise<AccountUser> {
      lets us avoid clearing the cookie if there was nothing to attribute. */
   const refCode = getRefCookie();
 
+  /* Pull the pending consent that the signup page stashed in
+     sessionStorage. consumePendingConsent() removes the entry as a
+     side-effect so a second signup in the same tab can't reuse it.
+     Null is fine — Google sign-ins from /login don't go through the
+     signup checkbox, and existing users are grandfathered. */
+  const pendingConsent = consumePendingConsent();
+
   const account: AccountUser = {
     uid: user.uid,
     email: user.email || "",
@@ -58,6 +66,7 @@ export async function ensureAccount(user: User): Promise<AccountUser> {
     ...(refCode
       ? { affiliateId: refCode, affiliateAttributedAt: now }
       : {}),
+    ...(pendingConsent ? { consent: pendingConsent } : {}),
   };
 
   await upsertUserDoc(account);

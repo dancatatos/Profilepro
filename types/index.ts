@@ -64,6 +64,32 @@ export interface AccountUser {
    * means "use whatever the plan grants".
    */
   limitOverrides?: UserLimitOverrides;
+  /**
+   * Consent record stamped at signup. Required for new users (DPA /
+   * GDPR compliance); absent for users created before the consent
+   * checkbox shipped — those are grandfathered in.
+   */
+  consent?: ConsentRecord;
+}
+
+/**
+ * Privacy / Terms consent record stamped onto the user doc at signup.
+ * Proves the user actively agreed when their account was created — the
+ * timestamp + version are the legal evidence in case of a future DPA
+ * complaint or audit. Existing users (signed up before consent was
+ * required) have this field unset; we treat them as grandfathered.
+ */
+export interface ConsentRecord {
+  /** Epoch ms when the user ticked the consent checkbox. */
+  agreedAt: number;
+  /**
+   * Version of the Terms + Privacy Policy they agreed to. Bump this
+   * whenever the policy changes materially so we can detect stale
+   * consents and re-prompt those users.
+   */
+  version: string;
+  /** Separate marketing opt-in (optional under DPA — keeps it auditable). */
+  marketingOptIn: boolean;
 }
 
 /** Per-user numeric overrides on top of plan-level limits. */

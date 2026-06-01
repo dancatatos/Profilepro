@@ -403,10 +403,12 @@ export default function LandingPage() {
           <p className="text-xs text-white/35">
             &copy; {new Date().getFullYear()} Credibly. Built for trust.
           </p>
-          <div className="flex gap-5 text-xs text-white/45">
-            <Link href="/login">Log in</Link>
-            <Link href="/signup">Sign up</Link>
-            <Link href="/demo">Example</Link>
+          <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-white/45">
+            <Link href="/login" className="hover:text-white">Log in</Link>
+            <Link href="/signup" className="hover:text-white">Sign up</Link>
+            <Link href="/demo" className="hover:text-white">Example</Link>
+            <Link href="/privacy" className="hover:text-white">Privacy</Link>
+            <Link href="/terms" className="hover:text-white">Terms</Link>
           </div>
         </div>
       </footer>

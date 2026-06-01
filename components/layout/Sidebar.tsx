@@ -102,6 +102,20 @@ export function Sidebar() {
           {(account?.plan || "free").toUpperCase()}
         </Badge>
       </Link>
+
+      {/* Legal footer — keeps Privacy + Terms accessible to signed-in
+          users at all times (required for ongoing DPA compliance and
+          GDPR right-to-be-informed). Tiny so it doesn't compete with
+          the main nav. */}
+      <div className="border-t border-white/[0.06] px-4 py-2.5 text-[10px] text-white/30">
+        <Link href="/privacy" target="_blank" className="hover:text-white/70">
+          Privacy
+        </Link>
+        <span className="mx-1.5">·</span>
+        <Link href="/terms" target="_blank" className="hover:text-white/70">
+          Terms
+        </Link>
+      </div>
     </aside>
   );
 }
