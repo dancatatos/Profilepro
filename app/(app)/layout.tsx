@@ -63,11 +63,16 @@ export default function AppLayout({
   }
 
   return (
+    /* Outer canvas = deepest black (ink-950). The nav rail blends into
+       this; the content column lifts above it via .app-workspace. */
     <div className="min-h-dvh bg-ink-950">
       <Sidebar />
-      <div className="lg:pl-64">
+      {/* Content column — the elevated workspace zone. min-h-dvh so the
+          lighter surface + ambient glow fill the viewport even on short
+          pages, rather than the dark canvas peeking through below. */}
+      <div className="app-workspace min-h-dvh lg:pl-64">
         <TopBar />
-        <main className="mx-auto max-w-5xl px-4 pb-28 pt-5 lg:px-8 lg:pb-12">
+        <main className="relative z-[1] mx-auto max-w-5xl px-4 pb-28 pt-5 lg:px-8 lg:pb-12">
           {children}
         </main>
       </div>

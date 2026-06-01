@@ -174,13 +174,19 @@
   .glass-card {
     background: linear-gradient(
       160deg,
-      rgba(28, 28, 35, 0.72),
-      rgba(10, 11, 14, 0.78)
+      rgba(32, 32, 40, 0.78),
+      rgba(12, 13, 17, 0.82)
     );
     backdrop-filter: blur(16px) saturate(150%);
     -webkit-backdrop-filter: blur(16px) saturate(150%);
     border: 1px solid rgba(255, 255, 255, 0.06);
-    box-shadow: var(--shadow-card);
+    /* Depth recipe (Option C):
+       1. outer drop shadow lifts the card off the workspace
+       2. inset top-edge highlight simulates light from above — the
+          single most effective "premium floating card" trick. */
+    box-shadow:
+      var(--shadow-card),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
   }
 
   /* Gradient text */
@@ -215,6 +221,22 @@
     opacity: 0.5;
     pointer-events: none;
     z-index: 0;
+  }
+
+  /* ── Workspace zone (Option C depth system) ──
+     The main content column. Sits one step LIGHTER than the nav rail
+     (ink-900 vs ink-950) so it reads as the elevated, "lit" workspace,
+     with a faint electric glow bleeding down from the top to keep the
+     surface from feeling flat. Cards float above this with .glass-card. */
+  .app-workspace {
+    position: relative;
+    background:
+      radial-gradient(
+        120% 55% at 50% -8%,
+        rgba(46, 107, 255, 0.07),
+        transparent 62%
+      ),
+      #0a0a0c;
   }
 
   /* Hairline divider */

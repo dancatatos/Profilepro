@@ -28,7 +28,7 @@ export function Sidebar() {
   );
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-white/[0.06] bg-ink-900/80 backdrop-blur-xl lg:flex">
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-white/[0.06] bg-ink-950/85 backdrop-blur-xl lg:flex">
       <div className="flex h-16 items-center px-5">
         <Link href="/dashboard">
           <Logo />
@@ -43,10 +43,15 @@ export function Sidebar() {
               key={item.key}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors",
+                /* Active state now uses an electric tint + a left accent
+                   bar (the `before:` pseudo) so the current page reads
+                   clearly against the dark rail — a premium touch vs the
+                   old flat grey highlight. */
+                "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors",
+                "before:absolute before:left-0 before:top-1/2 before:h-5 before:w-[3px] before:-translate-y-1/2 before:rounded-r-full before:transition-all",
                 active
-                  ? "bg-white/[0.06] font-medium text-white"
-                  : "text-white/55 hover:bg-white/[0.03] hover:text-white/85",
+                  ? "bg-electric-500/[0.10] font-medium text-white before:bg-electric-400"
+                  : "text-white/55 before:bg-transparent hover:bg-white/[0.03] hover:text-white/85",
               )}
             >
               <Icon
