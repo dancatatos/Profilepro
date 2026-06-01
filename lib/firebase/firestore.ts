@@ -1050,7 +1050,14 @@ export async function getProfileByUsername(
     fsLimit(1),
   );
   const snap = await getDocs(q);
-  return snap.empty ? null : (snap.docs[0].data() as Profile);
+  if (snap.empty) return null;
+  /* Spread the data first then overwrite id with the actual doc id —
+     previously we returned `data() as Profile` which crucially LACKED
+     the `id` field, since Firestore doesn't include the doc id inside
+     the data payload. Consumers that needed `profile.id` (e.g. for
+     analytics events on the public profile view) got a stale or
+     undefined id. */
+  return { ...(snap.docs[0].data() as Profile), id: snap.docs[0].id };
 }
 
 export async function saveProfile(profile: Profile): Promise<void> {

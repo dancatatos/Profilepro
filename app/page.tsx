@@ -72,22 +72,41 @@ export default function LandingPage() {
 
   /* Load the "featured profile" picked in /admin. Fails silently — if
      the username is unset, mistyped, or the profile is private/missing,
-     we just keep showing DEMO_PROFILE. */
+     we just keep showing DEMO_PROFILE. Diagnostic logs surface the
+     reason in dev tools so admins can debug why a swap isn't taking
+     effect (most common: profile is still in draft, or stale browser
+     cache after just saving the username). */
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         const flags = await getFeatureFlags();
         const username = flags.featuredProfileUsername?.trim();
-        if (!username) return;
+        if (!username) {
+          console.info("[Credibly] No featured profile set — showing demo.");
+          return;
+        }
+        console.info(
+          `[Credibly] Looking up featured profile: @${username}`,
+        );
         const profile = await getProfileByUsername(username);
-        if (cancelled || !profile) return;
-        /* Only swap when the profile is actually published — admin
-           shouldn't be able to leak a draft profile through the
-           homepage by accident. */
-        if (profile.status === "published") setFeatured(profile);
-      } catch {
-        /* network error → keep DEMO_PROFILE */
+        if (cancelled) return;
+        if (!profile) {
+          console.warn(
+            `[Credibly] Featured profile @${username} not found in Firestore.`,
+          );
+          return;
+        }
+        if (profile.status !== "published") {
+          console.warn(
+            `[Credibly] Featured profile @${username} is "${profile.status}" — only published profiles render. Set status to published in the user's /profile page.`,
+          );
+          return;
+        }
+        console.info(`[Credibly] ✓ Now showcasing @${username} on the homepage.`);
+        setFeatured(profile);
+      } catch (err) {
+        console.error("[Credibly] Featured profile lookup failed:", err);
       }
     })();
     return () => {
