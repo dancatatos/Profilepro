@@ -8,10 +8,6 @@ rules_version = '2';
 // Receipt uploads from anonymous funnel visitors live under
 // payment_receipts/{ownerId}/... — strict MIME + size validation
 // substitutes for auth (no user account at upload time).
-//
-// Legacy FitPal / Quiz rules are kept inline because this bucket
-// is shared with that project. Removing them here would lock out
-// FitPal's admin uploads on next deploy.
 // ============================================================
 
 service firebase.storage {
@@ -26,15 +22,10 @@ service firebase.storage {
         && request.resource.contentType.matches('image/.*');
     }
 
-    /* FitPal admin uid — separate project sharing this storage
-       bucket. Hardcoded because FitPal doesn't have a Firestore
-       roles collection to check. Update if the admin uid changes. */
-    function isFitpalAdmin() {
-      return request.auth != null
-        && request.auth.uid == "5CIQlUntrjOphUvpdW7Es0bj7RB2";
-    }
-
     // ---- Credibly user assets ----
+    // Profile photos, gallery, banners, etc. Public read so visitors
+    // can see them; only the owner can write, and only image files
+    // under 5 MB.
     match /users/{uid}/{allPaths=**} {
       allow read: if true;
       allow write: if isSignedIn()
@@ -55,18 +46,6 @@ service firebase.storage {
       allow create: if isValidImage();
       allow update, delete: if isSignedIn()
         && request.auth.uid == ownerId;
-    }
-
-    // ---- FitPal assets (legacy — separate project shares this bucket) ----
-    match /fitpal/{allPaths=**} {
-      allow read: if true;
-      allow write: if isFitpalAdmin();
-    }
-
-    // ---- Quiz assets (legacy) ----
-    match /quizzes/{quizId}/{allPaths=**} {
-      allow read: if true;
-      allow write: if isFitpalAdmin();
     }
 
     // Deny everything else by default.
