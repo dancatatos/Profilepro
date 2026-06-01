@@ -22,8 +22,12 @@ import { PublicProfileView } from "@/components/public-profile/PublicProfileView
 import { DEMO_PROFILE } from "@/lib/defaults";
 import { PLANS } from "@/lib/constants";
 import { planDisplayFeatures } from "@/lib/features";
-import { getPlansConfig } from "@/lib/firebase/firestore";
-import type { Plan } from "@/types";
+import {
+  getFeatureFlags,
+  getPlansConfig,
+  getProfileByUsername,
+} from "@/lib/firebase/firestore";
+import type { Plan, Profile } from "@/types";
 
 const AUDIENCES = [
   "Network Marketers",
@@ -51,6 +55,12 @@ const STEPS = [
 
 export default function LandingPage() {
   const [plans, setPlans] = useState<Plan[]>(PLANS);
+  /* Profile shown inside the hero phone mockup. Defaults to the
+     hardcoded DEMO_PROFILE so the page renders instantly with no
+     loading flicker; swapped to a real customer's live profile once
+     the feature-flag lookup resolves (and only if the admin has
+     actually picked one). */
+  const [featured, setFeatured] = useState<Profile>(DEMO_PROFILE);
 
   useEffect(() => {
     getPlansConfig()
@@ -58,6 +68,31 @@ export default function LandingPage() {
         if (p) setPlans(p);
       })
       .catch(() => null);
+  }, []);
+
+  /* Load the "featured profile" picked in /admin. Fails silently — if
+     the username is unset, mistyped, or the profile is private/missing,
+     we just keep showing DEMO_PROFILE. */
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const flags = await getFeatureFlags();
+        const username = flags.featuredProfileUsername?.trim();
+        if (!username) return;
+        const profile = await getProfileByUsername(username);
+        if (cancelled || !profile) return;
+        /* Only swap when the profile is actually published — admin
+           shouldn't be able to leak a draft profile through the
+           homepage by accident. */
+        if (profile.status === "published") setFeatured(profile);
+      } catch {
+        /* network error → keep DEMO_PROFILE */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
@@ -135,7 +170,7 @@ export default function LandingPage() {
             <div className="absolute -inset-6 rounded-[3rem] bg-electric-600/20 blur-3xl" />
             <div className="relative w-[300px] rounded-[2.6rem] border-4 border-ink-700 bg-ink-950 p-2 shadow-glass">
               <div className="no-scrollbar h-[600px] overflow-y-auto rounded-[2rem]">
-                <PublicProfileView profile={DEMO_PROFILE} />
+                <PublicProfileView profile={featured} />
               </div>
             </div>
           </motion.div>

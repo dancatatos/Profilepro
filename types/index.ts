@@ -92,6 +92,15 @@ export interface UserSubscription {
 export interface FeatureFlags {
   /** When true, the standalone Template Marketplace tab is visible to users. */
   templateMarketplace: boolean;
+  /**
+   * Username of the user whose live profile is showcased in the
+   * marketing landing page hero (the phone mockup). When unset, the
+   * homepage falls back to the hardcoded DEMO_PROFILE. Admin picks
+   * this from /admin so the showcase can rotate without code changes
+   * — perfect for highlighting real customer profiles that have
+   * actual photos and credibility content.
+   */
+  featuredProfileUsername?: string;
 }
 
 /* ---------------- Profile sections ---------------- */

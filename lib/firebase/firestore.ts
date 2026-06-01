@@ -79,6 +79,8 @@ const SAVED_BUILDS_SUB = "savedBuilds";
 
 export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   templateMarketplace: false,
+  /* featuredProfileUsername left undefined → landing page falls back
+     to DEMO_PROFILE until an admin picks a real customer to feature. */
 };
 
 const FEATURE_FLAGS_DOC = "featureFlags";

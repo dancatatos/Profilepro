@@ -8,7 +8,11 @@ import {
   CreditCard,
   RefreshCw,
   ArrowRight,
+  Check,
+  ExternalLink,
   LayoutTemplate,
+  Save,
+  Star,
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
@@ -193,6 +197,128 @@ export default function AdminDashboardPage() {
           />
         </Card>
       </div>
+
+      {/* Featured profile on the marketing site */}
+      <FeaturedProfileSection
+        flags={flags}
+        onSaved={(username) =>
+          setFlags((f) =>
+            f ? { ...f, featuredProfileUsername: username } : f,
+          )
+        }
+      />
+    </div>
+  );
+}
+
+/* ── Featured profile picker ──────────────────────────────────────── */
+
+/**
+ * Small inline editor for the marketing-site hero profile. Admins type
+ * the username of any published user profile; the homepage swaps in
+ * that live profile (with real photo + content) for the hardcoded
+ * Jasmine Cruz demo. Useful for showcasing standout customers without
+ * a code change.
+ */
+function FeaturedProfileSection({
+  flags,
+  onSaved,
+}: {
+  flags: FeatureFlags | null;
+  onSaved: (username: string) => void;
+}) {
+  const [draft, setDraft] = useState("");
+  const [saving, setSaving] = useState(false);
+  const patchLocalFlags = useFeatureFlagsStore((s) => s.patchLocal);
+
+  /* Seed the input from the saved value on first load + whenever the
+     flags doc re-syncs. Keeps the input in sync after a refresh. */
+  useEffect(() => {
+    if (flags) setDraft(flags.featuredProfileUsername ?? "");
+  }, [flags]);
+
+  const current = flags?.featuredProfileUsername?.trim() ?? "";
+  const dirty = draft.trim().toLowerCase() !== current.toLowerCase();
+
+  const save = async () => {
+    const cleaned = draft.trim().toLowerCase();
+    setSaving(true);
+    try {
+      /* Empty string = clear the override → homepage falls back to
+         DEMO_PROFILE. Otherwise persist the chosen username. */
+      await setFeatureFlags({
+        featuredProfileUsername: cleaned || undefined,
+      });
+      patchLocalFlags({ featuredProfileUsername: cleaned || undefined });
+      onSaved(cleaned);
+      toast.success(
+        cleaned
+          ? `Now featuring @${cleaned} on the homepage.`
+          : "Featured profile cleared — homepage now shows the demo.",
+      );
+    } catch {
+      toast.error("Couldn't save — check Firestore rules.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div>
+      <h2 className="mb-3 font-display text-sm font-semibold text-white">
+        Featured Profile (Homepage)
+      </h2>
+      <Card className="p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gold-400/15">
+            <Star className="h-5 w-5 text-gold-300" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-white">
+              Showcased profile on the marketing site
+            </p>
+            <p className="mt-1 text-xs text-white/55">
+              The phone mockup in the homepage hero displays this user&apos;s
+              live profile. Leave blank to fall back to the built-in demo.
+              The profile must be <strong>published</strong> — draft profiles
+              are ignored.
+            </p>
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+              <div className="flex flex-1 items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-3">
+                <span className="text-sm text-white/40">@</span>
+                <input
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  placeholder="username (e.g. dan)"
+                  className="h-10 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/30"
+                />
+                {!dirty && current && (
+                  <Check className="h-4 w-4 shrink-0 text-jade-400" />
+                )}
+              </div>
+              <Button
+                onClick={save}
+                loading={saving}
+                disabled={saving || !dirty}
+                leftIcon={<Save className="h-4 w-4" />}
+              >
+                Save
+              </Button>
+            </div>
+            {current && (
+              <a
+                href={`/${current}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-flex items-center gap-1 text-[11px] text-electric-400 hover:text-electric-300"
+              >
+                <ExternalLink className="h-3 w-3" />
+                Open /{current} to preview
+              </a>
+            )}
+          </div>
+        </div>
+      </Card>
     </div>
   );
 }
