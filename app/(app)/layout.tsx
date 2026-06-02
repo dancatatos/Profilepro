@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfileStore } from "@/store/profileStore";
+import { useTaskCountStore } from "@/store/taskCountStore";
 import { getProfile } from "@/lib/firebase/firestore";
 import { createDefaultProfile, DEMO_PROFILE } from "@/lib/defaults";
 import { FullScreenLoader } from "@/components/ui/Spinner";
@@ -20,6 +21,8 @@ export default function AppLayout({
   const router = useRouter();
   const profile = useProfileStore((s) => s.profile);
   const setProfile = useProfileStore((s) => s.setProfile);
+  const refreshTaskCount = useTaskCountStore((s) => s.refresh);
+  const resetTaskCount = useTaskCountStore((s) => s.reset);
 
   useEffect(() => {
     if (loading) return;
@@ -33,6 +36,18 @@ export default function AppLayout({
       router.replace("/affiliate");
     }
   }, [loading, account, router]);
+
+  /* Follow-up task count — fetched once on sign-in, drives the nav
+     badge and dashboard "Today" card. Reset on sign-out so stale
+     counts don't leak between user sessions on shared devices. */
+  useEffect(() => {
+    if (!account) {
+      resetTaskCount();
+      return;
+    }
+    if (account.uid === "demo") return;
+    refreshTaskCount(account.uid);
+  }, [account, refreshTaskCount, resetTaskCount]);
 
   useEffect(() => {
     let active = true;

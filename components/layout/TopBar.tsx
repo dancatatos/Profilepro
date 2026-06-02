@@ -11,6 +11,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Badge } from "@/components/ui/Badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
+import { useTaskCountStore } from "@/store/taskCountStore";
 import { logout } from "@/lib/firebase/auth";
 import { toast } from "@/store/uiStore";
 import { cn } from "@/lib/utils";
@@ -30,6 +31,7 @@ export function TopBar() {
   const router = useRouter();
   const { account } = useAuth();
   const { flags } = useFeatureFlags();
+  const urgentTasks = useTaskCountStore((s) => s.urgent);
   const [menuOpen, setMenuOpen] = useState(false);
 
   /* The Template Marketplace tab is admin-gated and off by default. */
@@ -50,10 +52,23 @@ export function TopBar() {
       <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-white/[0.06] bg-ink-900/70 px-4 backdrop-blur-xl lg:px-8">
         <button
           onClick={() => setMenuOpen(true)}
-          aria-label="Open menu"
-          className="rounded-lg p-2 text-white/70 no-tap-highlight hover:bg-white/5 lg:hidden"
+          aria-label={
+            urgentTasks > 0
+              ? `Open menu — ${urgentTasks} follow-ups due`
+              : "Open menu"
+          }
+          className="relative rounded-lg p-2 text-white/70 no-tap-highlight hover:bg-white/5 lg:hidden"
         >
           <Menu className="h-5 w-5" />
+          {/* Tiny red pulse dot mirrors the sidebar badge so mobile
+              users get the same signal — BottomNav doesn't include
+              Follow-Up, so the hamburger is the right surface. */}
+          {urgentTasks > 0 && (
+            <span className="absolute right-1.5 top-1.5 flex h-2.5 w-2.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500/70" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+            </span>
+          )}
         </button>
 
         <h1 className="flex-1 truncate font-display text-base font-semibold text-white lg:text-lg">
@@ -109,6 +124,13 @@ export function TopBar() {
                   )}
                 />
                 {item.label}
+                {/* Same urgent-task badge as the desktop sidebar, so
+                    the mobile drawer surfaces the same signal. */}
+                {item.key === "pipelines" && urgentTasks > 0 && (
+                  <span className="ml-auto flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-500/90 px-1.5 text-[10px] font-bold text-white">
+                    {urgentTasks > 99 ? "99+" : urgentTasks}
+                  </span>
+                )}
               </Link>
             );
           })}

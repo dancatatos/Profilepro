@@ -43,6 +43,7 @@ import {
   updateLead,
   moveLeadToStage,
 } from "@/lib/firebase/firestore";
+import { useTaskCountStore } from "@/store/taskCountStore";
 import { useProfileStore } from "@/store/profileStore";
 import { copyToClipboard, timeAgo, timeUntil } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
@@ -112,6 +113,11 @@ export function LeadDetailModal({
     }
     return map;
   }, [sentMessages]);
+
+  /* Hooks must run in the same order every render — pull task-count
+     refresh BEFORE the lead-null early return so React's hook
+     accounting stays stable when the modal closes (lead === null). */
+  const refreshTaskCount = useTaskCountStore((s) => s.refresh);
 
   if (!lead) return null;
 
@@ -256,6 +262,8 @@ export function LeadDetailModal({
           ? Date.now() + target.daysBeforeNextTask * 24 * 60 * 60 * 1000
           : undefined,
       });
+      /* Move resets nextTaskAt → badge could go up OR down. Refresh. */
+      refreshTaskCount(lead.ownerId);
       toast.success(`Moved to ${target.name}.`);
     } catch {
       toast.error("Couldn't move lead.");
@@ -285,6 +293,9 @@ export function LeadDetailModal({
     try {
       await updateLead(lead.id, { nextTaskAt: next });
       onUpdated({ nextTaskAt: next });
+      /* Snooze pushes this lead out of the "urgent" window — badge
+         decrements. Refresh so the dashboard reflects it instantly. */
+      refreshTaskCount(lead.ownerId);
       toast.success(`Snoozed ${days} day${days === 1 ? "" : "s"}.`);
     } catch {
       toast.error("Couldn't snooze.");

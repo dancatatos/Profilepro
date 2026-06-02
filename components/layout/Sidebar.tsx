@@ -10,6 +10,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
+import { useTaskCountStore } from "@/store/taskCountStore";
 import { cn } from "@/lib/utils";
 
 function isActive(pathname: string, href: string) {
@@ -21,6 +22,10 @@ export function Sidebar() {
   const pathname = usePathname();
   const { account } = useAuth();
   const { flags } = useFeatureFlags();
+  /* Follow-up task count — surfaces as a red dot + count on the
+     Follow-Up nav item so the user knows there's work waiting
+     without having to click into the section. */
+  const urgentTasks = useTaskCountStore((s) => s.urgent);
 
   /* The Template Marketplace tab is admin-gated and off by default. */
   const navItems = DASHBOARD_NAV.filter(
@@ -64,6 +69,18 @@ export function Sidebar() {
               {item.label}
               {item.key === "ai" && (
                 <span className="ml-auto h-1.5 w-1.5 rounded-full bg-jade-400" />
+              )}
+              {/* Follow-Up urgent-task badge. Red because overdue +
+                  due-today are time-sensitive — different from the
+                  passive electric tint elsewhere. Cap display at 99+
+                  to avoid the pill stretching the nav row. */}
+              {item.key === "pipelines" && urgentTasks > 0 && (
+                <span
+                  className="ml-auto flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-500/90 px-1.5 text-[10px] font-bold text-white"
+                  title={`${urgentTasks} follow-up${urgentTasks === 1 ? "" : "s"} due`}
+                >
+                  {urgentTasks > 99 ? "99+" : urgentTasks}
+                </span>
               )}
             </Link>
           );

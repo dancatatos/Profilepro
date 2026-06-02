@@ -3,12 +3,21 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, CheckCircle2, Circle, Sparkles } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowRight,
+  CalendarClock,
+  CheckCircle2,
+  Circle,
+  Sparkles,
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfileStore } from "@/store/profileStore";
+import { useTaskCountStore } from "@/store/taskCountStore";
+import { usePlanAccess } from "@/components/providers/PlanProvider";
 import { getAnalyticsSummary } from "@/lib/firebase/firestore";
 import { profileCompleteness } from "@/lib/profileMetrics";
-import { formatCompact, formatPercent } from "@/lib/utils";
+import { cn, formatCompact, formatPercent } from "@/lib/utils";
 import type { AnalyticsSummary } from "@/types";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -78,6 +87,11 @@ export default function DashboardPage() {
           {firstName} &#128075;
         </h1>
       </div>
+
+      {/* Follow-up tasks — the FIRST thing the user sees if they have
+          any due. Replaces "user forgot to check /pipelines/today" with
+          "user opens the app and immediately knows what to do." */}
+      <TodayTasksCard />
 
       {/* Completeness + AI */}
       <Card className="overflow-hidden p-5">
@@ -189,5 +203,138 @@ function StatIcon({ icon, accent }: { icon: string; accent: string }) {
     <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${map[accent]}`}>
       <Icon name={icon} className="h-5 w-5" />
     </div>
+  );
+}
+
+/* ── Today's follow-up tasks card ──────────────────────────────── */
+
+/**
+ * Prominent dashboard card that surfaces pending follow-up tasks so
+ * the user doesn't have to remember to click into /pipelines.
+ *
+ * Three states:
+ *   - Pipeline feature locked (not Pro)        → don't render
+ *   - Loaded, zero tasks                       → don't render
+ *   - Has tasks → urgent red card OR soft card
+ *
+ * Reads from useTaskCountStore which the app layout populates once
+ * on sign-in. Refreshes naturally on every dashboard mount because
+ * the layout's effect re-runs.
+ */
+function TodayTasksCard() {
+  const { hasFeature } = usePlanAccess();
+  const hasPipelines = hasFeature("follow_up_pipeline");
+  const { overdue, today, soon, urgent, initialised } = useTaskCountStore();
+
+  /* Lock-aware empty states — paid feature, free users don't see
+     this card at all (cleaner than showing a "Pro only" tease that
+     creates pricing friction on the most important screen). */
+  if (!hasPipelines) return null;
+  if (!initialised) return null;
+  if (overdue + today + soon === 0) return null;
+
+  /* Visual urgency scales with what's actually waiting:
+       - Overdue → red, animated pulse, "act now" energy
+       - Due today only → amber, calmer, "today's job" energy
+       - Only "coming up" → soft electric, FYI tone */
+  const tone =
+    overdue > 0 ? "urgent" : today > 0 ? "today" : "soft";
+
+  const palette = {
+    urgent: {
+      ring: "border-red-500/30",
+      bg: "bg-gradient-to-br from-red-500/[0.10] via-red-500/[0.04] to-transparent",
+      icon: "bg-red-500/20 text-red-300",
+      label: "Action needed",
+    },
+    today: {
+      ring: "border-amber-500/30",
+      bg: "bg-gradient-to-br from-amber-500/[0.10] via-amber-500/[0.04] to-transparent",
+      icon: "bg-amber-500/20 text-amber-300",
+      label: "Today's follow-ups",
+    },
+    soft: {
+      ring: "border-electric-500/25",
+      bg: "bg-gradient-to-br from-electric-500/[0.08] via-electric-500/[0.03] to-transparent",
+      icon: "bg-electric-500/15 text-electric-300",
+      label: "Coming up",
+    },
+  }[tone];
+
+  /* Headline copy — bias toward the most-urgent bucket so a single
+     scan tells the user the most important number. */
+  const headline =
+    overdue > 0
+      ? `${overdue} overdue follow-up${overdue === 1 ? "" : "s"}${
+          today > 0 ? ` · ${today} due today` : ""
+        }`
+      : today > 0
+        ? `${today} follow-up${today === 1 ? "" : "s"} due today`
+        : `${soon} follow-up${soon === 1 ? "" : "s"} coming up`;
+
+  return (
+    <Link href="/pipelines/today" className="block">
+      <Card
+        className={cn(
+          "relative overflow-hidden border-2 p-5 transition-all hover:border-opacity-60",
+          palette.ring,
+          palette.bg,
+        )}
+      >
+        <div className="flex items-center gap-4">
+          <div
+            className={cn(
+              "relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl",
+              palette.icon,
+            )}
+          >
+            {tone === "urgent" ? (
+              <AlertCircle className="h-6 w-6" />
+            ) : (
+              <CalendarClock className="h-6 w-6" />
+            )}
+            {/* Pulsing ring on the icon when there's something
+                truly overdue — gives a subtle "look here" motion. */}
+            {tone === "urgent" && (
+              <span className="absolute inset-0 animate-ping rounded-2xl bg-red-500/40" />
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-white/55">
+              {palette.label}
+            </p>
+            <h2 className="mt-0.5 font-display text-lg font-bold text-white sm:text-xl">
+              {headline}
+            </h2>
+            <p className="mt-0.5 text-xs text-white/55">
+              Open the daily task list to copy a message and mark done.
+            </p>
+          </div>
+          <ArrowRight className="hidden h-5 w-5 shrink-0 text-white/40 sm:block" />
+        </div>
+
+        {/* Mini chip row for the secondary buckets — gives more
+            granular info without forcing the user to navigate. */}
+        {(overdue > 0 || today > 0 || soon > 0) && (
+          <div className="mt-4 flex flex-wrap gap-1.5 border-t border-white/[0.06] pt-3">
+            {overdue > 0 && (
+              <span className="rounded-md bg-red-500/15 px-2 py-0.5 text-[11px] font-semibold text-red-300">
+                {overdue} overdue
+              </span>
+            )}
+            {today > 0 && (
+              <span className="rounded-md bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-300">
+                {today} due today
+              </span>
+            )}
+            {soon > 0 && (
+              <span className="rounded-md bg-electric-500/15 px-2 py-0.5 text-[11px] font-semibold text-electric-300">
+                {soon} coming up
+              </span>
+            )}
+          </div>
+        )}
+      </Card>
+    </Link>
   );
 }
