@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { InstallButton } from "@/components/pwa/InstallButton";
+import { PushNotificationToggle } from "@/components/settings/PushNotificationToggle";
 import { copyToClipboard, getAppOrigin } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 
@@ -122,6 +123,9 @@ export default function SettingsPage() {
           </Button>
         </div>
       </Card>
+
+      {/* Daily push reminder toggle — per-device subscription. */}
+      <PushNotificationToggle />
 
       {/* Install Credibly — surfaces a manual install action so users
           who dismissed the bottom banner (or whose browser never fired

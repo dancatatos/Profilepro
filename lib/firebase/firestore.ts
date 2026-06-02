@@ -69,6 +69,8 @@ export const COL = {
   universityTopics: "university_topics",
   /* Credibly University — per-user lesson completion log. */
   universityProgress: "university_progress",
+  /* Web push subscriptions — one doc per (user, device) pair. */
+  pushSubscriptions: "push_subscriptions",
   /* Follow-Up Pipelines — per-user pipeline definitions. */
   pipelines: "pipelines",
   /* Manual payment submissions — receipts uploaded by visitors. */
@@ -448,6 +450,61 @@ export async function listUserLessonProgress(
   return snap.docs.map(
     (d) => ({ ...(d.data() as UniversityProgress), id: d.id }),
   );
+}
+
+/* ---------------- Web Push Subscriptions ---------------- */
+
+/**
+ * Deterministic doc id derived from the user's uid + a tail of the
+ * push endpoint URL. Two reasons:
+ *
+ *   1. Resubscribing from the same device upserts (no duplicate docs)
+ *   2. Unsubscribe can delete-by-id without a query first
+ *
+ * Endpoint URLs end with a long random subscription token, so the
+ * last 24 chars are effectively unique per device.
+ */
+function pushSubscriptionDocId(uid: string, endpoint: string): string {
+  return `${uid}__${endpoint.slice(-24)}`;
+}
+
+/**
+ * Save THIS browser's push subscription to Firestore. Idempotent —
+ * the doc id is stable per (user, device), so a second call replaces
+ * the existing entry rather than creating a duplicate.
+ */
+export async function savePushSubscription(
+  userId: string,
+  subscription: PushSubscriptionJSON,
+  userAgent: string,
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  const endpoint = subscription.endpoint;
+  if (!endpoint || !subscription.keys) {
+    throw new Error("Invalid push subscription payload.");
+  }
+  const id = pushSubscriptionDocId(userId, endpoint);
+  await setDoc(doc(db, COL.pushSubscriptions, id), {
+    id,
+    userId,
+    endpoint,
+    keys: subscription.keys,
+    userAgent: userAgent.slice(0, 200),
+    createdAt: Date.now(),
+    /* lastUsedAt updated server-side by the cron after a successful
+       push — lets us garbage-collect long-dead subscriptions later. */
+    lastUsedAt: Date.now(),
+  });
+}
+
+/** Delete this device's subscription. Cron will also auto-prune dead ones. */
+export async function deletePushSubscription(
+  userId: string,
+  endpoint: string,
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  const id = pushSubscriptionDocId(userId, endpoint);
+  await deleteDoc(doc(db, COL.pushSubscriptions, id));
 }
 
 /* ---------------- Follow-Up Pipelines ---------------- */
