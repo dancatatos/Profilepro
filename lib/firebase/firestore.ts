@@ -28,6 +28,7 @@ import type {
   Commission,
   FeatureFlags,
   Funnel,
+  MarketingContent,
   Lead,
   Pipeline,
   Plan,
@@ -98,6 +99,34 @@ export async function getFeatureFlags(): Promise<FeatureFlags> {
   } catch {
     return { ...DEFAULT_FEATURE_FLAGS };
   }
+}
+
+/**
+ * Read the marketing-site content (homepage hero, testimonials, FAQ,
+ * etc). Returns null when no override has been saved yet — the
+ * caller layers this on top of DEFAULT_MARKETING_CONTENT so missing
+ * sections fall back gracefully.
+ */
+export async function getMarketingContent(): Promise<Partial<MarketingContent> | null> {
+  if (!isFirebaseConfigured) return null;
+  try {
+    const snap = await getDoc(doc(db, COL.settings, "marketing"));
+    if (!snap.exists()) return null;
+    return snap.data() as Partial<MarketingContent>;
+  } catch {
+    return null;
+  }
+}
+
+/** Save admin edits to the marketing content doc (admin-only via rules). */
+export async function setMarketingContent(
+  content: MarketingContent,
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  /* Full document write — the marketing doc is small (~4 KB) and the
+     admin always edits the whole thing in one go, so merging would
+     only add bookkeeping for no benefit. */
+  await setDoc(doc(db, COL.settings, "marketing"), content);
 }
 
 /** Update one or more feature flags (admin only — enforced by rules). */

@@ -115,6 +115,98 @@ export interface UserSubscription {
 
 /* ---------------- Feature flags (admin-controlled) ---------------- */
 
+/* ---------------- Marketing site content ---------------- */
+/* All content the admin can edit from /admin/marketing without
+   touching code. Stored as a single doc at settings/marketing
+   (public-read so the homepage can render it anonymously,
+   admin-write enforced by Firestore rules on the settings doc).
+   Each section has an `enabled` flag so the admin can hide
+   half-finished sections rather than ship placeholder copy. */
+
+export interface MarketingStat {
+  id: string;
+  /** Big number or phrase, e.g. "200+", "₱0", "24h". */
+  value: string;
+  /** Small label under the value, e.g. "Profiles built". */
+  label: string;
+}
+
+export interface MarketingTestimonial {
+  id: string;
+  name: string;
+  /** e.g. "Wellness Coach · Manila" */
+  role: string;
+  quote: string;
+  /** Optional public avatar URL — falls back to initials when missing. */
+  avatarUrl?: string;
+  /** 1-5 stars, 0/undefined hides the rating row. */
+  rating?: number;
+}
+
+export interface MarketingVideoTestimonial {
+  id: string;
+  /** Display title under the video. */
+  title: string;
+  /** YouTube, Vimeo, or Adilo URL — normalised on render. */
+  videoUrl: string;
+  /** Speaker name shown under the title. */
+  authorName?: string;
+}
+
+export interface MarketingFaqItem {
+  id: string;
+  question: string;
+  answer: string;
+}
+
+/**
+ * Everything on the public homepage that the admin can edit without
+ * shipping code. Each editable section has its own `enabled` flag so
+ * the admin can hide a section (e.g. "Testimonials") until they have
+ * real content to put in, rather than show empty placeholders.
+ */
+export interface MarketingContent {
+  hero: {
+    badge: string;
+    /** Two-line headline + a gradient phrase in between. */
+    headlineLine1: string;
+    headlineGradient: string;
+    headlineLine2: string;
+    subheadline: string;
+    primaryCta: string;
+    secondaryCta: string;
+    /** Audience pills shown under the CTAs. */
+    audiences: string[];
+  };
+  socialProof: {
+    enabled: boolean;
+    stats: MarketingStat[];
+  };
+  testimonials: {
+    enabled: boolean;
+    title: string;
+    subtitle?: string;
+    items: MarketingTestimonial[];
+  };
+  testimonialVideos: {
+    enabled: boolean;
+    title: string;
+    subtitle?: string;
+    items: MarketingVideoTestimonial[];
+  };
+  faq: {
+    enabled: boolean;
+    title: string;
+    items: MarketingFaqItem[];
+  };
+  finalCta: {
+    title: string;
+    subtitle: string;
+    primaryCta: string;
+    secondaryCta: string;
+  };
+}
+
 export interface FeatureFlags {
   /** When true, the standalone Template Marketplace tab is visible to users. */
   templateMarketplace: boolean;
