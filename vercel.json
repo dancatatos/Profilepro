@@ -6,7 +6,6 @@
       "schedule": "0 1 * * *"
     },
     {
-      "//": "Daily follow-up push reminders — 1:00 UTC == 9:00 PHT",
       "path": "/api/cron/daily-followup-push",
       "schedule": "0 1 * * *"
     }
