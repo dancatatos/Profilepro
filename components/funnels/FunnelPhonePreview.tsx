@@ -104,6 +104,11 @@ export function FunnelPhonePreview({
                     ownerId={profile?.ownerId ?? "preview"}
                     paymentMethods={profile?.paymentMethods}
                     source={`funnel:${funnel.slug}`}
+                    /* No-op advance — preview doesn't navigate. The
+                       CTA buttons still call onAdvance() so they're
+                       visibly tappable instead of inert, but nothing
+                       moves the visible step. */
+                    onAdvance={() => {}}
                   />
                 ))}
                 {showCta && cta && (

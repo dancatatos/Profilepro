@@ -19,12 +19,22 @@ import type {
 import type { ThemeConfig } from "@/lib/themes";
 
 export type TrackFn = (type: AnalyticsEventType, target?: string) => void;
-export type LeadSubmitFn = (data: {
-  name: string;
-  email?: string;
-  phone?: string;
-  source: string;
-}) => Promise<void> | void;
+/**
+ * Lead-form submit handler. The caller persists the lead, plus runs
+ * any default post-save behavior (in funnels, auto-advance to the
+ * next step). Pass `options.skipAdvance: true` when the calling
+ * section opts into a custom post-submit action ("url" / "stay")
+ * and you want to suppress the funnel auto-advance.
+ */
+export type LeadSubmitFn = (
+  data: {
+    name: string;
+    email?: string;
+    phone?: string;
+    source: string;
+  },
+  options?: { skipAdvance?: boolean },
+) => Promise<void> | void;
 
 interface RendererProps {
   section: ProfileSection;
@@ -43,6 +53,14 @@ interface RendererProps {
   paymentMethods?: PaymentMethod[];
   /** Where the section is rendered — funnel slug or "profile". */
   source?: string;
+  /**
+   * Funnel-only: advance to the next step. Passed by FunnelView so that
+   * CTAButtons with action="next", PricingCard CTAs with ctaAction="next",
+   * and LeadCapture sections with postSubmitAction="next" can navigate.
+   * On the public profile (non-funnel) context this is undefined and
+   * the "next" action gracefully falls back to "do nothing".
+   */
+  onAdvance?: () => void;
 }
 
 /* ──────────────────────────────────────────
@@ -304,29 +322,62 @@ export function SectionRenderer({
   ownerId,
   paymentMethods,
   source,
+  onAdvance,
 }: RendererProps) {
   switch (section.type) {
     case "cta":
       return (
         <SectionShell title={section.title} narrow="md">
           <div className="space-y-2.5">
-            {section.buttons.map((b) => (
-              <a
-                key={b.id}
-                href={b.url || "#"}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => track("cta_click", b.id)}
-                className={cn(
-                  "flex items-center justify-center gap-2 px-5 py-4 text-sm font-semibold shadow-card transition-transform active:scale-[0.98]",
-                  ctaButtonClasses(b),
-                )}
-                style={{ borderRadius: "var(--tp-btn-radius)" }}
-              >
-                <Icon name={b.icon} className="h-4 w-4" />
-                {b.label}
-              </a>
-            ))}
+            {section.buttons.map((b) => {
+              /* Default to "url" for buttons created before the action
+                 field existed. Honor the three explicit modes otherwise. */
+              const action: "url" | "next" | "none" = b.action ?? "url";
+              const baseClasses = cn(
+                "flex items-center justify-center gap-2 px-5 py-4 text-sm font-semibold shadow-card transition-transform active:scale-[0.98]",
+                ctaButtonClasses(b),
+              );
+              const baseStyle = {
+                borderRadius: "var(--tp-btn-radius)",
+              };
+
+              /* "url" → render as anchor so visitors can still
+                 right-click / long-press to copy the link. */
+              if (action === "url") {
+                return (
+                  <a
+                    key={b.id}
+                    href={b.url || "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => track("cta_click", b.id)}
+                    className={baseClasses}
+                    style={baseStyle}
+                  >
+                    <Icon name={b.icon} className="h-4 w-4" />
+                    {b.label}
+                  </a>
+                );
+              }
+
+              /* "next" → advance funnel if available, else do nothing.
+                 "none" → just log the click. Both render as buttons. */
+              return (
+                <button
+                  key={b.id}
+                  type="button"
+                  onClick={() => {
+                    track("cta_click", b.id);
+                    if (action === "next" && onAdvance) onAdvance();
+                  }}
+                  className={baseClasses}
+                  style={baseStyle}
+                >
+                  <Icon name={b.icon} className="h-4 w-4" />
+                  {b.label}
+                </button>
+              );
+            })}
           </div>
         </SectionShell>
       );
@@ -505,23 +556,44 @@ export function SectionRenderer({
                 ))}
               </ul>
             )}
-            {section.ctaLabel && (
-              <a
-                href={section.ctaUrl || "#"}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => track("cta_click", `pricing-${section.id}`)}
-                className="tp-btn-el block w-full px-5 py-3.5 text-center text-sm font-semibold transition-transform active:scale-[0.98]"
-                style={{
-                  background: "var(--tp-btn)",
-                  color: "var(--tp-btn-text)",
-                  borderRadius: "var(--tp-btn-radius)",
-                  border: "1px solid var(--tp-btn-border)",
-                }}
-              >
-                {section.ctaLabel}
-              </a>
-            )}
+            {section.ctaLabel && (() => {
+              const action: "url" | "next" | "none" = section.ctaAction ?? "url";
+              const btnClasses =
+                "tp-btn-el block w-full px-5 py-3.5 text-center text-sm font-semibold transition-transform active:scale-[0.98]";
+              const btnStyle = {
+                background: "var(--tp-btn)",
+                color: "var(--tp-btn-text)",
+                borderRadius: "var(--tp-btn-radius)",
+                border: "1px solid var(--tp-btn-border)",
+              };
+              if (action === "url") {
+                return (
+                  <a
+                    href={section.ctaUrl || "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => track("cta_click", `pricing-${section.id}`)}
+                    className={btnClasses}
+                    style={btnStyle}
+                  >
+                    {section.ctaLabel}
+                  </a>
+                );
+              }
+              return (
+                <button
+                  type="button"
+                  onClick={() => {
+                    track("cta_click", `pricing-${section.id}`);
+                    if (action === "next" && onAdvance) onAdvance();
+                  }}
+                  className={btnClasses}
+                  style={btnStyle}
+                >
+                  {section.ctaLabel}
+                </button>
+              );
+            })()}
           </div>
         </SectionShell>
       );
@@ -743,7 +815,25 @@ export function SectionRenderer({
     case "leadCapture":
       return (
         <SectionShell title={section.title} narrow="md">
-          <LeadForm section={section} track={track} onLead={onLead} />
+          <LeadForm
+            section={section}
+            track={track}
+            /* Wrap onLead so the section's postSubmitAction fires after
+               the save. Pass skipAdvance to suppress FunnelView's
+               auto-advance when the section opts into "url" or "stay". */
+            onLead={async (data) => {
+              const action = section.postSubmitAction ?? "next";
+              const skip = action !== "next";
+              await onLead(data, { skipAdvance: skip });
+              if (action === "url" && section.postSubmitUrl) {
+                if (typeof window !== "undefined") {
+                  window.location.href = section.postSubmitUrl;
+                }
+              }
+              /* "stay" → LeadForm renders its own success state, nothing
+                 else to do here. */
+            }}
+          />
         </SectionShell>
       );
 

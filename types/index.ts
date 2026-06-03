@@ -275,6 +275,17 @@ export interface PaymentMethod {
   sortOrder: number;
 }
 
+/**
+ * What a button does after the click:
+ *   "url"  → open the configured URL in a new tab (current default)
+ *   "next" → advance to the next funnel step (no-op outside funnels)
+ *   "none" → do nothing extra — just visual, useful for analytics tracking
+ *
+ * Optional + defaults to "url" everywhere so existing CTAs keep
+ * working without migration.
+ */
+export type CtaActionKind = "url" | "next" | "none";
+
 export interface CTAButton {
   id: string;
   label: string;
@@ -282,6 +293,8 @@ export interface CTAButton {
   icon: string; // lucide icon name or social key
   style: "solid" | "gradient" | "outline";
   accent: "blue" | "jade" | "gold" | "white";
+  /** What happens when this button is clicked. Defaults to "url". */
+  action?: CtaActionKind;
 }
 
 export type SocialPlatform =
@@ -435,6 +448,8 @@ export interface PricingCardSection extends SectionBase {
   features: PricingFeature[];
   ctaLabel: string;
   ctaUrl: string;
+  /** What the CTA button does. Defaults to "url" for back-compat. */
+  ctaAction?: CtaActionKind;
 }
 export interface CredibilitySection extends SectionBase {
   type: "credibility";
@@ -456,12 +471,26 @@ export interface GallerySection extends SectionBase {
   type: "gallery";
   images: GalleryImage[];
 }
+/**
+ * What happens after a visitor successfully submits the lead form.
+ * The lead is ALWAYS saved first; this only controls the navigation
+ * that fires after the save resolves.
+ *   "next" → auto-advance to the next funnel step (default, current behavior)
+ *   "url"  → redirect to a custom URL (e.g. an external checkout)
+ *   "stay" → keep them on the current page and just show success
+ */
+export type LeadCapturePostSubmitAction = "next" | "url" | "stay";
+
 export interface LeadCaptureSection extends SectionBase {
   type: "leadCapture";
   headline: string;
   subtext?: string;
   fields: LeadFieldKey[];
   channels: LeadCaptureChannels;
+  /** Post-save navigation. Defaults to "next". */
+  postSubmitAction?: LeadCapturePostSubmitAction;
+  /** Target URL when postSubmitAction === "url". */
+  postSubmitUrl?: string;
 }
 
 /**

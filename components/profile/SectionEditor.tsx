@@ -14,9 +14,11 @@ import type {
   AppointmentSection,
   CountdownSection,
   CredibilitySection,
+  CtaActionKind,
   HeroSection,
   BenefitsSection,
   FaqSection,
+  LeadCapturePostSubmitAction,
   PricingCardSection,
   CtaSection,
   GallerySection,
@@ -116,7 +118,10 @@ function CtaEditor({ section }: { section: CtaSection }) {
 
   return (
     <div className="space-y-2.5">
-      {section.buttons.map((b) => (
+      {section.buttons.map((b) => {
+        /* Default to "url" for buttons created before the field existed. */
+        const action: CtaActionKind = b.action ?? "url";
+        return (
         <RowCard
           key={b.id}
           onRemove={() => patch(section.buttons.filter((x) => x.id !== b.id))}
@@ -127,17 +132,39 @@ function CtaEditor({ section }: { section: CtaSection }) {
             placeholder="Button label"
             className={FIELD}
           />
-          <input
-            value={b.url}
-            onChange={(e) => edit(b.id, { url: e.target.value })}
-            placeholder="https://link.com"
-            className={FIELD}
-          />
+          {/* URL only shown when action === "url" so the editor doesn't
+              ask for a URL that won't be used. */}
+          {action === "url" && (
+            <input
+              value={b.url}
+              onChange={(e) => edit(b.id, { url: e.target.value })}
+              placeholder="https://link.com"
+              className={FIELD}
+            />
+          )}
           <IconPicker
             icons={CTA_ICONS}
             value={b.icon}
             onChange={(icon) => edit(b.id, { icon })}
           />
+          {/* "After click" picker — the new control. Hint reminds the
+              user that "next step" only works inside funnels. */}
+          <div>
+            <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/45">
+              After click
+            </label>
+            <Select
+              value={action}
+              onChange={(v) =>
+                edit(b.id, { action: v as CtaActionKind })
+              }
+              options={[
+                { value: "url", label: "Open URL (new tab)" },
+                { value: "next", label: "Go to next funnel step" },
+                { value: "none", label: "Do nothing" },
+              ]}
+            />
+          </div>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <Select
               value={b.style}
@@ -166,7 +193,8 @@ function CtaEditor({ section }: { section: CtaSection }) {
             />
           </div>
         </RowCard>
-      ))}
+        );
+      })}
       <AddRow
         label="Add button"
         onClick={() =>
@@ -516,20 +544,44 @@ function PricingCardEditor({ section }: { section: PricingCardSection }) {
           />
         </div>
       </div>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <input
-          value={section.ctaLabel}
-          onChange={(e) => update(section.id, { ctaLabel: e.target.value })}
-          placeholder="Button label"
-          className={FIELD}
-        />
-        <input
-          value={section.ctaUrl}
-          onChange={(e) => update(section.id, { ctaUrl: e.target.value })}
-          placeholder="Link / checkout URL"
-          className={FIELD}
-        />
-      </div>
+      {(() => {
+        const ctaAction: CtaActionKind = section.ctaAction ?? "url";
+        return (
+          <>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <input
+                value={section.ctaLabel}
+                onChange={(e) =>
+                  update(section.id, { ctaLabel: e.target.value })
+                }
+                placeholder="Button label"
+                className={FIELD}
+              />
+              <Select
+                value={ctaAction}
+                onChange={(v) =>
+                  update(section.id, { ctaAction: v as CtaActionKind })
+                }
+                options={[
+                  { value: "url", label: "Open URL (new tab)" },
+                  { value: "next", label: "Go to next funnel step" },
+                  { value: "none", label: "Do nothing" },
+                ]}
+              />
+            </div>
+            {ctaAction === "url" && (
+              <input
+                value={section.ctaUrl}
+                onChange={(e) =>
+                  update(section.id, { ctaUrl: e.target.value })
+                }
+                placeholder="Link / checkout URL"
+                className={FIELD}
+              />
+            )}
+          </>
+        );
+      })()}
     </div>
   );
 }
@@ -911,6 +963,47 @@ function LeadCaptureEditor({ section }: { section: LeadCaptureSection }) {
           className={FIELD}
         />
       </div>
+
+      {/* After-submission behavior — the parallel of the CTA "After
+          click" picker. Inside funnels the default is to auto-advance;
+          on profiles the section just shows its own success state. */}
+      {(() => {
+        const action: LeadCapturePostSubmitAction =
+          section.postSubmitAction ?? "next";
+        return (
+          <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
+            <p className="mb-2 text-xs font-medium text-white/65">
+              After submission
+            </p>
+            <Select
+              value={action}
+              onChange={(v) =>
+                update(section.id, {
+                  postSubmitAction: v as LeadCapturePostSubmitAction,
+                })
+              }
+              options={[
+                { value: "next", label: "Go to next funnel step (default)" },
+                { value: "url", label: "Redirect to a custom URL" },
+                { value: "stay", label: "Stay here & show success message" },
+              ]}
+            />
+            {action === "url" && (
+              <input
+                value={section.postSubmitUrl ?? ""}
+                onChange={(e) =>
+                  update(section.id, { postSubmitUrl: e.target.value })
+                }
+                placeholder="https://your-thank-you-page.com"
+                className={cn(FIELD, "mt-2")}
+              />
+            )}
+            <p className="mt-2 text-[10px] text-white/35">
+              The lead is always saved before this action fires.
+            </p>
+          </div>
+        );
+      })()}
     </div>
   );
 }

@@ -74,7 +74,14 @@ export function FunnelView({
   /* Analytics is intentionally a no-op for now (a later phase). */
   const track: TrackFn = () => {};
 
-  const onLead: LeadSubmitFn = async (data) => {
+  /**
+   * Save the lead, then advance UNLESS the caller passes
+   * options.skipAdvance — which the LeadCapture section does when its
+   * own postSubmitAction is "url" (redirect) or "stay" (success state
+   * on the current page). The lead is always saved regardless of the
+   * advance behaviour.
+   */
+  const onLead: LeadSubmitFn = async (data, options) => {
     if (live) {
       await createLead({
         profileId,
@@ -85,8 +92,7 @@ export function FunnelView({
         source: `funnel:${funnel.slug}`,
       });
     }
-    /* Capturing a lead advances the visitor to the next step. */
-    advance();
+    if (!options?.skipAdvance) advance();
   };
 
   const onBook: BookingSubmitFn = async (data) => {
@@ -157,6 +163,9 @@ export function FunnelView({
               ownerId={ownerId}
               paymentMethods={paymentMethods}
               source={`funnel:${funnel.slug}`}
+              /* Plumb through so CTA buttons with action="next" and
+                 pricing-card CTAs with ctaAction="next" can advance. */
+              onAdvance={advance}
             />
           ))}
 
