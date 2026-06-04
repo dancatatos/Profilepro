@@ -39,13 +39,14 @@ export default function FunnelsPage() {
   const router = useRouter();
   const { account, loading: authLoading } = useAuth();
 
-  const { hasAnyFeature, plans } = usePlanAccess();
-  /* Access to funnels at all = either tier of funnels enabled. */
-  const isPaid = hasAnyFeature(["funnels_5", "funnels_15"]);
+  const { plans } = usePlanAccess();
   /* Limit lookup respects: per-user override → plan.limits.funnels →
      legacy hardcoded FUNNEL_LIMITS map. The admin can grant individual
-     users extra capacity in /admin/users without touching their plan. */
+     users extra capacity in /admin/users without touching their plan.
+     Access is now purely cap-driven: any positive limit unlocks the
+     page — so a free plan with `limits.funnels: 1` gets in. */
   const limit = resolveUserFunnelLimit(account, plans);
+  const isPaid = limit > 0;
 
   const [funnels, setFunnels] = useState<Funnel[]>([]);
   const [loading, setLoading] = useState(false);

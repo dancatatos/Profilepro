@@ -99,17 +99,16 @@ export const FEATURE_CATALOG: readonly CatalogFeature[] = [
   },
 
   /* ── Funnels ─────────────────────────────────────────────────────── */
+  /* Count comes from the plan's `limits.funnels` numeric field — the
+     label below is just a fallback used when no limit is set. The real
+     display string ("Up to N sales funnels") is composed at render time
+     by planDisplayFeatures() via the DYNAMIC_LABELS map. */
   {
-    key: "funnels_5",
-    label: "Up to 5 sales funnels",
+    key: "funnels",
+    label: "Sales funnels",
     category: "Funnels",
-    hint: "Create up to 5 multi-step funnels.",
-  },
-  {
-    key: "funnels_15",
-    label: "Up to 15 sales funnels",
-    category: "Funnels",
-    hint: "Higher cap for team plans.",
+    hint:
+      "Create multi-step funnels. Cap is set per-plan via the 'Funnels' limit field below.",
   },
 
   /* ── Templates ───────────────────────────────────────────────────── */
@@ -204,11 +203,37 @@ export function groupCatalogByCategory(): Array<{
 }
 
 /**
+ * Per-feature dynamic label resolvers. When a feature's display string
+ * depends on a numeric plan setting (e.g. funnels = "Up to 5 sales
+ * funnels"), it gets an entry here keyed by the catalog `key`. The
+ * resolver receives the plan's `limits` and returns the final label.
+ *
+ * Returning `null` means "hide this feature row" — used to omit count
+ * features when the plan explicitly sets the cap to 0 (e.g. a plan
+ * with no funnels shouldn't advertise "0 sales funnels").
+ */
+const DYNAMIC_LABELS: Record<
+  string,
+  (limits: { funnels?: number; sharedBuilds?: number; pipelines?: number } | undefined) => string | null
+> = {
+  funnels: (limits) => {
+    const n = limits?.funnels;
+    if (n === undefined || n === null) return "Sales funnels";
+    if (n <= 0) return null;
+    if (n === 1) return "1 sales funnel";
+    return `Up to ${n} sales funnels`;
+  },
+};
+
+/**
  * Compute the unified display feature list for a plan — used by the
  * billing page + public pricing card. Combines:
  *
  *   1. Canonical features (featureKeys → catalog labels), in catalog
- *      order so categories stay grouped visually.
+ *      order so categories stay grouped visually. Features registered
+ *      in DYNAMIC_LABELS substitute the plan's numeric limits into
+ *      their label ("Up to 5 sales funnels") so the pricing card
+ *      always matches the actual cap.
  *   2. Custom display lines (plan.features) appended after, allowing
  *      marketing copy like "Everything in Free" without affecting
  *      functional gating.
@@ -216,19 +241,20 @@ export function groupCatalogByCategory(): Array<{
 export function planDisplayFeatures(plan: {
   featureKeys?: string[];
   features?: { label: string; included: boolean }[];
+  limits?: { funnels?: number; sharedBuilds?: number; pipelines?: number };
 }): { label: string; included: boolean }[] {
-  const fromCatalog = (plan.featureKeys ?? [])
-    .map((key) => {
-      const f = getCatalogFeature(key);
-      return f ? { label: f.label, included: true } : null;
-    })
-    .filter((row): row is { label: string; included: true } => row !== null);
-  /* Preserve catalog order — featureKeys may be in any order on the
-     plan doc but we want the pricing card to look consistent. */
-  const orderedFromCatalog = FEATURE_CATALOG.map((cf) =>
-    fromCatalog.find((r) => r.label === cf.label),
-  ).filter((row): row is { label: string; included: true } => Boolean(row));
-  return [...orderedFromCatalog, ...(plan.features ?? [])];
+  const keys = new Set(plan.featureKeys ?? []);
+  /* Iterate the catalog in declaration order so categories group
+     visually on the pricing card. */
+  const fromCatalog: { label: string; included: boolean }[] = [];
+  for (const cf of FEATURE_CATALOG) {
+    if (!keys.has(cf.key)) continue;
+    const dynamic = DYNAMIC_LABELS[cf.key];
+    const label = dynamic ? dynamic(plan.limits) : cf.label;
+    if (label === null) continue;
+    fromCatalog.push({ label, included: true });
+  }
+  return [...fromCatalog, ...(plan.features ?? [])];
 }
 
 /**
@@ -251,7 +277,19 @@ export function planHasFeature(
 ): boolean {
   if (!plan) return false;
   if (plan.featureKeys && plan.featureKeys.length > 0) {
-    return plan.featureKeys.includes(featureKey);
+    if (plan.featureKeys.includes(featureKey)) return true;
+    /* Back-compat: the funnels feature used to be split into two
+       count-tier keys (funnels_5, funnels_15). Plans saved before the
+       unified `funnels` key shipped still carry those — treat either
+       as granting `funnels` access so existing Firestore docs keep
+       working without a migration. */
+    if (
+      featureKey === "funnels" &&
+      (plan.featureKeys.includes("funnels_5") || plan.featureKeys.includes("funnels_15"))
+    ) {
+      return true;
+    }
+    return false;
   }
   /* Legacy fallback — match by label. */
   const catalog = getCatalogFeature(featureKey);
@@ -289,7 +327,7 @@ export function defaultFeatureKeysForPlan(planId: string): string[] {
       "qr_standard",
       "qr_branded_hd",
       "analytics_dashboard",
-      "funnels_5",
+      "funnels",
       "shared_builds",
       "premium_templates",
       "premium_themes",
@@ -309,7 +347,7 @@ export function defaultFeatureKeysForPlan(planId: string): string[] {
       "qr_branded_hd",
       "analytics_dashboard",
       "team_analytics",
-      "funnels_15",
+      "funnels",
       "shared_builds",
       "premium_templates",
       "premium_themes",
