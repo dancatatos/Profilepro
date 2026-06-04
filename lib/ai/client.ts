@@ -8,12 +8,31 @@
 
 const API_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
 
+/* Pinned default — kept in sync with .env.example. If the env var
+   fails to load (Vercel preview, missing secret, etc.) we still land
+   on the current production model rather than silently downgrading
+   to an older one. */
+const DEFAULT_MODEL = "gemini-2.5-flash";
+
 function modelName(): string {
-  return process.env.GEMINI_MODEL || "gemini-2.0-flash";
+  return process.env.GEMINI_MODEL || DEFAULT_MODEL;
 }
 function apiKey(): string {
   return process.env.GEMINI_API_KEY || "";
 }
+
+/* Safety overrides. Gemini's defaults block "MEDIUM" and above on
+   four harm categories; for legitimate marketing copy (esp. recruiting
+   + income-related language) that produces silent empty outputs. We
+   relax to BLOCK_ONLY_HIGH so only actually harmful content is
+   blocked, while regular sales / opportunity copy passes through.
+   The model still refuses anything genuinely abusive. */
+const SAFETY_SETTINGS = [
+  { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
+  { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
+  { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
+  { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" },
+];
 
 /** True when a real Gemini key is present (not a placeholder). */
 export function isAIConfigured(): boolean {
@@ -38,8 +57,27 @@ interface GeminiPart {
 interface GeminiCandidate {
   content?: { parts?: GeminiPart[] };
 }
+interface GeminiUsage {
+  promptTokenCount?: number;
+  candidatesTokenCount?: number;
+  totalTokenCount?: number;
+}
 interface GeminiResponse {
   candidates?: GeminiCandidate[];
+  usageMetadata?: GeminiUsage;
+}
+
+/**
+ * Most recent call's token usage. Set after each successful geminiText
+ * call (and therefore each geminiJSON call too). Read by the quota
+ * helpers in `lib/ai/usage.ts` after a generation to record cost.
+ * Single global slot is intentional — we only ever care about the
+ * immediately-preceding call from the same request, and serialising
+ * within a Next.js route handler request means there's no race.
+ */
+let lastUsage: GeminiUsage | null = null;
+export function getLastUsage(): GeminiUsage | null {
+  return lastUsage;
 }
 
 function buildBody(opts: GenerateOptions) {
@@ -56,7 +94,39 @@ function buildBody(opts: GenerateOptions) {
       ? { systemInstruction: { parts: [{ text: opts.system }] } }
       : {}),
     generationConfig,
+    safetySettings: SAFETY_SETTINGS,
   };
+}
+
+/* Retry policy: one transient blip shouldn't bounce the user to the
+   mock fallback. We retry on 429 (rate limit) and 5xx with exponential
+   backoff (250ms → 750ms). 4xx other than 429 are caller errors and
+   are NOT retried — re-trying a bad prompt just wastes quota. */
+const RETRYABLE_STATUSES = new Set([429, 500, 502, 503, 504]);
+const MAX_RETRIES = 2;
+
+async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+): Promise<Response> {
+  let lastErr: unknown;
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const res = await fetch(url, init);
+      if (res.ok) return res;
+      if (!RETRYABLE_STATUSES.has(res.status) || attempt === MAX_RETRIES) {
+        return res;
+      }
+      lastErr = new Error(`Gemini ${res.status}`);
+    } catch (err) {
+      lastErr = err;
+      if (attempt === MAX_RETRIES) throw err;
+    }
+    /* Exponential backoff: 250ms, 750ms — kept short so the user
+       doesn't notice a multi-second delay before falling to the mock. */
+    await new Promise((r) => setTimeout(r, 250 * (3 ** attempt)));
+  }
+  throw lastErr instanceof Error ? lastErr : new Error("Gemini retry exhausted");
 }
 
 function extractText(data: GeminiResponse): string {
@@ -75,7 +145,7 @@ export async function geminiText(opts: GenerateOptions): Promise<string> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30_000);
   try {
-    const res = await fetch(
+    const res = await fetchWithRetry(
       `${API_BASE}/${modelName()}:generateContent?key=${apiKey()}`,
       {
         method: "POST",
@@ -88,7 +158,9 @@ export async function geminiText(opts: GenerateOptions): Promise<string> {
       const detail = await res.text();
       throw new Error(`Gemini API error ${res.status}: ${detail.slice(0, 300)}`);
     }
-    return extractText((await res.json()) as GeminiResponse);
+    const data = (await res.json()) as GeminiResponse;
+    lastUsage = data.usageMetadata ?? null;
+    return extractText(data);
   } finally {
     clearTimeout(timeout);
   }

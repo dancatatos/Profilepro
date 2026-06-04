@@ -58,7 +58,7 @@ export default function AnalyticsPage() {
       const res = await fetch("/api/ai/audit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profile }),
+        body: JSON.stringify({ profile, uid: profile.ownerId }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);

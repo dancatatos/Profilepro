@@ -95,7 +95,7 @@ export function AIFunnelModal({
       const res = await fetch("/api/ai/generate-funnel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answers: payload }),
+        body: JSON.stringify({ answers: payload, uid: account.uid }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Generation failed");

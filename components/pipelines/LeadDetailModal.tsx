@@ -146,6 +146,7 @@ export function LeadDetailModal({
           offer: profile?.header.bio ?? "",
           language,
           tone: "friendly",
+          uid: lead.ownerId,
         }),
       });
       const data = (await res.json()) as {

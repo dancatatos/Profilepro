@@ -15,7 +15,8 @@
  */
 
 import { NextResponse } from "next/server";
-import { geminiJSON, isAIConfigured } from "@/lib/ai/client";
+import { geminiJSON, getLastUsage, isAIConfigured } from "@/lib/ai/client";
+import { checkAIQuota, logAICall } from "@/lib/ai/guard";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,8 @@ interface RequestBody {
   language?: "english" | "taglish";
   /** Conversational tone (e.g. "friendly", "professional", "recruiting"). */
   tone?: string;
+  /** Caller's uid — used for per-day quota tracking. */
+  uid?: string;
 }
 
 interface MessageVariants {
@@ -87,6 +90,11 @@ export async function POST(req: Request) {
       { error: "leadName is required." },
       { status: 400 },
     );
+  }
+
+  const gate = await checkAIQuota(body.uid);
+  if (!gate.ok) {
+    return NextResponse.json({ error: gate.error }, { status: gate.status });
   }
 
   const name = firstName(leadName);
@@ -159,6 +167,7 @@ Make the 3 variants feel meaningfully different — different angles, openers, o
         { status: 502 },
       );
     }
+    await logAICall(body.uid, "generate-headline", getLastUsage()?.totalTokenCount);
     return NextResponse.json({ variants });
   } catch (err) {
     return NextResponse.json(

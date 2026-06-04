@@ -61,6 +61,17 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // ---- AI usage counters (server-only) ----
+    // Per-day per-user docs (id: `${uid}__${YYYY-MM-DD}`) that track
+    // call count + tokens for quota enforcement. Only the Admin SDK
+    // writes here from API routes — clients have NO access. If we
+    // later want to show "X of Y AI calls today" in the dashboard
+    // we'll add an owner read rule; right now there's no client read
+    // path so we keep it locked tight.
+    match /ai_usage/{usageId} {
+      allow read, write: if false;
+    }
+
     // ---- AI generation history ----
     match /ai_generations/{genId} {
       allow create: if isSignedIn()

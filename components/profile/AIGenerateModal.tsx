@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, ArrowRight, Check, Languages, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Languages, Loader2, Sparkles, Wand2 } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
@@ -41,6 +41,12 @@ export function AIGenerateModal({
     useState<GeneratedProfileContent | null>(null);
   const [pickedHeadline, setPickedHeadline] = useState<string>("");
   const [pickedBio, setPickedBio] = useState<string>("");
+  /* Feedback state for regenerate-with-feedback. The field tag tells
+     us which area to regenerate; busy flag disables the button while
+     the round-trip is in flight. */
+  const [headlineFeedback, setHeadlineFeedback] = useState("");
+  const [bioFeedback, setBioFeedback] = useState("");
+  const [regenBusy, setRegenBusy] = useState<"headline" | "bio" | null>(null);
 
   const isStyleStep = step === ONBOARDING_QUESTIONS.length;
   const question = ONBOARDING_QUESTIONS[step];
@@ -52,6 +58,65 @@ export function AIGenerateModal({
     setPendingContent(null);
     setPickedHeadline("");
     setPickedBio("");
+    setHeadlineFeedback("");
+    setBioFeedback("");
+    setRegenBusy(null);
+  };
+
+  const regenerate = async (field: "headline" | "bio") => {
+    if (!profile || !pendingContent) return;
+    const feedback = (field === "headline" ? headlineFeedback : bioFeedback).trim();
+    if (!feedback) {
+      toast.error("Tell the AI what to change first.");
+      return;
+    }
+    const current = field === "headline" ? pickedHeadline : pickedBio;
+    setRegenBusy(field);
+    try {
+      const res = await fetch("/api/ai/regenerate-variant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          field,
+          current,
+          feedback,
+          mode: tone,
+          language,
+          uid: profile.ownerId,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Regeneration failed");
+      const next = (json.variant as string) || "";
+      if (!next) throw new Error("Empty response");
+      /* Append the new variant to the list AND select it, so the
+         user keeps their previous options visible if they want to
+         compare or roll back. */
+      setPendingContent((prev) => {
+        if (!prev) return prev;
+        if (field === "headline") {
+          return {
+            ...prev,
+            headlineVariants: [...(prev.headlineVariants ?? []), next],
+          };
+        }
+        return {
+          ...prev,
+          bioVariants: [...(prev.bioVariants ?? []), next],
+        };
+      });
+      if (field === "headline") {
+        setPickedHeadline(next);
+        setHeadlineFeedback("");
+      } else {
+        setPickedBio(next);
+        setBioFeedback("");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Regeneration failed.");
+    } finally {
+      setRegenBusy(null);
+    }
   };
 
   const close = () => {
@@ -90,7 +155,7 @@ export function AIGenerateModal({
       const res = await fetch("/api/ai/generate-profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answers: payload }),
+        body: JSON.stringify({ answers: payload, uid: profile.ownerId }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Generation failed");
@@ -175,6 +240,13 @@ export function AIGenerateModal({
                 ),
               )}
             </div>
+            <FeedbackRow
+              value={headlineFeedback}
+              onChange={setHeadlineFeedback}
+              onSubmit={() => regenerate("headline")}
+              busy={regenBusy === "headline"}
+              placeholder="Not quite right? e.g. shorter, more recruiting-focused…"
+            />
           </div>
           <div>
             <p className="font-display text-sm font-semibold text-white">
@@ -193,6 +265,13 @@ export function AIGenerateModal({
                 />
               ))}
             </div>
+            <FeedbackRow
+              value={bioFeedback}
+              onChange={setBioFeedback}
+              onSubmit={() => regenerate("bio")}
+              busy={regenBusy === "bio"}
+              placeholder="Want a different angle? e.g. add my mission, more story-led…"
+            />
           </div>
         </div>
       ) : isStyleStep ? (
@@ -295,6 +374,54 @@ export function AIGenerateModal({
         </div>
       )}
     </Modal>
+  );
+}
+
+function FeedbackRow({
+  value,
+  onChange,
+  onSubmit,
+  busy,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  onSubmit: () => void;
+  busy: boolean;
+  placeholder: string;
+}) {
+  return (
+    <div className="mt-2.5 flex gap-1.5">
+      <input
+        type="text"
+        value={value}
+        disabled={busy}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !busy && value.trim()) onSubmit();
+        }}
+        placeholder={placeholder}
+        className="flex-1 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-white placeholder:text-white/30 outline-none focus:border-electric-500/60"
+      />
+      <button
+        type="button"
+        onClick={onSubmit}
+        disabled={busy || !value.trim()}
+        className={cn(
+          "flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors",
+          busy || !value.trim()
+            ? "border-white/10 text-white/30"
+            : "border-electric-500/40 bg-electric-500/10 text-electric-300 hover:bg-electric-500/20",
+        )}
+      >
+        {busy ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <Wand2 className="h-3.5 w-3.5" />
+        )}
+        Regenerate
+      </button>
+    </div>
   );
 }
 
