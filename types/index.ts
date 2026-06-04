@@ -1422,6 +1422,16 @@ export interface AIOnboardingAnswers {
 export interface GeneratedProfileContent {
   headline: string;
   bio: string;
+  /**
+   * Alternative headline phrasings the model produced for the user to
+   * pick from. The primary `headline` above is always set (= the
+   * user's currently-chosen variant); `headlineVariants` is the wider
+   * shortlist surfaced in the modal's picker step. Optional so older
+   * generations / mocks without variants still type-check.
+   */
+  headlineVariants?: string[];
+  /** Same idea as headlineVariants — alternative bio phrasings. */
+  bioVariants?: string[];
   ctaButtons: { label: string; intent: string }[];
   aboutSection: string;
   credibilitySection: string[];

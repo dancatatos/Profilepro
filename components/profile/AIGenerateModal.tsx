@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, ArrowRight, Languages, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Languages, Sparkles } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
@@ -34,6 +34,13 @@ export function AIGenerateModal({
   const [tone, setTone] = useState<AICopyMode>("professional");
   const [language, setLanguage] = useState<AILanguage>("english");
   const [generating, setGenerating] = useState(false);
+  /* Once generation succeeds we don't apply the content immediately —
+     we hold it here and let the user pick their preferred headline +
+     bio variant first. `null` = no variants pending. */
+  const [pendingContent, setPendingContent] =
+    useState<GeneratedProfileContent | null>(null);
+  const [pickedHeadline, setPickedHeadline] = useState<string>("");
+  const [pickedBio, setPickedBio] = useState<string>("");
 
   const isStyleStep = step === ONBOARDING_QUESTIONS.length;
   const question = ONBOARDING_QUESTIONS[step];
@@ -42,12 +49,27 @@ export function AIGenerateModal({
     setStep(0);
     setAnswers({});
     setGenerating(false);
+    setPendingContent(null);
+    setPickedHeadline("");
+    setPickedBio("");
   };
 
   const close = () => {
     if (generating) return;
     onClose();
     setTimeout(reset, 250);
+  };
+
+  const applyPicked = () => {
+    if (!profile || !pendingContent) return;
+    const finalContent: GeneratedProfileContent = {
+      ...pendingContent,
+      headline: pickedHeadline || pendingContent.headline,
+      bio: pickedBio || pendingContent.bio,
+    };
+    setProfile(applyGeneratedContent(profile, finalContent));
+    toast.success("Your profile is ready — preview it on the right.");
+    close();
   };
 
   const generate = async () => {
@@ -73,6 +95,18 @@ export function AIGenerateModal({
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Generation failed");
       const content = json.data as GeneratedProfileContent;
+      const headlineVariants = content.headlineVariants ?? [content.headline];
+      const bioVariants = content.bioVariants ?? [content.bio];
+      const hasChoice = headlineVariants.length > 1 || bioVariants.length > 1;
+      if (hasChoice) {
+        /* Hand off to the picker step — apply happens on confirm. */
+        setPendingContent(content);
+        setPickedHeadline(headlineVariants[0] || content.headline);
+        setPickedBio(bioVariants[0] || content.bio);
+        setGenerating(false);
+        return;
+      }
+      /* No variants returned (older flow or single-option mock) — apply directly. */
       setProfile(applyGeneratedContent(profile, content));
       toast.success(
         json.usedAI
@@ -119,6 +153,47 @@ export function AIGenerateModal({
           <p className="mt-1 text-xs text-white/45">
             Generating headline, bio, CTAs and credibility copy.
           </p>
+        </div>
+      ) : pendingContent ? (
+        <div className="space-y-5 pb-2">
+          <div>
+            <p className="font-display text-sm font-semibold text-white">
+              Pick your headline
+            </p>
+            <p className="mt-0.5 text-xs text-white/45">
+              The AI wrote a few angles — choose the one that sounds most like you.
+            </p>
+            <div className="mt-2.5 space-y-1.5">
+              {(pendingContent.headlineVariants ?? [pendingContent.headline]).map(
+                (v, i) => (
+                  <VariantOption
+                    key={`h-${i}`}
+                    text={v}
+                    selected={pickedHeadline === v}
+                    onSelect={() => setPickedHeadline(v)}
+                  />
+                ),
+              )}
+            </div>
+          </div>
+          <div>
+            <p className="font-display text-sm font-semibold text-white">
+              Pick your bio
+            </p>
+            <p className="mt-0.5 text-xs text-white/45">
+              You can always edit it after — this is just the starting point.
+            </p>
+            <div className="mt-2.5 space-y-1.5">
+              {(pendingContent.bioVariants ?? [pendingContent.bio]).map((v, i) => (
+                <VariantOption
+                  key={`b-${i}`}
+                  text={v}
+                  selected={pickedBio === v}
+                  onSelect={() => setPickedBio(v)}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       ) : isStyleStep ? (
         <div className="space-y-4 pb-2">
@@ -179,34 +254,79 @@ export function AIGenerateModal({
 
       {!generating && (
         <div className="mt-4 flex gap-2">
-          {step > 0 && (
-            <Button
-              variant="outline"
-              onClick={() => setStep((s) => s - 1)}
-              leftIcon={<ArrowLeft className="h-4 w-4" />}
-            >
-              Back
-            </Button>
-          )}
-          {isStyleStep ? (
+          {pendingContent ? (
             <Button
               fullWidth
-              onClick={generate}
-              leftIcon={<Sparkles className="h-4 w-4" />}
+              onClick={applyPicked}
+              leftIcon={<Check className="h-4 w-4" />}
             >
-              Generate my profile
+              Use these
             </Button>
           ) : (
-            <Button
-              fullWidth
-              onClick={() => setStep((s) => s + 1)}
-              rightIcon={<ArrowRight className="h-4 w-4" />}
-            >
-              {step === ONBOARDING_QUESTIONS.length - 1 ? "Almost done" : "Next"}
-            </Button>
+            <>
+              {step > 0 && (
+                <Button
+                  variant="outline"
+                  onClick={() => setStep((s) => s - 1)}
+                  leftIcon={<ArrowLeft className="h-4 w-4" />}
+                >
+                  Back
+                </Button>
+              )}
+              {isStyleStep ? (
+                <Button
+                  fullWidth
+                  onClick={generate}
+                  leftIcon={<Sparkles className="h-4 w-4" />}
+                >
+                  Generate my profile
+                </Button>
+              ) : (
+                <Button
+                  fullWidth
+                  onClick={() => setStep((s) => s + 1)}
+                  rightIcon={<ArrowRight className="h-4 w-4" />}
+                >
+                  {step === ONBOARDING_QUESTIONS.length - 1 ? "Almost done" : "Next"}
+                </Button>
+              )}
+            </>
           )}
         </div>
       )}
     </Modal>
+  );
+}
+
+function VariantOption({
+  text,
+  selected,
+  onSelect,
+}: {
+  text: string;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={cn(
+        "flex w-full items-start gap-2.5 rounded-xl border p-3 text-left text-sm transition-colors",
+        selected
+          ? "border-electric-500/70 bg-electric-500/10 text-white"
+          : "border-white/10 bg-white/[0.02] text-white/70 hover:border-white/20 hover:text-white",
+      )}
+    >
+      <span
+        className={cn(
+          "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border",
+          selected ? "border-electric-400 bg-electric-500" : "border-white/25",
+        )}
+      >
+        {selected && <Check className="h-2.5 w-2.5 text-white" />}
+      </span>
+      <span className="flex-1 leading-snug">{text}</span>
+    </button>
   );
 }

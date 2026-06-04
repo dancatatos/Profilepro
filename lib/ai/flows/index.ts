@@ -98,6 +98,11 @@ export async function generateProfileFlow(
       answers.tone,
       answers.language,
     );
+    /* Keep variants[0] aligned with the (possibly condensed) primary so
+       the picker's "current" highlight stays correct. */
+    if (content.headlineVariants && content.headlineVariants.length > 0) {
+      content.headlineVariants = [content.headline, ...content.headlineVariants.slice(1)];
+    }
     return { data: content, usedAI: true };
   } catch (err) {
     console.warn("[AI] generateProfileFlow failed, using mock:", err);
@@ -233,9 +238,31 @@ export async function assistantStreamFlow(
    ============================================================ */
 
 function normalizeContent(c: GeneratedProfileContent): GeneratedProfileContent {
+  const headline = c.headline || "";
+  const bio = c.bio || "";
+  /* Dedup variants and guarantee the primary is the first entry — keeps
+     the picker UI simple (variants[0] === current applied copy). Cap at
+     3 to match what the prompt asks for. */
+  const dedupe = (primary: string, list?: string[]): string[] => {
+    const out: string[] = [];
+    const seen = new Set<string>();
+    const push = (s: string) => {
+      const v = (s || "").trim();
+      if (!v) return;
+      const key = v.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      out.push(v);
+    };
+    push(primary);
+    for (const v of list || []) push(v);
+    return out.slice(0, 3);
+  };
   return {
-    headline: c.headline || "",
-    bio: c.bio || "",
+    headline,
+    bio,
+    headlineVariants: dedupe(headline, c.headlineVariants),
+    bioVariants: dedupe(bio, c.bioVariants),
     ctaButtons: (c.ctaButtons || []).slice(0, 6),
     aboutSection: c.aboutSection || "",
     credibilitySection: (c.credibilitySection || []).slice(0, 6),
@@ -313,13 +340,35 @@ function mockProfileContent(
   const audience = a.targetMarket || "people who want more";
   const result = a.resultYouHelpAchieve || "reach their goals";
   const taglish = a.language === "taglish";
+  const headline = taglish
+    ? `Tinutulungan ko ang ${audience} na ${result}`
+    : `I help ${audience} ${result}`;
+  const bio = taglish
+    ? `${a.mission || "Nandito ako para tumulong."} Kasama ko ang ${a.company || "isang trusted brand"} sa ${a.niche || "industriyang ito"} — simple lang: gusto kitang makita na mag-succeed.`
+    : `${a.mission || "I'm here to help people win."} I work with ${a.company || "a trusted brand"} in ${a.niche || "this space"} — and my goal is simple: to see you succeed.`;
+  const headlineAlts = taglish
+    ? [
+        `Para sa ${audience} na handa nang ${result}`,
+        `Sinasamahan kita papunta sa ${result}`,
+      ]
+    : [
+        `For ${audience} ready to ${result}`,
+        `Helping ${audience} finally ${result}`,
+      ];
+  const bioAlts = taglish
+    ? [
+        `Simulan natin sa simpleng tanong: anong gusto mong baguhin? Yan ang sinisimulan ko sa bawat ${audience} na nakakausap ko, at madalas, doon din nagsisimula ang ${result}.`,
+        `${a.niche || "Ito ang field ko"} — at araw-araw, ang trabaho ko ay tulungan ang ${audience} na ${result}, isang tao at isang hakbang lang.`,
+      ]
+    : [
+        `It starts with one simple question: what do you want to change? That's where I begin with every ${audience} I work with — and usually, where ${result} begins too.`,
+        `${a.niche || "This is my field"} — and every day, my work is to help ${audience} ${result}, one person and one small step at a time.`,
+      ];
   return {
-    headline: taglish
-      ? `Tinutulungan ko ang ${audience} na ${result}`
-      : `I help ${audience} ${result}`,
-    bio: taglish
-      ? `${a.mission || "Nandito ako para tumulong."} Kasama ko ang ${a.company || "isang trusted brand"} sa ${a.niche || "industriyang ito"} — simple lang: gusto kitang makita na mag-succeed.`
-      : `${a.mission || "I'm here to help people win."} I work with ${a.company || "a trusted brand"} in ${a.niche || "this space"} — and my goal is simple: to see you succeed.`,
+    headline,
+    bio,
+    headlineVariants: [headline, ...headlineAlts],
+    bioVariants: [bio, ...bioAlts],
     ctaButtons: [
       { label: taglish ? "Sumali sa Team" : "Join My Team", intent: "recruit" },
       { label: taglish ? "Libreng Training" : "Free Training", intent: "lead-magnet" },

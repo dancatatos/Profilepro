@@ -8,6 +8,8 @@ export const profileContentSchema: Record<string, unknown> = {
   properties: {
     headline: { type: "STRING" },
     bio: { type: "STRING" },
+    headlineVariants: { type: "ARRAY", items: { type: "STRING" } },
+    bioVariants: { type: "ARRAY", items: { type: "STRING" } },
     ctaButtons: {
       type: "ARRAY",
       items: {
