@@ -232,6 +232,7 @@ export type SectionType =
   | "products"
   | "video"
   | "gallery"
+  | "image"
   | "leadCapture"
   | "appointment"
   | "text"
@@ -241,6 +242,15 @@ export type SectionType =
   | "faq"
   | "pricingCard"
   | "payment";
+
+/**
+ * How a CTA button row is laid out horizontally. Defaults to "stretch"
+ * for back-compat with every CTA shipped before the alignment control
+ * existed — that's the current full-width-button behaviour. The other
+ * three sizes the button to its content and positions it at the
+ * left / center / right of the section.
+ */
+export type CtaAlignment = "stretch" | "left" | "center" | "right";
 
 /**
  * Manual payment method the owner accepts (GCash, Maya, BPI, etc.).
@@ -387,6 +397,32 @@ export interface RichTextNode {
 export interface CtaSection extends SectionBase {
   type: "cta";
   buttons: CTAButton[];
+  /** Horizontal layout for the button row. Defaults to "stretch". */
+  align?: CtaAlignment;
+}
+
+/**
+ * Single image block — a quick way to drop one photo, banner or
+ * graphic into a profile or funnel step without spinning up a full
+ * gallery grid. Common uses: a product shot, a results screenshot,
+ * a workshop poster, a hand-drawn brand graphic.
+ *
+ * Optional `linkUrl` turns the image into a clickable link. `align`
+ * + `maxWidth` let the owner control how prominent the image feels
+ * on the page without needing CSS knowledge.
+ */
+export interface ImageSection extends SectionBase {
+  type: "image";
+  /** Public URL of the uploaded image. */
+  url?: string;
+  /** Small caption shown under the image. */
+  caption?: string;
+  /** Optional click-through — when set, the image becomes a link. */
+  linkUrl?: string;
+  /** Horizontal position. Defaults to "center". */
+  align?: "left" | "center" | "right";
+  /** Visual width cap. Defaults to "md" — a comfortable mobile-first size. */
+  maxWidth?: "sm" | "md" | "lg" | "full";
 }
 export interface SocialsSection extends SectionBase {
   type: "socials";
@@ -575,6 +611,7 @@ export type ProfileSection =
   | ProductsSection
   | VideoSection
   | GallerySection
+  | ImageSection
   | LeadCaptureSection
   | AppointmentSection
   | PaymentSection;

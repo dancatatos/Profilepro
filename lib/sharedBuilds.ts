@@ -136,6 +136,19 @@ function freshSection(section: ProfileSection): ProfileSection {
         type: "gallery",
         images: section.images.map((g) => ({ ...g, id: uid("img") })),
       };
+    case "image":
+      /* URLs preserved — the image itself is the content. Caption +
+         layout settings carry over verbatim. linkUrl is cleared so a
+         shared build doesn't link the recipient's visitors to the
+         publisher's destination. */
+      return {
+        ...base,
+        type: "image",
+        ...(section.url ? { url: section.url } : {}),
+        ...(section.caption ? { caption: section.caption } : {}),
+        ...(section.align ? { align: section.align } : {}),
+        ...(section.maxWidth ? { maxWidth: section.maxWidth } : {}),
+      };
     case "leadCapture":
       return {
         ...base,

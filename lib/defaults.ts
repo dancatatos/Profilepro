@@ -131,6 +131,15 @@ export function createSection(type: SectionType): ProfileSection {
       return { ...base, type: "video", title: "Watch My Story", videos: [] };
     case "gallery":
       return { ...base, type: "gallery", title: "Gallery", images: [] };
+    case "image":
+      return {
+        ...base,
+        type: "image",
+        url: "",
+        caption: "",
+        align: "center",
+        maxWidth: "md",
+      };
     case "leadCapture":
       return {
         ...base,

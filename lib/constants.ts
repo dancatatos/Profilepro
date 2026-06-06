@@ -151,6 +151,12 @@ export const SECTION_CATALOG: SectionMeta[] = [
     icon: "Images",
   },
   {
+    type: "image",
+    label: "Single Image",
+    description: "Drop one photo, banner or graphic — with optional link",
+    icon: "Image",
+  },
+  {
     type: "leadCapture",
     label: "Lead Capture",
     description: "Collect names, emails and chat leads",

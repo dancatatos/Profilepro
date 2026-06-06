@@ -325,10 +325,24 @@ export function SectionRenderer({
   onAdvance,
 }: RendererProps) {
   switch (section.type) {
-    case "cta":
+    case "cta": {
+      /* "stretch" (the original) keeps buttons full-width. The three
+         positional values size the button to its content and pin it
+         to that horizontal edge. Wrapper changes layout direction
+         accordingly so buttons don't fight each other. */
+      const align = section.align ?? "stretch";
+      const wrapperClass =
+        align === "stretch"
+          ? "space-y-2.5"
+          : cn(
+              "flex flex-col gap-2.5",
+              align === "left" && "items-start",
+              align === "center" && "items-center",
+              align === "right" && "items-end",
+            );
       return (
         <SectionShell title={section.title} narrow="md">
-          <div className="space-y-2.5">
+          <div className={wrapperClass}>
             {section.buttons.map((b) => {
               /* Default to "url" for buttons created before the action
                  field existed. Honor the three explicit modes otherwise. */
@@ -381,6 +395,7 @@ export function SectionRenderer({
           </div>
         </SectionShell>
       );
+    }
 
     case "socials":
       return (
@@ -811,6 +826,65 @@ export function SectionRenderer({
           </div>
         </SectionShell>
       );
+
+    case "image": {
+      if (!section.url) return null;
+      const align = section.align ?? "center";
+      const maxWidth = section.maxWidth ?? "md";
+      const wrapperClass = cn(
+        "flex flex-col",
+        align === "left" && "items-start",
+        align === "center" && "items-center",
+        align === "right" && "items-end",
+      );
+      const widthClass = cn(
+        "w-full",
+        maxWidth === "sm" && "max-w-[240px]",
+        maxWidth === "md" && "max-w-[420px]",
+        maxWidth === "lg" && "max-w-[640px]",
+        // "full" → no cap
+      );
+      const imgEl = (
+        <img
+          src={section.url}
+          alt={section.caption || section.title || "Image"}
+          className={cn("h-auto w-full object-cover", widthClass)}
+          style={{ borderRadius: "var(--tp-card-radius)" }}
+        />
+      );
+      return (
+        <SectionShell title={section.title}>
+          <div className={wrapperClass}>
+            {section.linkUrl ? (
+              <a
+                href={section.linkUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => track("cta_click", section.id)}
+                className={widthClass}
+              >
+                {imgEl}
+              </a>
+            ) : (
+              imgEl
+            )}
+            {section.caption && (
+              <p
+                className={cn(
+                  "mt-2 text-xs",
+                  align === "left" && "text-left",
+                  align === "center" && "text-center",
+                  align === "right" && "text-right",
+                )}
+                style={{ color: "var(--tp-muted)" }}
+              >
+                {section.caption}
+              </p>
+            )}
+          </div>
+        </SectionShell>
+      );
+    }
 
     case "leadCapture":
       return (

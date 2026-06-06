@@ -15,7 +15,9 @@ import type {
   CountdownSection,
   CredibilitySection,
   CtaActionKind,
+  CtaAlignment,
   HeroSection,
+  ImageSection,
   BenefitsSection,
   FaqSection,
   LeadCapturePostSubmitAction,
@@ -115,9 +117,28 @@ function CtaEditor({ section }: { section: CtaSection }) {
     update(section.id, { buttons });
   const edit = (id: string, p: Partial<CtaSection["buttons"][number]>) =>
     patch(section.buttons.map((b) => (b.id === id ? { ...b, ...p } : b)));
+  /* Section-level alignment — applies to the whole button row. Default
+     stays "stretch" so existing CTAs look identical until the owner
+     opts into a positional layout. */
+  const align: CtaAlignment = section.align ?? "stretch";
 
   return (
     <div className="space-y-2.5">
+      <div>
+        <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/45">
+          Button alignment
+        </label>
+        <Select
+          value={align}
+          onChange={(v) => update(section.id, { align: v as CtaAlignment })}
+          options={[
+            { value: "stretch", label: "Stretch (full width)" },
+            { value: "left", label: "Left" },
+            { value: "center", label: "Center" },
+            { value: "right", label: "Right" },
+          ]}
+        />
+      </div>
       {section.buttons.map((b) => {
         /* Default to "url" for buttons created before the field existed. */
         const action: CtaActionKind = b.action ?? "url";
@@ -882,6 +903,72 @@ function GalleryEditor({ section }: { section: GallerySection }) {
   );
 }
 
+/* ---------------- Single image ---------------- */
+
+function ImageEditor({ section }: { section: ImageSection }) {
+  const { updateSection: update } = useSections();
+  const patch = (p: Partial<ImageSection>) => update(section.id, p);
+  const align = section.align ?? "center";
+  const maxWidth = section.maxWidth ?? "md";
+
+  return (
+    <div className="space-y-2.5">
+      <ImageUploadField
+        value={section.url ?? ""}
+        onChange={(url) => patch({ url })}
+        folder="media"
+      />
+      <input
+        value={section.caption ?? ""}
+        onChange={(e) => patch({ caption: e.target.value })}
+        placeholder="Caption (optional)"
+        className={FIELD}
+      />
+      <input
+        value={section.linkUrl ?? ""}
+        onChange={(e) => patch({ linkUrl: e.target.value })}
+        placeholder="Link URL (optional — makes the image clickable)"
+        className={FIELD}
+      />
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <div>
+          <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/45">
+            Alignment
+          </label>
+          <Select
+            value={align}
+            onChange={(v) =>
+              patch({ align: v as ImageSection["align"] })
+            }
+            options={[
+              { value: "left", label: "Left" },
+              { value: "center", label: "Center" },
+              { value: "right", label: "Right" },
+            ]}
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/45">
+            Max width
+          </label>
+          <Select
+            value={maxWidth}
+            onChange={(v) =>
+              patch({ maxWidth: v as ImageSection["maxWidth"] })
+            }
+            options={[
+              { value: "sm", label: "Small" },
+              { value: "md", label: "Medium" },
+              { value: "lg", label: "Large" },
+              { value: "full", label: "Full width" },
+            ]}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ---------------- Lead capture ---------------- */
 
 function LeadCaptureEditor({ section }: { section: LeadCaptureSection }) {
@@ -1217,6 +1304,8 @@ export function SectionEditor({ section }: { section: ProfileSection }) {
       return <VideoEditor section={section} />;
     case "gallery":
       return <GalleryEditor section={section} />;
+    case "image":
+      return <ImageEditor section={section} />;
     case "leadCapture":
       return <LeadCaptureEditor section={section} />;
     case "appointment":
