@@ -827,6 +827,48 @@ export function SectionRenderer({
         </SectionShell>
       );
 
+    case "embedHtml": {
+      const html = (section.html || "").trim();
+      if (!html) return null;
+      /* Height presets keep the visual cadence consistent and avoid
+         the foot-gun of letting owners type giant pixel values. */
+      const height =
+        section.height === "sm"
+          ? 320
+          : section.height === "lg"
+            ? 720
+            : section.height === "xl"
+              ? 1000
+              : 480; // "md" default
+      /* Wrap the user's snippet in a minimal HTML document so scripts
+         have a place to run. body styles match the profile theme so
+         embeds blend in instead of showing a stark white background. */
+      const srcdoc = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><base target="_blank"><style>html,body{margin:0;padding:0;background:transparent;color:inherit;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}body{padding:8px}*{box-sizing:border-box;max-width:100%}</style></head><body>${html}</body></html>`;
+      return (
+        <SectionShell title={section.title}>
+          <iframe
+            srcDoc={srcdoc}
+            sandbox="allow-scripts allow-popups allow-forms allow-popups-to-escape-sandbox"
+            referrerPolicy="no-referrer"
+            loading="lazy"
+            style={{
+              width: "100%",
+              height: `${height}px`,
+              border: "0",
+              borderRadius: "var(--tp-card-radius)",
+              background: "var(--tp-card)",
+            }}
+            title={section.title || "Embedded content"}
+          />
+          {section.caption && (
+            <p className="mt-2 text-center text-xs" style={{ color: "var(--tp-muted)" }}>
+              {section.caption}
+            </p>
+          )}
+        </SectionShell>
+      );
+    }
+
     case "image": {
       if (!section.url) return null;
       const align = section.align ?? "center";

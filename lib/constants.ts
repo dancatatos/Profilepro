@@ -157,6 +157,13 @@ export const SECTION_CATALOG: SectionMeta[] = [
     icon: "Image",
   },
   {
+    type: "embedHtml",
+    label: "Embed / Custom HTML",
+    description:
+      "Calendly, Tally, ManyChat, custom widgets — paste any embed code",
+    icon: "Code2",
+  },
+  {
     type: "leadCapture",
     label: "Lead Capture",
     description: "Collect names, emails and chat leads",

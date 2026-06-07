@@ -149,6 +149,17 @@ function freshSection(section: ProfileSection): ProfileSection {
         ...(section.align ? { align: section.align } : {}),
         ...(section.maxWidth ? { maxWidth: section.maxWidth } : {}),
       };
+    case "embedHtml":
+      /* Embed code carries over verbatim — the recipient gets a
+         working starting point that they can replace with their
+         own Calendly username / Tally ID / etc. */
+      return {
+        ...base,
+        type: "embedHtml",
+        html: section.html,
+        ...(section.height ? { height: section.height } : {}),
+        ...(section.caption ? { caption: section.caption } : {}),
+      };
     case "leadCapture":
       return {
         ...base,

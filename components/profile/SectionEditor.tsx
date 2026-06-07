@@ -16,6 +16,7 @@ import type {
   CredibilitySection,
   CtaActionKind,
   CtaAlignment,
+  EmbedHtmlSection,
   HeroSection,
   ImageSection,
   BenefitsSection,
@@ -969,6 +970,128 @@ function ImageEditor({ section }: { section: ImageSection }) {
   );
 }
 
+/* ---------------- Embed / Custom HTML ---------------- */
+
+/* Quick-pick snippets for the most common embeds — the user picks
+   one, types in the relevant identifier, and we fill the textarea
+   with a working embed. Saves them a trip to the provider's docs
+   for the 80% common case. Raw paste still works for everything else. */
+const EMBED_PRESETS: {
+  key: string;
+  label: string;
+  build: (input: string) => string;
+  inputPlaceholder: string;
+}[] = [
+  {
+    key: "calendly",
+    label: "Calendly",
+    inputPlaceholder: "your-calendly-username/30min",
+    build: (input) =>
+      `<div class="calendly-inline-widget" data-url="https://calendly.com/${input.trim()}" style="min-width:320px;height:100%;"></div>\n<script src="https://assets.calendly.com/assets/external/widget.js" async></script>`,
+  },
+  {
+    key: "tally",
+    label: "Tally form",
+    inputPlaceholder: "Tally form ID (e.g. w7P5gB)",
+    build: (input) =>
+      `<iframe src="https://tally.so/embed/${input.trim()}?alignLeft=1&hideTitle=0&transparentBackground=1&dynamicHeight=1" width="100%" height="100%" frameborder="0" title="Tally form"></iframe>`,
+  },
+  {
+    key: "googleMaps",
+    label: "Google Maps",
+    inputPlaceholder: "Place name or address",
+    build: (input) =>
+      `<iframe src="https://www.google.com/maps?q=${encodeURIComponent(input.trim())}&output=embed" width="100%" height="100%" style="border:0" loading="lazy"></iframe>`,
+  },
+  {
+    key: "spotify",
+    label: "Spotify",
+    inputPlaceholder: "Spotify episode/playlist URL",
+    build: (input) => {
+      const id = input
+        .trim()
+        .replace(/^https?:\/\/open\.spotify\.com\//, "")
+        .replace(/\?.*$/, "");
+      return `<iframe src="https://open.spotify.com/embed/${id}" width="100%" height="100%" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture" loading="lazy"></iframe>`;
+    },
+  },
+];
+
+function EmbedHtmlEditor({ section }: { section: EmbedHtmlSection }) {
+  const { updateSection: update } = useSections();
+  const patch = (p: Partial<EmbedHtmlSection>) => update(section.id, p);
+  const height = section.height ?? "md";
+
+  return (
+    <div className="space-y-2.5">
+      <input
+        value={section.title ?? ""}
+        onChange={(e) => patch({ title: e.target.value })}
+        placeholder="Section title (optional)"
+        className={FIELD}
+      />
+      <div>
+        <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-white/45">
+          Quick fill (optional)
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {EMBED_PRESETS.map((preset) => (
+            <button
+              key={preset.key}
+              type="button"
+              onClick={() => {
+                const input = window.prompt(
+                  `${preset.label}: ${preset.inputPlaceholder}`,
+                );
+                if (input && input.trim()) {
+                  patch({ html: preset.build(input) });
+                }
+              }}
+              className="rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1 text-xs text-white/70 hover:border-electric-500/40 hover:text-white"
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <textarea
+        value={section.html ?? ""}
+        onChange={(e) => patch({ html: e.target.value })}
+        placeholder='Paste embed code here — e.g. <iframe src="..."></iframe> or a <script> snippet from Calendly, Tally, ManyChat, etc.'
+        rows={6}
+        spellCheck={false}
+        className="w-full resize-y rounded-lg border border-white/10 bg-white/[0.03] p-3 font-mono text-xs text-white outline-none placeholder:text-white/30 focus:border-electric-500/60"
+      />
+      <input
+        value={section.caption ?? ""}
+        onChange={(e) => patch({ caption: e.target.value })}
+        placeholder="Caption shown under the embed (optional)"
+        className={FIELD}
+      />
+      <div>
+        <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/45">
+          Height
+        </label>
+        <Select
+          value={height}
+          onChange={(v) => patch({ height: v as EmbedHtmlSection["height"] })}
+          options={[
+            { value: "sm", label: "Small (320px)" },
+            { value: "md", label: "Medium (480px)" },
+            { value: "lg", label: "Large (720px)" },
+            { value: "xl", label: "Very tall (1000px)" },
+          ]}
+        />
+      </div>
+      <p className="text-[11px] leading-relaxed text-white/40">
+        Embeds run in a secure sandbox — they can show their content and run
+        their own scripts, but they can&apos;t access your profile or steal
+        visitor data. Only paste code from providers you trust.
+      </p>
+    </div>
+  );
+}
+
 /* ---------------- Lead capture ---------------- */
 
 function LeadCaptureEditor({ section }: { section: LeadCaptureSection }) {
@@ -1306,6 +1429,8 @@ export function SectionEditor({ section }: { section: ProfileSection }) {
       return <GalleryEditor section={section} />;
     case "image":
       return <ImageEditor section={section} />;
+    case "embedHtml":
+      return <EmbedHtmlEditor section={section} />;
     case "leadCapture":
       return <LeadCaptureEditor section={section} />;
     case "appointment":

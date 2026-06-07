@@ -233,6 +233,7 @@ export type SectionType =
   | "video"
   | "gallery"
   | "image"
+  | "embedHtml"
   | "leadCapture"
   | "appointment"
   | "text"
@@ -424,6 +425,33 @@ export interface ImageSection extends SectionBase {
   /** Visual width cap. Defaults to "md" — a comfortable mobile-first size. */
   maxWidth?: "sm" | "md" | "lg" | "full";
 }
+
+/**
+ * Embed third-party HTML — Calendly, Tally forms, ManyChat widgets,
+ * Stripe pricing tables, Google Maps, custom calculators, etc.
+ *
+ * SECURITY: The HTML runs inside a sandboxed iframe via the srcdoc
+ * attribute, with `sandbox="allow-scripts allow-popups allow-forms"`
+ * and NO `allow-same-origin`. That means embedded scripts execute
+ * with a null origin — they can fetch external resources (so Calendly,
+ * GA, Pixel, etc. all work) but CANNOT touch the parent page's DOM,
+ * cookies, or localStorage. This is the same boundary Linktree,
+ * Beacons, and Carrd use. Owners can paste arbitrary embed code
+ * without any risk to other users or to the Credibly domain.
+ *
+ * Height is preset (sm/md/lg/xl → 320/480/720/1000 px) rather than
+ * a free-text number, both for visual consistency and because
+ * letting users type pixel values is a common foot-gun.
+ */
+export interface EmbedHtmlSection extends SectionBase {
+  type: "embedHtml";
+  /** Raw HTML the owner pasted from the embed provider. */
+  html: string;
+  /** Iframe height preset. Defaults to "md". */
+  height?: "sm" | "md" | "lg" | "xl";
+  /** Small caption shown under the embed (optional). */
+  caption?: string;
+}
 export interface SocialsSection extends SectionBase {
   type: "socials";
   links: SocialLink[];
@@ -612,6 +640,7 @@ export type ProfileSection =
   | VideoSection
   | GallerySection
   | ImageSection
+  | EmbedHtmlSection
   | LeadCaptureSection
   | AppointmentSection
   | PaymentSection;

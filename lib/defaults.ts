@@ -140,6 +140,14 @@ export function createSection(type: SectionType): ProfileSection {
         align: "center",
         maxWidth: "md",
       };
+    case "embedHtml":
+      return {
+        ...base,
+        type: "embedHtml",
+        title: "Embed",
+        html: "",
+        height: "md",
+      };
     case "leadCapture":
       return {
         ...base,
