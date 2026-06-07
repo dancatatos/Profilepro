@@ -1185,6 +1185,39 @@ export async function createLead(
   });
 }
 
+/**
+ * Permanently delete a single lead. Firestore rules already restrict
+ * delete to the lead's owner (and admin), so this is safe to call
+ * directly from the client. Caller should confirm with the user first
+ * — this is irreversible and removes the row from every dashboard
+ * (leads inbox, pipeline kanban, today task list).
+ */
+export async function deleteLead(leadId: string): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await deleteDoc(doc(db, COL.leads, leadId));
+}
+
+/**
+ * Bulk-delete leads. Uses a batched write so a partial failure
+ * doesn't leave half the selection orphaned. Firestore caps batches
+ * at 500 ops, which is well above any realistic per-user selection,
+ * but we still chunk defensively so a future "delete all 1000" doesn't
+ * silently fail. Returns the number actually deleted.
+ */
+export async function deleteLeads(leadIds: string[]): Promise<number> {
+  if (!isFirebaseConfigured || leadIds.length === 0) return 0;
+  let deleted = 0;
+  const CHUNK = 400;
+  for (let i = 0; i < leadIds.length; i += CHUNK) {
+    const chunk = leadIds.slice(i, i + CHUNK);
+    const batch = writeBatch(db);
+    for (const id of chunk) batch.delete(doc(db, COL.leads, id));
+    await batch.commit();
+    deleted += chunk.length;
+  }
+  return deleted;
+}
+
 export async function listLeads(ownerId: string): Promise<Lead[]> {
   if (!isFirebaseConfigured) return [];
   const q = query(

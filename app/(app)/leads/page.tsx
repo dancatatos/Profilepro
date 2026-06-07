@@ -27,17 +27,24 @@ import {
   Mail,
   Phone,
   Square,
+  Trash2,
   UserPlus,
   X,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { listLeads, listPipelinesForUser } from "@/lib/firebase/firestore";
+import {
+  deleteLead,
+  deleteLeads,
+  listLeads,
+  listPipelinesForUser,
+} from "@/lib/firebase/firestore";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { EmptyState } from "@/components/common/EmptyState";
 import { AddToPipelineModal } from "@/components/leads/AddToPipelineModal";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { cn, timeAgo } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 import type { Lead, Pipeline } from "@/types";
@@ -95,6 +102,17 @@ export default function LeadsPage() {
 
   /* Bulk enroll modal state. */
   const [enrollOpen, setEnrollOpen] = useState(false);
+
+  /* Delete-confirm state. Holds either:
+       { kind: "one", lead }  — per-row trash icon click
+       { kind: "bulk", ids }  — bulk delete from selection mode
+     Null when no dialog is open. */
+  const [pendingDelete, setPendingDelete] = useState<
+    | { kind: "one"; lead: Lead }
+    | { kind: "bulk"; ids: string[] }
+    | null
+  >(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!account) return;
@@ -163,6 +181,44 @@ export default function LeadsPage() {
   const exitSelectMode = () => {
     setSelecting(false);
     clearSelection();
+  };
+
+  /* Run the pending delete (single or bulk) and patch local state so
+     the UI reflects the removal without a Firestore re-read. Demo
+     leads are local-only — they never hit Firestore, so we just drop
+     them from state. */
+  const confirmDelete = async () => {
+    if (!pendingDelete || !account) return;
+    setDeleting(true);
+    try {
+      const ids =
+        pendingDelete.kind === "one"
+          ? [pendingDelete.lead.id]
+          : pendingDelete.ids;
+      if (account.uid !== "demo") {
+        if (ids.length === 1) {
+          await deleteLead(ids[0]);
+        } else {
+          await deleteLeads(ids);
+        }
+      }
+      const removed = new Set(ids);
+      setLeads((prev) => prev.filter((l) => !removed.has(l.id)));
+      /* Clean up selection state so the bulk bar count is correct. */
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        for (const id of ids) next.delete(id);
+        return next;
+      });
+      toast.success(
+        ids.length === 1 ? "Lead deleted" : `${ids.length} leads deleted`,
+      );
+      setPendingDelete(null);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Delete failed.");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   /* CSV export — unchanged from the original. */
@@ -409,6 +465,25 @@ export default function LeadsPage() {
                     </span>
                   </div>
                 </div>
+
+                {/* Per-row delete — only when NOT in selection mode (in
+                    selection mode the whole row toggles selection, so a
+                    second clickable target would be confusing). Compact
+                    icon button so it doesn't fight the lead info for
+                    visual weight. */}
+                {!selecting && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPendingDelete({ kind: "one", lead });
+                    }}
+                    aria-label={`Delete ${lead.name}`}
+                    className="ml-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white/30 transition-colors hover:bg-red-500/10 hover:text-red-400"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
               </Card>
             );
           })}
@@ -436,6 +511,24 @@ export default function LeadsPage() {
             </p>
             <Button
               size="sm"
+              variant="outline"
+              onClick={() => {
+                if (selectedCount === 0) {
+                  toast.error("Select at least one lead first.");
+                  return;
+                }
+                setPendingDelete({
+                  kind: "bulk",
+                  ids: Array.from(selectedIds),
+                });
+              }}
+              leftIcon={<Trash2 className="h-3.5 w-3.5" />}
+              className="!border-red-500/30 !text-red-300 hover:!bg-red-500/10"
+            >
+              Delete
+            </Button>
+            <Button
+              size="sm"
               onClick={() => {
                 if (selectedCount === 0) {
                   toast.error("Select at least one lead first.");
@@ -450,6 +543,40 @@ export default function LeadsPage() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!pendingDelete}
+        loading={deleting}
+        onCancel={() => !deleting && setPendingDelete(null)}
+        onConfirm={confirmDelete}
+        title={
+          pendingDelete?.kind === "one"
+            ? "Delete this lead?"
+            : `Delete ${pendingDelete?.ids?.length ?? 0} leads?`
+        }
+        confirmLabel={
+          pendingDelete?.kind === "one"
+            ? "Delete lead"
+            : `Delete ${pendingDelete?.ids?.length ?? 0}`
+        }
+        body={
+          pendingDelete?.kind === "one" ? (
+            <p>
+              <span className="font-medium text-white">
+                {pendingDelete.lead.name}
+              </span>{" "}
+              and all their contact info will be permanently removed from
+              your inbox, pipelines, and today&apos;s tasks. This can&apos;t
+              be undone.
+            </p>
+          ) : (
+            <p>
+              These leads will be permanently removed from your inbox,
+              pipelines, and today&apos;s tasks. This can&apos;t be undone.
+            </p>
+          )
+        }
+      />
 
       <AddToPipelineModal
         open={enrollOpen}
