@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Sparkles } from "lucide-react";
-import { DASHBOARD_NAV, trainingsLabel } from "@/lib/constants";
+import { resolveDashboardNav, trainingsLabel } from "@/lib/constants";
 import { Logo } from "@/components/ui/Logo";
 import { Icon } from "@/components/ui/Icon";
 import { Avatar } from "@/components/ui/Avatar";
@@ -40,13 +40,19 @@ export function Sidebar() {
   }, [loadMarketing]);
   const trainingsName = trainingsLabel(marketingContent, "plural");
 
-  /* The Template Marketplace tab is admin-gated and off by default.
-     Trainings entry uses the configurable label. */
-  const navItems = DASHBOARD_NAV.filter(
-    (item) => item.key !== "templates" || flags.templateMarketplace,
-  ).map((item) =>
-    item.key === "trainings" ? { ...item, label: trainingsName } : item,
-  );
+  /* Sidebar layout pipeline:
+       1. Admin-configured order + visibility (resolveDashboardNav)
+       2. Feature-flag filter for the Template Marketplace tab
+       3. Per-item label overrides (Trainings rebrand)
+     The resolver guarantees essentials ("home", "settings") stay
+     visible even if the admin accidentally hides them. */
+  const navItems = resolveDashboardNav(marketingContent?.dashboardNav)
+    .filter(
+      (item) => item.key !== "templates" || flags.templateMarketplace,
+    )
+    .map((item) =>
+      item.key === "trainings" ? { ...item, label: trainingsName } : item,
+    );
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-white/[0.06] bg-ink-950/85 backdrop-blur-xl lg:flex">

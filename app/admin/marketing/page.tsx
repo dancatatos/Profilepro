@@ -18,6 +18,8 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
+  ArrowDown,
+  ArrowUp,
   ChevronDown,
   ChevronUp,
   ExternalLink,
@@ -29,6 +31,7 @@ import {
   Star,
   Trash2,
 } from "lucide-react";
+import { DASHBOARD_NAV } from "@/lib/constants";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/hooks/useAuth";
@@ -165,6 +168,14 @@ export default function AdminMarketingPage() {
         labels={content.featureLabels}
         onChange={(next) => {
           setContent((prev) => ({ ...prev, featureLabels: next }));
+          setDirty(true);
+        }}
+      />
+
+      <DashboardNavEditor
+        layout={content.dashboardNav}
+        onChange={(next) => {
+          setContent((prev) => ({ ...prev, dashboardNav: next }));
           setDirty(true);
         }}
       />
@@ -983,6 +994,158 @@ function FeatureLabelsEditor({
         Examples: <code>Programs</code> / <code>Program</code>, <code>Academy</code> /
         <code> Module</code>, <code>Coaching</code> / <code>Session</code>. Refresh the
         app after saving to see the new label everywhere it&apos;s used.
+      </p>
+    </SectionCard>
+  );
+}
+
+/* ---------------- Dashboard nav layout ---------------- */
+
+/**
+ * Lets the admin reorder the user-facing sidebar + hide items they
+ * don't want surfaced. Affects every signed-in user globally — the
+ * resolver in lib/constants.ts merges this with DASHBOARD_NAV at
+ * render time.
+ *
+ * Constraints:
+ *   - "Dashboard" and "Settings" stay locked-visible regardless of
+ *     hidden state (enforced both here and in the resolver) so users
+ *     can never be stranded
+ *   - Brand-new code-level nav items the admin hasn't seen yet
+ *     auto-appear at the bottom on next page load
+ */
+function DashboardNavEditor({
+  layout,
+  onChange,
+}: {
+  layout: { order?: string[]; hidden?: string[] } | undefined;
+  onChange: (next: { order: string[]; hidden: string[] }) => void;
+}) {
+  /* Build the working list: start from saved order, append any
+     code-level items the admin hasn't seen yet. */
+  const allKeys = DASHBOARD_NAV.map((n) => n.key);
+  const savedOrder = layout?.order ?? [];
+  const merged: string[] = [];
+  for (const k of savedOrder) {
+    if (allKeys.includes(k) && !merged.includes(k)) merged.push(k);
+  }
+  for (const k of allKeys) {
+    if (!merged.includes(k)) merged.push(k);
+  }
+  const hidden = new Set(layout?.hidden ?? []);
+  const lookup = new Map(DASHBOARD_NAV.map((n) => [n.key, n]));
+
+  const commit = (nextOrder: string[], nextHidden: Set<string>) => {
+    onChange({
+      order: nextOrder,
+      hidden: Array.from(nextHidden),
+    });
+  };
+
+  const move = (idx: number, dir: -1 | 1) => {
+    const target = idx + dir;
+    if (target < 0 || target >= merged.length) return;
+    const next = [...merged];
+    [next[idx], next[target]] = [next[target], next[idx]];
+    commit(next, hidden);
+  };
+
+  const toggleHidden = (key: string) => {
+    const next = new Set(hidden);
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    commit(merged, next);
+  };
+
+  const reset = () => commit([], new Set());
+
+  const lockedKeys = new Set(["home", "settings"]);
+
+  return (
+    <SectionCard
+      title="Dashboard navigation"
+      description="Reorder the sidebar or hide items you don't want users to see. Affects every signed-in user."
+      defaultOpen={false}
+    >
+      <div className="space-y-1.5">
+        {merged.map((key, idx) => {
+          const item = lookup.get(key);
+          if (!item) return null;
+          const isLocked = lockedKeys.has(key);
+          const isHidden = hidden.has(key);
+          return (
+            <div
+              key={key}
+              className={cn(
+                "flex items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.02] p-2.5",
+                isHidden && "opacity-50",
+              )}
+            >
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/[0.05] text-[10px] font-semibold text-white/55">
+                {idx + 1}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-white">
+                  {item.label}
+                </p>
+                <p className="truncate text-[10px] text-white/40">
+                  {item.href}
+                  {isLocked && (
+                    <span className="ml-1.5 rounded bg-electric-500/15 px-1 py-0.5 text-electric-300">
+                      Always visible
+                    </span>
+                  )}
+                </p>
+              </div>
+              {/* Show/hide toggle */}
+              <button
+                type="button"
+                onClick={() => toggleHidden(key)}
+                disabled={isLocked}
+                className={cn(
+                  "rounded-md border px-2 py-1 text-[10px] font-medium transition-colors disabled:opacity-30",
+                  isHidden
+                    ? "border-white/10 text-white/45 hover:bg-white/[0.05]"
+                    : "border-jade-500/30 bg-jade-500/[0.08] text-jade-300 hover:bg-jade-500/15",
+                )}
+                aria-label={isHidden ? "Show in sidebar" : "Hide from sidebar"}
+              >
+                {isLocked ? "Visible" : isHidden ? "Hidden" : "Visible"}
+              </button>
+              {/* Reorder */}
+              <button
+                type="button"
+                onClick={() => move(idx, -1)}
+                disabled={idx === 0}
+                aria-label="Move up"
+                className="rounded p-1 text-white/40 hover:text-white disabled:opacity-25"
+              >
+                <ArrowUp className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => move(idx, 1)}
+                disabled={idx === merged.length - 1}
+                aria-label="Move down"
+                className="rounded p-1 text-white/40 hover:text-white disabled:opacity-25"
+              >
+                <ArrowDown className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          );
+        })}
+      </div>
+      <button
+        type="button"
+        onClick={reset}
+        className="mt-3 rounded-lg border border-white/10 px-3 py-1.5 text-[11px] font-medium text-white/65 hover:bg-white/[0.05]"
+      >
+        Reset to default order
+      </button>
+      <p className="mt-2 text-[11px] text-white/40">
+        Dashboard and Settings stay visible no matter what — locking them
+        keeps users from getting stranded. Brand-new nav items that ship
+        with future updates appear at the bottom automatically.
       </p>
     </SectionCard>
   );

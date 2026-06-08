@@ -219,6 +219,26 @@ export interface MarketingContent {
     /** Singular form, used in empty states and confirm dialogs. Default: "Training". */
     trainingsSingular?: string;
   };
+  /**
+   * Admin-configurable dashboard sidebar layout. When unset, the
+   * sidebar renders DASHBOARD_NAV in its hardcoded order. Admin can
+   * override the order + hide items in /admin/marketing.
+   *
+   * Stored as nav keys (matching DASHBOARD_NAV[].key) so a future
+   * rename or removal of a code-level nav item gracefully falls
+   * through — unknown keys in saved data are ignored, new items not
+   * in saved data fall in at the end.
+   *
+   * `hidden` cannot remove "always-visible" keys ("home", "settings")
+   * — those are filtered back in by the resolver so users can never
+   * be stranded without a way home.
+   */
+  dashboardNav?: {
+    /** Nav keys in the desired display order. */
+    order?: string[];
+    /** Nav keys the admin has explicitly hidden from the sidebar. */
+    hidden?: string[];
+  };
 }
 
 export interface FeatureFlags {

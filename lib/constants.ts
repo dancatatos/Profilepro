@@ -615,6 +615,61 @@ export function resolveUserTrainingsActivateLimit(
  * the UI surfaces the word "Trainings" so a future rename is one
  * Firestore write.
  */
+/* ---------------- Dashboard nav resolver ---------------- */
+
+/**
+ * Nav keys the user can NEVER hide from the sidebar — removing them
+ * would strand the user with no way to reach the home screen or
+ * their settings/billing. Filter operates AFTER the admin's hidden
+ * list, so even if these end up in `hidden`, they're forced back in.
+ */
+export const ALWAYS_VISIBLE_NAV_KEYS = ["home", "settings"] as const;
+
+/**
+ * Apply the admin's saved sidebar layout (order + hidden) on top of
+ * the canonical DASHBOARD_NAV list. Returns a filtered + reordered
+ * array of NavItems.
+ *
+ * Rules:
+ *   - Unknown keys in saved data are ignored (graceful for renames /
+ *     removals at the code level)
+ *   - New nav items that ship in code but aren't in saved `order` fall
+ *     in at the END in their original DASHBOARD_NAV position — so
+ *     adding a new feature doesn't require admin to re-sort
+ *   - ALWAYS_VISIBLE_NAV_KEYS bypass `hidden`
+ */
+export function resolveDashboardNav(
+  layout: { order?: string[]; hidden?: string[] } | undefined,
+): NavItem[] {
+  const all = new Map(DASHBOARD_NAV.map((item) => [item.key, item]));
+  const hidden = new Set(layout?.hidden ?? []);
+  /* Force essentials back into the visible set. */
+  for (const k of ALWAYS_VISIBLE_NAV_KEYS) hidden.delete(k);
+
+  /* Start with the admin's order, dropping unknown keys + hidden. */
+  const seen = new Set<string>();
+  const ordered: NavItem[] = [];
+  for (const key of layout?.order ?? []) {
+    const item = all.get(key);
+    if (!item) continue;
+    if (hidden.has(key)) {
+      seen.add(key);
+      continue;
+    }
+    ordered.push(item);
+    seen.add(key);
+  }
+  /* Append any nav items that weren't in saved order yet — they're
+     either brand-new from a recent code update, or the admin has
+     never saved a layout. Preserve their DASHBOARD_NAV order. */
+  for (const item of DASHBOARD_NAV) {
+    if (seen.has(item.key)) continue;
+    if (hidden.has(item.key)) continue;
+    ordered.push(item);
+  }
+  return ordered;
+}
+
 export function trainingsLabel(
   marketing: { featureLabels?: { trainingsPlural?: string; trainingsSingular?: string } } | null | undefined,
   form: "plural" | "singular" = "plural",

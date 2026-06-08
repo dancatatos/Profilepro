@@ -171,6 +171,11 @@ export function mergeMarketingContent(
     ...(override.featureLabels
       ? { featureLabels: { ...override.featureLabels } }
       : {}),
+    /* Same idea for dashboardNav — when unset, the sidebar uses
+       its hardcoded order. */
+    ...(override.dashboardNav
+      ? { dashboardNav: { ...override.dashboardNav } }
+      : {}),
   };
 }
 
