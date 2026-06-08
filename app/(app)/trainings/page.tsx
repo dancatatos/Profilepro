@@ -14,8 +14,9 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { GraduationCap, Plus, Sparkles } from "lucide-react";
+import { BookOpen, GraduationCap, KeyRound, Plus, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlanAccess } from "@/components/providers/PlanProvider";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -26,13 +27,18 @@ import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/common/EmptyState";
 import { FullScreenLoader } from "@/components/ui/Spinner";
 import {
+  cloneTraining,
   createTraining,
+  getProfile,
+  getTraining,
+  getTrainingByShareCode,
+  listTrainingAccessForUser,
   listTrainingsByOwner,
 } from "@/lib/firebase/firestore";
 import { resolveUserTrainingsCreateLimit } from "@/lib/constants";
 import { cn, timeAgo } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
-import type { Training } from "@/types";
+import type { Training, TrainingAccess } from "@/types";
 
 /* Build a URL-safe slug from a title. Mirrors the funnel slug helper. */
 function slugify(input: string): string {
@@ -65,6 +71,11 @@ export default function TrainingsPage() {
   const [title, setTitle] = useState("");
   const [creating, setCreating] = useState(false);
 
+  /* Clone-with-code modal state. */
+  const [cloneOpen, setCloneOpen] = useState(false);
+  const [cloneCode, setCloneCode] = useState("");
+  const [cloning, setCloning] = useState(false);
+
   const load = useCallback(async () => {
     if (!account) return;
     if (account.uid === "demo") {
@@ -84,6 +95,41 @@ export default function TrainingsPage() {
   }, [load]);
 
   const remainingSlots = Math.max(0, createLimit - trainings.length);
+
+  const handleClone = async () => {
+    if (!account) return;
+    const raw = cloneCode.trim().toUpperCase();
+    if (!raw) {
+      toast.error("Paste a share code first.");
+      return;
+    }
+    if (trainings.length >= createLimit) {
+      toast.error(
+        "You've used all your training slots. Upgrade your plan to clone more.",
+      );
+      return;
+    }
+    setCloning(true);
+    try {
+      const source = await getTrainingByShareCode(raw);
+      if (!source) {
+        toast.error("That share code didn't match any training.");
+        setCloning(false);
+        return;
+      }
+      if (source.ownerId === account.uid) {
+        toast.error("You can't clone your own training.");
+        setCloning(false);
+        return;
+      }
+      const newId = await cloneTraining(source, account.uid);
+      toast.success("Cloned — open it to edit your copy and share with your team.");
+      router.push(`/trainings/${newId}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Clone failed.");
+      setCloning(false);
+    }
+  };
 
   const handleCreate = async () => {
     if (!account) return;
@@ -126,14 +172,25 @@ export default function TrainingsPage() {
         }
         action={
           canCreate && (
-            <Button
-              size="sm"
-              onClick={() => setCreateOpen(true)}
-              leftIcon={<Plus className="h-3.5 w-3.5" />}
-              disabled={trainings.length >= createLimit}
-            >
-              New training
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setCloneOpen(true)}
+                leftIcon={<KeyRound className="h-3.5 w-3.5" />}
+                disabled={trainings.length >= createLimit}
+              >
+                Clone with code
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => setCreateOpen(true)}
+                leftIcon={<Plus className="h-3.5 w-3.5" />}
+                disabled={trainings.length >= createLimit}
+              >
+                New training
+              </Button>
+            </div>
           )
         }
       />
@@ -176,6 +233,52 @@ export default function TrainingsPage() {
       ) : (
         <LibraryTab />
       )}
+
+      <Modal
+        open={cloneOpen}
+        onClose={() => !cloning && setCloneOpen(false)}
+        title="Clone a training"
+        description="Paste a share code from another leader to make your own copy."
+        size="sm"
+      >
+        <div className="space-y-3 pb-2">
+          <input
+            autoFocus
+            value={cloneCode}
+            onChange={(e) => setCloneCode(e.target.value.toUpperCase())}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !cloning && cloneCode.trim()) handleClone();
+            }}
+            placeholder="SHARE-XXXXX"
+            className="h-11 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 font-mono text-sm uppercase tracking-wider text-white outline-none placeholder:text-white/30 focus:border-electric-500/60"
+            disabled={cloning}
+          />
+          <p className="rounded-lg bg-white/[0.03] p-3 text-[11px] leading-relaxed text-white/55">
+            Cloning makes an independent copy that <strong>you own</strong>. You&apos;ll
+            get your own activation code so progress from your team goes to you,
+            not the original leader. Uses one of your training slots.
+          </p>
+          <div className="flex gap-2">
+            <Button
+              fullWidth
+              variant="outline"
+              onClick={() => setCloneOpen(false)}
+              disabled={cloning}
+            >
+              Cancel
+            </Button>
+            <Button
+              fullWidth
+              onClick={handleClone}
+              loading={cloning}
+              disabled={cloning || !cloneCode.trim()}
+              leftIcon={<KeyRound className="h-3.5 w-3.5" />}
+            >
+              Clone
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       <Modal
         open={createOpen}
@@ -320,14 +423,122 @@ function TrainingRow({ training }: { training: Training }) {
   );
 }
 
-/* ---------------- Library tab (Session 2 — placeholder for now) ---------------- */
+/* ---------------- Library tab ---------------- */
+
+interface LibraryRow {
+  access: TrainingAccess;
+  training: Training | null;
+  ownerUsername: string | null;
+}
 
 function LibraryTab() {
+  const { account } = useAuth();
+  const [rows, setRows] = useState<LibraryRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!account || account.uid === "demo") {
+        setRows([]);
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      const accesses = await listTrainingAccessForUser(account.uid);
+      /* Fan out training + owner-profile reads. For the typical "1-10
+         unlocked trainings" case the parallel reads are fine; if the
+         library grows beyond ~50 we'd batch with `in`-queries. */
+      const built = await Promise.all(
+        accesses.map(async (a) => {
+          const [training, profile] = await Promise.all([
+            getTraining(a.trainingId).catch(() => null),
+            getProfile(a.ownerId).catch(() => null),
+          ]);
+          return {
+            access: a,
+            training,
+            ownerUsername: profile?.username ?? null,
+          } as LibraryRow;
+        }),
+      );
+      if (!cancelled) {
+        /* Filter out rows whose underlying training was deleted —
+           cleanup happens elsewhere; here we just hide the broken card. */
+        setRows(built.filter((r) => r.training !== null));
+        setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [account]);
+
+  if (loading) {
+    return (
+      <Card className="p-8 text-center text-sm text-white/40">
+        Loading your library…
+      </Card>
+    );
+  }
+
+  if (rows.length === 0) {
+    return (
+      <EmptyState
+        icon="BookOpen"
+        title="Your library is empty"
+        description="When your team leader gives you an activation code, the unlocked training will appear here."
+        action={
+          <Button
+            href="/training"
+            leftIcon={<KeyRound className="h-3.5 w-3.5" />}
+          >
+            Have a code? Unlock it
+          </Button>
+        }
+      />
+    );
+  }
+
   return (
-    <EmptyState
-      icon="BookOpen"
-      title="Your library is empty"
-      description="Trainings other creators give you access to will appear here. Have an activation code? The unlock flow ships in the next update."
-    />
+    <div className="space-y-2.5">
+      {rows.map((row) => (
+        <LibraryRowCard key={row.access.id} row={row} />
+      ))}
+      <div className="pt-1 text-center">
+        <Link
+          href="/training"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-electric-300 hover:text-electric-200"
+        >
+          <KeyRound className="h-3.5 w-3.5" />
+          Have another code? Unlock more
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function LibraryRowCard({ row }: { row: LibraryRow }) {
+  const t = row.training;
+  if (!t) return null;
+  const watchHref =
+    row.ownerUsername ? `/${row.ownerUsername}/t/${t.slug}` : "#";
+  return (
+    <Link href={watchHref}>
+      <Card className="flex cursor-pointer items-center gap-3 p-3.5 transition-colors hover:border-electric-500/30">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-electric-500/15 text-electric-300">
+          <BookOpen className="h-5 w-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium text-white">{t.title}</p>
+          <p className="mt-0.5 text-xs text-white/45">
+            {t.lessons?.length ?? 0} lesson
+            {(t.lessons?.length ?? 0) === 1 ? "" : "s"} · Unlocked{" "}
+            {timeAgo(row.access.unlockedAt)}
+          </p>
+        </div>
+        <Badge tone="neutral">Watch</Badge>
+      </Card>
+    </Link>
   );
 }

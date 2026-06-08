@@ -2320,3 +2320,139 @@ export async function listTrainingProgress(
   );
   return snap.docs.map((d) => ({ ...(d.data() as TrainingProgress), id: d.id }));
 }
+
+/* ---- Code-based lookups + activation + cloning ---- */
+
+/** Find a training by its activation code (case-insensitive). */
+export async function getTrainingByActivationCode(
+  code: string,
+): Promise<Training | null> {
+  if (!isFirebaseConfigured) return null;
+  const snap = await getDocs(
+    query(
+      collection(db, COL.trainings),
+      where("activationCode", "==", code.trim().toUpperCase()),
+      fsLimit(1),
+    ),
+  );
+  if (snap.empty) return null;
+  return { ...(snap.docs[0].data() as Training), id: snap.docs[0].id };
+}
+
+/** Find a training by its share code — used by the clone flow. */
+export async function getTrainingByShareCode(
+  code: string,
+): Promise<Training | null> {
+  if (!isFirebaseConfigured) return null;
+  const snap = await getDocs(
+    query(
+      collection(db, COL.trainings),
+      where("shareCode", "==", code.trim().toUpperCase()),
+      fsLimit(1),
+    ),
+  );
+  if (snap.empty) return null;
+  return { ...(snap.docs[0].data() as Training), id: snap.docs[0].id };
+}
+
+/** Get a single access record (or null) for the user+training pair. */
+export async function getTrainingAccess(
+  userId: string,
+  trainingId: string,
+): Promise<TrainingAccess | null> {
+  if (!isFirebaseConfigured) return null;
+  const id = `${userId}__${trainingId}`;
+  const snap = await getDoc(doc(db, COL.trainingAccess, id));
+  if (!snap.exists()) return null;
+  return { ...(snap.data() as TrainingAccess), id: snap.id };
+}
+
+/**
+ * Grant a user access to a training. Idempotent — re-activating the
+ * same training upserts the same doc (id = `${userId}__${trainingId}`)
+ * so the cap-counting query stays accurate. Returns the access record.
+ *
+ * The library cap is enforced by the CALLER reading the user's
+ * current count first — we don't enforce here so admin / auto-grant
+ * flows (which legitimately may exceed the cap) can still work.
+ */
+export async function activateTrainingForUser(input: {
+  userId: string;
+  trainingId: string;
+  ownerId: string;
+  unlockedVia: TrainingAccess["unlockedVia"];
+  activationCode?: string;
+}): Promise<TrainingAccess> {
+  if (!isFirebaseConfigured) {
+    throw new Error("Firebase is not configured.");
+  }
+  const id = `${input.userId}__${input.trainingId}`;
+  const record: Omit<TrainingAccess, "id"> = {
+    userId: input.userId,
+    trainingId: input.trainingId,
+    ownerId: input.ownerId,
+    unlockedAt: Date.now(),
+    unlockedVia: input.unlockedVia,
+    ...(input.activationCode ? { activationCode: input.activationCode } : {}),
+  };
+  await setDoc(doc(db, COL.trainingAccess, id), record, { merge: true });
+  return { id, ...record };
+}
+
+/**
+ * Clone a training into a new owner's account. Deep-copies the
+ * lessons (with fresh ids so progress tracking doesn't leak across
+ * the original + clone), generates new shareCode + activationCode
+ * for the cloned copy, and bumps the original's cloneCount.
+ *
+ * Returns the new training's id so the caller can navigate to it.
+ */
+export async function cloneTraining(
+  source: Training,
+  newOwnerId: string,
+): Promise<string> {
+  if (!isFirebaseConfigured) {
+    throw new Error("Firebase is not configured.");
+  }
+  const now = Date.now();
+  const clonedLessons = (source.lessons ?? []).map((l, idx) => ({
+    ...l,
+    id: `lesson_${Math.random().toString(36).slice(2, 10)}`,
+    sortOrder: idx,
+    /* Reset resources' ids too so they're unique per-lesson copy. */
+    resources: (l.resources ?? []).map((r) => ({
+      ...r,
+      id: `res_${Math.random().toString(36).slice(2, 10)}`,
+    })),
+  }));
+  /* Default the cloned slug to `${original-slug}-copy` so the new
+     owner doesn't accidentally publish at the same URL pattern as
+     someone else; they'll likely edit it. */
+  const slug = `${source.slug}-copy-${Math.random().toString(36).slice(2, 6)}`;
+  const newRef = await addDoc(collection(db, COL.trainings), {
+    ownerId: newOwnerId,
+    slug,
+    title: source.title,
+    description: source.description,
+    ...(source.bannerUrl ? { bannerUrl: source.bannerUrl } : {}),
+    lessons: clonedLessons,
+    status: "draft" as const,
+    distribution: "team" as const, // clones default to team mode
+    shareCode: generateTrainingCode("SHARE"),
+    activationCode: generateTrainingCode("ACTIVATE"),
+    clonedFrom: source.id,
+    cloneCount: 0,
+    createdAt: now,
+    updatedAt: now,
+  });
+  /* Bump the original's cloneCount — best-effort, swallow errors
+     (the clone succeeded either way and the count is vanity). */
+  try {
+    await updateDoc(doc(db, COL.trainings, source.id), {
+      cloneCount: (source.cloneCount ?? 0) + 1,
+    });
+  } catch {
+    // ignore — counter is non-critical
+  }
+  return newRef.id;
+}
