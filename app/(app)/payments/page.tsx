@@ -38,6 +38,9 @@ import {
   updatePaymentSubmission,
   listPipelinesForUser,
   moveLeadToStage,
+  activateTrainingForUser,
+  getTraining,
+  getUserByEmail,
 } from "@/lib/firebase/firestore";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db, isFirebaseConfigured } from "@/lib/firebase/client";
@@ -364,7 +367,55 @@ function ReviewModal({
         reviewerId: updated.reviewerId,
         ...(updated.linkedLeadId ? { linkedLeadId: updated.linkedLeadId } : {}),
       });
-      toast.success(`Approved — ${submission.visitorName} is now a lead.`);
+
+      /* If this receipt was for a paid-mode TRAINING, try to grant
+         access to the buyer's account. Two outcomes:
+           a) Buyer's email matches a Credibly account → activate
+              automatically (best path, zero further work for owner).
+           b) No account on that email → tell the owner the activation
+              code so they can DM it to the buyer alongside a "sign up
+              free at crediblyai.com/training" nudge.
+         Either way the receipt is approved — the auto-grant is a
+         bonus, never a blocker. */
+      if (submission.trainingId) {
+        try {
+          const training = await getTraining(submission.trainingId);
+          if (training) {
+            const buyerEmail = submission.visitorEmail?.trim();
+            const buyer = buyerEmail ? await getUserByEmail(buyerEmail) : null;
+            if (buyer) {
+              await activateTrainingForUser({
+                userId: buyer.uid,
+                trainingId: training.id,
+                ownerId: training.ownerId,
+                unlockedVia: "purchase",
+              });
+              toast.success(
+                `Approved — ${submission.visitorName} unlocked "${training.title}".`,
+              );
+            } else {
+              /* No matching account. Owner shares the activation
+                 code manually. Copy-friendly toast so they can grab
+                 it quickly. */
+              try {
+                await navigator.clipboard.writeText(training.activationCode);
+              } catch {
+                // ignore — toast still shows the code below
+              }
+              toast.success(
+                `Approved. Buyer has no account yet — share this code: ${training.activationCode} (copied to clipboard)`,
+              );
+            }
+          } else {
+            toast.success(`Approved — ${submission.visitorName} is now a lead.`);
+          }
+        } catch (err) {
+          console.warn("[Credibly] training auto-grant failed:", err);
+          toast.success(`Approved — ${submission.visitorName} is now a lead.`);
+        }
+      } else {
+        toast.success(`Approved — ${submission.visitorName} is now a lead.`);
+      }
       onReviewed(updated);
     } catch (err) {
       console.error("[Credibly] Approve failed:", err);
@@ -489,7 +540,9 @@ function ReviewModal({
               disabled={working}
               leftIcon={<CheckCircle2 className="h-4 w-4" />}
             >
-              Approve &amp; create lead
+              {submission.trainingId
+                ? "Approve & grant training access"
+                : "Approve & create lead"}
             </Button>
           </div>
         )}

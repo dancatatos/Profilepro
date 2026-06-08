@@ -918,6 +918,14 @@ export interface PaymentSubmission {
    * back from the payment list to the corresponding lead.
    */
   linkedLeadId?: string;
+
+  /**
+   * When the submission originated from a paid-mode training (vs. a
+   * generic funnel payment section), this carries the training id so
+   * the /payments review flow can offer a "Grant training access"
+   * one-tap button on approval. Optional — funnel payments never set it.
+   */
+  trainingId?: string;
 }
 
 /* ---------------- Follow-Up Pipeline ---------------- */

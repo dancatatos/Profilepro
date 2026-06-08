@@ -50,7 +50,9 @@ import { ImageUploadField } from "@/components/profile/ImageUploadField";
 import {
   deleteTraining,
   getTraining,
+  listPipelinesForUser,
   listTrainingAccessForTraining,
+  listTrainingClones,
   listTrainingProgress,
   regenerateTrainingCode,
   updateTraining,
@@ -844,13 +846,138 @@ function DistributionTab({
             <p className="mt-1 text-[11px] text-white/40">
               Buyers will see this on the public training page and pay via
               your GCash / Maya / bank methods configured on your profile.
-              Receipt approval (with auto-grant) ships in the next update.
+              Approve receipts in <code>/payments</code> — if the buyer
+              has a Credibly account on the same email, they unlock
+              automatically.
             </p>
           </div>
         </Card>
       )}
+
+      {/* Pipeline auto-grant — available for any mode. The trigger
+          fires from moveLeadToStage when a lead enters the configured
+          stage AND has an email matching a Credibly account. */}
+      <AutoGrantBlock training={training} onPatch={onPatch} />
     </div>
   );
+}
+
+function AutoGrantBlock({
+  training,
+  onPatch,
+}: {
+  training: Training;
+  onPatch: (patch: Partial<Training>) => Promise<void>;
+}) {
+  const { account } = useAuth();
+  const [pipelines, setPipelines] = useState<PipelineSummary[]>([]);
+  /* Lazy-load the owner's pipelines on mount. Failure is fine — the
+     selector just stays empty and the user can configure later. */
+  useEffect(() => {
+    if (!account || account.uid === "demo") return;
+    let cancelled = false;
+    (async () => {
+      const list = await listPipelinesForUser(account.uid).catch(() => []);
+      if (!cancelled) {
+        setPipelines(
+          list.map((p) => ({
+            id: p.id,
+            name: p.name,
+            stages: p.stages.map((s) => ({ id: s.id, name: s.name })),
+          })),
+        );
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [account]);
+
+  const selectedPipeline = pipelines.find(
+    (p) => p.id === training.autoGrantPipelineId,
+  );
+
+  return (
+    <Card className="space-y-3 p-4">
+      <div>
+        <p className="text-[10px] font-medium uppercase tracking-wider text-white/45">
+          Pipeline auto-grant (optional)
+        </p>
+        <p className="mt-1 text-xs text-white/55">
+          Auto-unlock this training when a lead enters a specific
+          pipeline stage. Works only if the lead&apos;s email matches
+          a Credibly account.
+        </p>
+      </div>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <div>
+          <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/40">
+            Pipeline
+          </label>
+          <select
+            value={training.autoGrantPipelineId ?? ""}
+            onChange={(e) =>
+              onPatch({
+                autoGrantPipelineId: e.target.value || undefined,
+                /* Clear the stage when pipeline changes — old stage
+                   id is no longer valid against the new pipeline. */
+                autoGrantStageId: undefined,
+              })
+            }
+            className="h-10 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 text-sm text-white outline-none focus:border-electric-500/60"
+          >
+            <option value="">— None —</option>
+            {pipelines.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/40">
+            Stage
+          </label>
+          <select
+            value={training.autoGrantStageId ?? ""}
+            onChange={(e) =>
+              onPatch({ autoGrantStageId: e.target.value || undefined })
+            }
+            disabled={!selectedPipeline}
+            className="h-10 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 text-sm text-white outline-none focus:border-electric-500/60 disabled:opacity-50"
+          >
+            <option value="">— Pick a stage —</option>
+            {(selectedPipeline?.stages ?? []).map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      {training.autoGrantPipelineId && training.autoGrantStageId && (
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() =>
+            onPatch({
+              autoGrantPipelineId: undefined,
+              autoGrantStageId: undefined,
+            })
+          }
+        >
+          Clear auto-grant
+        </Button>
+      )}
+    </Card>
+  );
+}
+
+/** Lightweight pipeline shape so we don't pull all the heavy fields. */
+interface PipelineSummary {
+  id: string;
+  name: string;
+  stages: { id: string; name: string }[];
 }
 
 function ModeRadio({
@@ -1038,25 +1165,76 @@ function LearnersTab({ trainingId }: { trainingId: string }) {
    ============================================================ */
 
 function ClonesTab({ training }: { training: Training }) {
-  /* Session 2 ships the count only. The "list of cloners" view needs
-     a reverse index (clonedFrom == training.id) which we'll wire up
-     when cloning itself lands in Session 3. */
-  const count = training.cloneCount ?? 0;
+  const [clones, setClones] = useState<Training[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      const list = await listTrainingClones(training.id).catch(() => []);
+      if (!cancelled) {
+        setClones(list);
+        setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [training.id]);
+
+  if (loading) {
+    return (
+      <Card className="p-6 text-center text-sm text-white/40">
+        Loading clones…
+      </Card>
+    );
+  }
+
+  if (clones.length === 0) {
+    return (
+      <Card className="p-8 text-center">
+        <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-white/[0.05]">
+          <GraduationCap className="h-6 w-6 text-white/40" />
+        </span>
+        <p className="text-sm font-medium text-white">
+          No other leaders have cloned this yet
+        </p>
+        <p className="mt-1 text-xs text-white/50">
+          Share your training&apos;s share code with other leaders so they
+          can clone it and track their own downline separately.
+        </p>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="p-8 text-center">
-      <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-white/[0.05]">
-        <GraduationCap className="h-6 w-6 text-white/40" />
-      </span>
-      <p className="text-sm font-medium text-white">
-        {count === 0
-          ? "No other leaders have cloned this yet"
-          : `${count} leader${count === 1 ? "" : "s"} cloned this training`}
-      </p>
-      <p className="mt-1 text-xs text-white/50">
-        {count === 0
-          ? "Share your training's share code with other leaders in your line so they can clone it and run their own copy."
-          : "The full list of cloners (with their learner counts) lands in the next update."}
-      </p>
+    <Card className="divide-y divide-white/[0.06] p-0">
+      <div className="border-b border-white/[0.06] p-3.5">
+        <p className="text-xs font-medium text-white">
+          {clones.length} leader{clones.length === 1 ? "" : "s"} cloned this
+        </p>
+        <p className="mt-0.5 text-[11px] text-white/45">
+          You can only see the clone count + when it was made. The
+          learner lists inside each clone belong to that leader, not you.
+        </p>
+      </div>
+      {clones.map((c) => (
+        <div key={c.id} className="flex items-center gap-3 p-3.5">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.05] text-white/55">
+            <GraduationCap className="h-4 w-4" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-white">
+              {c.title || "Untitled clone"}
+            </p>
+            <p className="mt-0.5 text-xs text-white/45">
+              Cloned {timeAgo(c.createdAt)} ·{" "}
+              {c.status === "published" ? "Published" : "Draft"}
+            </p>
+          </div>
+        </div>
+      ))}
     </Card>
   );
 }

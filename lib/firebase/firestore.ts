@@ -740,6 +740,69 @@ export async function moveLeadToStage(
     patch.nextTaskAt = null; // no follow-up due — terminal stage
   }
   await updateDoc(doc(db, COL.leads, leadId), patch);
+  /* Fire any training auto-grants attached to this (pipeline, stage)
+     pair. Best-effort — failures here mustn't block the stage move
+     itself (the auto-grant is a nice-to-have, the move is the
+     primary action). */
+  try {
+    await fireTrainingAutoGrantsForStage(leadId, pipelineId, stageId);
+  } catch (err) {
+    console.warn("[Credibly] training auto-grant failed:", err);
+  }
+}
+
+/**
+ * Find every training the lead's owner has set to auto-grant on this
+ * (pipelineId, stageId) pair. For each match, look up the lead's email
+ * → user account, and grant access if both exist. Quietly skips when
+ * the lead has no email or the email doesn't map to an account.
+ *
+ * Called from moveLeadToStage; exposed for direct testing / manual
+ * triggers if needed.
+ */
+export async function fireTrainingAutoGrantsForStage(
+  leadId: string,
+  pipelineId: string,
+  stageId: string,
+): Promise<number> {
+  if (!isFirebaseConfigured) return 0;
+  const leadSnap = await getDoc(doc(db, COL.leads, leadId));
+  if (!leadSnap.exists()) return 0;
+  const lead = leadSnap.data() as Lead;
+  const email = lead.email?.trim().toLowerCase();
+  if (!email) return 0;
+  /* Find the lead-owner's trainings that target this stage. */
+  const trainingsSnap = await getDocs(
+    query(
+      collection(db, COL.trainings),
+      where("ownerId", "==", lead.ownerId),
+      where("autoGrantPipelineId", "==", pipelineId),
+      where("autoGrantStageId", "==", stageId),
+      fsLimit(20),
+    ),
+  );
+  if (trainingsSnap.empty) return 0;
+  /* Resolve the lead's email to a Credibly user account. If they
+     don't have one yet, skip — the future "email unlock token" flow
+     will handle this case. */
+  const user = await getUserByEmail(email);
+  if (!user) return 0;
+  let granted = 0;
+  for (const tDoc of trainingsSnap.docs) {
+    const training = { ...(tDoc.data() as Training), id: tDoc.id };
+    try {
+      await activateTrainingForUser({
+        userId: user.uid,
+        trainingId: training.id,
+        ownerId: training.ownerId,
+        unlockedVia: "pipeline",
+      });
+      granted += 1;
+    } catch (err) {
+      console.warn("[Credibly] auto-grant for", training.id, "failed:", err);
+    }
+  }
+  return granted;
 }
 
 /**
@@ -2319,6 +2382,58 @@ export async function listTrainingProgress(
     ),
   );
   return snap.docs.map((d) => ({ ...(d.data() as TrainingProgress), id: d.id }));
+}
+
+/**
+ * Look up a Credibly account by email. Case-insensitive (we store
+ * emails as-typed, so we match case-insensitively in JS rather than
+ * with a Firestore query). Returns the first match — emails are
+ * effectively unique at signup but no enforced constraint.
+ */
+export async function getUserByEmail(
+  email: string,
+): Promise<AccountUser | null> {
+  if (!isFirebaseConfigured) return null;
+  const lower = email.trim().toLowerCase();
+  if (!lower) return null;
+  /* No `lowercase email` index, so do a small targeted scan via
+     equality. For the realistic case (a few thousand users), this
+     stays cheap because Firestore's where-on-string is indexed
+     automatically on each field. We try the lowercase first, then
+     the as-typed version, to handle both shapes. */
+  for (const candidate of [lower, email.trim()]) {
+    const snap = await getDocs(
+      query(
+        collection(db, COL.users),
+        where("email", "==", candidate),
+        fsLimit(1),
+      ),
+    );
+    if (!snap.empty) {
+      return { ...(snap.docs[0].data() as AccountUser), uid: snap.docs[0].id };
+    }
+  }
+  return null;
+}
+
+/**
+ * List every training that was cloned from the given training id.
+ * Used by the Clones tab in the training editor to surface "47
+ * leaders cloned this — here's who". Returns just the bare info the
+ * tab needs (owner display can be denormalised later if perf bites).
+ */
+export async function listTrainingClones(
+  sourceTrainingId: string,
+): Promise<Training[]> {
+  if (!isFirebaseConfigured) return [];
+  const snap = await getDocs(
+    query(
+      collection(db, COL.trainings),
+      where("clonedFrom", "==", sourceTrainingId),
+      fsLimit(100),
+    ),
+  );
+  return snap.docs.map((d) => ({ ...(d.data() as Training), id: d.id }));
 }
 
 /* ---- Code-based lookups + activation + cloning ---- */

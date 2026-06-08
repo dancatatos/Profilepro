@@ -35,6 +35,7 @@ import {
 } from "@/lib/firebase/firestore";
 import { normalizeVideoUrl } from "@/lib/video";
 import { cn } from "@/lib/utils";
+import { TrainingPurchaseForm } from "./TrainingPurchaseForm";
 import type { Profile, Training, TrainingLesson } from "@/types";
 
 export function PublicTrainingView({
@@ -166,7 +167,7 @@ export function PublicTrainingView({
 
         {/* Access prompt — only shown when user can't unlock everything */}
         {!unlocked && (
-          <UnlockBlock training={training} />
+          <UnlockBlock training={training} profile={profile} />
         )}
 
         {/* Progress strip */}
@@ -376,21 +377,28 @@ function LockedPlaceholder() {
   );
 }
 
-function UnlockBlock({ training }: { training: Training }) {
-  /* Distribution-aware CTA copy. Paid mode hints at the purchase
-     flow (full payment integration ships in Session 4); team mode
-     points the viewer to /training to enter their code. */
+function UnlockBlock({
+  training,
+  profile,
+}: {
+  training: Training;
+  profile: Profile;
+}) {
+  /* Distribution-aware CTA. Paid mode renders the receipt-upload
+     form inline so visitors can buy without bouncing through a
+     separate funnel. Team mode points to /training for code entry. */
   if (training.distribution === "paid") {
     return (
       <div className="mb-5 rounded-2xl border border-electric-500/30 bg-electric-500/[0.08] p-4">
         <p className="text-sm font-semibold text-white">
-          Buy this training {training.price ? `— ₱${training.price.toLocaleString()}` : ""}
+          Buy this training{" "}
+          {training.price ? `— ₱${training.price.toLocaleString()}` : ""}
         </p>
-        <p className="mt-1 text-xs text-white/65">
-          Send payment to the seller&apos;s GCash / Maya / bank account,
-          upload your receipt, and you&apos;ll be unlocked once the
-          seller approves. (Payment flow integration coming soon.)
+        <p className="mt-1 mb-4 text-xs text-white/65">
+          Send payment via the seller&apos;s GCash / Maya / bank, upload
+          your receipt, and you&apos;ll be unlocked once the seller approves.
         </p>
+        <TrainingPurchaseForm training={training} profile={profile} />
       </div>
     );
   }

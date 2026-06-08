@@ -90,9 +90,13 @@ export default function FunnelsPage() {
     setCreating(true);
     try {
       const funnel = createFunnel(account.uid, name, template);
-      /* Keep the slug unique among this user's funnels. */
+      /* Keep the slug unique among this user's funnels AND avoid
+         reserved segments that collide with sibling public routes
+         under /{username}/ — currently just "t" (training page). */
+      const RESERVED_FUNNEL_SLUGS = new Set(["t"]);
       const taken = new Set(funnels.map((f) => f.slug));
       let slug = funnel.slug;
+      if (RESERVED_FUNNEL_SLUGS.has(slug)) slug = `${slug}-funnel`;
       let n = 2;
       while (taken.has(slug)) slug = `${funnel.slug}-${n++}`;
       funnel.slug = slug;
