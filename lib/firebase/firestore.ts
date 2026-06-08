@@ -34,6 +34,9 @@ import type {
   Plan,
   PlanId,
   Profile,
+  Training,
+  TrainingAccess,
+  TrainingProgress,
   SavedBuild,
   SentMessageLog,
   SharedBuild,
@@ -75,6 +78,10 @@ export const COL = {
   pipelines: "pipelines",
   /* Manual payment submissions — receipts uploaded by visitors. */
   paymentSubmissions: "payment_submissions",
+  /* Trainings (user-owned courses) + access + progress. */
+  trainings: "trainings",
+  trainingAccess: "training_access",
+  trainingProgress: "training_progress",
 } as const;
 
 /** Subcollection name for a user's saved-build locker. */
@@ -193,6 +200,15 @@ function normalizePlan(raw: Record<string, unknown>): Plan {
     }
     if (typeof l.sharedBuilds === "number" && l.sharedBuilds >= 0) {
       limits.sharedBuilds = Math.floor(l.sharedBuilds);
+    }
+    if (typeof l.pipelines === "number" && l.pipelines >= 0) {
+      limits.pipelines = Math.floor(l.pipelines);
+    }
+    if (typeof l.trainingsCreate === "number" && l.trainingsCreate >= 0) {
+      limits.trainingsCreate = Math.floor(l.trainingsCreate);
+    }
+    if (typeof l.trainingsActivate === "number" && l.trainingsActivate >= 0) {
+      limits.trainingsActivate = Math.floor(l.trainingsActivate);
     }
     return Object.keys(limits).length > 0 ? limits : undefined;
   };
@@ -2092,4 +2108,212 @@ export async function lookupSharedFunnelByCode(
     id: snap.docs[0].id,
   };
   return found.revoked ? null : found;
+}
+
+/* ============================================================
+   Trainings — user-owned courses
+   ============================================================ */
+
+/**
+ * Generate a human-friendly code with the given prefix. Format:
+ * `${PREFIX}-${5-char alnum}` — kept short enough to type once on
+ * mobile but long enough to be effectively unguessable for our scale.
+ */
+function generateTrainingCode(prefix: "ACTIVATE" | "SHARE"): string {
+  const alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // omits visually-ambiguous chars
+  let suffix = "";
+  for (let i = 0; i < 5; i++) {
+    suffix += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return `${prefix}-${suffix}`;
+}
+
+/** Create a fresh training doc with auto-generated codes. */
+export async function createTraining(
+  ownerId: string,
+  init: { title: string; slug: string; description?: string },
+): Promise<string> {
+  if (!isFirebaseConfigured) {
+    throw new Error("Firebase is not configured.");
+  }
+  const now = Date.now();
+  const docRef = await addDoc(collection(db, COL.trainings), {
+    ownerId,
+    slug: init.slug,
+    title: init.title,
+    description: init.description ?? "",
+    lessons: [],
+    status: "draft" as const,
+    distribution: "team" as const,
+    shareCode: generateTrainingCode("SHARE"),
+    activationCode: generateTrainingCode("ACTIVATE"),
+    cloneCount: 0,
+    createdAt: now,
+    updatedAt: now,
+  });
+  return docRef.id;
+}
+
+/** List trainings owned by a user. Sorted newest-first. */
+export async function listTrainingsByOwner(ownerId: string): Promise<Training[]> {
+  if (!isFirebaseConfigured) return [];
+  const snap = await getDocs(
+    query(
+      collection(db, COL.trainings),
+      where("ownerId", "==", ownerId),
+      orderBy("createdAt", "desc"),
+      fsLimit(50),
+    ),
+  );
+  return snap.docs.map((d) => ({ ...(d.data() as Training), id: d.id }));
+}
+
+/** Fetch a single training by id. Returns null if missing. */
+export async function getTraining(id: string): Promise<Training | null> {
+  if (!isFirebaseConfigured) return null;
+  const snap = await getDoc(doc(db, COL.trainings, id));
+  if (!snap.exists()) return null;
+  return { ...(snap.data() as Training), id: snap.id };
+}
+
+/** Public lookup by username's slug — used by /{username}/t/{slug}. */
+export async function getTrainingByOwnerSlug(
+  ownerId: string,
+  slug: string,
+): Promise<Training | null> {
+  if (!isFirebaseConfigured) return null;
+  const snap = await getDocs(
+    query(
+      collection(db, COL.trainings),
+      where("ownerId", "==", ownerId),
+      where("slug", "==", slug),
+      fsLimit(1),
+    ),
+  );
+  if (snap.empty) return null;
+  return { ...(snap.docs[0].data() as Training), id: snap.docs[0].id };
+}
+
+/** Patch a training. Always bumps updatedAt. */
+export async function updateTraining(
+  id: string,
+  patch: Partial<Training>,
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await updateDoc(doc(db, COL.trainings, id), {
+    ...patch,
+    updatedAt: Date.now(),
+  });
+}
+
+/**
+ * Delete a training and all its access records. We don't leave
+ * orphan TrainingAccess docs pointing at a missing training — those
+ * would break the learner's library cards.
+ */
+export async function deleteTraining(trainingId: string): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  const accessSnap = await getDocs(
+    query(
+      collection(db, COL.trainingAccess),
+      where("trainingId", "==", trainingId),
+    ),
+  );
+  const batch = writeBatch(db);
+  for (const d of accessSnap.docs) batch.delete(d.ref);
+  batch.delete(doc(db, COL.trainings, trainingId));
+  await batch.commit();
+  /* Progress records (per-lesson) are left behind. They're scoped
+     to userId__lessonId and harmless — a future cleanup sweep can
+     prune them. Avoids slowing the delete with a third query. */
+}
+
+/** Regenerate one of the codes (shareCode or activationCode). */
+export async function regenerateTrainingCode(
+  id: string,
+  which: "share" | "activation",
+): Promise<string> {
+  if (!isFirebaseConfigured) throw new Error("Firebase is not configured.");
+  const next = generateTrainingCode(which === "share" ? "SHARE" : "ACTIVATE");
+  await updateDoc(doc(db, COL.trainings, id), {
+    [which === "share" ? "shareCode" : "activationCode"]: next,
+    updatedAt: Date.now(),
+  });
+  return next;
+}
+
+/* ---- Training access (learner library) ---- */
+
+/**
+ * List every training a learner has unlocked. Sorted newest-first.
+ * Used to render the "My Library" view + to enforce the per-plan
+ * activation cap.
+ */
+export async function listTrainingAccessForUser(
+  userId: string,
+): Promise<TrainingAccess[]> {
+  if (!isFirebaseConfigured) return [];
+  const snap = await getDocs(
+    query(
+      collection(db, COL.trainingAccess),
+      where("userId", "==", userId),
+      orderBy("unlockedAt", "desc"),
+      fsLimit(100),
+    ),
+  );
+  return snap.docs.map((d) => ({ ...(d.data() as TrainingAccess), id: d.id }));
+}
+
+/**
+ * List learners who have unlocked a specific training. Used by the
+ * Learners tab in the training editor — owner sees who joined +
+ * each learner's progress summary.
+ */
+export async function listTrainingAccessForTraining(
+  trainingId: string,
+): Promise<TrainingAccess[]> {
+  if (!isFirebaseConfigured) return [];
+  const snap = await getDocs(
+    query(
+      collection(db, COL.trainingAccess),
+      where("trainingId", "==", trainingId),
+      orderBy("unlockedAt", "desc"),
+      fsLimit(500),
+    ),
+  );
+  return snap.docs.map((d) => ({ ...(d.data() as TrainingAccess), id: d.id }));
+}
+
+/* ---- Training progress ---- */
+
+/** Mark a lesson complete (idempotent — same uid+lesson upserts). */
+export async function markTrainingLessonComplete(
+  userId: string,
+  trainingId: string,
+  lessonId: string,
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  const id = `${userId}__${lessonId}`;
+  await setDoc(doc(db, COL.trainingProgress, id), {
+    userId,
+    trainingId,
+    lessonId,
+    completedAt: Date.now(),
+  });
+}
+
+/** Fetch a user's progress for a single training. */
+export async function listTrainingProgress(
+  userId: string,
+  trainingId: string,
+): Promise<TrainingProgress[]> {
+  if (!isFirebaseConfigured) return [];
+  const snap = await getDocs(
+    query(
+      collection(db, COL.trainingProgress),
+      where("userId", "==", userId),
+      where("trainingId", "==", trainingId),
+    ),
+  );
+  return snap.docs.map((d) => ({ ...(d.data() as TrainingProgress), id: d.id }));
 }

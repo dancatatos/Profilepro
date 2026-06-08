@@ -41,6 +41,7 @@ export const DASHBOARD_NAV: NavItem[] = [
   { key: "pipelines", label: "Follow-Up", href: "/pipelines", icon: "KanbanSquare" },
   { key: "payments", label: "Payments", href: "/payments", icon: "Wallet" },
   { key: "analytics", label: "Analytics", href: "/analytics", icon: "BarChart3" },
+  { key: "trainings", label: "Trainings", href: "/trainings", icon: "GraduationCap" },
   { key: "university", label: "Credibly University", href: "/university", icon: "GraduationCap" },
   { key: "media", label: "Media Library", href: "/media", icon: "Images" },
   { key: "settings", label: "Settings", href: "/settings", icon: "Settings" },
@@ -344,7 +345,7 @@ export const PLANS: Plan[] = [
        at display time. */
     features: [{ label: "Core profile sections", included: true }],
     featureKeys: ["profile_basic", "qr_standard"],
-    limits: { funnels: 0, sharedBuilds: 0 },
+    limits: { funnels: 0, sharedBuilds: 0, trainingsCreate: 0, trainingsActivate: 1 },
     visibility: "public",
     checkoutUrl: "",
     commission: 0,
@@ -373,7 +374,7 @@ export const PLANS: Plan[] = [
       "appointments",
       "follow_up_pipeline",
     ],
-    limits: { funnels: 5, sharedBuilds: 5 },
+    limits: { funnels: 5, sharedBuilds: 5, trainingsCreate: 1, trainingsActivate: 999 },
     visibility: "public",
     checkoutUrl: DEFAULT_GUMROAD_URL,
     commission: 0,
@@ -408,7 +409,7 @@ export const PLANS: Plan[] = [
       "appointments",
       "follow_up_pipeline",
     ],
-    limits: { funnels: 15, sharedBuilds: 15 },
+    limits: { funnels: 15, sharedBuilds: 15, trainingsCreate: 5, trainingsActivate: 999 },
     visibility: "public",
     checkoutUrl: DEFAULT_GUMROAD_URL,
     commission: 0,
@@ -542,4 +543,87 @@ export function resolveUserPipelineLimit(
   const plan = plans?.find((p) => p.id === planId);
   if (plan?.limits?.pipelines !== undefined) return plan.limits.pipelines;
   return getPipelineLimit(planId);
+}
+
+/* ---------------- Training limits ---------------- */
+
+/**
+ * Hardcoded fallbacks for the trainings-create and trainings-activate
+ * limits — used when a plan doc has no explicit `limits.trainingsCreate`
+ * / `limits.trainingsActivate` set. Admin can override these per-plan
+ * in /admin/subscriptions, and per-user in /admin/users.
+ *
+ * Defaults mirror the BUILT_IN_PLANS values:
+ *   free  → can create 0, can activate 1
+ *   pro   → can create 1, can activate "effectively unlimited" (999)
+ *   team  → can create 5, can activate "effectively unlimited" (999)
+ *
+ * 999 is treated as "unlimited" everywhere — the UI shows ∞ instead of
+ * the literal number. Keeps the limit math simple (always a number).
+ */
+export const TRAININGS_CREATE_LIMITS: Record<string, number> = {
+  free: 0,
+  pro: 1,
+  team: 5,
+};
+export const TRAININGS_ACTIVATE_LIMITS: Record<string, number> = {
+  free: 1,
+  pro: 999,
+  team: 999,
+};
+
+export function getTrainingsCreateLimit(planId: PlanId): number {
+  return TRAININGS_CREATE_LIMITS[planId] ?? TRAININGS_CREATE_LIMITS.pro;
+}
+export function getTrainingsActivateLimit(planId: PlanId): number {
+  return TRAININGS_ACTIVATE_LIMITS[planId] ?? TRAININGS_ACTIVATE_LIMITS.pro;
+}
+
+/**
+ * Per-user resolver. Priority:
+ *   1. (future) user.limitOverrides — not yet wired into AccountUser
+ *   2. plan.limits.trainingsCreate
+ *   3. legacy hardcoded TRAININGS_CREATE_LIMITS
+ */
+export function resolveUserTrainingsCreateLimit(
+  user: { plan?: PlanId } | null | undefined,
+  plans: Plan[] | null | undefined,
+): number {
+  const planId = user?.plan ?? "free";
+  const plan = plans?.find((p) => p.id === planId);
+  if (plan?.limits?.trainingsCreate !== undefined) {
+    return plan.limits.trainingsCreate;
+  }
+  return getTrainingsCreateLimit(planId);
+}
+export function resolveUserTrainingsActivateLimit(
+  user: { plan?: PlanId } | null | undefined,
+  plans: Plan[] | null | undefined,
+): number {
+  const planId = user?.plan ?? "free";
+  const plan = plans?.find((p) => p.id === planId);
+  if (plan?.limits?.trainingsActivate !== undefined) {
+    return plan.limits.trainingsActivate;
+  }
+  return getTrainingsActivateLimit(planId);
+}
+
+/**
+ * Resolve the configurable feature label. Reads from the marketing
+ * settings doc via the MarketingContent.featureLabels block, falling
+ * back to the canonical default if unset/empty. Use this everywhere
+ * the UI surfaces the word "Trainings" so a future rename is one
+ * Firestore write.
+ */
+export function trainingsLabel(
+  marketing: { featureLabels?: { trainingsPlural?: string; trainingsSingular?: string } } | null | undefined,
+  form: "plural" | "singular" = "plural",
+): string {
+  const labels = marketing?.featureLabels;
+  if (form === "singular") {
+    const v = labels?.trainingsSingular?.trim();
+    return v && v.length > 0 ? v : "Training";
+  }
+  const v = labels?.trainingsPlural?.trim();
+  return v && v.length > 0 ? v : "Trainings";
 }

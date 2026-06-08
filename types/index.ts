@@ -205,6 +205,20 @@ export interface MarketingContent {
     primaryCta: string;
     secondaryCta: string;
   };
+  /**
+   * Configurable display labels for in-app feature names. Lets the
+   * admin rebrand "Trainings" to "Programs", "Academy", "Trainings",
+   * etc. from /admin/marketing without a code deploy. Each entry has
+   * sensible defaults baked into the UI — empty/unset values fall
+   * through to the default. Singular + plural so empty states and
+   * counts read naturally.
+   */
+  featureLabels?: {
+    /** What we call the "Trainings" feature in nav + copy. Default: "Trainings". */
+    trainingsPlural?: string;
+    /** Singular form, used in empty states and confirm dialogs. Default: "Training". */
+    trainingsSingular?: string;
+  };
 }
 
 export interface FeatureFlags {
@@ -1163,6 +1177,19 @@ export interface PlanLimits {
    * duplicates from the template picker. Unset = unlimited.
    */
   pipelines?: number;
+  /**
+   * Maximum number of trainings this user can author (originals OR
+   * clones — they share the same slot pool). Free typically 0,
+   * Pro 1, Team 5. 0 blocks the create button outright.
+   */
+  trainingsCreate?: number;
+  /**
+   * Maximum number of trainings the user can have unlocked / active
+   * in their library at once. Drives the freemium upgrade nudge:
+   * free=1, paid plans effectively unlimited. When the cap is hit,
+   * the activation flow shows a "remove one to make room" prompt.
+   */
+  trainingsActivate?: number;
 }
 
 export interface Plan {
@@ -1334,6 +1361,141 @@ export interface UniversityProgress {
   id: string;
   userId: string;
   topicId: string;
+  lessonId: string;
+  completedAt: number;
+}
+
+/* ---------------- Trainings (user-owned courses) ---------------- */
+
+/**
+ * Distribution mode determines who can unlock and watch a training.
+ *   "public" — anyone with the URL can watch, no code needed
+ *   "team"   — code-gated, free; learners pay nothing, owner just
+ *              wants to limit access to their team / list
+ *   "paid"   — code-gated AND payment-gated; visitor pays via the
+ *              owner's manual-payment receipt flow, owner approves
+ *              from /payments, access granted
+ *
+ * The same training data structure supports all three — the owner
+ * just flips the switch in the Distribution tab.
+ */
+export type TrainingDistribution = "public" | "team" | "paid";
+
+export type TrainingStatus = "draft" | "published";
+
+/**
+ * One lesson inside a training. Mirrors UniversityLesson nearly 1:1
+ * so the lesson editor + player can be ported cleanly. Kept inline
+ * on the training doc (not a subcollection) for the same reason —
+ * 5-15 lessons per training means a single Firestore read returns
+ * the whole curriculum.
+ */
+export interface TrainingLesson {
+  id: string;
+  title: string;
+  description?: string;
+  /** Video URL — YouTube, Adilo, Vimeo or direct MP4. */
+  videoUrl?: string;
+  /** Notes / transcript. Plain text with newlines preserved. */
+  body?: string;
+  durationMinutes?: number;
+  resources?: UniversityResource[];
+  /**
+   * When true, this lesson is unlocked even for visitors who haven't
+   * activated the training — a "free preview" to drive activations
+   * on the public landing page.
+   */
+  freePreview: boolean;
+  sortOrder: number;
+}
+
+/**
+ * A training the user authored or cloned. Hard cap of 15 lessons
+ * per training (enforced in the editor) so the in-app player stays
+ * scannable on mobile.
+ *
+ * Two codes:
+ *   `shareCode`      — used by OTHER LEADERS to clone the training
+ *                       into their own account so they can monitor
+ *                       their own downline separately
+ *   `activationCode` — used by LEARNERS to unlock watching access;
+ *                       their progress reports to THIS training's
+ *                       owner, not the upstream original
+ *
+ * Cloning produces a fully independent copy — the cloned training
+ * gets its own pair of codes and its own learner list. Editing the
+ * original does NOT propagate to clones (same model as SharedBuild).
+ */
+export interface Training {
+  id: string;
+  ownerId: string;
+  /** URL slug — public training lives at /{username}/t/{slug}. */
+  slug: string;
+  title: string;
+  description: string;
+  bannerUrl?: string;
+  lessons: TrainingLesson[];
+  status: TrainingStatus;
+  distribution: TrainingDistribution;
+  /** Code other leaders use to clone this training. */
+  shareCode: string;
+  /** Code learners use to activate / unlock watching access. */
+  activationCode: string;
+  /** Set when this training was cloned from another. Vanity field
+   *  for "where did this come from" attribution + future analytics. */
+  clonedFrom?: string;
+  /** How many other leaders have cloned this training. Maintained
+   *  on the original whenever a clone is created. */
+  cloneCount?: number;
+  /* ── Paid-mode settings ── */
+  /** Price in PHP. Only meaningful when distribution === "paid". */
+  price?: number;
+  /**
+   * Which of the owner's payment methods (from Profile.paymentMethods)
+   * to accept for this training. Empty = all enabled methods.
+   */
+  paymentMethodIds?: string[];
+  /* ── Pipeline auto-grant (optional) ── */
+  /** When set, learners moved into the configured pipeline+stage
+   *  automatically receive activation for this training. */
+  autoGrantPipelineId?: string;
+  autoGrantStageId?: string;
+  /** Send the auto-granted learner an unlock email. */
+  autoGrantSendEmail?: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+/**
+ * Per-(user, training) access record. Created when a learner
+ * activates with a code, gets pipeline-auto-granted, or buys
+ * the training. The doc id is `${userId}__${trainingId}` so the
+ * uniqueness constraint is enforced at the storage layer.
+ *
+ * Counts against the user's `trainingsActivate` plan cap — the
+ * free-tier "1 training only" gate reads this collection.
+ */
+export interface TrainingAccess {
+  id: string;
+  userId: string;
+  trainingId: string;
+  /** Owner of the training (denormalised for cheap dashboard reads). */
+  ownerId: string;
+  unlockedAt: number;
+  unlockedVia: "activation" | "purchase" | "public" | "pipeline";
+  /** Code used at activation time (for audit). */
+  activationCode?: string;
+}
+
+/**
+ * Per-(user, lesson) progress log. One doc per completed lesson.
+ * Doc id format `${userId}__${lessonId}` to prevent duplicates.
+ * Reuses the same shape as UniversityProgress for consistency.
+ */
+export interface TrainingProgress {
+  id: string;
+  userId: string;
+  trainingId: string;
   lessonId: string;
   completedAt: number;
 }

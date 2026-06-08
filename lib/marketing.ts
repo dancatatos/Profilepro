@@ -165,6 +165,12 @@ export function mergeMarketingContent(
       items: override.faq?.items ?? base.faq.items,
     },
     finalCta: { ...base.finalCta, ...(override.finalCta ?? {}) },
+    /* Carry through the (optional) admin-configured feature labels.
+       Not in DEFAULT_MARKETING_CONTENT because the consumers default
+       gracefully when the field is absent — keeps the defaults tight. */
+    ...(override.featureLabels
+      ? { featureLabels: { ...override.featureLabels } }
+      : {}),
   };
 }
 

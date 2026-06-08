@@ -294,6 +294,12 @@ export default function AdminSubscriptionsPage() {
         if (patch.sharedBuilds !== undefined) {
           next.sharedBuilds = Math.max(0, Math.floor(patch.sharedBuilds));
         }
+        if (patch.trainingsCreate !== undefined) {
+          next.trainingsCreate = Math.max(0, Math.floor(patch.trainingsCreate));
+        }
+        if (patch.trainingsActivate !== undefined) {
+          next.trainingsActivate = Math.max(0, Math.floor(patch.trainingsActivate));
+        }
         return { ...p, limits: next };
       }),
     );
@@ -784,10 +790,44 @@ export default function AdminSubscriptionsPage() {
                       }
                     />
                   </div>
+                  <div>
+                    <p className="mb-1 text-[10px] text-white/45">
+                      Trainings — create / clone
+                    </p>
+                    <input
+                      type="number"
+                      min={0}
+                      className={inputCls}
+                      value={plan.limits?.trainingsCreate ?? 0}
+                      onChange={(e) =>
+                        updateLimits(pIdx, {
+                          trainingsCreate: Number(e.target.value) || 0,
+                        })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <p className="mb-1 text-[10px] text-white/45">
+                      Trainings — library cap
+                    </p>
+                    <input
+                      type="number"
+                      min={0}
+                      className={inputCls}
+                      value={plan.limits?.trainingsActivate ?? 0}
+                      onChange={(e) =>
+                        updateLimits(pIdx, {
+                          trainingsActivate: Number(e.target.value) || 0,
+                        })
+                      }
+                    />
+                  </div>
                 </div>
                 <p className="mt-1 text-[10px] text-white/35">
-                  0 means &ldquo;none&rdquo;. Per-user overrides in{" "}
-                  <code>/admin/users</code> can grant individuals more.
+                  0 means &ldquo;none&rdquo;. Use 999 for &ldquo;effectively
+                  unlimited&rdquo; — anything ≥ 999 renders as ∞ in the UI.
+                  Per-user overrides in <code>/admin/users</code> can grant
+                  individuals more.
                 </p>
               </div>
 

@@ -255,6 +255,50 @@ service cloud.firestore {
         && resource.data.userId == request.auth.uid;
     }
 
+    // ---- Trainings (user-owned courses) ----
+    // Trainings are public-readable so the /{username}/t/{slug}
+    // landing page renders for anonymous visitors who haven't
+    // activated yet. Owner has full CRUD. Same shape as funnels.
+    match /trainings/{trainingId} {
+      allow read, list: if true;
+      allow create: if isSignedIn()
+        && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isAdmin()
+        || (isSignedIn() && resource.data.ownerId == request.auth.uid);
+    }
+
+    // ---- Training access (per-user unlock records) ----
+    // The LEARNER creates their own access record when activating a
+    // code. The OWNER of the training reads them all for the
+    // Learners tab. Doc id format: `${userId}__${trainingId}` so
+    // re-activation upserts instead of duplicating.
+    match /training_access/{accessId} {
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid;
+      allow read: if isAdmin()
+        || (isSignedIn() && (
+              resource.data.userId == request.auth.uid
+              || resource.data.ownerId == request.auth.uid
+           ));
+      allow list: if isAdmin() || isSignedIn();
+      allow delete: if isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow update: if false;
+    }
+
+    // ---- Training progress (per-lesson completion log) ----
+    // Each doc id is `${userId}__${lessonId}`. Same pattern as
+    // university_progress — learner has full control over their own
+    // rows, owner reads their training's progress via Learners tab.
+    match /training_progress/{progressId} {
+      allow read, list: if isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create, update: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn()
+        && resource.data.userId == request.auth.uid;
+    }
+
     // ---- Appointment slot markers (public, PII-free availability) ----
     match /bookingSlots/{slotId} {
       allow read, list: if true;
