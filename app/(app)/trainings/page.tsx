@@ -85,6 +85,18 @@ export default function TrainingsPage() {
     setLoading(true);
     try {
       setTrainings(await listTrainingsByOwner(account.uid));
+    } catch (err) {
+      /* Surface load failures so the user sees a toast instead of a
+         silently empty list (the most common cause is a missing
+         Firestore composite index in production). The helper itself
+         now falls back to a client-side sort on `failed-precondition`,
+         so anything still landing here is a real error worth seeing. */
+      console.error("[Credibly] listTrainingsByOwner failed:", err);
+      toast.error(
+        err instanceof Error
+          ? `Couldn't load trainings: ${err.message}`
+          : "Couldn't load trainings.",
+      );
     } finally {
       setLoading(false);
     }

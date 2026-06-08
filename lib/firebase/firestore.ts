@@ -2223,15 +2223,40 @@ export async function createTraining(
 /** List trainings owned by a user. Sorted newest-first. */
 export async function listTrainingsByOwner(ownerId: string): Promise<Training[]> {
   if (!isFirebaseConfigured) return [];
-  const snap = await getDocs(
-    query(
-      collection(db, COL.trainings),
-      where("ownerId", "==", ownerId),
-      orderBy("createdAt", "desc"),
-      fsLimit(50),
-    ),
-  );
-  return snap.docs.map((d) => ({ ...(d.data() as Training), id: d.id }));
+  /* Fast path: use the (ownerId, createdAt) composite index. */
+  try {
+    const snap = await getDocs(
+      query(
+        collection(db, COL.trainings),
+        where("ownerId", "==", ownerId),
+        orderBy("createdAt", "desc"),
+        fsLimit(50),
+      ),
+    );
+    return snap.docs.map((d) => ({ ...(d.data() as Training), id: d.id }));
+  } catch (err) {
+    /* Fallback for the index-build window — same data, sorted client-
+       side. Without this fallback, a missing index makes the trainings
+       list silently empty (the create succeeds but nothing renders),
+       which is exactly the kind of failure mode that wastes hours of
+       debugging time. Same pattern as listPaymentSubmissions. */
+    const code = (err as { code?: string })?.code;
+    if (code !== "failed-precondition") throw err;
+    console.warn(
+      "[listTrainingsByOwner] composite index missing — falling back to client-side sort. Deploy firestore.indexes.json to fix.",
+    );
+    const snap = await getDocs(
+      query(
+        collection(db, COL.trainings),
+        where("ownerId", "==", ownerId),
+      ),
+    );
+    const list = snap.docs.map(
+      (d) => ({ ...(d.data() as Training), id: d.id }),
+    );
+    list.sort((a, b) => b.createdAt - a.createdAt);
+    return list.slice(0, 50);
+  }
 }
 
 /** Fetch a single training by id. Returns null if missing. */
@@ -2319,15 +2344,31 @@ export async function listTrainingAccessForUser(
   userId: string,
 ): Promise<TrainingAccess[]> {
   if (!isFirebaseConfigured) return [];
-  const snap = await getDocs(
-    query(
-      collection(db, COL.trainingAccess),
-      where("userId", "==", userId),
-      orderBy("unlockedAt", "desc"),
-      fsLimit(100),
-    ),
-  );
-  return snap.docs.map((d) => ({ ...(d.data() as TrainingAccess), id: d.id }));
+  try {
+    const snap = await getDocs(
+      query(
+        collection(db, COL.trainingAccess),
+        where("userId", "==", userId),
+        orderBy("unlockedAt", "desc"),
+        fsLimit(100),
+      ),
+    );
+    return snap.docs.map((d) => ({ ...(d.data() as TrainingAccess), id: d.id }));
+  } catch (err) {
+    const code = (err as { code?: string })?.code;
+    if (code !== "failed-precondition") throw err;
+    console.warn(
+      "[listTrainingAccessForUser] composite index missing — client-side sort fallback.",
+    );
+    const snap = await getDocs(
+      query(collection(db, COL.trainingAccess), where("userId", "==", userId)),
+    );
+    const list = snap.docs.map(
+      (d) => ({ ...(d.data() as TrainingAccess), id: d.id }),
+    );
+    list.sort((a, b) => b.unlockedAt - a.unlockedAt);
+    return list.slice(0, 100);
+  }
 }
 
 /**
@@ -2339,15 +2380,34 @@ export async function listTrainingAccessForTraining(
   trainingId: string,
 ): Promise<TrainingAccess[]> {
   if (!isFirebaseConfigured) return [];
-  const snap = await getDocs(
-    query(
-      collection(db, COL.trainingAccess),
-      where("trainingId", "==", trainingId),
-      orderBy("unlockedAt", "desc"),
-      fsLimit(500),
-    ),
-  );
-  return snap.docs.map((d) => ({ ...(d.data() as TrainingAccess), id: d.id }));
+  try {
+    const snap = await getDocs(
+      query(
+        collection(db, COL.trainingAccess),
+        where("trainingId", "==", trainingId),
+        orderBy("unlockedAt", "desc"),
+        fsLimit(500),
+      ),
+    );
+    return snap.docs.map((d) => ({ ...(d.data() as TrainingAccess), id: d.id }));
+  } catch (err) {
+    const code = (err as { code?: string })?.code;
+    if (code !== "failed-precondition") throw err;
+    console.warn(
+      "[listTrainingAccessForTraining] composite index missing — client-side sort fallback.",
+    );
+    const snap = await getDocs(
+      query(
+        collection(db, COL.trainingAccess),
+        where("trainingId", "==", trainingId),
+      ),
+    );
+    const list = snap.docs.map(
+      (d) => ({ ...(d.data() as TrainingAccess), id: d.id }),
+    );
+    list.sort((a, b) => b.unlockedAt - a.unlockedAt);
+    return list.slice(0, 500);
+  }
 }
 
 /* ---- Training progress ---- */
