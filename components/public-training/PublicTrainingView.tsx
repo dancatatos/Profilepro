@@ -18,6 +18,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
+  ArrowLeft,
   ArrowRight,
   CheckCircle2,
   Download,
@@ -121,8 +122,40 @@ export function PublicTrainingView({
     if (next) setActiveId(next.id);
   };
 
+  /* Decide which "back" link makes sense — owners go back to their
+     editor, signed-in learners go to their library, anonymous
+     visitors get nothing (this is a public page). */
+  const backHref = isOwner
+    ? `/trainings/${training.id}`
+    : account && account.uid !== "demo"
+      ? "/trainings"
+      : null;
+  const backLabel = isOwner ? "Back to editor" : "Back to my library";
+
   return (
     <main className="min-h-dvh bg-ink-950 text-white">
+      {/* Thin top bar — only when there's somewhere to go back to.
+          Sticky so it stays in reach during a long lesson scroll. */}
+      {backHref && (
+        <div className="sticky top-0 z-20 border-b border-white/[0.06] bg-ink-950/85 backdrop-blur">
+          <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-2.5">
+            <Link
+              href={backHref}
+              className="flex items-center gap-1.5 rounded-lg border border-white/10 px-2.5 py-1.5 text-xs font-medium text-white/75 transition-colors hover:bg-white/[0.05] hover:text-white"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              {backLabel}
+            </Link>
+            <Link
+              href="/dashboard"
+              className="text-xs font-medium text-white/55 hover:text-white"
+            >
+              Dashboard
+            </Link>
+          </div>
+        </div>
+      )}
+
       <div className="mx-auto max-w-3xl px-4 py-8">
         {/* Header */}
         <header className="mb-6">
