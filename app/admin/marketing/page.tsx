@@ -36,6 +36,7 @@ import {
   getMarketingContent,
   setMarketingContent,
 } from "@/lib/firebase/firestore";
+import { useMarketingStore } from "@/store/marketingStore";
 import {
   blankFaqItem,
   blankStat,
@@ -98,6 +99,10 @@ export default function AdminMarketingPage() {
     setSaving(true);
     try {
       await setMarketingContent(content);
+      /* Push the new content into the in-memory store so any open
+         dashboard tab (sidebar nav, /trainings, etc.) reflects the
+         feature-label rename without a page reload. */
+      useMarketingStore.getState().setLocal(content);
       setDirty(false);
       toast.success("Marketing content saved — live on the homepage.");
     } catch {
@@ -155,6 +160,14 @@ export default function AdminMarketingPage() {
           publish them to the live homepage.
         </div>
       )}
+
+      <FeatureLabelsEditor
+        labels={content.featureLabels}
+        onChange={(next) => {
+          setContent((prev) => ({ ...prev, featureLabels: next }));
+          setDirty(true);
+        }}
+      />
 
       <HeroEditor
         hero={content.hero}
@@ -909,6 +922,68 @@ function FinalCtaEditor({
           />
         </Field>
       </div>
+    </SectionCard>
+  );
+}
+
+/* ---------------- Feature labels ---------------- */
+
+/**
+ * Configurable display names for in-app features. Right now only the
+ * "Trainings" feature surfaces here — admin can rebrand to "Programs",
+ * "Academy", "Coaching", etc. without a code deploy. Both singular and
+ * plural so empty states + count strings read naturally.
+ *
+ * The label flows through:
+ *   - Sidebar nav entry
+ *   - /trainings page header + empty states
+ *   - Public "Have a code?" CTA on profiles
+ *   - The /training redeem page (Session 3)
+ */
+function FeatureLabelsEditor({
+  labels,
+  onChange,
+}: {
+  labels:
+    | { trainingsPlural?: string; trainingsSingular?: string }
+    | undefined;
+  onChange: (next: { trainingsPlural?: string; trainingsSingular?: string }) => void;
+}) {
+  const plural = labels?.trainingsPlural ?? "";
+  const singular = labels?.trainingsSingular ?? "";
+  return (
+    <SectionCard
+      title="Feature labels"
+      description="Rebrand in-app feature names without a code deploy. Leave blank to use the defaults."
+      defaultOpen={false}
+    >
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Trainings — plural">
+          <input
+            value={plural}
+            onChange={(e) =>
+              onChange({ ...labels, trainingsPlural: e.target.value })
+            }
+            placeholder="Default: Trainings"
+            className={inputCx}
+          />
+        </Field>
+        <Field label="Trainings — singular">
+          <input
+            value={singular}
+            onChange={(e) =>
+              onChange({ ...labels, trainingsSingular: e.target.value })
+            }
+            placeholder="Default: Training"
+            className={inputCx}
+          />
+        </Field>
+      </div>
+      <p className="mt-1 text-[11px] text-white/40">
+        Examples: <code>Programs</code> / <code>Program</code>, <code>Academy</code> /
+        <code> Module</code>, <code>Coaching</code> / <code>Session</code>. Refresh the
+        app after saving to see the new label everywhere it&apos;s used.
+      </p>
     </SectionCard>
   );
 }

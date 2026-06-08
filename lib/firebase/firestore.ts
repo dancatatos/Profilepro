@@ -116,6 +116,9 @@ export async function getFeatureFlags(): Promise<FeatureFlags> {
  * caller layers this on top of DEFAULT_MARKETING_CONTENT so missing
  * sections fall back gracefully.
  */
+/** Convenience alias for the optional marketing override shape. */
+export type MarketingContentPartial = Partial<MarketingContent>;
+
 export async function getMarketingContent(): Promise<Partial<MarketingContent> | null> {
   if (!isFirebaseConfigured) return null;
   try {

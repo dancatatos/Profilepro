@@ -1,9 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Sparkles } from "lucide-react";
-import { DASHBOARD_NAV } from "@/lib/constants";
+import { DASHBOARD_NAV, trainingsLabel } from "@/lib/constants";
 import { Logo } from "@/components/ui/Logo";
 import { Icon } from "@/components/ui/Icon";
 import { Avatar } from "@/components/ui/Avatar";
@@ -11,6 +12,7 @@ import { Badge } from "@/components/ui/Badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { useTaskCountStore } from "@/store/taskCountStore";
+import { useMarketingStore } from "@/store/marketingStore";
 import { cn } from "@/lib/utils";
 
 function isActive(pathname: string, href: string) {
@@ -27,9 +29,23 @@ export function Sidebar() {
      without having to click into the section. */
   const urgentTasks = useTaskCountStore((s) => s.urgent);
 
-  /* The Template Marketplace tab is admin-gated and off by default. */
+  /* Configurable feature label — pulls the admin's preferred name
+     for "Trainings" so a rebrand from /admin/marketing doesn't need
+     a code deploy. Hydrates lazily on first mount, then served from
+     the in-memory store on subsequent renders. */
+  const marketingContent = useMarketingStore((s) => s.content);
+  const loadMarketing = useMarketingStore((s) => s.load);
+  useEffect(() => {
+    loadMarketing();
+  }, [loadMarketing]);
+  const trainingsName = trainingsLabel(marketingContent, "plural");
+
+  /* The Template Marketplace tab is admin-gated and off by default.
+     Trainings entry uses the configurable label. */
   const navItems = DASHBOARD_NAV.filter(
     (item) => item.key !== "templates" || flags.templateMarketplace,
+  ).map((item) =>
+    item.key === "trainings" ? { ...item, label: trainingsName } : item,
   );
 
   return (
