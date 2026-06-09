@@ -16,7 +16,7 @@ import {
   getThemeConfig,
 } from "@/lib/themes";
 import { createBooking, createLead, logEvent } from "@/lib/firebase/firestore";
-import { cn } from "@/lib/utils";
+import { cn, normalizeExternalUrl } from "@/lib/utils";
 import type { Funnel } from "@/types";
 
 const btnStyle: React.CSSProperties = {
@@ -114,7 +114,12 @@ export function FunnelView({
   const onCta = () => {
     if (!cta) return;
     if (cta.action === "url") {
-      if (cta.url) window.open(cta.url, "_blank", "noopener,noreferrer");
+      if (cta.url) {
+        /* normalizeExternalUrl prevents `youtube.com` (no scheme)
+           from being treated as a relative path by window.open. */
+        const safe = normalizeExternalUrl(cta.url);
+        if (safe !== "#") window.open(safe, "_blank", "noopener,noreferrer");
+      }
     } else {
       advance();
     }

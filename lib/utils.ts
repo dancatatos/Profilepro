@@ -76,6 +76,43 @@ export function getAppOrigin(): string {
   return process.env.NEXT_PUBLIC_APP_URL || "https://www.crediblyai.com";
 }
 
+/**
+ * Normalize a user-typed URL for use as a link `href`.
+ *
+ * Users almost always type `youtube.com` (no protocol) rather than
+ * `https://youtube.com`. Browsers treat protocol-less hrefs as
+ * RELATIVE to the current page, so `<a href="youtube.com">` on
+ * crediblyai.com/dan navigates to /dan/youtube.com — silently
+ * confusing. We prepend `https://` for any bare domain.
+ *
+ * Preserved as-is:
+ *   - empty / falsy → "#"          (no nav, no broken link)
+ *   - http:// https:// already absolute
+ *   - mailto: tel: sms:            (legit non-web schemes)
+ *   - / path                       (legit internal links)
+ *
+ * Blocked for safety:
+ *   - javascript: data: vbscript:  → returns "#" to prevent XSS via
+ *                                    user-typed URLs being rendered
+ *                                    on public profiles
+ */
+export function normalizeExternalUrl(raw: string | undefined | null): string {
+  const url = (raw ?? "").trim();
+  if (!url) return "#";
+  /* Block dangerous schemes — same boundary the public profile sandbox
+     iframe enforces for embed HTML, applied here for plain anchor hrefs. */
+  if (/^(javascript|data|vbscript):/i.test(url)) return "#";
+  /* Absolute or scheme-prefixed → leave alone. */
+  if (/^(https?:|mailto:|tel:|sms:)/i.test(url)) return url;
+  /* Internal app links — let Next.js / the browser resolve relative
+     to the site root, not the current page. */
+  if (url.startsWith("/")) return url;
+  /* Hash-only links (in-page jumps). */
+  if (url.startsWith("#")) return url;
+  /* Anything else is treated as an external bare URL — prepend https. */
+  return `https://${url}`;
+}
+
 /** Copy text to the clipboard, returns success. */
 export async function copyToClipboard(text: string): Promise<boolean> {
   try {

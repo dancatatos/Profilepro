@@ -9,7 +9,7 @@ import { PaymentSectionView } from "./PaymentSectionView";
 import { RichTextRenderer } from "@/components/ui/RichTextRenderer";
 import { CountdownTimer } from "./CountdownTimer";
 import { ctaButtonClasses } from "@/lib/theme";
-import { cn, isValidEmail, toEmbedUrl } from "@/lib/utils";
+import { cn, isValidEmail, normalizeExternalUrl, toEmbedUrl } from "@/lib/utils";
 import type {
   AnalyticsEventType,
   FaqItem,
@@ -249,7 +249,7 @@ function LeadForm({
           {channels.map((c) => (
             <a
               key={c.label}
-              href={c.url}
+              href={normalizeExternalUrl(c.url)}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => track("cta_click", `chat-${c.label}`)}
@@ -361,7 +361,7 @@ export function SectionRenderer({
                 return (
                   <a
                     key={b.id}
-                    href={b.url || "#"}
+                    href={normalizeExternalUrl(b.url)}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => track("cta_click", b.id)}
@@ -404,7 +404,7 @@ export function SectionRenderer({
             {section.links.map((l) => (
               <a
                 key={l.id}
-                href={l.url || "#"}
+                href={normalizeExternalUrl(l.url)}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => track("social_click", l.platform)}
@@ -584,7 +584,7 @@ export function SectionRenderer({
               if (action === "url") {
                 return (
                   <a
-                    href={section.ctaUrl || "#"}
+                    href={normalizeExternalUrl(section.ctaUrl)}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => track("cta_click", `pricing-${section.id}`)}
@@ -734,7 +734,7 @@ export function SectionRenderer({
                   </div>
                 </div>
                 <a
-                  href={p.ctaUrl || "#"}
+                  href={normalizeExternalUrl(p.ctaUrl)}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => track("cta_click", `product-${p.id}`)}
@@ -760,7 +760,7 @@ export function SectionRenderer({
               v.provider === "tiktok" ? (
                 <a
                   key={v.id}
-                  href={v.url}
+                  href={normalizeExternalUrl(v.url)}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => track("cta_click", `video-${v.id}`)}
@@ -899,7 +899,7 @@ export function SectionRenderer({
           <div className={wrapperClass}>
             {section.linkUrl ? (
               <a
-                href={section.linkUrl}
+                href={normalizeExternalUrl(section.linkUrl)}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => track("cta_click", section.id)}
