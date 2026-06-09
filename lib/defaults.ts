@@ -6,26 +6,26 @@ export function createSection(type: SectionType): ProfileSection {
   const base = { id: uid("sec"), enabled: true };
   switch (type) {
     case "cta":
+      /* Generic, non-opinionated starter — one neutral button the
+         owner can rename + point anywhere. Was previously pre-filled
+         with "Join My Team" + "Book A Call" which assumed a specific
+         use case (network marketing recruiting); for a general
+         website-builder block, that's too prescriptive. Users who
+         actually want a call-booking flow have the Appointment
+         section; users who want lead capture have the Lead Capture
+         section. This block is just buttons. */
       return {
         ...base,
         type: "cta",
-        title: "Work With Me",
+        title: "Buttons",
         buttons: [
           {
             id: uid("btn"),
-            label: "Join My Team",
+            label: "New button",
             url: "",
-            icon: "Users",
+            icon: "Link",
             style: "gradient",
             accent: "blue",
-          },
-          {
-            id: uid("btn"),
-            label: "Book A Call",
-            url: "",
-            icon: "Phone",
-            style: "outline",
-            accent: "white",
           },
         ],
       };
