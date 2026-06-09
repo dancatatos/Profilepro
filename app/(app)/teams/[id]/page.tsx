@@ -20,11 +20,13 @@ import {
   Calendar,
   Copy,
   Plus,
-  RefreshCw,
+  QrCode,
   Settings,
   Trash2,
   Users,
 } from "lucide-react";
+import { Modal } from "@/components/ui/Modal";
+import { QRBlock } from "@/components/qr/QRBlock";
 import { useAuth } from "@/hooks/useAuth";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card } from "@/components/ui/Card";
@@ -362,6 +364,7 @@ function SettingsTab({
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
 
   const joinUrl = `${getAppOrigin()}/join/team/${space.activationCode}`;
 
@@ -404,14 +407,14 @@ function SettingsTab({
 
   return (
     <div className="space-y-4">
-      {/* Join link + code */}
+      {/* Join link + code + QR */}
       <Card className="space-y-3 p-4">
         <p className="text-[10px] font-medium uppercase tracking-wider text-white/45">
-          Join link
+          Invite to team
         </p>
         <p className="text-xs text-white/55">
-          Share this with your team. Anyone who opens it can sign up + join.
-          QR generator ships in the next update.
+          Share this link, code, or QR with your team. Anyone who opens
+          it can sign up + join in two taps.
         </p>
         <div className="flex items-center gap-2">
           <code className="flex-1 truncate rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 font-mono text-xs text-electric-300">
@@ -439,6 +442,13 @@ function SettingsTab({
             Copy code
           </Button>
         </div>
+        <Button
+          variant="outline"
+          onClick={() => setQrOpen(true)}
+          leftIcon={<QrCode className="h-3.5 w-3.5" />}
+        >
+          Show QR code
+        </Button>
       </Card>
 
       {/* Details */}
@@ -517,11 +527,19 @@ function SettingsTab({
         }
       />
 
-      {/* RefreshCw kept lint-safe for a future "regenerate code" button.
-          The icon import is still wanted in the next session. */}
-      <span className="hidden">
-        <RefreshCw className="h-3.5 w-3.5" />
-      </span>
+      <Modal
+        open={qrOpen}
+        onClose={() => setQrOpen(false)}
+        title="Team join QR"
+        description="Print this on banners or show on a screen — scanning takes anyone to the join page."
+      >
+        <div className="space-y-3 pb-2">
+          <QRBlock value={joinUrl} display={260} fileName={`team-${space.id}`} />
+          <p className="text-center text-[11px] text-white/45">
+            Or share the direct link: <code>{joinUrl}</code>
+          </p>
+        </div>
+      </Modal>
     </div>
   );
 }

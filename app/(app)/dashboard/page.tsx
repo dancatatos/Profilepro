@@ -6,19 +6,26 @@ import { motion } from "framer-motion";
 import {
   AlertCircle,
   ArrowRight,
+  Calendar as CalendarIcon,
   CalendarClock,
   CheckCircle2,
   Circle,
+  MapPin,
   Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfileStore } from "@/store/profileStore";
 import { useTaskCountStore } from "@/store/taskCountStore";
 import { usePlanAccess } from "@/components/providers/PlanProvider";
-import { getAnalyticsSummary } from "@/lib/firebase/firestore";
+import {
+  getAnalyticsSummary,
+  getTeamSpace,
+  listEventsForTeamSpace,
+  listTeamMembershipsForUser,
+} from "@/lib/firebase/firestore";
 import { profileCompleteness } from "@/lib/profileMetrics";
 import { cn, formatCompact, formatPercent } from "@/lib/utils";
-import type { AnalyticsSummary } from "@/types";
+import type { AnalyticsSummary, TeamEvent } from "@/types";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
@@ -92,6 +99,12 @@ export default function DashboardPage() {
           any due. Replaces "user forgot to check /pipelines/today" with
           "user opens the app and immediately knows what to do." */}
       <TodayTasksCard />
+
+      {/* Upcoming events from teams the user belongs to. Same "you
+          need to know this NOW" framing as TodayTasksCard. Renders
+          nothing when the user has no upcoming events, so the card
+          doesn't take up space for users who haven't joined any team. */}
+      <UpcomingEventsCard />
 
       {/* Completeness + AI */}
       <Card className="overflow-hidden p-5">
@@ -334,6 +347,115 @@ function TodayTasksCard() {
             )}
           </div>
         )}
+      </Card>
+    </Link>
+  );
+}
+
+/* ============================================================
+   Upcoming Events widget
+   ============================================================ */
+
+interface DashboardEventRow {
+  event: TeamEvent;
+  teamName: string;
+}
+
+function UpcomingEventsCard() {
+  const { account } = useAuth();
+  const [rows, setRows] = useState<DashboardEventRow[] | null>(null);
+
+  useEffect(() => {
+    if (!account || account.uid === "demo") return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const memberships = await listTeamMembershipsForUser(account.uid);
+        if (memberships.length === 0) {
+          if (!cancelled) setRows([]);
+          return;
+        }
+        const pairs = await Promise.all(
+          memberships.map(async (m) => {
+            const [team, events] = await Promise.all([
+              getTeamSpace(m.teamSpaceId).catch(() => null),
+              listEventsForTeamSpace(m.teamSpaceId).catch(() => []),
+            ]);
+            return { team, events };
+          }),
+        );
+        const now = Date.now();
+        const flat: DashboardEventRow[] = [];
+        for (const { team, events } of pairs) {
+          if (!team) continue;
+          for (const ev of events) {
+            if (ev.status === "canceled") continue;
+            if (ev.endAt < now) continue;
+            flat.push({ event: ev, teamName: team.name });
+          }
+        }
+        flat.sort((a, b) => a.event.startAt - b.event.startAt);
+        if (!cancelled) setRows(flat.slice(0, 3));
+      } catch {
+        if (!cancelled) setRows([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [account]);
+
+  /* Hide entirely until we know there's at least one event to show —
+     avoids a "loading skeleton" flash for users with no teams. */
+  if (!rows || rows.length === 0) return null;
+
+  return (
+    <Link href="/my-events" className="block">
+      <Card className="p-4 transition-colors hover:border-electric-500/30 sm:p-5">
+        <div className="flex items-center gap-3">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-electric-500/15 text-electric-300">
+            <CalendarIcon className="h-5 w-5" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="font-display text-sm font-semibold text-white">
+              Upcoming events
+            </p>
+            <p className="text-xs text-white/55">
+              From teams you&apos;ve joined
+            </p>
+          </div>
+          <ArrowRight className="hidden h-5 w-5 shrink-0 text-white/40 sm:block" />
+        </div>
+        <div className="mt-3 space-y-1.5 border-t border-white/[0.06] pt-3">
+          {rows.map((row) => {
+            const d = new Date(row.event.startAt);
+            const when = d.toLocaleString(undefined, {
+              month: "short",
+              day: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+            });
+            return (
+              <div
+                key={row.event.id}
+                className="flex items-center gap-2 text-xs"
+              >
+                <span className="shrink-0 rounded bg-white/[0.05] px-1.5 py-0.5 text-[10px] font-medium text-white/55">
+                  {when}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-white/80">
+                  {row.event.title}
+                </span>
+                <span className="hidden shrink-0 truncate text-[10px] text-white/40 sm:block">
+                  {row.teamName}
+                </span>
+                {row.event.locationLabel && (
+                  <MapPin className="hidden h-3 w-3 shrink-0 text-white/30 sm:block" />
+                )}
+              </div>
+            );
+          })}
+        </div>
       </Card>
     </Link>
   );

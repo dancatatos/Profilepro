@@ -34,6 +34,29 @@ export default function AppLayout({
        regular customer app so they don't see an empty profile builder. */
     if (account.role === "affiliate") {
       router.replace("/affiliate");
+      return;
+    }
+    /* Post-signup team / event join handoff. The join pages stash a
+       pending code in localStorage before bouncing to /signup; when
+       the user lands back here authenticated, we resolve the pending
+       intent + redirect them to the right join URL. Cleared once
+       consumed so subsequent loads don't re-trigger. */
+    if (typeof window === "undefined") return;
+    const pendingTeam = window.localStorage.getItem(
+      "credibly:pendingTeamJoin",
+    );
+    if (pendingTeam) {
+      window.localStorage.removeItem("credibly:pendingTeamJoin");
+      router.replace(`/join/team/${pendingTeam}`);
+      return;
+    }
+    const pendingEvent = window.localStorage.getItem(
+      "credibly:pendingEventJoin",
+    );
+    if (pendingEvent) {
+      window.localStorage.removeItem("credibly:pendingEventJoin");
+      router.replace(`/join/event/${pendingEvent}`);
+      return;
     }
   }, [loading, account, router]);
 
