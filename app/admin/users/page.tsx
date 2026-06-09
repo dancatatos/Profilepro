@@ -21,6 +21,7 @@ import {
   listAllUsers,
   adminSetUserPlan,
   adminSetUserLimitOverrides,
+  adminSetUserAddOn,
   getPlansConfig,
   type AdminSetUserPlanResult,
 } from "@/lib/firebase/firestore";
@@ -29,6 +30,7 @@ import {
   PLANS as DEFAULT_PLANS,
   resolveUserFunnelLimit,
   resolveUserSharedBuildSlots,
+  DEFAULT_ADDON_LIMITS,
 } from "@/lib/constants";
 import { cn, daysUntil, timeUntil } from "@/lib/utils";
 import type { AccountUser, Plan, PlanId } from "@/types";
@@ -552,6 +554,11 @@ function LimitOverridesModal({
   /* Track edit state as strings so an empty input means "use default". */
   const [funnels, setFunnels] = useState<string>("");
   const [sharedBuilds, setSharedBuilds] = useState<string>("");
+  /* Add-on: Events */
+  const [eventsAddOn, setEventsAddOn] = useState<boolean>(false);
+  const [teamSpaces, setTeamSpaces] = useState<string>("");
+  const [eventsPerMonth, setEventsPerMonth] = useState<string>("");
+  const [membersPerTeam, setMembersPerTeam] = useState<string>("");
   const [saving, setSaving] = useState(false);
 
   /* Re-seed local state every time a different user is opened. */
@@ -565,6 +572,22 @@ function LimitOverridesModal({
     setSharedBuilds(
       user.limitOverrides?.sharedBuilds !== undefined
         ? String(user.limitOverrides.sharedBuilds)
+        : "",
+    );
+    setEventsAddOn(user.addOns?.events === true);
+    setTeamSpaces(
+      user.addOnLimits?.teamSpaces !== undefined
+        ? String(user.addOnLimits.teamSpaces)
+        : "",
+    );
+    setEventsPerMonth(
+      user.addOnLimits?.eventsPerMonth !== undefined
+        ? String(user.addOnLimits.eventsPerMonth)
+        : "",
+    );
+    setMembersPerTeam(
+      user.addOnLimits?.membersPerTeam !== undefined
+        ? String(user.addOnLimits.membersPerTeam)
         : "",
     );
     setSaving(false);
@@ -599,10 +622,17 @@ function LimitOverridesModal({
         sharedBuilds: sb,
       });
       onSaved(user.uid, { funnels: fn, sharedBuilds: sb });
-      toast.success(`Limits updated for ${user.displayName || user.email}.`);
+      /* Save the add-on flag + per-add-on limit overrides in one
+         atomic update on the same user doc. */
+      await adminSetUserAddOn(user.uid, "events", eventsAddOn, {
+        teamSpaces: parsed(teamSpaces),
+        eventsPerMonth: parsed(eventsPerMonth),
+        membersPerTeam: parsed(membersPerTeam),
+      });
+      toast.success(`Saved settings for ${user.displayName || user.email}.`);
       onClose();
     } catch {
-      toast.error("Couldn't save the overrides.");
+      toast.error("Couldn't save — check Firestore rules.");
     } finally {
       setSaving(false);
     }
@@ -660,6 +690,79 @@ function LimitOverridesModal({
                   )} slots regardless of plan.`
             }
           />
+        </div>
+
+        {/* ── Add-ons ───────────────────────────────────────────
+            Feature toggles that live outside the plan system —
+            granted per-user by admin. Currently just Events; future
+            add-ons append below using the same pattern. */}
+        <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-white/45">
+            Add-ons
+          </p>
+
+          <label className="flex items-start gap-2 text-sm text-white/80">
+            <input
+              type="checkbox"
+              checked={eventsAddOn}
+              onChange={(e) => setEventsAddOn(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-white/20 bg-white/[0.04] accent-electric-500"
+            />
+            <span className="min-w-0 flex-1">
+              <span className="block font-medium text-white">Team Events</span>
+              <span className="block text-[11px] text-white/55">
+                Lets this user create team spaces + events with notifications.
+                Not part of any plan tier.
+              </span>
+            </span>
+          </label>
+
+          {eventsAddOn && (
+            <div className="mt-3 grid gap-2 sm:grid-cols-3">
+              <div>
+                <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/40">
+                  Team spaces cap
+                </label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={teamSpaces}
+                  onChange={(e) => setTeamSpaces(e.target.value)}
+                  placeholder={`Default: ${DEFAULT_ADDON_LIMITS.teamSpaces}`}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/40">
+                  Events / month cap
+                </label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={eventsPerMonth}
+                  onChange={(e) => setEventsPerMonth(e.target.value)}
+                  placeholder={`Default: ${DEFAULT_ADDON_LIMITS.eventsPerMonth}`}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/40">
+                  Members per team cap
+                </label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={membersPerTeam}
+                  onChange={(e) => setMembersPerTeam(e.target.value)}
+                  placeholder={`Default: ${DEFAULT_ADDON_LIMITS.membersPerTeam}`}
+                />
+              </div>
+            </div>
+          )}
+          {eventsAddOn && (
+            <p className="mt-2 text-[10px] text-white/35">
+              Blank = use the default. <code>0</code> = blocked.{" "}
+              <code>999</code> = effectively unlimited.
+            </p>
+          )}
         </div>
       </div>
       <div className="flex gap-2 border-t border-white/[0.06] p-4 pb-safe">

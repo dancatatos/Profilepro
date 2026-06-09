@@ -42,6 +42,8 @@ export const DASHBOARD_NAV: NavItem[] = [
   { key: "payments", label: "Payments", href: "/payments", icon: "Wallet" },
   { key: "analytics", label: "Analytics", href: "/analytics", icon: "BarChart3" },
   { key: "trainings", label: "Trainings", href: "/trainings", icon: "GraduationCap" },
+  { key: "teams", label: "Teams", href: "/teams", icon: "Users" },
+  { key: "my-events", label: "My Events", href: "/my-events", icon: "CalendarDays" },
   { key: "university", label: "Credibly University", href: "/university", icon: "GraduationCap" },
   { key: "media", label: "Media Library", href: "/media", icon: "Images" },
   { key: "settings", label: "Settings", href: "/settings", icon: "Settings" },
@@ -615,6 +617,52 @@ export function resolveUserTrainingsActivateLimit(
  * the UI surfaces the word "Trainings" so a future rename is one
  * Firestore write.
  */
+/* ---------------- Add-on defaults + resolver ---------------- */
+
+/**
+ * Default numeric caps for the Events add-on. Admin can override any
+ * of these per user via /admin/users. 999 anywhere means "effectively
+ * unlimited" — the UI displays it as ∞ and limit checks short-circuit.
+ *
+ * Defaults sized for safety, not stinginess:
+ *   - 3 team spaces  → enough for "main team" + "sub-team" + "VIP"
+ *   - 20 events/mo   → roughly 5/week, generous for active leaders
+ *   - 500 members    → comfortable for most MLM downlines
+ * Bigger uplines (1000+ downline) need admin to bump these.
+ */
+export const DEFAULT_ADDON_LIMITS = {
+  teamSpaces: 3,
+  eventsPerMonth: 20,
+  membersPerTeam: 500,
+} as const;
+
+/**
+ * Resolve a single add-on limit for a user. Per-user override wins;
+ * otherwise the default. Returns a guaranteed number so callers can
+ * do plain numeric comparisons without null-checks.
+ */
+export function resolveAddOnLimit(
+  user: { addOnLimits?: { teamSpaces?: number; eventsPerMonth?: number; membersPerTeam?: number } } | null | undefined,
+  key: keyof typeof DEFAULT_ADDON_LIMITS,
+): number {
+  const override = user?.addOnLimits?.[key];
+  if (typeof override === "number" && override >= 0) return override;
+  return DEFAULT_ADDON_LIMITS[key];
+}
+
+/**
+ * Whether a user can access the Events add-on at all. Centralised so
+ * sidebar + page guards stay consistent. Admin always passes through
+ * — useful for debugging and support without granting an add-on.
+ */
+export function userHasEventsAddOn(
+  user: { addOns?: { events?: boolean }; role?: string } | null | undefined,
+): boolean {
+  if (!user) return false;
+  if (user.role === "admin") return true;
+  return user.addOns?.events === true;
+}
+
 /* ---------------- Dashboard nav resolver ---------------- */
 
 /**

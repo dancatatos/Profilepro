@@ -299,6 +299,67 @@ service cloud.firestore {
         && resource.data.userId == request.auth.uid;
     }
 
+    // ---- Team spaces (Events add-on) ----
+    // Public-readable so the join page can render the team name +
+    // banner anonymously before the visitor signs up. Owner has full
+    // CRUD on their own spaces. Add-on gating is enforced in the
+    // CLIENT (sidebar visibility + create-button gate) — Firestore
+    // rules only enforce ownership.
+    match /team_spaces/{spaceId} {
+      allow read, list: if true;
+      allow create: if isSignedIn()
+        && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isAdmin()
+        || (isSignedIn() && resource.data.ownerId == request.auth.uid);
+    }
+
+    // ---- Team memberships ----
+    // Doc id: `${userId}__${teamSpaceId}`. Members create their own
+    // record when joining; both the member AND the team owner can
+    // read it (the leader needs to see their member list).
+    match /team_memberships/{membershipId} {
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid;
+      allow read: if isAdmin()
+        || (isSignedIn() && (
+              resource.data.userId == request.auth.uid
+              || resource.data.ownerId == request.auth.uid
+           ));
+      allow list: if isAdmin() || isSignedIn();
+      allow delete: if isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid)
+        || (isSignedIn() && resource.data.ownerId == request.auth.uid);
+      allow update: if false;
+    }
+
+    // ---- Team events ----
+    // Public-readable so anonymous join-event-by-QR can render the
+    // event preview before signup. Owner CRUDs their events; anyone
+    // signed in can list (filtering by teamSpaceId enforced in app).
+    match /team_events/{eventId} {
+      allow read, list: if true;
+      allow create: if isSignedIn()
+        && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isAdmin()
+        || (isSignedIn() && resource.data.ownerId == request.auth.uid);
+    }
+
+    // ---- Event RSVPs ----
+    // Members CRUD their own; team owner can read the full list to
+    // see who's attending.
+    match /event_rsvps/{rsvpId} {
+      allow create, update: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid;
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid)
+        || (isSignedIn() && exists(
+              /databases/$(database)/documents/team_spaces/$(resource.data.teamSpaceId))
+            && get(/databases/$(database)/documents/team_spaces/$(resource.data.teamSpaceId)).data.ownerId == request.auth.uid);
+      allow list: if isAdmin() || isSignedIn();
+      allow delete: if isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+
     // ---- Appointment slot markers (public, PII-free availability) ----
     match /bookingSlots/{slotId} {
       allow read, list: if true;

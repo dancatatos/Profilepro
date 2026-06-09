@@ -4,7 +4,11 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Sparkles } from "lucide-react";
-import { resolveDashboardNav, trainingsLabel } from "@/lib/constants";
+import {
+  resolveDashboardNav,
+  trainingsLabel,
+  userHasEventsAddOn,
+} from "@/lib/constants";
 import { Logo } from "@/components/ui/Logo";
 import { Icon } from "@/components/ui/Icon";
 import { Avatar } from "@/components/ui/Avatar";
@@ -43,13 +47,25 @@ export function Sidebar() {
   /* Sidebar layout pipeline:
        1. Admin-configured order + visibility (resolveDashboardNav)
        2. Feature-flag filter for the Template Marketplace tab
-       3. Per-item label overrides (Trainings rebrand)
+       3. Add-on filter: "Teams" only for users with the events
+          add-on; "My Events" only when the user has joined ≥ 1 team
+          (the page itself short-circuits to a helpful empty state
+          when access is missing, but hiding the entry keeps the
+          sidebar clean for the 95% of users who don't have it).
+       4. Per-item label overrides (Trainings rebrand)
      The resolver guarantees essentials ("home", "settings") stay
      visible even if the admin accidentally hides them. */
+  const hasEventsAddOn = userHasEventsAddOn(account);
   const navItems = resolveDashboardNav(marketingContent?.dashboardNav)
     .filter(
       (item) => item.key !== "templates" || flags.templateMarketplace,
     )
+    .filter((item) => item.key !== "teams" || hasEventsAddOn)
+    /* "My Events" stays for everyone signed in — the page renders a
+       useful empty state with copy explaining how to join a team,
+       which doubles as discovery for users who don't yet know the
+       feature exists. If this gets noisy we can gate behind a
+       cached "any membership exists" check later. */
     .map((item) =>
       item.key === "trainings" ? { ...item, label: trainingsName } : item,
     );

@@ -37,6 +37,10 @@ import type {
   Training,
   TrainingAccess,
   TrainingProgress,
+  TeamSpace,
+  TeamMembership,
+  TeamEvent,
+  EventRsvp,
   SavedBuild,
   SentMessageLog,
   SharedBuild,
@@ -82,6 +86,11 @@ export const COL = {
   trainings: "trainings",
   trainingAccess: "training_access",
   trainingProgress: "training_progress",
+  /* Team Events add-on. */
+  teamSpaces: "team_spaces",
+  teamMemberships: "team_memberships",
+  teamEvents: "team_events",
+  eventRsvps: "event_rsvps",
 } as const;
 
 /** Subcollection name for a user's saved-build locker. */
@@ -1601,6 +1610,41 @@ export async function adminSetUserLimitOverrides(
 }
 
 /**
+ * Admin-only: toggle a feature add-on flag + optionally override its
+ * numeric limits. Null on a limit field clears it (revert to default);
+ * a number sets a specific override. The add-on flag itself is a
+ * straight boolean — we never store `false`, we delete instead, so
+ * the absence-of-flag = "not granted" invariant stays clean.
+ */
+export async function adminSetUserAddOn(
+  uid: string,
+  addOnKey: "events",
+  enabled: boolean,
+  limitOverrides?: {
+    teamSpaces?: number | null;
+    eventsPerMonth?: number | null;
+    membersPerTeam?: number | null;
+  },
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  const patch: Record<string, unknown> = {
+    [`addOns.${addOnKey}`]: enabled ? true : null,
+    updatedAt: Date.now(),
+  };
+  if (limitOverrides) {
+    const setOrClear = (key: string, value: number | null | undefined) => {
+      if (value === null) patch[`addOnLimits.${key}`] = null;
+      else if (typeof value === "number" && value >= 0)
+        patch[`addOnLimits.${key}`] = Math.floor(value);
+    };
+    setOrClear("teamSpaces", limitOverrides.teamSpaces);
+    setOrClear("eventsPerMonth", limitOverrides.eventsPerMonth);
+    setOrClear("membersPerTeam", limitOverrides.membersPerTeam);
+  }
+  await updateDoc(doc(db, COL.users, uid), patch);
+}
+
+/**
  * Manually set a user's plan (admin only).
  *
  * Side effects beyond updating the user doc:
@@ -2630,4 +2674,450 @@ export async function cloneTraining(
     // ignore — counter is non-critical
   }
   return newRef.id;
+}
+
+/* ============================================================
+   Team Events add-on
+   ============================================================ */
+
+/** Generate a short, mobile-typeable join code with a fixed prefix. */
+function generateTeamCode(prefix: "JOIN" | "SHARETEAM"): string {
+  const alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+  let suffix = "";
+  for (let i = 0; i < 5; i++) {
+    suffix += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return `${prefix}-${suffix}`;
+}
+
+/* ---- Team spaces ---- */
+
+export async function createTeamSpace(
+  ownerId: string,
+  init: { name: string; slug: string; description?: string },
+): Promise<string> {
+  if (!isFirebaseConfigured) throw new Error("Firebase is not configured.");
+  const now = Date.now();
+  const ref = await addDoc(collection(db, COL.teamSpaces), {
+    ownerId,
+    name: init.name,
+    slug: init.slug,
+    description: init.description ?? "",
+    shareCode: generateTeamCode("SHARETEAM"),
+    activationCode: generateTeamCode("JOIN"),
+    memberCount: 0,
+    createdAt: now,
+    updatedAt: now,
+  });
+  /* Owner is auto-enrolled so they show up in their own member list
+     and can RSVP to their own events from the member surface. */
+  await setDoc(
+    doc(db, COL.teamMemberships, `${ownerId}__${ref.id}`),
+    {
+      userId: ownerId,
+      teamSpaceId: ref.id,
+      ownerId,
+      joinedAt: now,
+      joinedVia: "manual" as const,
+      role: "owner" as const,
+    },
+  );
+  return ref.id;
+}
+
+export async function listTeamSpacesByOwner(
+  ownerId: string,
+): Promise<TeamSpace[]> {
+  if (!isFirebaseConfigured) return [];
+  /* Same indexed-first / client-fallback shape as listTrainingsByOwner
+     so a missing composite index never silently empties the list. */
+  try {
+    const snap = await getDocs(
+      query(
+        collection(db, COL.teamSpaces),
+        where("ownerId", "==", ownerId),
+        orderBy("createdAt", "desc"),
+        fsLimit(50),
+      ),
+    );
+    return snap.docs.map((d) => ({ ...(d.data() as TeamSpace), id: d.id }));
+  } catch (err) {
+    const code = (err as { code?: string })?.code;
+    if (code !== "failed-precondition") throw err;
+    console.warn(
+      "[listTeamSpacesByOwner] composite index missing — client-side sort fallback.",
+    );
+    const snap = await getDocs(
+      query(collection(db, COL.teamSpaces), where("ownerId", "==", ownerId)),
+    );
+    const list = snap.docs.map(
+      (d) => ({ ...(d.data() as TeamSpace), id: d.id }),
+    );
+    list.sort((a, b) => b.createdAt - a.createdAt);
+    return list.slice(0, 50);
+  }
+}
+
+export async function getTeamSpace(id: string): Promise<TeamSpace | null> {
+  if (!isFirebaseConfigured) return null;
+  const snap = await getDoc(doc(db, COL.teamSpaces, id));
+  if (!snap.exists()) return null;
+  return { ...(snap.data() as TeamSpace), id: snap.id };
+}
+
+export async function getTeamSpaceByCode(
+  code: string,
+): Promise<TeamSpace | null> {
+  if (!isFirebaseConfigured) return null;
+  const snap = await getDocs(
+    query(
+      collection(db, COL.teamSpaces),
+      where("activationCode", "==", code.trim().toUpperCase()),
+      fsLimit(1),
+    ),
+  );
+  if (snap.empty) return null;
+  return { ...(snap.docs[0].data() as TeamSpace), id: snap.docs[0].id };
+}
+
+export async function updateTeamSpace(
+  id: string,
+  patch: Partial<TeamSpace>,
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await updateDoc(doc(db, COL.teamSpaces, id), {
+    ...patch,
+    updatedAt: Date.now(),
+  });
+}
+
+/**
+ * Delete a team space + all memberships + all events + all RSVPs.
+ * Chunked into per-collection batched writes to stay under Firestore's
+ * 500-op limit even for large teams.
+ */
+export async function deleteTeamSpace(teamSpaceId: string): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  const [memberSnap, eventSnap] = await Promise.all([
+    getDocs(
+      query(
+        collection(db, COL.teamMemberships),
+        where("teamSpaceId", "==", teamSpaceId),
+      ),
+    ),
+    getDocs(
+      query(
+        collection(db, COL.teamEvents),
+        where("teamSpaceId", "==", teamSpaceId),
+      ),
+    ),
+  ]);
+  /* RSVPs are scoped per event — fetch in parallel for all events. */
+  const rsvpSnaps = await Promise.all(
+    eventSnap.docs.map((e) =>
+      getDocs(
+        query(
+          collection(db, COL.eventRsvps),
+          where("eventId", "==", e.id),
+        ),
+      ),
+    ),
+  );
+
+  const refs: ReturnType<typeof doc>[] = [];
+  for (const d of memberSnap.docs) refs.push(d.ref);
+  for (const d of eventSnap.docs) refs.push(d.ref);
+  for (const snap of rsvpSnaps) for (const d of snap.docs) refs.push(d.ref);
+  refs.push(doc(db, COL.teamSpaces, teamSpaceId));
+
+  /* Chunk at 400 ops/batch — well under Firestore's 500 cap. */
+  for (let i = 0; i < refs.length; i += 400) {
+    const batch = writeBatch(db);
+    for (const r of refs.slice(i, i + 400)) batch.delete(r);
+    await batch.commit();
+  }
+}
+
+/* ---- Team memberships ---- */
+
+export async function listTeamMembershipsForUser(
+  userId: string,
+): Promise<TeamMembership[]> {
+  if (!isFirebaseConfigured) return [];
+  try {
+    const snap = await getDocs(
+      query(
+        collection(db, COL.teamMemberships),
+        where("userId", "==", userId),
+        orderBy("joinedAt", "desc"),
+        fsLimit(100),
+      ),
+    );
+    return snap.docs.map((d) => ({ ...(d.data() as TeamMembership), id: d.id }));
+  } catch (err) {
+    const code = (err as { code?: string })?.code;
+    if (code !== "failed-precondition") throw err;
+    const snap = await getDocs(
+      query(
+        collection(db, COL.teamMemberships),
+        where("userId", "==", userId),
+      ),
+    );
+    const list = snap.docs.map(
+      (d) => ({ ...(d.data() as TeamMembership), id: d.id }),
+    );
+    list.sort((a, b) => b.joinedAt - a.joinedAt);
+    return list.slice(0, 100);
+  }
+}
+
+export async function listTeamMembershipsForSpace(
+  teamSpaceId: string,
+): Promise<TeamMembership[]> {
+  if (!isFirebaseConfigured) return [];
+  const snap = await getDocs(
+    query(
+      collection(db, COL.teamMemberships),
+      where("teamSpaceId", "==", teamSpaceId),
+      fsLimit(1000),
+    ),
+  );
+  return snap.docs.map((d) => ({ ...(d.data() as TeamMembership), id: d.id }));
+}
+
+export async function countTeamMembersForSpace(
+  teamSpaceId: string,
+): Promise<number> {
+  if (!isFirebaseConfigured) return 0;
+  /* Use the cached count on the team space when possible — cheap. The
+     authoritative fallback is a count query if the cache looks stale,
+     but for v1 we trust the cache (maintained on join/leave). */
+  const space = await getTeamSpace(teamSpaceId);
+  return space?.memberCount ?? 0;
+}
+
+/**
+ * Join a team space. Idempotent — re-running upserts the same doc.
+ * Caller should check the team's member cap before calling.
+ */
+export async function joinTeamSpace(input: {
+  userId: string;
+  teamSpaceId: string;
+  ownerId: string;
+  joinedVia: TeamMembership["joinedVia"];
+}): Promise<TeamMembership> {
+  if (!isFirebaseConfigured) throw new Error("Firebase is not configured.");
+  const id = `${input.userId}__${input.teamSpaceId}`;
+  const existing = await getDoc(doc(db, COL.teamMemberships, id));
+  const isNew = !existing.exists();
+  const record: Omit<TeamMembership, "id"> = {
+    userId: input.userId,
+    teamSpaceId: input.teamSpaceId,
+    ownerId: input.ownerId,
+    joinedAt: existing.exists()
+      ? (existing.data() as TeamMembership).joinedAt
+      : Date.now(),
+    joinedVia: input.joinedVia,
+    role: "member",
+  };
+  await setDoc(doc(db, COL.teamMemberships, id), record, { merge: true });
+  /* Increment the team's cached member count only on a true first
+     join — re-runs are idempotent and shouldn't double-count. */
+  if (isNew) {
+    try {
+      const space = await getTeamSpace(input.teamSpaceId);
+      if (space) {
+        await updateDoc(doc(db, COL.teamSpaces, input.teamSpaceId), {
+          memberCount: (space.memberCount ?? 0) + 1,
+        });
+      }
+    } catch {
+      // best-effort
+    }
+  }
+  return { id, ...record };
+}
+
+export async function leaveTeamSpace(
+  userId: string,
+  teamSpaceId: string,
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  const id = `${userId}__${teamSpaceId}`;
+  await deleteDoc(doc(db, COL.teamMemberships, id));
+  try {
+    const space = await getTeamSpace(teamSpaceId);
+    if (space) {
+      await updateDoc(doc(db, COL.teamSpaces, teamSpaceId), {
+        memberCount: Math.max(0, (space.memberCount ?? 1) - 1),
+      });
+    }
+  } catch {
+    // best-effort
+  }
+}
+
+/* ---- Events ---- */
+
+export async function createTeamEvent(
+  input: Omit<TeamEvent, "id" | "createdAt" | "updatedAt" | "status">,
+): Promise<string> {
+  if (!isFirebaseConfigured) throw new Error("Firebase is not configured.");
+  const now = Date.now();
+  const ref = await addDoc(collection(db, COL.teamEvents), {
+    ...input,
+    status: "active" as const,
+    createdAt: now,
+    updatedAt: now,
+  });
+  return ref.id;
+}
+
+export async function getTeamEvent(id: string): Promise<TeamEvent | null> {
+  if (!isFirebaseConfigured) return null;
+  const snap = await getDoc(doc(db, COL.teamEvents, id));
+  if (!snap.exists()) return null;
+  return { ...(snap.data() as TeamEvent), id: snap.id };
+}
+
+export async function listEventsForTeamSpace(
+  teamSpaceId: string,
+): Promise<TeamEvent[]> {
+  if (!isFirebaseConfigured) return [];
+  try {
+    const snap = await getDocs(
+      query(
+        collection(db, COL.teamEvents),
+        where("teamSpaceId", "==", teamSpaceId),
+        orderBy("startAt", "asc"),
+        fsLimit(200),
+      ),
+    );
+    return snap.docs.map((d) => ({ ...(d.data() as TeamEvent), id: d.id }));
+  } catch (err) {
+    const code = (err as { code?: string })?.code;
+    if (code !== "failed-precondition") throw err;
+    const snap = await getDocs(
+      query(
+        collection(db, COL.teamEvents),
+        where("teamSpaceId", "==", teamSpaceId),
+      ),
+    );
+    const list = snap.docs.map(
+      (d) => ({ ...(d.data() as TeamEvent), id: d.id }),
+    );
+    list.sort((a, b) => a.startAt - b.startAt);
+    return list.slice(0, 200);
+  }
+}
+
+/**
+ * Count events the owner has created in the rolling last 30 days.
+ * Used to enforce the addOnLimits.eventsPerMonth cap on create.
+ */
+export async function countOwnerEventsLast30Days(
+  ownerId: string,
+): Promise<number> {
+  if (!isFirebaseConfigured) return 0;
+  const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  try {
+    const snap = await getDocs(
+      query(
+        collection(db, COL.teamEvents),
+        where("ownerId", "==", ownerId),
+        where("createdAt", ">=", cutoff),
+      ),
+    );
+    return snap.size;
+  } catch {
+    /* Index missing → scan all owner events (capped) + filter
+       client-side. Acceptable for small per-owner counts. */
+    const snap = await getDocs(
+      query(
+        collection(db, COL.teamEvents),
+        where("ownerId", "==", ownerId),
+        fsLimit(500),
+      ),
+    );
+    return snap.docs.filter((d) => {
+      const data = d.data() as TeamEvent;
+      return (data.createdAt ?? 0) >= cutoff;
+    }).length;
+  }
+}
+
+export async function updateTeamEvent(
+  id: string,
+  patch: Partial<TeamEvent>,
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await updateDoc(doc(db, COL.teamEvents, id), {
+    ...patch,
+    updatedAt: Date.now(),
+  });
+}
+
+export async function deleteTeamEvent(eventId: string): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  /* Drop RSVPs along with the event so the member side doesn't
+     show ghost cards pointing at a missing event. */
+  const rsvpSnap = await getDocs(
+    query(collection(db, COL.eventRsvps), where("eventId", "==", eventId)),
+  );
+  const batch = writeBatch(db);
+  for (const d of rsvpSnap.docs) batch.delete(d.ref);
+  batch.delete(doc(db, COL.teamEvents, eventId));
+  await batch.commit();
+}
+
+/* ---- RSVPs ---- */
+
+export async function setEventRsvp(input: {
+  userId: string;
+  eventId: string;
+  teamSpaceId: string;
+  status: EventRsvp["status"];
+  checkedIn?: boolean;
+}): Promise<EventRsvp> {
+  if (!isFirebaseConfigured) throw new Error("Firebase is not configured.");
+  const id = `${input.userId}__${input.eventId}`;
+  const existing = await getDoc(doc(db, COL.eventRsvps, id));
+  const now = Date.now();
+  const record: Omit<EventRsvp, "id"> = {
+    userId: input.userId,
+    eventId: input.eventId,
+    teamSpaceId: input.teamSpaceId,
+    status: input.status,
+    ...(input.checkedIn ? { checkedInAt: now } : {}),
+    createdAt: existing.exists()
+      ? (existing.data() as EventRsvp).createdAt
+      : now,
+    updatedAt: now,
+  };
+  await setDoc(doc(db, COL.eventRsvps, id), record, { merge: true });
+  return { id, ...record };
+}
+
+export async function getEventRsvp(
+  userId: string,
+  eventId: string,
+): Promise<EventRsvp | null> {
+  if (!isFirebaseConfigured) return null;
+  const snap = await getDoc(doc(db, COL.eventRsvps, `${userId}__${eventId}`));
+  if (!snap.exists()) return null;
+  return { ...(snap.data() as EventRsvp), id: snap.id };
+}
+
+export async function listRsvpsForEvent(
+  eventId: string,
+): Promise<EventRsvp[]> {
+  if (!isFirebaseConfigured) return [];
+  const snap = await getDocs(
+    query(
+      collection(db, COL.eventRsvps),
+      where("eventId", "==", eventId),
+      fsLimit(1000),
+    ),
+  );
+  return snap.docs.map((d) => ({ ...(d.data() as EventRsvp), id: d.id }));
 }

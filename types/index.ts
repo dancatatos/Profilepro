@@ -70,6 +70,40 @@ export interface AccountUser {
    * checkbox shipped — those are grandfathered in.
    */
   consent?: ConsentRecord;
+  /**
+   * Admin-granted feature add-ons that live OUTSIDE the plan system.
+   * Set via /admin/users → Add-ons section. Used for capabilities we
+   * want to comp to specific users (top affiliates, beta testers,
+   * top MLM uplines) without changing their plan tier. Each flag is
+   * a boolean gate; sizing limits live in `addOnLimits`.
+   */
+  addOns?: AccountAddOns;
+  /**
+   * Per-add-on numeric caps. Defaults live in DEFAULT_ADDON_LIMITS
+   * (lib/constants.ts) — set a field here to override for a specific
+   * user. 0 = blocked, 999 = effectively unlimited.
+   */
+  addOnLimits?: AccountAddOnLimits;
+}
+
+/** Add-on capability flags. Each is binary — granted or not. */
+export interface AccountAddOns {
+  /** Lets the user create team spaces + events with notifications. */
+  events?: boolean;
+}
+
+/**
+ * Per-add-on numeric caps. All optional — when unset, the resolver
+ * falls back to DEFAULT_ADDON_LIMITS so admins only need to type a
+ * number for the users they want to specifically override.
+ */
+export interface AccountAddOnLimits {
+  /** Max team spaces this leader can own. Default 3. */
+  teamSpaces?: number;
+  /** Rolling-30-day cap on events this leader can create. Default 20. */
+  eventsPerMonth?: number;
+  /** Max members per team space. Default 500. */
+  membersPerTeam?: number;
 }
 
 /**
@@ -1526,6 +1560,113 @@ export interface TrainingProgress {
   trainingId: string;
   lessonId: string;
   completedAt: number;
+}
+
+/* ---------------- Team Events (admin-granted add-on) ---------------- */
+
+/**
+ * A "team space" — a leader-owned container for team events. Members
+ * join via a share/activation code (link or QR) and start seeing the
+ * leader's events in their /my-events page + dashboard widget.
+ *
+ * NOT part of the plan system — only users with addOns.events === true
+ * can create these. Per-user limits in addOnLimits cap how many spaces
+ * each leader can own.
+ *
+ * Members never need the add-on; they just join + consume.
+ */
+export interface TeamSpace {
+  id: string;
+  ownerId: string;
+  name: string;
+  /** URL slug — public team landing at /{username}/team/{slug} (Tier 2). */
+  slug: string;
+  description?: string;
+  bannerUrl?: string;
+  /** Code other leaders could use to clone (parity with trainings — Tier 2). */
+  shareCode: string;
+  /** Code members use to join via /join/team/{code}. */
+  activationCode: string;
+  /** Cached member count for cheap dashboard reads. Maintained by helpers. */
+  memberCount?: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+/**
+ * Per-(user, team) membership record. Doc id = `${userId}__${teamSpaceId}`
+ * for uniqueness + idempotent re-joins.
+ */
+export interface TeamMembership {
+  id: string;
+  userId: string;
+  teamSpaceId: string;
+  /** Denormalised owner for cheap read-side access checks. */
+  ownerId: string;
+  joinedAt: number;
+  /** Which channel they joined through — useful for the leader's stats. */
+  joinedVia: "link" | "qr" | "event-qr" | "manual";
+  /** Future-proofing for moderator / co-host roles. */
+  role: "owner" | "member";
+}
+
+/** Where an event happens. */
+export type EventLocationType =
+  | "in-person"
+  | "zoom"
+  | "meet"
+  | "other";
+
+/**
+ * One event hosted inside a team space. Multi-timezone-aware: startAt
+ * is stored as an epoch ms (UTC), timezone is the IANA zone the
+ * leader entered — the renderer converts to the viewer's local time
+ * with the original timezone shown alongside for clarity.
+ */
+export interface TeamEvent {
+  id: string;
+  teamSpaceId: string;
+  /** Denormalised — saves a join when listing events across teams. */
+  ownerId: string;
+  title: string;
+  description?: string;
+  bannerUrl?: string;
+  /** Epoch ms (UTC). */
+  startAt: number;
+  /** Epoch ms (UTC). */
+  endAt: number;
+  /** IANA timezone string, e.g. "Asia/Manila". */
+  timezone: string;
+  locationType: EventLocationType;
+  /** Display label, e.g. "Cebu Coliseum" or "Zoom meeting". */
+  locationLabel?: string;
+  /** Actual URL or address (the meeting link, or street address). */
+  locationUrl?: string;
+  /** Paid event metadata — Tier 1.5, fields ready but UI defers. */
+  paid?: boolean;
+  price?: number;
+  paymentMethodIds?: string[];
+  /** Notification preferences — chosen at create time. */
+  notifyOnCreate?: boolean;
+  notifyDayBefore?: boolean;
+  pushDayBefore?: boolean;
+  /** Status — "canceled" hides from member views and notifies RSVPs. */
+  status?: "active" | "canceled";
+  createdAt: number;
+  updatedAt: number;
+}
+
+/** Per-(user, event) RSVP. Doc id = `${userId}__${eventId}`. */
+export interface EventRsvp {
+  id: string;
+  userId: string;
+  eventId: string;
+  teamSpaceId: string;
+  status: "going" | "maybe" | "declined";
+  /** Set when a member scans the event QR or the leader checks them in. */
+  checkedInAt?: number;
+  createdAt: number;
+  updatedAt: number;
 }
 
 /* ---------------- Affiliate system ---------------- */
