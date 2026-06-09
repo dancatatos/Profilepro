@@ -2908,15 +2908,27 @@ export async function joinTeamSpace(input: {
 }): Promise<TeamMembership> {
   if (!isFirebaseConfigured) throw new Error("Firebase is not configured.");
   const id = `${input.userId}__${input.teamSpaceId}`;
-  const existing = await getDoc(doc(db, COL.teamMemberships, id));
-  const isNew = !existing.exists();
+  /* Firestore `read` rules can't evaluate `resource.data.userId == uid`
+     against a non-existent doc, so the getDoc throws "Missing or
+     insufficient permissions" on a first-time join. Swallow it and
+     treat as "no existing membership" — the subsequent setDoc is
+     governed by the `create` rule which DOES evaluate against
+     request.resource.data and works correctly. */
+  let existingJoinedAt: number | null = null;
+  try {
+    const snap = await getDoc(doc(db, COL.teamMemberships, id));
+    if (snap.exists()) {
+      existingJoinedAt = (snap.data() as TeamMembership).joinedAt ?? null;
+    }
+  } catch {
+    /* Treat permission-denied as "doesn't exist yet". */
+  }
+  const isNew = existingJoinedAt === null;
   const record: Omit<TeamMembership, "id"> = {
     userId: input.userId,
     teamSpaceId: input.teamSpaceId,
     ownerId: input.ownerId,
-    joinedAt: existing.exists()
-      ? (existing.data() as TeamMembership).joinedAt
-      : Date.now(),
+    joinedAt: existingJoinedAt ?? Date.now(),
     joinedVia: input.joinedVia,
     role: "member",
   };
@@ -3081,7 +3093,18 @@ export async function setEventRsvp(input: {
 }): Promise<EventRsvp> {
   if (!isFirebaseConfigured) throw new Error("Firebase is not configured.");
   const id = `${input.userId}__${input.eventId}`;
-  const existing = await getDoc(doc(db, COL.eventRsvps, id));
+  /* Same permission-denied-on-non-existent-doc gotcha as joinTeamSpace.
+     Swallow the read error, treat as "no prior RSVP" — the create rule
+     for event_rsvps handles the first write fine. */
+  let existingCreatedAt: number | null = null;
+  try {
+    const snap = await getDoc(doc(db, COL.eventRsvps, id));
+    if (snap.exists()) {
+      existingCreatedAt = (snap.data() as EventRsvp).createdAt ?? null;
+    }
+  } catch {
+    /* Treat permission-denied as "doesn't exist yet". */
+  }
   const now = Date.now();
   const record: Omit<EventRsvp, "id"> = {
     userId: input.userId,
@@ -3089,9 +3112,7 @@ export async function setEventRsvp(input: {
     teamSpaceId: input.teamSpaceId,
     status: input.status,
     ...(input.checkedIn ? { checkedInAt: now } : {}),
-    createdAt: existing.exists()
-      ? (existing.data() as EventRsvp).createdAt
-      : now,
+    createdAt: existingCreatedAt ?? now,
     updatedAt: now,
   };
   await setDoc(doc(db, COL.eventRsvps, id), record, { merge: true });
