@@ -230,11 +230,9 @@ function JoinFlow() {
   );
 }
 
-/* Helper exported for the post-signup hook in app/(app)/layout.tsx
-   if we ever want it (Session 3 will likely consume it). For now,
-   the signup flow → redirect-to-dashboard → user manually returns
-   here is the path. */
-export { PENDING_TEAM_KEY };
+/* PENDING_TEAM_KEY is intentionally a module-local constant — Next.js
+   page files reject non-reserved exports. The layout's pending-key
+   handoff uses the same literal string directly. */
 
 /* getTeamSpace is intentionally referenced so future enhancements
    that need to refresh the space mid-page have a ready import path. */

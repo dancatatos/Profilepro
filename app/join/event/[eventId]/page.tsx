@@ -228,4 +228,8 @@ function Flow() {
   );
 }
 
-export { PENDING_EVENT_KEY };
+/* PENDING_EVENT_KEY is intentionally a module-local constant — Next.js
+   page files can only re-export `default` plus a handful of reserved
+   names (config, generateStaticParams, etc.), so exporting arbitrary
+   identifiers fails the build. The layout's pending-key handoff just
+   uses the same literal string directly. */
