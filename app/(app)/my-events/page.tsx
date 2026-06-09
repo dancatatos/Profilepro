@@ -14,6 +14,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Calendar,
+  CalendarPlus,
   CheckCircle2,
   Clock,
   MapPin,
@@ -25,6 +26,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { Modal } from "@/components/ui/Modal";
 import { EmptyState } from "@/components/common/EmptyState";
 import { FullScreenLoader } from "@/components/ui/Spinner";
 import {
@@ -133,6 +135,11 @@ export default function MyEventsPage() {
     );
   };
 
+  /* Preview modal — null when closed. Holding the whole row so the
+     modal can render banner + team name + RSVP buttons without
+     another lookup. */
+  const [preview, setPreview] = useState<FeedRow | null>(null);
+
   if (authLoading || !account) {
     return <FullScreenLoader label="Loading…" />;
   }
@@ -170,6 +177,7 @@ export default function MyEventsPage() {
                 <EventCard
                   key={row.event.id}
                   row={row}
+                  onOpen={() => setPreview(row)}
                   onRsvpChange={(status) => updateLocalRsvp(row.event.id, status)}
                 />
               ))}
@@ -181,12 +189,23 @@ export default function MyEventsPage() {
                 Past
               </p>
               {pastRows.map((row) => (
-                <EventCard key={row.event.id} row={row} dimmed />
+                <EventCard
+                  key={row.event.id}
+                  row={row}
+                  dimmed
+                  onOpen={() => setPreview(row)}
+                />
               ))}
             </div>
           )}
         </>
       )}
+
+      <EventPreviewModal
+        row={preview}
+        onClose={() => setPreview(null)}
+        onRsvpChange={(eventId, status) => updateLocalRsvp(eventId, status)}
+      />
     </div>
   );
 }
@@ -194,10 +213,12 @@ export default function MyEventsPage() {
 function EventCard({
   row,
   dimmed,
+  onOpen,
   onRsvpChange,
 }: {
   row: FeedRow;
   dimmed?: boolean;
+  onOpen: () => void;
   onRsvpChange?: (status: EventRsvp["status"]) => void;
 }) {
   const { account } = useAuth();
@@ -240,26 +261,53 @@ function EventCard({
   });
 
   return (
-    <Card className={cn("p-3.5 transition-colors", dimmed && "opacity-60")}>
-      <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-electric-500/15 text-electric-300">
-          <Calendar className="h-5 w-5" />
-        </span>
+    <Card
+      className={cn(
+        "p-3 transition-colors hover:border-electric-500/30",
+        dimmed && "opacity-60",
+      )}
+    >
+      {/* Header row — thumbnail + details. The whole header is the
+          click target for opening the preview. Buttons below it stay
+          on the card so RSVP is one tap without entering the modal. */}
+      <button
+        type="button"
+        onClick={onOpen}
+        className="flex w-full items-start gap-3 text-left"
+        aria-label={`Open preview for ${row.event.title}`}
+      >
+        {/* Thumbnail — banner image if present, calendar icon fallback.
+            Aspect-square @ 76px keeps cards compact (~110px total) so
+            5-6 fit on a phone screen. */}
+        {row.event.bannerUrl ? (
+          <img
+            src={row.event.bannerUrl}
+            alt=""
+            className="h-[76px] w-[76px] shrink-0 rounded-xl object-cover"
+          />
+        ) : (
+          <span className="flex h-[76px] w-[76px] shrink-0 items-center justify-center rounded-xl bg-electric-500/15 text-electric-300">
+            <Calendar className="h-7 w-7" />
+          </span>
+        )}
         <div className="min-w-0 flex-1">
           <p className="text-[11px] text-white/45">{row.team.name}</p>
-          <p className="text-sm font-medium text-white">{row.event.title}</p>
+          <p className="truncate text-sm font-semibold text-white">
+            {row.event.title}
+          </p>
           <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-white/55">
             <span className="flex items-center gap-1">
               <Clock className="h-3 w-3" /> {dateLine} · {timeLine}
             </span>
             {row.event.locationLabel && (
-              <span className="flex items-center gap-1">
-                <MapPin className="h-3 w-3" /> {row.event.locationLabel}
+              <span className="flex min-w-0 items-center gap-1">
+                <MapPin className="h-3 w-3 shrink-0" />
+                <span className="truncate">{row.event.locationLabel}</span>
               </span>
             )}
           </div>
         </div>
-      </div>
+      </button>
 
       {!dimmed && (
         <div className="mt-3 flex flex-wrap items-center gap-1.5">
@@ -309,6 +357,246 @@ function EventCard({
       )}
     </Card>
   );
+}
+
+/* ============================================================
+   EVENT PREVIEW MODAL
+   ============================================================ */
+
+/**
+ * Click-into-the-card preview. Shows the full beauty of the event —
+ * banner, description, location — plus RSVP buttons (so users don't
+ * have to close the modal to commit) and an "Add to calendar" link
+ * that emits a .ics file (works with Google / Apple / Outlook with
+ * no integration setup on our side).
+ */
+function EventPreviewModal({
+  row,
+  onClose,
+  onRsvpChange,
+}: {
+  row: FeedRow | null;
+  onClose: () => void;
+  onRsvpChange: (eventId: string, status: EventRsvp["status"]) => void;
+}) {
+  const { account } = useAuth();
+  const [busy, setBusy] = useState(false);
+
+  if (!row) return null;
+  const { event, team, rsvp } = row;
+
+  const start = new Date(event.startAt);
+  const end = new Date(event.endAt);
+  const dateLine = start.toLocaleDateString(undefined, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+  const timeLine = `${start.toLocaleTimeString(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  })} – ${end.toLocaleTimeString(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  })}`;
+
+  const handleRsvp = async (status: EventRsvp["status"]) => {
+    if (!account) return;
+    setBusy(true);
+    try {
+      await setEventRsvp({
+        userId: account.uid,
+        eventId: event.id,
+        teamSpaceId: team.id,
+        status,
+      });
+      onRsvpChange(event.id, status);
+      toast.success(
+        status === "going"
+          ? "RSVP'd — see you there!"
+          : status === "maybe"
+            ? "Marked as maybe."
+            : "Marked as declined.",
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "RSVP failed.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /* Build a .ics blob URL on the fly. No library — RFC 5545 is small
+     enough to write by hand for a simple VEVENT. Works in Google
+     Calendar, Apple Calendar, Outlook, Yahoo Calendar with no setup
+     on our side. */
+  const icsHref = buildIcsDataUrl({
+    title: event.title,
+    description: event.description ?? "",
+    locationLabel: event.locationLabel ?? "",
+    startAt: event.startAt,
+    endAt: event.endAt,
+    eventId: event.id,
+  });
+
+  return (
+    <Modal
+      open={!!row}
+      onClose={onClose}
+      title={event.title}
+      description={team.name}
+      size="lg"
+    >
+      <div className="space-y-3 pb-2">
+        {event.bannerUrl && (
+          <img
+            src={event.bannerUrl}
+            alt={event.title}
+            className="aspect-[16/8] w-full rounded-xl object-cover"
+          />
+        )}
+
+        <div className="space-y-1.5 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
+          <div className="flex items-start gap-2 text-sm text-white/80">
+            <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-electric-300" />
+            <div>
+              <p>{dateLine}</p>
+              <p className="text-xs text-white/55">
+                {timeLine} · {event.timezone}
+              </p>
+            </div>
+          </div>
+          {event.locationLabel && (
+            <div className="flex items-start gap-2 text-sm text-white/80">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-electric-300" />
+              <span>{event.locationLabel}</span>
+            </div>
+          )}
+        </div>
+
+        {event.description && (
+          <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/75">
+              {event.description}
+            </p>
+          </div>
+        )}
+
+        {rsvp?.checkedInAt && <Badge tone="blue">✓ Checked in</Badge>}
+
+        {/* RSVP buttons inside the modal so committing doesn't require
+            closing it first. Same handlers as the card. */}
+        <div>
+          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-white/45">
+            RSVP
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            <RsvpButton
+              current={rsvp?.status}
+              target="going"
+              onClick={() => handleRsvp("going")}
+              disabled={busy}
+              icon={<CheckCircle2 className="h-3.5 w-3.5" />}
+              label="Going"
+            />
+            <RsvpButton
+              current={rsvp?.status}
+              target="maybe"
+              onClick={() => handleRsvp("maybe")}
+              disabled={busy}
+              icon={<Clock className="h-3.5 w-3.5" />}
+              label="Maybe"
+            />
+            <RsvpButton
+              current={rsvp?.status}
+              target="declined"
+              onClick={() => handleRsvp("declined")}
+              disabled={busy}
+              icon={<XCircle className="h-3.5 w-3.5" />}
+              label="Can't make it"
+            />
+          </div>
+        </div>
+
+        {/* Actions row — Add to calendar + (for online events) Join call */}
+        <div className="flex flex-wrap gap-2 pt-1">
+          <a
+            href={icsHref}
+            download={`${slugify(event.title)}.ics`}
+            className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-white/75 hover:bg-white/[0.05]"
+          >
+            <CalendarPlus className="h-3.5 w-3.5" />
+            Add to calendar
+          </a>
+          {event.locationUrl &&
+            (event.locationType === "zoom" || event.locationType === "meet") && (
+              <Link
+                href={event.locationUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 rounded-lg bg-brand-gradient px-3 py-2 text-xs font-semibold text-white shadow-glow-blue"
+              >
+                Join call →
+              </Link>
+            )}
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+/* Quick slugify used only for the .ics download filename. */
+function slugify(s: string): string {
+  return (
+    s
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 40) || "event"
+  );
+}
+
+/** Format an epoch ms as the YYYYMMDDTHHMMSSZ form .ics requires (UTC). */
+function icsDate(ms: number): string {
+  const d = new Date(ms);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`;
+}
+
+/** Escape commas / semicolons / newlines per RFC 5545. */
+function icsEscape(s: string): string {
+  return s
+    .replace(/\\/g, "\\\\")
+    .replace(/\n/g, "\\n")
+    .replace(/,/g, "\\,")
+    .replace(/;/g, "\\;");
+}
+
+function buildIcsDataUrl(input: {
+  title: string;
+  description: string;
+  locationLabel: string;
+  startAt: number;
+  endAt: number;
+  eventId: string;
+}): string {
+  const lines = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Credibly//Team Events//EN",
+    "CALSCALE:GREGORIAN",
+    "BEGIN:VEVENT",
+    `UID:${input.eventId}@crediblyai.com`,
+    `DTSTAMP:${icsDate(Date.now())}`,
+    `DTSTART:${icsDate(input.startAt)}`,
+    `DTEND:${icsDate(input.endAt)}`,
+    `SUMMARY:${icsEscape(input.title)}`,
+    `DESCRIPTION:${icsEscape(input.description)}`,
+    `LOCATION:${icsEscape(input.locationLabel)}`,
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
+  return `data:text/calendar;charset=utf-8,${encodeURIComponent(lines)}`;
 }
 
 function RsvpButton({
