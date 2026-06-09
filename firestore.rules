@@ -344,6 +344,14 @@ service cloud.firestore {
         || (isSignedIn() && resource.data.ownerId == request.auth.uid);
     }
 
+    // ---- Event notifications (cron dedup — server-only) ----
+    // Per-event dedup record written by /api/cron/event-reminders so
+    // re-firing the cron same-day is a no-op. Clients never read or
+    // write this collection.
+    match /event_notifications/{notifId} {
+      allow read, write: if false;
+    }
+
     // ---- Event RSVPs ----
     // Members CRUD their own; team owner can read the full list to
     // see who's attending.

@@ -25,6 +25,7 @@ import {
 } from "@/lib/firebase/firestore";
 import { resolveAddOnLimit } from "@/lib/constants";
 import { toast } from "@/store/uiStore";
+import { auth as firebaseAuth } from "@/lib/firebase/client";
 import type { EventLocationType, TeamSpace } from "@/types";
 
 /* Common IANA zones bundled — same set used in your existing
@@ -179,7 +180,41 @@ export default function NewEventPage() {
         notifyDayBefore,
         pushDayBefore,
       });
-      toast.success("Event created. Notifications go out once the send pipeline ships.");
+
+      /* Fire the "new event" email blast if the leader opted in.
+         Best-effort: success goes silently into the success toast,
+         failures show as a warning but don't roll back the event. */
+      if (notifyOnCreate) {
+        try {
+          const idToken = await firebaseAuth.currentUser?.getIdToken();
+          const res = await fetch("/api/events/notify-created", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
+            },
+            body: JSON.stringify({
+              eventId: id,
+              origin: window.location.origin,
+            }),
+          });
+          const j = await res.json();
+          if (res.ok && j.sent > 0) {
+            toast.success(
+              `Event created — ${j.sent} member${j.sent === 1 ? "" : "s"} notified.`,
+            );
+          } else if (res.ok) {
+            toast.success("Event created.");
+          } else {
+            toast.success("Event created. (Notification send had an issue — try resending later.)");
+          }
+        } catch {
+          toast.success("Event created. (Couldn't send notifications — check email settings.)");
+        }
+      } else {
+        toast.success("Event created.");
+      }
+
       router.push(`/teams/${space.id}/events/${id}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Couldn't create event.");

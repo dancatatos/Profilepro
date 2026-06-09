@@ -36,6 +36,7 @@ import {
   listRsvpsForEvent,
   updateTeamEvent,
 } from "@/lib/firebase/firestore";
+import { auth as firebaseAuth } from "@/lib/firebase/client";
 import { cn, getAppOrigin, timeAgo } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 import type { EventRsvp, TeamEvent } from "@/types";
@@ -113,7 +114,33 @@ export default function EventDetailPage() {
       setEvent((prev) =>
         prev ? { ...prev, status: "canceled" as const } : prev,
       );
-      toast.success("Event canceled. Members will be notified once the send pipeline ships.");
+      /* Fire the cancellation email blast in the background — failures
+         don't unroll the cancel itself (the cancel is the primary
+         action; the email is a courtesy heads-up). */
+      try {
+        const idToken = await firebaseAuth.currentUser?.getIdToken();
+        const res = await fetch("/api/events/notify-canceled", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
+          },
+          body: JSON.stringify({
+            eventId: event.id,
+            origin: window.location.origin,
+          }),
+        });
+        const j = await res.json();
+        if (res.ok && j.sent > 0) {
+          toast.success(
+            `Event canceled — ${j.sent} attendee${j.sent === 1 ? "" : "s"} notified.`,
+          );
+        } else {
+          toast.success("Event canceled.");
+        }
+      } catch {
+        toast.success("Event canceled. (Couldn't send cancel emails.)");
+      }
       setConfirmCancel(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Cancel failed.");
