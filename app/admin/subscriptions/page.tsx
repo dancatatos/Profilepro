@@ -23,7 +23,13 @@ import {
   getPlansConfig,
   setPlansConfig,
 } from "@/lib/firebase/firestore";
-import { PLANS } from "@/lib/constants";
+import {
+  PLANS,
+  getFunnelLimit,
+  getTemplateLockerSlots,
+  getTrainingsActivateLimit,
+  getTrainingsCreateLimit,
+} from "@/lib/constants";
 import {
   defaultFeatureKeysForPlan,
   groupCatalogByCategory,
@@ -279,27 +285,41 @@ export default function AdminSubscriptionsPage() {
    * "users on this plan cannot use this feature even if the feature
    * flag is on", which is a useful escape hatch.
    */
+  /**
+   * Update plan limits. Supports three input shapes per field:
+   *   - number ≥ 0  → store as the explicit cap (0 = block, 999 = ∞)
+   *   - null        → CLEAR the field so the resolver falls back to
+   *                   the hardcoded default for this plan id
+   *   - undefined   → no change to this field
+   *
+   * The "clear to default" path is what makes a blank admin input
+   * mean "use the sensible default" instead of "block at 0" — fixes
+   * the foot-gun where saving a plan without explicitly typing a
+   * number would zero out all the limits.
+   */
   const updateLimits = (
     pIdx: number,
-    patch: Partial<NonNullable<Plan["limits"]>>,
+    patch: Partial<Record<keyof NonNullable<Plan["limits"]>, number | null>>,
   ) => {
     setPlans((ps) =>
       ps.map((p, i) => {
         if (i !== pIdx) return p;
         const current = p.limits ?? {};
         const next: NonNullable<Plan["limits"]> = { ...current };
-        if (patch.funnels !== undefined) {
-          next.funnels = Math.max(0, Math.floor(patch.funnels));
-        }
-        if (patch.sharedBuilds !== undefined) {
-          next.sharedBuilds = Math.max(0, Math.floor(patch.sharedBuilds));
-        }
-        if (patch.trainingsCreate !== undefined) {
-          next.trainingsCreate = Math.max(0, Math.floor(patch.trainingsCreate));
-        }
-        if (patch.trainingsActivate !== undefined) {
-          next.trainingsActivate = Math.max(0, Math.floor(patch.trainingsActivate));
-        }
+        const apply = (key: keyof NonNullable<Plan["limits"]>) => {
+          const v = patch[key];
+          if (v === undefined) return;
+          if (v === null) {
+            delete next[key];
+            return;
+          }
+          next[key] = Math.max(0, Math.floor(v));
+        };
+        apply("funnels");
+        apply("sharedBuilds");
+        apply("trainingsCreate");
+        apply("trainingsActivate");
+        apply("pipelines");
         return { ...p, limits: next };
       }),
     );
@@ -758,74 +778,34 @@ export default function AdminSubscriptionsPage() {
                   Plan limits
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <p className="mb-1 text-[10px] text-white/45">
-                      Funnel cap
-                    </p>
-                    <input
-                      type="number"
-                      min={0}
-                      className={inputCls}
-                      value={plan.limits?.funnels ?? 0}
-                      onChange={(e) =>
-                        updateLimits(pIdx, {
-                          funnels: Number(e.target.value) || 0,
-                        })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <p className="mb-1 text-[10px] text-white/45">
-                      Shared-build slots
-                    </p>
-                    <input
-                      type="number"
-                      min={0}
-                      className={inputCls}
-                      value={plan.limits?.sharedBuilds ?? 0}
-                      onChange={(e) =>
-                        updateLimits(pIdx, {
-                          sharedBuilds: Number(e.target.value) || 0,
-                        })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <p className="mb-1 text-[10px] text-white/45">
-                      Trainings — create / clone
-                    </p>
-                    <input
-                      type="number"
-                      min={0}
-                      className={inputCls}
-                      value={plan.limits?.trainingsCreate ?? 0}
-                      onChange={(e) =>
-                        updateLimits(pIdx, {
-                          trainingsCreate: Number(e.target.value) || 0,
-                        })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <p className="mb-1 text-[10px] text-white/45">
-                      Trainings — library cap
-                    </p>
-                    <input
-                      type="number"
-                      min={0}
-                      className={inputCls}
-                      value={plan.limits?.trainingsActivate ?? 0}
-                      onChange={(e) =>
-                        updateLimits(pIdx, {
-                          trainingsActivate: Number(e.target.value) || 0,
-                        })
-                      }
-                    />
-                  </div>
+                  <LimitInput
+                    label="Funnel cap"
+                    value={plan.limits?.funnels}
+                    defaultValue={getFunnelLimit(plan.id)}
+                    onChange={(v) => updateLimits(pIdx, { funnels: v })}
+                  />
+                  <LimitInput
+                    label="Shared-build slots"
+                    value={plan.limits?.sharedBuilds}
+                    defaultValue={getTemplateLockerSlots(plan.id)}
+                    onChange={(v) => updateLimits(pIdx, { sharedBuilds: v })}
+                  />
+                  <LimitInput
+                    label="Trainings — create / clone"
+                    value={plan.limits?.trainingsCreate}
+                    defaultValue={getTrainingsCreateLimit(plan.id)}
+                    onChange={(v) => updateLimits(pIdx, { trainingsCreate: v })}
+                  />
+                  <LimitInput
+                    label="Trainings — library cap"
+                    value={plan.limits?.trainingsActivate}
+                    defaultValue={getTrainingsActivateLimit(plan.id)}
+                    onChange={(v) => updateLimits(pIdx, { trainingsActivate: v })}
+                  />
                 </div>
                 <p className="mt-1 text-[10px] text-white/35">
-                  0 means &ldquo;none&rdquo;. Use 999 for &ldquo;effectively
-                  unlimited&rdquo; — anything ≥ 999 renders as ∞ in the UI.
+                  Blank = use the default for this plan id (shown as
+                  placeholder). 0 = block. 999 = effectively unlimited.
                   Per-user overrides in <code>/admin/users</code> can grant
                   individuals more.
                 </p>
@@ -1021,5 +1001,54 @@ function FeatureToggleRow({
         )}
       </span>
     </button>
+  );
+}
+
+/**
+ * Plan-limit numeric input that supports three states:
+ *   - typed number  → explicit cap (0 = block, 999 = ∞)
+ *   - blank         → clears the field; the resolver falls back to
+ *                     the hardcoded default for this plan id
+ *   - never touched → shows blank with the default as a placeholder
+ *                     ("Default: 5") so admin can see what they'd
+ *                     get without typing anything
+ *
+ * The previous version auto-populated 0 when the saved value was
+ * undefined and treated blank as 0 on save — which silently wiped
+ * the defaults the moment an admin clicked Save on a plan without
+ * touching the fields.
+ */
+function LimitInput({
+  label,
+  value,
+  defaultValue,
+  onChange,
+}: {
+  label: string;
+  value: number | undefined;
+  defaultValue: number;
+  onChange: (v: number | null) => void;
+}) {
+  return (
+    <div>
+      <p className="mb-1 text-[10px] text-white/45">{label}</p>
+      <input
+        type="number"
+        min={0}
+        className="h-9 w-full rounded-lg border border-white/[0.07] bg-white/[0.03] px-2.5 text-sm text-white outline-none focus:border-electric-500/50"
+        value={value ?? ""}
+        placeholder={`Default: ${defaultValue >= 999 ? "∞" : defaultValue}`}
+        onChange={(e) => {
+          const raw = e.target.value;
+          if (raw === "") {
+            onChange(null);
+            return;
+          }
+          const n = Number(raw);
+          if (!Number.isFinite(n) || n < 0) return;
+          onChange(n);
+        }}
+      />
+    </div>
   );
 }
