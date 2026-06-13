@@ -62,6 +62,11 @@ import { LightFeatures } from "@/components/marketing/LightFeatures";
 import { LightDeepDive } from "@/components/marketing/LightDeepDive";
 import { LightTestimonials } from "@/components/marketing/LightTestimonials";
 import { LightPricing } from "@/components/marketing/LightPricing";
+import { LightHowItWorks } from "@/components/marketing/LightHowItWorks";
+import { LightAIHighlight } from "@/components/marketing/LightAIHighlight";
+import { LightTrustPhoto } from "@/components/marketing/LightTrustPhoto";
+import { LightFAQ } from "@/components/marketing/LightFAQ";
+import { DarkFinalCTA } from "@/components/marketing/DarkFinalCTA";
 import { DEMO_PROFILE } from "@/lib/defaults";
 import { PLANS } from "@/lib/constants";
 import { planDisplayFeatures } from "@/lib/features";
@@ -89,9 +94,9 @@ const FEATURES = [
 ];
 
 const STEPS = [
-  { n: "1", title: "Answer a few questions", desc: "Tell the AI about your niche, offer and audience." },
-  { n: "2", title: "AI builds your profile", desc: "Headline, bio, CTAs and sections — generated in seconds." },
-  { n: "3", title: "Share & capture leads", desc: "Send your link or QR code and watch the leads roll in." },
+  { n: 1, title: "Answer a few questions", desc: "Tell the AI about your niche, offer and audience." },
+  { n: 2, title: "AI builds your profile", desc: "Headline, bio, CTAs and sections — generated in seconds." },
+  { n: 3, title: "Share & capture leads", desc: "Send your link or QR code and watch the leads roll in." },
 ];
 
 export default function LandingPage() {
@@ -227,86 +232,48 @@ export default function LandingPage() {
 
       <LightPricing plans={plans} />
 
-      {/* ── Remaining (dark) sections — AI highlight, How it works,
-          videos, FAQ, final CTA, footer. Migrated in Session 3. ── */}
-      <div className="relative overflow-hidden bg-ink-950">
-        <div className="glow-blob -left-32 top-0 h-80 w-80 bg-electric-600/30" />
-        <div className="glow-blob right-0 top-[40rem] h-80 w-80 bg-jade-600/20" />
+      <LightAIHighlight />
 
-      {/* ── AI highlight ────────────────────────────────────────── */}
-      <section className="mx-auto max-w-6xl px-5 py-16">
-        <div className="glass-card overflow-hidden rounded-3xl p-8 lg:p-12">
-          <div className="grid items-center gap-8 lg:grid-cols-2">
-            <div>
-              <Badge tone="jade" icon={<Zap className="h-3 w-3" />}>
-                Gemini AI inside
-              </Badge>
-              <h2 className="mt-4 font-display text-3xl font-bold text-white">
-                Your AI credibility copywriter
-              </h2>
-              <p className="mt-3 text-sm text-white/55">
-                Generate persuasive, conversion-focused copy in seconds — in
-                English or natural Taglish. AI audits your profile and tells
-                you exactly how to improve.
-              </p>
-              <ul className="mt-5 space-y-2.5">
-                {[
-                  "Conversational AI profile generator",
-                  "Native Taglish mode for Filipino marketers",
-                  "AI audit with credibility & conversion scores",
-                  "Rewrite bios, CTAs and recruiting pitches",
-                ].map((item) => (
-                  <li key={item} className="flex items-center gap-2.5 text-sm text-white/70">
-                    <Check className="h-4 w-4 shrink-0 text-jade-400" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="rounded-2xl border border-white/[0.07] bg-ink-900/60 p-5">
-              <div className="flex items-center gap-2 text-xs text-white/40">
-                <Sparkles className="h-3.5 w-3.5 text-electric-400" />
-                Credibly AI
-              </div>
-              <p className="mt-3 rounded-xl bg-white/[0.04] p-3 text-sm text-white/80">
-                &ldquo;Tinutulungan ko ang mga busy moms na magkaroon ng extra
-                income mula sa bahay — kahit walang experience.&rdquo;
-              </p>
-              <div className="mt-3 flex gap-2">
-                <span className="rounded-lg bg-jade-500/15 px-2.5 py-1 text-xs text-jade-300">
-                  Credibility 92
-                </span>
-                <span className="rounded-lg bg-electric-500/15 px-2.5 py-1 text-xs text-electric-300">
-                  Conversion 88
-                </span>
-              </div>
-            </div>
+      <LightHowItWorks steps={STEPS} />
+
+      <LightTrustPhoto
+        photoUrl={content.trustPhotoUrl}
+        photoAlt={content.trustPhotoAlt}
+      />
+
+      {faq.enabled && faq.items.length > 0 && (
+        <LightFAQ title={faq.title} items={faq.items} />
+      )}
+
+      <DarkFinalCTA
+        title={finalCta.title}
+        subtitle={finalCta.subtitle}
+        primaryCta={finalCta.primaryCta}
+        secondaryCta={finalCta.secondaryCta}
+      />
+
+      {/* ── Footer — stays dark, consistent with the final CTA above ── */}
+      <footer className="bg-ink-950 text-white">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 py-10 sm:flex-row">
+          <Logo />
+          <p className="text-xs text-white/35">
+            &copy; {new Date().getFullYear()} Credibly. Built for trust.
+          </p>
+          <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-white/45">
+            <Link href="/login" className="hover:text-white">Log in</Link>
+            <Link href="/signup" className="hover:text-white">Sign up</Link>
+            <Link href="/demo" className="hover:text-white">Example</Link>
+            <Link href="/privacy" className="hover:text-white">Privacy</Link>
+            <Link href="/terms" className="hover:text-white">Terms</Link>
           </div>
         </div>
-      </section>
+      </footer>
 
-      {/* ── How it works ────────────────────────────────────────── */}
-      <section id="how" className="mx-auto max-w-6xl px-5 py-16">
-        <div className="text-center">
-          <h2 className="font-display text-3xl font-bold text-white">
-            Live in 3 simple steps
-          </h2>
-        </div>
-        <div className="mt-10 grid gap-4 md:grid-cols-3">
-          {STEPS.map((s) => (
-            <div key={s.n} className="glass-card rounded-2xl p-6 text-center">
-              <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-gradient font-display text-lg font-bold text-white shadow-glow-blue">
-                {s.n}
-              </span>
-              <h3 className="mt-4 font-display text-base font-semibold text-white">
-                {s.title}
-              </h3>
-              <p className="mt-1 text-sm text-white/50">{s.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
+      {/* ── Legacy dark sections still rendered for testimonial
+          videos (when admin enables them) — wrapped in their own
+          dark container so the gradient back to the dark footer
+          still reads coherently if they're empty. ── */}
+      <div className="relative overflow-hidden bg-ink-950">
       {/* ── Testimonial videos (admin-toggleable) ───────────────── */}
       {testimonialVideos.enabled && testimonialVideos.items.length > 0 && (
         <section className="mx-auto max-w-6xl px-5 py-16">
@@ -364,66 +331,6 @@ export default function LandingPage() {
         </section>
       )}
 
-      {/* ── FAQ (admin-toggleable, defaults to enabled) ─────────── */}
-      {faq.enabled && faq.items.length > 0 && (
-        <section id="faq" className="mx-auto max-w-3xl px-5 py-16">
-          <div className="text-center">
-            <h2 className="font-display text-3xl font-bold text-white">
-              {faq.title}
-            </h2>
-          </div>
-          <div className="mt-10 space-y-2.5">
-            {faq.items.map((item) => (
-              <FaqRow key={item.id} item={item} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* ── Final CTA ───────────────────────────────────────────── */}
-      <section className="mx-auto max-w-6xl px-5 py-16">
-        <div className="relative overflow-hidden rounded-3xl bg-brand-gradient p-10 text-center">
-          <div className="glow-blob left-1/2 top-0 h-60 w-60 -translate-x-1/2 bg-white/20" />
-          <div className="relative">
-            <h2 className="font-display text-3xl font-bold text-white">
-              {finalCta.title}
-            </h2>
-            <p className="mx-auto mt-2 max-w-md text-sm text-white/80">
-              {finalCta.subtitle}
-            </p>
-            <div className="mt-6 flex justify-center gap-3">
-              <Button href="/signup" variant="solid" size="lg">
-                {finalCta.primaryCta}
-              </Button>
-              <Button
-                href="/demo"
-                variant="outline"
-                size="lg"
-                className="border-white/30"
-              >
-                {finalCta.secondaryCta}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Footer ──────────────────────────────────────────────── */}
-      <footer className="border-t border-white/[0.06]">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 py-8 sm:flex-row">
-          <Logo />
-          <p className="text-xs text-white/35">
-            &copy; {new Date().getFullYear()} Credibly. Built for trust.
-          </p>
-          <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-white/45">
-            <Link href="/login" className="hover:text-white">Log in</Link>
-            <Link href="/signup" className="hover:text-white">Sign up</Link>
-            <Link href="/demo" className="hover:text-white">Example</Link>
-            <Link href="/privacy" className="hover:text-white">Privacy</Link>
-            <Link href="/terms" className="hover:text-white">Terms</Link>
-          </div>
-        </div>
-      </footer>
       </div>
     </div>
   );

@@ -93,7 +93,14 @@ export default function AdminMarketingPage() {
   ) => {
     setContent((prev) => ({
       ...prev,
-      [section]: { ...prev[section], ...update },
+      /* MarketingContent has both object-typed sections (hero, faq,
+         etc.) and scalar fields (trustPhotoUrl). This helper is only
+         called for the object-typed ones; the cast tells TS to trust
+         the caller. */
+      [section]: {
+        ...(prev[section] as object),
+        ...(update as object),
+      },
     }));
     setDirty(true);
   };
@@ -163,6 +170,15 @@ export default function AdminMarketingPage() {
           publish them to the live homepage.
         </div>
       )}
+
+      <TrustPhotoEditor
+        photoUrl={content.trustPhotoUrl}
+        photoAlt={content.trustPhotoAlt}
+        onChange={(next) => {
+          setContent((prev) => ({ ...prev, ...next }));
+          setDirty(true);
+        }}
+      />
 
       <FeatureLabelsEditor
         labels={content.featureLabels}
@@ -1147,6 +1163,69 @@ function DashboardNavEditor({
         keeps users from getting stranded. Brand-new nav items that ship
         with future updates appear at the bottom automatically.
       </p>
+    </SectionCard>
+  );
+}
+
+/* ---------------- Trust photo (homepage trust section) ---------------- */
+
+/**
+ * Photo + alt-text for the "Built in Manila" trust section on the
+ * homepage. The image fills 65% of that section; the floating glass-
+ * morphism card with copy + CTA overlays its right edge. Use a real
+ * photo of yourself, a customer, or a team gathering — anything that
+ * grounds the page in a human moment rather than illustrations.
+ */
+function TrustPhotoEditor({
+  photoUrl,
+  photoAlt,
+  onChange,
+}: {
+  photoUrl: string | undefined;
+  photoAlt: string | undefined;
+  onChange: (next: { trustPhotoUrl?: string; trustPhotoAlt?: string }) => void;
+}) {
+  return (
+    <SectionCard
+      title="Trust section photo"
+      description="The big human photo on the 'Built in Manila' section of the homepage. Falls back to a curated default if unset."
+      defaultOpen={false}
+    >
+      <div className="space-y-3">
+        <Field label="Photo URL">
+          <input
+            value={photoUrl ?? ""}
+            onChange={(e) =>
+              onChange({ trustPhotoUrl: e.target.value, trustPhotoAlt: photoAlt })
+            }
+            placeholder="https://… (Firebase Storage, Unsplash, etc.)"
+            className={inputCx}
+          />
+        </Field>
+        <Field label="Alt text">
+          <input
+            value={photoAlt ?? ""}
+            onChange={(e) =>
+              onChange({ trustPhotoUrl: photoUrl, trustPhotoAlt: e.target.value })
+            }
+            placeholder="Describe the photo for accessibility + SEO"
+            className={inputCx}
+          />
+        </Field>
+        {photoUrl?.trim() && (
+          <div className="mt-2">
+            <p className="mb-1 text-[11px] uppercase tracking-wider text-white/40">
+              Preview
+            </p>
+            <img
+              src={photoUrl}
+              alt={photoAlt ?? ""}
+              className="aspect-[4/3] w-full max-w-md rounded-xl border border-white/10 object-cover"
+              loading="lazy"
+            />
+          </div>
+        )}
+      </div>
     </SectionCard>
   );
 }

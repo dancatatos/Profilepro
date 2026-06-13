@@ -254,6 +254,15 @@ export interface MarketingContent {
     trainingsSingular?: string;
   };
   /**
+   * The photo that fills the background of the "Made in PH for PH"
+   * trust section on the homepage. When unset, the section uses a
+   * curated default URL (or hides the section entirely if a hard
+   * fallback is missing). Admin uploads from /admin/marketing.
+   */
+  trustPhotoUrl?: string;
+  /** Alt text for the trust photo — accessibility + SEO. */
+  trustPhotoAlt?: string;
+  /**
    * Admin-configurable dashboard sidebar layout. When unset, the
    * sidebar renders DASHBOARD_NAV in its hardcoded order. Admin can
    * override the order + hide items in /admin/marketing.
