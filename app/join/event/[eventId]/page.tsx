@@ -164,6 +164,9 @@ function Flow() {
               src={event.bannerUrl}
               alt={event.title}
               className="aspect-[16/8] w-full object-cover"
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
             />
           )}
           <div className="p-5">

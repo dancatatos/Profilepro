@@ -8,6 +8,14 @@ interface AvatarProps {
   verified?: boolean;
   className?: string;
   ring?: boolean;
+  /**
+   * When true, the image loads eagerly with high fetch priority —
+   * for above-the-fold avatars (profile page hero, training page
+   * leader). Defaults to false so the dozens of avatars in lists
+   * (Members, Learners, RSVPs, etc.) lazy-load and don't compete
+   * with critical resources for bandwidth.
+   */
+  priority?: boolean;
 }
 
 /**
@@ -21,6 +29,7 @@ export function Avatar({
   verified,
   className,
   ring = true,
+  priority,
 }: AvatarProps) {
   return (
     <div
@@ -34,7 +43,16 @@ export function Avatar({
         )}
       >
         {src ? (
-          <img src={src} alt={name} className="h-full w-full object-cover" />
+          <img
+            src={src}
+            alt={name}
+            className="h-full w-full object-cover"
+            loading={priority ? "eager" : "lazy"}
+            decoding="async"
+            {...(priority ? { fetchPriority: "high" as const } : {})}
+            width={size}
+            height={size}
+          />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-brand-gradient">
             <span

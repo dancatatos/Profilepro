@@ -413,6 +413,10 @@ function SelectedMethodDetails({ method }: { method: PaymentMethod }) {
             src={method.qrImageUrl}
             alt="Payment QR code"
             className="mx-auto h-44 w-44 object-contain"
+            loading="lazy"
+            decoding="async"
+            width={176}
+            height={176}
           />
           <p className="mt-1 text-center text-[10px] font-medium text-ink-950">
             Scan with your {method.type.toUpperCase()} app

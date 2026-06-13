@@ -652,6 +652,8 @@ export function SectionRenderer({
                     src={t.mediaUrl}
                     alt={t.authorName}
                     className="mb-3 w-full rounded-xl object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                 )}
                 {typeof t.rating === "number" && (
@@ -713,6 +715,10 @@ export function SectionRenderer({
                         src={p.imageUrl}
                         alt={p.title}
                         className="h-full w-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                        width={64}
+                        height={64}
                       />
                     )}
                   </div>
@@ -819,6 +825,8 @@ export function SectionRenderer({
                     src={img.url}
                     alt={img.caption || "Gallery image"}
                     className="h-full w-full object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                 )}
               </div>
@@ -892,6 +900,8 @@ export function SectionRenderer({
           alt={section.caption || section.title || "Image"}
           className={cn("h-auto w-full object-cover", widthClass)}
           style={{ borderRadius: "var(--tp-card-radius)" }}
+          loading="lazy"
+          decoding="async"
         />
       );
       return (

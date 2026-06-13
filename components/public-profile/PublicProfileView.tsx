@@ -173,6 +173,7 @@ export function PublicProfileView({
                 src={header.avatarUrl}
                 size={104}
                 verified={header.verified}
+                priority
               />
               <h1
                 className="mt-3.5 font-display text-xl font-bold"

@@ -204,6 +204,10 @@ export function TrainingPurchaseForm({
               src={selectedMethod.qrImageUrl}
               alt="QR code"
               className="mx-auto mt-3 h-40 w-40 rounded-lg bg-white object-contain p-2"
+              loading="lazy"
+              decoding="async"
+              width={160}
+              height={160}
             />
           )}
         </div>

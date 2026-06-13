@@ -168,6 +168,9 @@ function JoinFlow() {
               src={space.bannerUrl}
               alt={space.name}
               className="aspect-[16/8] w-full object-cover"
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
             />
           )}
           <div className="p-5">

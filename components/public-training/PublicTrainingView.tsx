@@ -164,6 +164,9 @@ export function PublicTrainingView({
               src={training.bannerUrl}
               alt={training.title}
               className="mb-5 aspect-[16/8] w-full rounded-2xl object-cover"
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
             />
           )}
           <div className="flex flex-wrap items-center gap-2 text-xs text-white/55">
