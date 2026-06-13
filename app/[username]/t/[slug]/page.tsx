@@ -23,7 +23,11 @@ import type { Profile, Training } from "@/types";
  * Non-preview lessons show a lock + an "Unlock with code" CTA.
  */
 
-export const dynamic = "force-dynamic";
+/* Edge-cache for 60s — training pages are public-readable, so the
+   member-side access check (which decides locked vs. unlocked
+   lessons) happens client-side inside PublicTrainingView and isn't
+   affected by the SSR cache. */
+export const revalidate = 60;
 
 interface Params {
   username: string;

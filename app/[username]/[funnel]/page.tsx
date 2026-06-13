@@ -6,7 +6,9 @@ import { FunnelView } from "@/components/public-profile/FunnelView";
 import { APP } from "@/lib/constants";
 import type { Funnel, Profile } from "@/types";
 
-export const dynamic = "force-dynamic";
+/* Same edge-cache strategy as the profile page — 60s revalidate.
+   Funnel edits show up to external visitors within ~1 min. */
+export const revalidate = 60;
 
 async function resolveFunnel(
   username: string,

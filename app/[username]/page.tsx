@@ -12,7 +12,12 @@ import { APP, PLANS as DEFAULT_PLANS } from "@/lib/constants";
 import { defaultFeatureKeysForPlan, planHasFeature } from "@/lib/features";
 import type { Profile } from "@/types";
 
-export const dynamic = "force-dynamic";
+/* Edge-cache the rendered profile for 60s. Profile saves in the
+   builder are visible immediately to the owner (they edit on a
+   non-cached /profile route); external visitors see updates within
+   ~1 min. Cuts ~99% of Firestore reads on shared profile traffic
+   (one render per minute per profile, instead of one per visit). */
+export const revalidate = 60;
 
 async function resolveProfile(username: string): Promise<Profile | null> {
   const handle = username.toLowerCase();

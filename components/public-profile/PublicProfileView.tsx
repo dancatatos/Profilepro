@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useRef } from "react";
-import { motion } from "framer-motion";
 import { BadgeCheck, MapPin } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { LogoMark } from "@/components/ui/Logo";
@@ -112,11 +111,9 @@ export function PublicProfileView({
       style={themeStyle}
     >
       <div className="mx-auto max-w-md px-4 pb-14 pt-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
+        {/* Header — CSS fade-up replaces what framer-motion was doing.
+            Same visual cue, ~50 KB lighter on the public profile bundle. */}
+        <div className="cr-fade-up">
           {isHero ? (
             /* ── Hero cover-photo header ── */
             <div className="relative -mx-4 -mt-8">
@@ -252,31 +249,41 @@ export function PublicProfileView({
               </div>
             )}
           </div>
-        </motion.div>
+        </div>
 
-        {/* Sections */}
+        {/* Sections — staggered fade-up via CSS delay classes.
+            The 6th+ section gets the max delay (.2s) instead of
+            growing forever, matching the cap framer-motion had. */}
         <div className="mt-7 space-y-7">
-          {sections.map((section, i) => (
-            <motion.div
-              key={section.id}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.4, delay: Math.min(i * 0.04, 0.2) }}
-            >
-              <SectionRenderer
-                section={section}
-                themeConfig={tc}
-                track={track}
-                onLead={onLead}
-                onBook={onBook}
-                profileId={profile.id}
-                ownerId={profile.ownerId}
-                paymentMethods={profile.paymentMethods}
-                source="profile"
-              />
-            </motion.div>
-          ))}
+          {sections.map((section, i) => {
+            const delayClass =
+              i === 0
+                ? "cr-fade-up"
+                : i === 1
+                  ? "cr-fade-up-delay-1"
+                  : i === 2
+                    ? "cr-fade-up-delay-2"
+                    : i === 3
+                      ? "cr-fade-up-delay-3"
+                      : i === 4
+                        ? "cr-fade-up-delay-4"
+                        : "cr-fade-up-delay-5";
+            return (
+              <div key={section.id} className={delayClass}>
+                <SectionRenderer
+                  section={section}
+                  themeConfig={tc}
+                  track={track}
+                  onLead={onLead}
+                  onBook={onBook}
+                  profileId={profile.id}
+                  ownerId={profile.ownerId}
+                  paymentMethods={profile.paymentMethods}
+                  source="profile"
+                />
+              </div>
+            );
+          })}
         </div>
 
         {/* Branding footer — only shown when the owner's plan doesn't

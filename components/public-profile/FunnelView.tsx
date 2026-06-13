@@ -2,7 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+/* framer-motion removed — step transitions now use a CSS fade-up
+   on the keyed wrapper, which re-fires on step change because React
+   tears down + remounts the div on key change. Same visual cue,
+   ~50 KB lighter on the public funnel bundle. */
 import { LogoMark } from "@/components/ui/Logo";
 import {
   SectionRenderer,
@@ -149,13 +152,7 @@ export function FunnelView({
           </div>
         )}
 
-        <motion.div
-          key={step.id}
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35 }}
-          className="space-y-7"
-        >
+        <div key={step.id} className="cr-fade-up space-y-7">
           {sections.map((section) => (
             <SectionRenderer
               key={section.id}
@@ -184,7 +181,7 @@ export function FunnelView({
               {cta.label}
             </button>
           )}
-        </motion.div>
+        </div>
 
         <Link
           href="/"
