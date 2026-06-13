@@ -57,6 +57,11 @@ import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import { PublicProfileView } from "@/components/public-profile/PublicProfileView";
 import { LightHero } from "@/components/marketing/LightHero";
+import { LightStats } from "@/components/marketing/LightStats";
+import { LightFeatures } from "@/components/marketing/LightFeatures";
+import { LightDeepDive } from "@/components/marketing/LightDeepDive";
+import { LightTestimonials } from "@/components/marketing/LightTestimonials";
+import { LightPricing } from "@/components/marketing/LightPricing";
 import { DEMO_PROFILE } from "@/lib/defaults";
 import { PLANS } from "@/lib/constants";
 import { planDisplayFeatures } from "@/lib/features";
@@ -156,70 +161,20 @@ export default function LandingPage() {
 
   return (
     <div className="relative">
-      {/* ── NEW: Light hero (Session 1 of homepage redesign) ────────
-          Self-contained light island over white. Replaces the old
-          dark nav + hero. Everything below stays on the original
-          dark theme until subsequent design sessions migrate them. */}
+      {/* ── NEW: Light marketing surface (Sessions 1 + 2) ───────────
+          Hero → stats → features → 3 deep-dives → testimonials →
+          pricing. Everything light. Below this, the AI highlight,
+          How-it-works, FAQ, final CTA + footer stay dark for now
+          (Session 3 finishes the migration). */}
       <LightHero hero={hero} navLinks={navLinks} featuredProfile={featured} />
 
-      {/* ── Original (dark) sections continue below ─────────────── */}
-      <div className="relative overflow-hidden bg-ink-950">
-        <div className="glow-blob -left-32 top-0 h-80 w-80 bg-electric-600/30" />
-        <div className="glow-blob right-0 top-[40rem] h-80 w-80 bg-jade-600/20" />
-
-      {/* ── Social proof bar (admin-toggleable) ─────────────────── */}
       {socialProof.enabled && socialProof.stats.length > 0 && (
-        <section className="mx-auto max-w-6xl px-5 pb-4">
-          <div className="grid grid-cols-2 gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-5 sm:grid-cols-4">
-            {socialProof.stats.map((s) => (
-              <div key={s.id} className="text-center">
-                <p className="font-display text-2xl font-bold text-white sm:text-3xl">
-                  {s.value}
-                </p>
-                <p className="text-[11px] text-white/45 sm:text-xs">
-                  {s.label}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
+        <LightStats stats={socialProof.stats} />
       )}
 
-      {/* ── Features grid ───────────────────────────────────────── */}
-      <section id="features" className="mx-auto max-w-6xl px-5 py-16">
-        <div className="text-center">
-          <h2 className="font-display text-3xl font-bold text-white">
-            Everything you need to{" "}
-            <span className="text-gradient-jade">build trust</span>
-          </h2>
-          <p className="mx-auto mt-3 max-w-md text-sm text-white/50">
-            Not just a link in bio — a complete credibility operating system.
-          </p>
-        </div>
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map((f, i) => (
-            <motion.div
-              key={f.title}
-              initial={{ opacity: 0, y: 18 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.05 }}
-              className="glass-card rounded-2xl p-5"
-            >
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-electric-500/12">
-                <f.icon className="h-5 w-5 text-electric-400" />
-              </span>
-              <h3 className="mt-3.5 font-display text-base font-semibold text-white">
-                {f.title}
-              </h3>
-              <p className="mt-1 text-sm text-white/50">{f.desc}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
+      <LightFeatures features={FEATURES} />
 
-      {/* ── Pipelines feature deep-dive ─────────────────────────── */}
-      <FeatureDeepDive
+      <LightDeepDive
         eyebrow="Follow-up Pipelines"
         title="Never forget a follow-up again"
         body="Every lead lands on a daily task board. The right message at the right time, ready to copy + paste in English or Taglish — no more 'crap, I forgot to message Maria back.' Top recruiters add 3-5 extra sign-ups a month just from following up consistently."
@@ -229,14 +184,11 @@ export default function LandingPage() {
           "Native English + Taglish modes — paste straight into Messenger",
           "Push notifications at 9 AM PHT each morning",
         ]}
-        icon={<KanbanSquare className="h-5 w-5" />}
-        accent="electric"
         mockup={<PipelinesMockup />}
-        reverse={false}
+        blob="lavender"
       />
 
-      {/* ── Funnels feature deep-dive ───────────────────────────── */}
-      <FeatureDeepDive
+      <LightDeepDive
         eyebrow="Mini Sales Funnels"
         title="Turn DMs into deals — no ClickFunnels needed"
         body="Drop a multi-step funnel together in 10 minutes. Opt-in → waiting room → webinar → offer → thank you. Each visitor gets enrolled in the right pipeline automatically, so your daily task list stays current."
@@ -246,14 +198,12 @@ export default function LandingPage() {
           "Auto-enrol funnel leads into the right pipeline",
           "Templates ready to clone — no design skills needed",
         ]}
-        icon={<LayoutTemplate className="h-5 w-5" />}
-        accent="jade"
         mockup={<FunnelsMockup />}
-        reverse={true}
+        reverse
+        blob="mint"
       />
 
-      {/* ── Manual Payments feature deep-dive ───────────────────── */}
-      <FeatureDeepDive
+      <LightDeepDive
         eyebrow="Manual Payments"
         title="Get paid via GCash, Maya & bank — no Stripe needed"
         body="Set up your accounts once. Add a payment section to any funnel. Visitors send payment outside the app, upload their receipt, and you approve from /payments. Zero processor fees. Approved buyers auto-flow into your pipeline."
@@ -263,11 +213,25 @@ export default function LandingPage() {
           "Approved payments auto-enrol the buyer into your pipeline",
           "Zero processor fees — keep 100% of what you charge",
         ]}
-        icon={<CreditCard className="h-5 w-5" />}
-        accent="gold"
         mockup={<PaymentsMockup />}
-        reverse={false}
+        blob="cream"
       />
+
+      {testimonials.enabled && testimonials.items.length > 0 && (
+        <LightTestimonials
+          title={testimonials.title}
+          subtitle={testimonials.subtitle}
+          items={testimonials.items}
+        />
+      )}
+
+      <LightPricing plans={plans} />
+
+      {/* ── Remaining (dark) sections — AI highlight, How it works,
+          videos, FAQ, final CTA, footer. Migrated in Session 3. ── */}
+      <div className="relative overflow-hidden bg-ink-950">
+        <div className="glow-blob -left-32 top-0 h-80 w-80 bg-electric-600/30" />
+        <div className="glow-blob right-0 top-[40rem] h-80 w-80 bg-jade-600/20" />
 
       {/* ── AI highlight ────────────────────────────────────────── */}
       <section className="mx-auto max-w-6xl px-5 py-16">
@@ -343,58 +307,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Testimonials (admin-toggleable) ─────────────────────── */}
-      {testimonials.enabled && testimonials.items.length > 0 && (
-        <section className="mx-auto max-w-6xl px-5 py-16">
-          <div className="text-center">
-            <h2 className="font-display text-3xl font-bold text-white">
-              {testimonials.title}
-            </h2>
-            {testimonials.subtitle && (
-              <p className="mx-auto mt-3 max-w-md text-sm text-white/50">
-                {testimonials.subtitle}
-              </p>
-            )}
-          </div>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {testimonials.items.map((t) => (
-              <div
-                key={t.id}
-                className="glass-card flex flex-col rounded-2xl p-5"
-              >
-                {t.rating ? (
-                  <div className="mb-3 flex gap-0.5 text-gold-300">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={cn(
-                          "h-3.5 w-3.5",
-                          i < (t.rating ?? 0)
-                            ? "fill-gold-300"
-                            : "fill-transparent text-white/15",
-                        )}
-                      />
-                    ))}
-                  </div>
-                ) : null}
-                <p className="flex-1 text-sm leading-relaxed text-white/75">
-                  &ldquo;{t.quote}&rdquo;
-                </p>
-                <div className="mt-4 flex items-center gap-3 border-t border-white/[0.06] pt-4">
-                  <Avatar name={t.name} src={t.avatarUrl} size={36} />
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-white">
-                      {t.name}
-                    </p>
-                    <p className="truncate text-xs text-white/45">{t.role}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
       {/* ── Testimonial videos (admin-toggleable) ───────────────── */}
       {testimonialVideos.enabled && testimonialVideos.items.length > 0 && (
         <section className="mx-auto max-w-6xl px-5 py-16">
@@ -451,73 +363,6 @@ export default function LandingPage() {
           </div>
         </section>
       )}
-
-      {/* ── Pricing ─────────────────────────────────────────────── */}
-      <section id="pricing" className="mx-auto max-w-6xl px-5 py-16">
-        <div className="text-center">
-          <h2 className="font-display text-3xl font-bold text-white">
-            Simple, honest pricing
-          </h2>
-          <p className="mt-3 text-sm text-white/50">
-            Start free. Upgrade when you&apos;re ready to scale.
-          </p>
-        </div>
-        <div className="mt-10 grid gap-4 lg:grid-cols-3">
-          {plans
-            .filter((plan) => plan.visibility !== "affiliate")
-            .map((plan) => (
-              <div
-                key={plan.id}
-                className={`rounded-2xl border p-6 ${
-                  plan.highlighted
-                    ? "border-electric-500/40 bg-electric-500/[0.05]"
-                    : "border-white/[0.07] bg-white/[0.02]"
-                }`}
-              >
-                {plan.highlighted && (
-                  <Badge tone="blue" className="mb-3">
-                    Most popular
-                  </Badge>
-                )}
-                <h3 className="font-display text-lg font-bold text-white">
-                  {plan.name}
-                </h3>
-                <p className="text-xs text-white/45">{plan.tagline}</p>
-                <p className="mt-4 font-display text-3xl font-bold text-white">
-                  ₱{plan.price.toLocaleString()}
-                  <span className="text-sm font-normal text-white/40">
-                    {plan.billingPeriod === "annual" ? "/yr" : "/mo"}
-                  </span>
-                </p>
-                <Button
-                  href="/signup"
-                  fullWidth
-                  variant={plan.highlighted ? "primary" : "outline"}
-                  className="mt-4"
-                >
-                  Get {plan.name}
-                </Button>
-                <ul className="mt-5 space-y-2">
-                  {planDisplayFeatures(plan).map((f) => (
-                    <li
-                      key={f.label}
-                      className={`flex items-center gap-2 text-sm ${
-                        f.included ? "text-white/70" : "text-white/30"
-                      }`}
-                    >
-                      <Check
-                        className={`h-4 w-4 shrink-0 ${
-                          f.included ? "text-jade-400" : "text-white/15"
-                        }`}
-                      />
-                      {f.label}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-        </div>
-      </section>
 
       {/* ── FAQ (admin-toggleable, defaults to enabled) ─────────── */}
       {faq.enabled && faq.items.length > 0 && (

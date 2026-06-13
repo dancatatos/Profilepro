@@ -183,11 +183,8 @@ export function LightHero({
               }}
             />
 
-            {/* The tilted phone */}
-            <div
-              className="relative"
-              style={{ transform: "rotate(-4deg)" }}
-            >
+            {/* Phone — straight (no rotation) per user preference. */}
+            <div className="relative">
               <div className="relative w-[280px] rounded-[2.6rem] border-[10px] border-stone-900 bg-stone-900 shadow-[var(--shadow-phone)] sm:w-[300px]">
                 {/* Tiny notch detail — sells "real phone" */}
                 <div
