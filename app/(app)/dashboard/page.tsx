@@ -405,9 +405,32 @@ function UpcomingEventsCard() {
     };
   }, [account]);
 
-  /* Hide entirely until we know there's at least one event to show —
-     avoids a "loading skeleton" flash for users with no teams. */
-  if (!rows || rows.length === 0) return null;
+  /* When the user has no upcoming events, render a tiny inline
+     "Got a join code?" prompt instead of a full empty card. Surfaces
+     the manual-code-entry path for users who got the code via voice /
+     screenshot / FB Group post and don't have a QR or shareable link
+     handy. Hides entirely while loading to avoid a skeleton flash. */
+  if (rows === null) return null;
+  if (rows.length === 0) {
+    return (
+      <Link href="/join" className="block">
+        <Card className="flex items-center gap-3 p-4 transition-colors hover:border-electric-500/30">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-electric-500/15 text-electric-300">
+            <CalendarIcon className="h-4 w-4" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-white">
+              Got a team join code?
+            </p>
+            <p className="text-xs text-white/55">
+              Enter it to unlock your team&apos;s events + reminders.
+            </p>
+          </div>
+          <ArrowRight className="h-4 w-4 shrink-0 text-white/40" />
+        </Card>
+      </Link>
+    );
+  }
 
   return (
     <Link href="/my-events" className="block">

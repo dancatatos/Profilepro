@@ -17,6 +17,7 @@ import {
   CalendarPlus,
   CheckCircle2,
   Clock,
+  KeyRound,
   MapPin,
   Users,
   XCircle,
@@ -149,6 +150,16 @@ export default function MyEventsPage() {
       <PageHeader
         title="My Events"
         subtitle="Every upcoming event from teams you've joined."
+        action={
+          <Button
+            href="/join"
+            size="sm"
+            variant="outline"
+            leftIcon={<KeyRound className="h-3.5 w-3.5" />}
+          >
+            Enter join code
+          </Button>
+        }
       />
 
       {loading && rows.length === 0 ? (
@@ -159,11 +170,23 @@ export default function MyEventsPage() {
         <EmptyState
           icon="Calendar"
           title="No events yet"
-          description="Once you join a team, their events appear here with RSVP buttons + reminders. Got a join link or QR from your team leader? Open it to get started."
+          description="Once you join a team, their events appear here with RSVP buttons + reminders. Got a join code, link, or QR from your team leader? Use any of them to get started."
           action={
-            <Button href="/dashboard" leftIcon={<Users className="h-3.5 w-3.5" />}>
-              Back to dashboard
-            </Button>
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button
+                href="/join"
+                leftIcon={<KeyRound className="h-3.5 w-3.5" />}
+              >
+                Enter join code
+              </Button>
+              <Button
+                href="/dashboard"
+                variant="outline"
+                leftIcon={<Users className="h-3.5 w-3.5" />}
+              >
+                Back to dashboard
+              </Button>
+            </div>
           }
         />
       ) : (
