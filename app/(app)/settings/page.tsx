@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Copy, ExternalLink, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthStore } from "@/store/authStore";
+import { usePlanAccess } from "@/components/providers/PlanProvider";
 import { updateUserDoc } from "@/lib/firebase/firestore";
 import { isFirebaseConfigured } from "@/lib/firebase/config";
 import { logout } from "@/lib/firebase/auth";
@@ -22,6 +23,9 @@ export default function SettingsPage() {
   const router = useRouter();
   const { account } = useAuth();
   const setAccount = useAuthStore((s) => s.setAccount);
+  /* Live plan record — name comes from /admin/subscriptions, so a
+     rename ("Team" → "VIP") flows through to this card automatically. */
+  const { currentPlan } = usePlanAccess();
   const [name, setName] = useState(account?.displayName || "");
   const [saving, setSaving] = useState(false);
 
@@ -110,12 +114,12 @@ export default function SettingsPage() {
         <div className="mt-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Badge tone={account.plan === "free" ? "neutral" : "blue"}>
-              {account.plan.toUpperCase()}
+              {currentPlan?.name?.toUpperCase() || account.plan.toUpperCase()}
             </Badge>
             <span className="text-sm text-white/55">
               {account.plan === "free"
                 ? "Free plan"
-                : `${account.plan} plan active`}
+                : `${currentPlan?.name ?? account.plan} plan active`}
             </span>
           </div>
           <Button href="/billing" size="sm" variant="outline">

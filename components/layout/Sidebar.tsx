@@ -15,6 +15,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
+import { usePlanAccess } from "@/components/providers/PlanProvider";
 import { useTaskCountStore } from "@/store/taskCountStore";
 import { useMarketingStore } from "@/store/marketingStore";
 import { cn } from "@/lib/utils";
@@ -28,6 +29,12 @@ export function Sidebar() {
   const pathname = usePathname();
   const { account } = useAuth();
   const { flags } = useFeatureFlags();
+  /* Live plan record — uses the admin-edited name from
+     /admin/subscriptions, so renaming a plan ("Team" → "VIP") updates
+     the sidebar badge without a code change. Falls back to the plan
+     id (uppercased) while loading or if the plan is missing from the
+     saved config. */
+  const { currentPlan } = usePlanAccess();
   /* Follow-up task count — surfaces as a red dot + count on the
      Follow-Up nav item so the user knows there's work waiting
      without having to click into the section. */
@@ -159,7 +166,8 @@ export function Sidebar() {
           <p className="truncate text-xs text-white/40">{account?.email}</p>
         </div>
         <Badge tone={account?.plan === "free" ? "neutral" : "blue"}>
-          {(account?.plan || "free").toUpperCase()}
+          {currentPlan?.name?.toUpperCase()
+            || (account?.plan || "free").toUpperCase()}
         </Badge>
       </Link>
 
