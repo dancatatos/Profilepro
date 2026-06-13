@@ -4,13 +4,19 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ExternalLink, LogOut, Menu } from "lucide-react";
-import { DASHBOARD_NAV } from "@/lib/constants";
+import {
+  DASHBOARD_NAV,
+  resolveDashboardNav,
+  trainingsLabel,
+  userHasEventsAddOn,
+} from "@/lib/constants";
 import { Icon } from "@/components/ui/Icon";
 import { Avatar } from "@/components/ui/Avatar";
 import { Modal } from "@/components/ui/Modal";
 import { Badge } from "@/components/ui/Badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
+import { useMarketingStore } from "@/store/marketingStore";
 import { useTaskCountStore } from "@/store/taskCountStore";
 import { logout } from "@/lib/firebase/auth";
 import { toast } from "@/store/uiStore";
@@ -34,10 +40,22 @@ export function TopBar() {
   const urgentTasks = useTaskCountStore((s) => s.urgent);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  /* The Template Marketplace tab is admin-gated and off by default. */
-  const navItems = DASHBOARD_NAV.filter(
-    (item) => item.key !== "templates" || flags.templateMarketplace,
-  );
+  /* Same nav-resolution pipeline as Sidebar — admin-configured order,
+     template-marketplace gate, Events add-on gate, Trainings label
+     rebrand. Keeping it identical here means the mobile hamburger
+     menu never leaks entries (like Teams) that the desktop sidebar
+     correctly hides. */
+  const marketingContent = useMarketingStore((s) => s.content);
+  const trainingsName = trainingsLabel(marketingContent, "plural");
+  const hasEventsAddOn = userHasEventsAddOn(account);
+  const navItems = resolveDashboardNav(marketingContent?.dashboardNav)
+    .filter(
+      (item) => item.key !== "templates" || flags.templateMarketplace,
+    )
+    .filter((item) => item.key !== "teams" || hasEventsAddOn)
+    .map((item) =>
+      item.key === "trainings" ? { ...item, label: trainingsName } : item,
+    );
 
   const publicUrl = `/${account?.username || "demo"}`;
 
