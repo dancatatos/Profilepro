@@ -56,6 +56,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import { PublicProfileView } from "@/components/public-profile/PublicProfileView";
+import { LightHero } from "@/components/marketing/LightHero";
 import { DEMO_PROFILE } from "@/lib/defaults";
 import { PLANS } from "@/lib/constants";
 import { planDisplayFeatures } from "@/lib/features";
@@ -144,92 +145,27 @@ export default function LandingPage() {
   const { hero, socialProof, testimonials, testimonialVideos, faq, finalCta } =
     content;
 
+  /* Nav links — single source of truth, shared between the new light
+     hero nav AND the (still-dark) sections below. */
+  const navLinks = [
+    { href: "#features", label: "Features" },
+    { href: "#how", label: "How it works" },
+    { href: "#pricing", label: "Pricing" },
+    ...(faq.enabled ? [{ href: "#faq", label: "FAQ" }] : []),
+  ];
+
   return (
-    <div className="relative overflow-hidden bg-ink-950">
-      <div className="glow-blob -left-32 top-0 h-80 w-80 bg-electric-600/30" />
-      <div className="glow-blob right-0 top-[40rem] h-80 w-80 bg-jade-600/20" />
+    <div className="relative">
+      {/* ── NEW: Light hero (Session 1 of homepage redesign) ────────
+          Self-contained light island over white. Replaces the old
+          dark nav + hero. Everything below stays on the original
+          dark theme until subsequent design sessions migrate them. */}
+      <LightHero hero={hero} navLinks={navLinks} featuredProfile={featured} />
 
-      {/* ── Nav ─────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-ink-950/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
-          <Logo />
-          <nav className="hidden items-center gap-7 text-sm text-white/60 md:flex">
-            <a href="#features" className="hover:text-white">Features</a>
-            <a href="#how" className="hover:text-white">How it works</a>
-            <a href="#pricing" className="hover:text-white">Pricing</a>
-            {faq.enabled && (
-              <a href="#faq" className="hover:text-white">FAQ</a>
-            )}
-          </nav>
-          <div className="flex items-center gap-2">
-            <Button href="/login" variant="ghost" size="sm">
-              Log in
-            </Button>
-            <Button href="/signup" size="sm">
-              Get started
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {/* ── Hero ────────────────────────────────────────────────── */}
-      <section className="relative mx-auto max-w-6xl px-5 pt-14 pb-10 lg:pt-20">
-        <div className="grid items-center gap-10 lg:grid-cols-2">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Badge tone="blue" icon={<Sparkles className="h-3 w-3" />}>
-              {hero.badge}
-            </Badge>
-            <h1 className="mt-4 font-display text-4xl font-bold leading-[1.1] text-white sm:text-5xl">
-              {hero.headlineLine1}{" "}
-              <span className="text-gradient">{hero.headlineGradient}</span>{" "}
-              {hero.headlineLine2}
-            </h1>
-            <p className="mt-4 max-w-lg text-base text-white/55">
-              {hero.subheadline}
-            </p>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <Button
-                href="/signup"
-                size="lg"
-                rightIcon={<ArrowRight className="h-4 w-4" />}
-              >
-                {hero.primaryCta}
-              </Button>
-              <Button href="/demo" size="lg" variant="outline">
-                {hero.secondaryCta}
-              </Button>
-            </div>
-            <div className="mt-6 flex flex-wrap gap-2">
-              {hero.audiences.map((a) => (
-                <span
-                  key={a}
-                  className="rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 text-xs text-white/55"
-                >
-                  {a}
-                </span>
-              ))}
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.92, y: 30 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.15 }}
-            className="relative mx-auto"
-          >
-            <div className="absolute -inset-6 rounded-[3rem] bg-electric-600/20 blur-3xl" />
-            <div className="relative w-[300px] rounded-[2.6rem] border-4 border-ink-700 bg-ink-950 p-2 shadow-glass">
-              <div className="no-scrollbar h-[600px] overflow-y-auto rounded-[2rem]">
-                <PublicProfileView profile={featured} />
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
+      {/* ── Original (dark) sections continue below ─────────────── */}
+      <div className="relative overflow-hidden bg-ink-950">
+        <div className="glow-blob -left-32 top-0 h-80 w-80 bg-electric-600/30" />
+        <div className="glow-blob right-0 top-[40rem] h-80 w-80 bg-jade-600/20" />
 
       {/* ── Social proof bar (admin-toggleable) ─────────────────── */}
       {socialProof.enabled && socialProof.stats.length > 0 && (
@@ -643,6 +579,7 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+      </div>
     </div>
   );
 }

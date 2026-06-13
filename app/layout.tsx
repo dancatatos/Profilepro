@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Space_Grotesk } from "next/font/google";
+import { Caveat, Inter, JetBrains_Mono, Schibsted_Grotesk } from "next/font/google";
 import { Providers } from "@/components/providers/Providers";
 import { APP } from "@/lib/constants";
 import "./globals.css";
@@ -10,9 +10,33 @@ const inter = Inter({
   display: "swap",
 });
 
-const display = Space_Grotesk({
+/* Display family — swapped from Space Grotesk to Schibsted Grotesk per
+   the new homepage design spec. Distinctive but not weird; warmer
+   terminals than Space Grotesk give it editorial credibility that
+   signals "this brand has substance" without being cold. */
+const display = Schibsted_Grotesk({
   subsets: ["latin"],
+  weight: ["400", "500", "700", "900"],
   variable: "--font-display",
+  display: "swap",
+});
+
+/* Mono — used for numbers in social-proof stats + pricing,
+   gives them deliberate visual weight + a "designed" feel. */
+const mono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["500", "700"],
+  variable: "--font-mono",
+  display: "swap",
+});
+
+/* Marker pen — used ONLY for the "real customer" annotation next to
+   the hero phone mockup. Caveat is hand-drawn casual, deliberately
+   not part of the brand palette — feels like a human marked it up. */
+const marker = Caveat({
+  subsets: ["latin"],
+  weight: ["500"],
+  variable: "--font-marker",
   display: "swap",
 });
 
@@ -66,7 +90,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${display.variable}`}>
+    <html
+      lang="en"
+      className={`${inter.variable} ${display.variable} ${mono.variable} ${marker.variable}`}
+    >
       <body className="font-sans antialiased">
         <Providers>{children}</Providers>
       </body>

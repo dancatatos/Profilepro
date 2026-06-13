@@ -41,11 +41,49 @@
   --color-gold-400: #e3c081;
   --color-gold-500: #cda45e;
 
+  /* ─────────────────────────────────────────────────────────────
+     LIGHT MARKETING PALETTE — Hostinkar-inspired pastels for the
+     new homepage redesign. Used ONLY on /, never inside the dark
+     dashboard. Each pastel comes in 50 (whisper background) / 100
+     (card fill) / 200 (border / saturated chip) / 700 (text on
+     pastel). Sized for high contrast on white.
+     ───────────────────────────────────────────────────────────── */
+  --color-cream-50: #fffdf7;
+  --color-cream-100: #fff8e7;
+  --color-cream-200: #fcefc7;
+  --color-cream-700: #8b6914;
+
+  --color-lavender-50: #f8f7fe;
+  --color-lavender-100: #ece9fe;
+  --color-lavender-200: #ddd6fe;
+  --color-lavender-700: #5b4fbf;
+
+  --color-mint-50: #f4fdf7;
+  --color-mint-100: #dcfce7;
+  --color-mint-200: #bbf7d0;
+  --color-mint-700: #166534;
+
+  --color-butter-50: #fffdf0;
+  --color-butter-100: #fef3c7;
+  --color-butter-200: #fde68a;
+  --color-butter-700: #92400e;
+
+  /* Neutral spine for the light theme — used for headlines, body
+     text, dividers. The "stone" scale stays muted enough to keep
+     pastels in the lead. */
+  --color-stone-100: #f4f4f7;
+  --color-stone-300: #c9c9d2;
+  --color-stone-500: #6b6b75;
+  --color-stone-700: #404048;
+  --color-stone-900: #1a1a1f;
+
   /* --- Typography --- */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
     sans-serif;
   --font-display: var(--font-display), var(--font-inter), ui-sans-serif,
     system-ui, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, monospace;
+  --font-marker: var(--font-marker), cursive;
 
   /* --- Radii --- */
   --radius-xl: 1rem;
@@ -58,6 +96,14 @@
   --shadow-glow-blue: 0 0 36px rgba(46, 107, 255, 0.35);
   --shadow-glow-jade: 0 0 36px rgba(16, 185, 129, 0.32);
   --shadow-glow-gold: 0 0 30px rgba(205, 164, 94, 0.3);
+
+  /* Light-theme shadows for the new homepage. Soft, layered, no
+     harsh dropoff — feel like real paper depth, not Photoshop. */
+  --shadow-pill-cta: 0 12px 32px -8px rgba(46, 107, 255, 0.42);
+  --shadow-card-soft: 0 1px 2px rgba(20, 21, 26, 0.04),
+    0 8px 24px -12px rgba(20, 21, 26, 0.08);
+  --shadow-phone: 0 32px 80px -20px rgba(20, 21, 26, 0.18),
+    0 4px 16px -4px rgba(20, 21, 26, 0.1);
 
   /* --- Animations --- */
   --animate-float: float 7s ease-in-out infinite;
