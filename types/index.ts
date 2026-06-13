@@ -1608,6 +1608,16 @@ export interface TeamMembership {
   joinedVia: "link" | "qr" | "event-qr" | "manual";
   /** Future-proofing for moderator / co-host roles. */
   role: "owner" | "member";
+  /**
+   * Display fields denormalised at join time so the team owner can
+   * render the Members tab without reading other users' /users docs
+   * (which Firestore rules wouldn't allow anyway). Set by the
+   * joining user from their own account on every join — refreshed
+   * on re-join so a renamed account propagates.
+   */
+  userDisplayName?: string;
+  userEmail?: string;
+  userPhotoURL?: string;
 }
 
 /** Where an event happens. */

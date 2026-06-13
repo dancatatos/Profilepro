@@ -2694,7 +2694,17 @@ function generateTeamCode(prefix: "JOIN" | "SHARETEAM"): string {
 
 export async function createTeamSpace(
   ownerId: string,
-  init: { name: string; slug: string; description?: string },
+  init: {
+    name: string;
+    slug: string;
+    description?: string;
+    /* Owner's display info gets stamped onto their own membership
+       row so the Members tab can render their name without an extra
+       lookup — same denormalisation as the join helpers. */
+    ownerDisplayName?: string;
+    ownerEmail?: string;
+    ownerPhotoURL?: string;
+  },
 ): Promise<string> {
   if (!isFirebaseConfigured) throw new Error("Firebase is not configured.");
   const now = Date.now();
@@ -2705,7 +2715,7 @@ export async function createTeamSpace(
     description: init.description ?? "",
     shareCode: generateTeamCode("SHARETEAM"),
     activationCode: generateTeamCode("JOIN"),
-    memberCount: 0,
+    memberCount: 1, // owner is auto-enrolled
     createdAt: now,
     updatedAt: now,
   });
@@ -2720,6 +2730,9 @@ export async function createTeamSpace(
       joinedAt: now,
       joinedVia: "manual" as const,
       role: "owner" as const,
+      ...(init.ownerDisplayName ? { userDisplayName: init.ownerDisplayName } : {}),
+      ...(init.ownerEmail ? { userEmail: init.ownerEmail } : {}),
+      ...(init.ownerPhotoURL ? { userPhotoURL: init.ownerPhotoURL } : {}),
     },
   );
   return ref.id;
@@ -2882,7 +2895,15 @@ export async function listTeamMembershipsForSpace(
       fsLimit(1000),
     ),
   );
-  return snap.docs.map((d) => ({ ...(d.data() as TeamMembership), id: d.id }));
+  const list = snap.docs.map(
+    (d) => ({ ...(d.data() as TeamMembership), id: d.id }),
+  );
+  /* Sync the team's cached memberCount with the actual list size.
+     No-ops for non-owners (permission denied is swallowed), so the
+     leader's view stays current without paying a write on every
+     read. */
+  void reconcileTeamMemberCount(teamSpaceId, list.length);
+  return list;
 }
 
 export async function countTeamMembersForSpace(
@@ -2905,6 +2926,12 @@ export async function joinTeamSpace(input: {
   teamSpaceId: string;
   ownerId: string;
   joinedVia: TeamMembership["joinedVia"];
+  /* Display info denormalised onto the membership doc so the team
+     owner can render the Members tab without cross-collection reads
+     (which Firestore rules wouldn't allow anyway). */
+  userDisplayName?: string;
+  userEmail?: string;
+  userPhotoURL?: string;
 }): Promise<TeamMembership> {
   if (!isFirebaseConfigured) throw new Error("Firebase is not configured.");
   const id = `${input.userId}__${input.teamSpaceId}`;
@@ -2923,7 +2950,6 @@ export async function joinTeamSpace(input: {
   } catch {
     /* Treat permission-denied as "doesn't exist yet". */
   }
-  const isNew = existingJoinedAt === null;
   const record: Omit<TeamMembership, "id"> = {
     userId: input.userId,
     teamSpaceId: input.teamSpaceId,
@@ -2931,23 +2957,46 @@ export async function joinTeamSpace(input: {
     joinedAt: existingJoinedAt ?? Date.now(),
     joinedVia: input.joinedVia,
     role: "member",
+    ...(input.userDisplayName
+      ? { userDisplayName: input.userDisplayName }
+      : {}),
+    ...(input.userEmail ? { userEmail: input.userEmail } : {}),
+    ...(input.userPhotoURL ? { userPhotoURL: input.userPhotoURL } : {}),
   };
   await setDoc(doc(db, COL.teamMemberships, id), record, { merge: true });
-  /* Increment the team's cached member count only on a true first
-     join — re-runs are idempotent and shouldn't double-count. */
-  if (isNew) {
-    try {
-      const space = await getTeamSpace(input.teamSpaceId);
-      if (space) {
-        await updateDoc(doc(db, COL.teamSpaces, input.teamSpaceId), {
-          memberCount: (space.memberCount ?? 0) + 1,
-        });
-      }
-    } catch {
-      // best-effort
-    }
-  }
+  /* The memberCount cache used to be incremented here but the
+     Firestore rule blocks non-owners from updating team_spaces.
+     Instead we recompute the count from the source of truth
+     (the memberships query) when the owner views the team — see
+     reconcileTeamMemberCount() called from listTeamMembershipsForSpace. */
   return { id, ...record };
+}
+
+/**
+ * Recompute the team's cached memberCount from the authoritative
+ * source (team_memberships query) and patch the team space if it's
+ * out of sync. Owner-only — Firestore rules block updates by members.
+ * Called from listTeamMembershipsForSpace so the cache stays current
+ * every time the leader views their Members tab, without a separate
+ * cron or trigger.
+ */
+async function reconcileTeamMemberCount(
+  teamSpaceId: string,
+  actualCount: number,
+): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  try {
+    const space = await getTeamSpace(teamSpaceId);
+    if (!space) return;
+    if ((space.memberCount ?? 0) === actualCount) return;
+    await updateDoc(doc(db, COL.teamSpaces, teamSpaceId), {
+      memberCount: actualCount,
+    });
+  } catch {
+    /* Non-owners hit a permission error here; that's fine, the count
+       just stays stale on their view (they don't see member lists
+       anyway). The next time the owner loads the page it'll sync. */
+  }
 }
 
 export async function leaveTeamSpace(

@@ -325,22 +325,41 @@ function MembersTab({ spaceId }: { spaceId: string }) {
 
   return (
     <Card className="divide-y divide-white/[0.06] p-0">
-      {members.map((m) => (
-        <div key={m.id} className="flex items-center gap-3 p-3.5">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.05] text-white/55">
-            <Users className="h-4 w-4" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-white">
-              {m.userId}
-            </p>
-            <p className="mt-0.5 text-xs text-white/45">
-              Joined {timeAgo(m.joinedAt)} · via {m.joinedVia}
-            </p>
+      {members.map((m) => {
+        /* Prefer the denormalised display name + email saved at join
+           time. Falls back to the raw uid only for legacy memberships
+           created before the denormalisation shipped — those will be
+           refreshed the next time the user re-joins. */
+        const name = m.userDisplayName?.trim() || m.userEmail || m.userId;
+        const subtitle = m.userDisplayName && m.userEmail ? m.userEmail : null;
+        return (
+          <div key={m.id} className="flex items-center gap-3 p-3.5">
+            {m.userPhotoURL ? (
+              <img
+                src={m.userPhotoURL}
+                alt=""
+                className="h-9 w-9 shrink-0 rounded-xl object-cover"
+              />
+            ) : (
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.05] text-white/55">
+                <Users className="h-4 w-4" />
+              </span>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-white">{name}</p>
+              {subtitle && (
+                <p className="truncate text-[11px] text-white/45">
+                  {subtitle}
+                </p>
+              )}
+              <p className="mt-0.5 text-xs text-white/45">
+                Joined {timeAgo(m.joinedAt)} · via {m.joinedVia}
+              </p>
+            </div>
+            {m.role === "owner" && <Badge tone="blue">Owner</Badge>}
           </div>
-          {m.role === "owner" && <Badge tone="blue">Owner</Badge>}
-        </div>
-      ))}
+        );
+      })}
     </Card>
   );
 }

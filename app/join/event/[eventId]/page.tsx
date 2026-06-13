@@ -94,6 +94,9 @@ function Flow() {
         teamSpaceId: s.id,
         ownerId: s.ownerId,
         joinedVia: "event-qr",
+        userDisplayName: account.displayName,
+        userEmail: account.email,
+        userPhotoURL: account.photoURL,
       });
       await setEventRsvp({
         userId: account.uid,

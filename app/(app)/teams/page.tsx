@@ -116,6 +116,9 @@ export default function TeamsPage() {
       const id = await createTeamSpace(account.uid, {
         name: trimmed,
         slug,
+        ownerDisplayName: account.displayName,
+        ownerEmail: account.email,
+        ownerPhotoURL: account.photoURL,
       });
       toast.success("Team created — add your first event next.");
       router.push(`/teams/${id}`);

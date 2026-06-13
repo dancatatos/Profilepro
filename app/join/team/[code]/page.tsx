@@ -109,6 +109,9 @@ function JoinFlow() {
         teamSpaceId: s.id,
         ownerId: s.ownerId,
         joinedVia: "link",
+        userDisplayName: account.displayName,
+        userEmail: account.email,
+        userPhotoURL: account.photoURL,
       });
       window.localStorage.removeItem(PENDING_TEAM_KEY);
       toast.success(`You're in — welcome to ${s.name}.`);
