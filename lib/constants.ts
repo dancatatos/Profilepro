@@ -652,15 +652,19 @@ export function resolveAddOnLimit(
 
 /**
  * Whether a user can access the Events add-on at all. Centralised so
- * sidebar + page guards stay consistent. Admin always passes through
- * — useful for debugging and support without granting an add-on.
+ * sidebar + page guards stay consistent.
+ *
+ * Pure check against `addOns.events` — no admin role override. If an
+ * admin wants to see / use the Teams feature for support or testing,
+ * they grant the add-on to their own account from /admin/users like
+ * any other user. That keeps the gating predictable ("is the flag on
+ * this account or not?") and avoids the "why is Teams showing on my
+ * admin account that doesn't have the addon?" confusion.
  */
 export function userHasEventsAddOn(
-  user: { addOns?: { events?: boolean }; role?: string } | null | undefined,
+  user: { addOns?: { events?: boolean } } | null | undefined,
 ): boolean {
-  if (!user) return false;
-  if (user.role === "admin") return true;
-  return user.addOns?.events === true;
+  return user?.addOns?.events === true;
 }
 
 /* ---------------- Dashboard nav resolver ---------------- */
