@@ -39,12 +39,22 @@ import {
   deleteTeamSpace,
   getTeamSpace,
   listEventsForTeamSpace,
+  listFunnels,
+  listPipelinesForUser,
   listTeamMembershipsForSpace,
+  listTrainingsByOwner,
   updateTeamSpace,
 } from "@/lib/firebase/firestore";
 import { cn, getAppOrigin, timeAgo } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
-import type { TeamEvent, TeamMembership, TeamSpace } from "@/types";
+import type {
+  Funnel,
+  Pipeline,
+  TeamEvent,
+  TeamMembership,
+  TeamSpace,
+  Training,
+} from "@/types";
 
 type TabKey = "events" | "members" | "settings";
 
@@ -512,6 +522,8 @@ function SettingsTab({
         </Button>
       </Card>
 
+      <BundleEditor space={space} onChange={onChange} />
+
       {/* Danger zone */}
       <Card className="space-y-2 border-red-500/15 bg-red-500/[0.02] p-4">
         <p className="text-[10px] font-medium uppercase tracking-wider text-red-300/80">
@@ -561,4 +573,216 @@ function SettingsTab({
       </Modal>
     </div>
   );
+}
+
+/* ============================================================
+   ONBOARDING BUNDLE EDITOR
+   ============================================================
+   Lets the team owner pick which trainings / funnels / pipelines /
+   events new members auto-receive when they join. Saves into the
+   four autoGrant*Ids arrays on the TeamSpace doc. */
+
+function BundleEditor({
+  space,
+  onChange,
+}: {
+  space: TeamSpace;
+  onChange: (next: TeamSpace) => void;
+}) {
+  const [trainings, setTrainings] = useState<Training[]>([]);
+  const [funnels, setFunnels] = useState<Funnel[]>([]);
+  const [pipelines, setPipelines] = useState<Pipeline[]>([]);
+  const [events, setEvents] = useState<TeamEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const [trainingIds, setTrainingIds] = useState<string[]>(
+    space.autoGrantTrainingIds ?? [],
+  );
+  const [funnelIds, setFunnelIds] = useState<string[]>(
+    space.autoGrantFunnelIds ?? [],
+  );
+  const [pipelineIds, setPipelineIds] = useState<string[]>(
+    space.autoGrantPipelineIds ?? [],
+  );
+  const [eventIds, setEventIds] = useState<string[]>(
+    space.autoGrantEventIds ?? [],
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const [t, f, p, ev] = await Promise.all([
+        listTrainingsByOwner(space.ownerId).catch(() => []),
+        listFunnels(space.ownerId).catch(() => []),
+        listPipelinesForUser(space.ownerId).catch(() => []),
+        listEventsForTeamSpace(space.id).catch(() => []),
+      ]);
+      if (cancelled) return;
+      setTrainings(t);
+      setFunnels(f);
+      setPipelines(p);
+      setEvents(ev.filter((e) => e.endAt > Date.now()));
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [space.id, space.ownerId]);
+
+  const totalSelected =
+    trainingIds.length + funnelIds.length + pipelineIds.length + eventIds.length;
+  const dirty =
+    !sameSet(trainingIds, space.autoGrantTrainingIds) ||
+    !sameSet(funnelIds, space.autoGrantFunnelIds) ||
+    !sameSet(pipelineIds, space.autoGrantPipelineIds) ||
+    !sameSet(eventIds, space.autoGrantEventIds);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const patch: Partial<TeamSpace> = {
+        autoGrantTrainingIds: trainingIds,
+        autoGrantFunnelIds: funnelIds,
+        autoGrantPipelineIds: pipelineIds,
+        autoGrantEventIds: eventIds,
+      };
+      await updateTeamSpace(space.id, patch);
+      onChange({ ...space, ...patch });
+      toast.success("Onboarding bundle saved.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Save failed.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card className="space-y-4 p-4">
+      <div>
+        <p className="text-[10px] font-medium uppercase tracking-wider text-white/45">
+          Onboarding bundle
+        </p>
+        <p className="mt-1 text-xs text-white/55">
+          When someone joins this team, automatically grant access to these
+          items. Plan caps apply on the recruit&apos;s side — over-cap items
+          are silently skipped.
+        </p>
+      </div>
+
+      {loading ? (
+        <p className="text-xs text-white/45">Loading your library…</p>
+      ) : (
+        <>
+          <BundleGroup
+            label="Trainings"
+            empty="You haven't created any trainings yet."
+            items={trainings.map((t) => ({ id: t.id, label: t.title }))}
+            selected={trainingIds}
+            onChange={setTrainingIds}
+          />
+          <BundleGroup
+            label="Funnels"
+            empty="No funnels in your account yet."
+            items={funnels.map((f) => ({ id: f.id, label: f.name }))}
+            selected={funnelIds}
+            onChange={setFunnelIds}
+          />
+          <BundleGroup
+            label="Follow-up pipelines"
+            empty="No pipelines in your account yet."
+            items={pipelines.map((p) => ({ id: p.id, label: p.name }))}
+            selected={pipelineIds}
+            onChange={setPipelineIds}
+          />
+          <BundleGroup
+            label="Upcoming events"
+            empty="No upcoming events. Past events can't be auto-RSVP'd."
+            items={events.map((e) => ({
+              id: e.id,
+              label: `${e.title} · ${new Date(e.startAt).toLocaleDateString()}`,
+            }))}
+            selected={eventIds}
+            onChange={setEventIds}
+          />
+
+          <div className="flex items-center justify-between border-t border-white/[0.06] pt-3">
+            <p className="text-xs text-white/55">
+              {totalSelected === 0
+                ? "No items selected. New members get team access only."
+                : `${totalSelected} item${totalSelected === 1 ? "" : "s"} will be granted on join.`}
+            </p>
+            <Button
+              size="sm"
+              onClick={save}
+              loading={saving}
+              disabled={!dirty || saving}
+            >
+              {dirty ? "Save bundle" : "Saved"}
+            </Button>
+          </div>
+        </>
+      )}
+    </Card>
+  );
+}
+
+function BundleGroup({
+  label,
+  empty,
+  items,
+  selected,
+  onChange,
+}: {
+  label: string;
+  empty: string;
+  items: { id: string; label: string }[];
+  selected: string[];
+  onChange: (next: string[]) => void;
+}) {
+  const toggle = (id: string) => {
+    onChange(selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id]);
+  };
+  return (
+    <div>
+      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-white/70">
+        {label} {selected.length > 0 && (
+          <span className="ml-1 rounded bg-electric-500/15 px-1.5 py-0.5 text-[10px] text-electric-300">
+            {selected.length}
+          </span>
+        )}
+      </p>
+      {items.length === 0 ? (
+        <p className="text-[11px] italic text-white/35">{empty}</p>
+      ) : (
+        <div className="flex flex-wrap gap-1.5">
+          {items.map((it) => {
+            const active = selected.includes(it.id);
+            return (
+              <button
+                key={it.id}
+                type="button"
+                onClick={() => toggle(it.id)}
+                className={cn(
+                  "max-w-full truncate rounded-md border px-2 py-1 text-xs transition-colors",
+                  active
+                    ? "border-electric-500/50 bg-electric-500/15 text-electric-100"
+                    : "border-white/10 bg-white/[0.02] text-white/55 hover:text-white",
+                )}
+              >
+                {it.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function sameSet(a: string[], b?: string[]): boolean {
+  const bb = b ?? [];
+  if (a.length !== bb.length) return false;
+  const set = new Set(a);
+  return bb.every((x) => set.has(x));
 }

@@ -31,6 +31,7 @@ import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { ScoreRing } from "@/components/common/ScoreRing";
 import { StatCard } from "@/components/common/StatCard";
+import { InviteCodeCard } from "@/components/dashboard/InviteCodeCard";
 
 const DEMO_SUMMARY: AnalyticsSummary = {
   views: 1240,
@@ -94,6 +95,11 @@ export default function DashboardPage() {
           {firstName} &#128075;
         </h1>
       </div>
+
+      {/* Universal invite-code entry — always visible, lets recruits
+          redeem a TEAM-/TRAIN-/PIPE-/FUNNEL- code their leader shared
+          without needing the Teams nav (which is add-on gated). */}
+      <InviteCodeCard />
 
       {/* Follow-up tasks — the FIRST thing the user sees if they have
           any due. Replaces "user forgot to check /pipelines/today" with

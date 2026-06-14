@@ -1645,6 +1645,25 @@ export interface TeamSpace {
   activationCode: string;
   /** Cached member count for cheap dashboard reads. Maintained by helpers. */
   memberCount?: number;
+  /**
+   * "Team-in-a-box" onboarding bundle. When a recruit joins this team
+   * (link, QR or manual code), each of the four slots fires
+   * automatically after the TeamMembership is created:
+   *   - trainings  → TrainingAccess records granted
+   *   - funnels    → cloned into the recruit's own account
+   *   - pipelines  → cloned into the recruit's own account (never default)
+   *   - events     → EventRsvp "going" auto-created (future events only)
+   *
+   * Plan caps short-circuit per item — over-cap items are silently
+   * skipped and surfaced on the post-join summary screen with an
+   * upgrade nudge. Bundle changes are NOT retroactive: items only
+   * apply at the moment of join. All four arrays are optional, empty
+   * = nothing happens for that slot.
+   */
+  autoGrantTrainingIds?: string[];
+  autoGrantFunnelIds?: string[];
+  autoGrantPipelineIds?: string[];
+  autoGrantEventIds?: string[];
   createdAt: number;
   updatedAt: number;
 }
