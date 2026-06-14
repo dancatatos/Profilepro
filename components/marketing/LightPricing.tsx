@@ -53,7 +53,7 @@ export function LightPricing({ plans }: { plans: Plan[] }) {
   return (
     <section
       id="pricing"
-      className="relative bg-stone-100/40 py-20 sm:py-28"
+      className="relative bg-white py-20 sm:py-28"
     >
       <div className="mx-auto max-w-6xl px-4">
         <div className="mx-auto max-w-2xl text-center">
@@ -63,7 +63,7 @@ export function LightPricing({ plans }: { plans: Plan[] }) {
           <h2 className="mt-4 font-display text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl lg:text-[2.75rem]">
             Simple, honest pricing
           </h2>
-          <p className="mx-auto mt-4 max-w-md text-base text-stone-600">
+          <p className="mx-auto mt-5 max-w-md text-lg font-medium leading-relaxed text-stone-700">
             Start free. Upgrade when you&apos;re ready to scale.
           </p>
         </div>
