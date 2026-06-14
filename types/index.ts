@@ -282,6 +282,53 @@ export interface MarketingContent {
     /** Nav keys the admin has explicitly hidden from the sidebar. */
     hidden?: string[];
   };
+  /**
+   * Homepage-only settings, edited from /admin/marketing under
+   * "Homepage". Holds branding (logo + favicon), SEO meta, and the
+   * 4 deep-dive feature sections rendered between the features grid
+   * and pricing. Each deep-dive can embed a real Credibly funnel or
+   * training URL inside the phone frame (LIVE marketing showcase).
+   */
+  homepage?: {
+    branding?: {
+      logoUrl?: string;
+      faviconUrl?: string;
+    };
+    seo?: {
+      title?: string;
+      description?: string;
+      ogImageUrl?: string;
+    };
+    deepDives?: HomepageDeepDive[];
+  };
+}
+
+/** Stable ids for the 4 homepage deep-dive slots. Used so saved
+ *  admin overrides survive future code-level renames. */
+export type HomepageDeepDiveId =
+  | "teamOnboarding"
+  | "followUp"
+  | "recruitmentFunnel"
+  | "productFunnels";
+
+/** Pastel blob colour behind the phone in a deep-dive. */
+export type HomepageDeepDiveBlob = "lavender" | "mint" | "cream" | "butter";
+
+/**
+ * One feature deep-dive section on the homepage. Renders as a
+ * LightDeepDive with the optional `embedUrl` shown inside the phone
+ * frame via a sandboxed iframe. When `embedUrl` is empty the section
+ * falls back to a static placeholder so the homepage never breaks.
+ */
+export interface HomepageDeepDive {
+  id: HomepageDeepDiveId;
+  eyebrow: string;
+  title: string;
+  body: string;
+  bullets: string[];
+  /** Credibly URL (funnel / training / profile) embedded in the phone. */
+  embedUrl?: string;
+  blob: HomepageDeepDiveBlob;
 }
 
 export interface FeatureFlags {

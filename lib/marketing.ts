@@ -10,12 +10,74 @@
  */
 
 import type {
+  HomepageDeepDive,
   MarketingContent,
   MarketingFaqItem,
   MarketingStat,
   MarketingTestimonial,
   MarketingVideoTestimonial,
 } from "@/types";
+
+/**
+ * Default copy for the 4 homepage deep-dive sections. Order here IS the
+ * render order on /. Each section's `embedUrl` is empty by default —
+ * admin pastes a real Credibly funnel/training URL from /admin/marketing
+ * and it renders inside the phone frame as a live mini-preview.
+ */
+export const DEFAULT_HOMEPAGE_DEEP_DIVES: HomepageDeepDive[] = [
+  {
+    id: "teamOnboarding",
+    eyebrow: "Team Onboarding",
+    title: "Duplicate success across your entire team",
+    body: "Every new member learns your system from day one without relying on one-on-one training. Give your team a proven onboarding process so they can start faster while you focus on growing your business.",
+    bullets: [
+      "Automated step-by-step onboarding",
+      "Consistent training for every new recruit",
+      "Reduce repetitive coaching and support",
+      "Save time while scaling your organization",
+    ],
+    blob: "lavender",
+  },
+  {
+    id: "followUp",
+    eyebrow: "Follow-up Automation",
+    title: "The fortune is still in the follow-up",
+    body: "Most prospects don't join on the first contact. Stay top-of-mind with automated follow-ups that nurture relationships and increase conversions.",
+    bullets: [
+      "Automated email and SMS sequences",
+      "Follow-up reminders for hot prospects",
+      "Never lose track of conversations",
+      "Convert more leads into customers and recruits",
+    ],
+    blob: "mint",
+  },
+  {
+    id: "recruitmentFunnel",
+    eyebrow: "Recruitment Funnels",
+    title: "Recruit leaders while you sleep",
+    body: "Stop chasing prospects manually. Create a simple recruiting journey that turns interested visitors into booked presentations and qualified team members.",
+    bullets: [
+      "AI-generated recruiting funnels in minutes",
+      "Capture leads from Facebook, TikTok, and Messenger",
+      "Auto-book opportunity presentations",
+      "Track every prospect from interest to signup",
+    ],
+    blob: "cream",
+  },
+  {
+    id: "productFunnels",
+    eyebrow: "Product Funnels",
+    title: "Sell without selling",
+    body: "Stop explaining the same product over and over. Let your funnel educate prospects, answer common questions, build trust, and guide them toward a purchase automatically.",
+    bullets: [
+      "Let your product presentation work 24/7",
+      "Answer FAQs before prospects ask",
+      "Share testimonials and success stories automatically",
+      "Turn curiosity into customers while you focus on growing your business",
+    ],
+    blob: "butter",
+  },
+];
 
 export const DEFAULT_MARKETING_CONTENT: MarketingContent = {
   hero: {
@@ -176,7 +238,34 @@ export function mergeMarketingContent(
     ...(override.dashboardNav
       ? { dashboardNav: { ...override.dashboardNav } }
       : {}),
+    /* Carry-through trust photo (scalar field on MarketingContent). */
+    ...(override.trustPhotoUrl !== undefined
+      ? { trustPhotoUrl: override.trustPhotoUrl }
+      : {}),
+    ...(override.trustPhotoAlt !== undefined
+      ? { trustPhotoAlt: override.trustPhotoAlt }
+      : {}),
+    /* Homepage block — branding, SEO, deep-dives. Each piece is
+       optional; deepDives is merged BY ID so admins can edit one
+       section without losing the others' defaults. */
+    homepage: mergeHomepage(override.homepage),
   };
+}
+
+function mergeHomepage(
+  override?: MarketingContent["homepage"],
+): MarketingContent["homepage"] {
+  const branding = override?.branding ? { ...override.branding } : undefined;
+  const seo = override?.seo ? { ...override.seo } : undefined;
+  /* Merge deep-dives by id so adding a new slot later doesn't wipe
+     unrelated saved overrides. Unknown ids are dropped. */
+  const savedById = new Map(
+    (override?.deepDives ?? []).map((d) => [d.id, d] as const),
+  );
+  const deepDives = DEFAULT_HOMEPAGE_DEEP_DIVES.map(
+    (d) => savedById.get(d.id) ?? d,
+  );
+  return { branding, seo, deepDives };
 }
 
 /** Factory: blank item with a fresh id — used by the admin "Add" buttons. */

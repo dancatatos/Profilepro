@@ -60,6 +60,7 @@ import { LightHero } from "@/components/marketing/LightHero";
 import { LightStats } from "@/components/marketing/LightStats";
 import { LightFeatures } from "@/components/marketing/LightFeatures";
 import { LightDeepDive } from "@/components/marketing/LightDeepDive";
+import { PhoneEmbed } from "@/components/marketing/PhoneEmbed";
 import { LightTestimonials } from "@/components/marketing/LightTestimonials";
 import { LightPricing } from "@/components/marketing/LightPricing";
 import { LightHowItWorks } from "@/components/marketing/LightHowItWorks";
@@ -77,6 +78,7 @@ import {
   getProfileByUsername,
 } from "@/lib/firebase/firestore";
 import {
+  DEFAULT_HOMEPAGE_DEEP_DIVES,
   DEFAULT_MARKETING_CONTENT,
   mergeMarketingContent,
 } from "@/lib/marketing";
@@ -179,48 +181,24 @@ export default function LandingPage() {
 
       <LightFeatures features={FEATURES} />
 
-      <LightDeepDive
-        eyebrow="Follow-up Pipelines"
-        title="Never forget a follow-up again"
-        body="Every lead lands on a daily task board. The right message at the right time, ready to copy + paste in English or Taglish — no more 'crap, I forgot to message Maria back.' Top recruiters add 3-5 extra sign-ups a month just from following up consistently."
-        bullets={[
-          "Daily task dashboard surfaces who to follow up TODAY",
-          "Pre-written message templates per pipeline stage",
-          "Native English + Taglish modes — paste straight into Messenger",
-          "Push notifications at 9 AM PHT each morning",
-        ]}
-        mockup={<PipelinesMockup />}
-        blob="lavender"
-      />
-
-      <LightDeepDive
-        eyebrow="Mini Sales Funnels"
-        title="Turn DMs into deals — no ClickFunnels needed"
-        body="Drop a multi-step funnel together in 10 minutes. Opt-in → waiting room → webinar → offer → thank you. Each visitor gets enrolled in the right pipeline automatically, so your daily task list stays current."
-        bullets={[
-          "AI-generated funnels for recruiting, training, opt-ins, offers",
-          "Built-in countdown timers + scarcity sections",
-          "Auto-enrol funnel leads into the right pipeline",
-          "Templates ready to clone — no design skills needed",
-        ]}
-        mockup={<FunnelsMockup />}
-        reverse
-        blob="mint"
-      />
-
-      <LightDeepDive
-        eyebrow="Manual Payments"
-        title="Get paid via GCash, Maya & bank — no Stripe needed"
-        body="Set up your accounts once. Add a payment section to any funnel. Visitors send payment outside the app, upload their receipt, and you approve from /payments. Zero processor fees. Approved buyers auto-flow into your pipeline."
-        bullets={[
-          "Configure GCash / Maya / BPI / BDO accounts once, reuse everywhere",
-          "Visitors upload receipt; you approve or reject with one tap",
-          "Approved payments auto-enrol the buyer into your pipeline",
-          "Zero processor fees — keep 100% of what you charge",
-        ]}
-        mockup={<PaymentsMockup />}
-        blob="cream"
-      />
+      {/* 4 admin-driven deep-dives, alternating L/R. Each phone frame
+          embeds a real Credibly funnel/training URL set from
+          /admin/marketing → Homepage tab. Order: Team Onboarding →
+          Follow-up Automation → Recruitment Funnels → Product Funnels. */}
+      {(content.homepage?.deepDives ?? DEFAULT_HOMEPAGE_DEEP_DIVES).map(
+        (dive, i) => (
+          <LightDeepDive
+            key={dive.id}
+            eyebrow={dive.eyebrow}
+            title={dive.title}
+            body={dive.body}
+            bullets={dive.bullets}
+            mockup={<PhoneEmbed url={dive.embedUrl} label={dive.eyebrow} />}
+            reverse={i % 2 === 1}
+            blob={dive.blob}
+          />
+        ),
+      )}
 
       {testimonials.enabled && testimonials.items.length > 0 && (
         <LightTestimonials

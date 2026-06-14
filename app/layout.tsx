@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Caveat, Inter, JetBrains_Mono, Schibsted_Grotesk } from "next/font/google";
 import { Providers } from "@/components/providers/Providers";
 import { APP } from "@/lib/constants";
+import { getMarketingContent } from "@/lib/firebase/firestore";
 import "./globals.css";
 
 const inter = Inter({
@@ -40,42 +41,62 @@ const marker = Caveat({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(APP.url),
-  title: {
-    default: "Credibly — Build Your Credibility Profile In Minutes",
-    template: "%s · Credibly",
-  },
-  description: APP.description,
-  applicationName: APP.name,
-  keywords: [
-    "credibility profile",
-    "link in bio",
-    "network marketing",
-    "digital business card",
-    "personal branding",
-    "recruiting profile",
-  ],
-  authors: [{ name: "Credibly" }],
-  appleWebApp: {
-    capable: true,
-    title: APP.name,
-    statusBarStyle: "black-translucent",
-  },
-  formatDetection: { telephone: false },
-  openGraph: {
-    type: "website",
-    siteName: APP.name,
-    title: "Credibly — Build Your Credibility Profile In Minutes",
-    description: APP.description,
-    url: APP.url,
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Credibly",
-    description: APP.description,
-  },
-};
+/* Title + description + favicon + OG image are pulled from the
+   admin-managed settings/marketing doc when set, with hardcoded
+   fallbacks so the site renders fine before the admin saves anything.
+   Revalidated every 5 minutes — the cost is one Firestore read on
+   cold-cache requests. */
+export async function generateMetadata(): Promise<Metadata> {
+  const override = await getMarketingContent().catch(() => null);
+  const seo = override?.homepage?.seo;
+  const branding = override?.homepage?.branding;
+
+  const defaultTitle =
+    seo?.title?.trim() || "Credibly — Build Your Credibility Profile In Minutes";
+  const description = seo?.description?.trim() || APP.description;
+  const ogImage = seo?.ogImageUrl?.trim();
+  const favicon = branding?.faviconUrl?.trim();
+
+  return {
+    metadataBase: new URL(APP.url),
+    title: {
+      default: defaultTitle,
+      template: "%s · Credibly",
+    },
+    description,
+    applicationName: APP.name,
+    keywords: [
+      "credibility profile",
+      "link in bio",
+      "network marketing",
+      "digital business card",
+      "personal branding",
+      "recruiting profile",
+    ],
+    authors: [{ name: "Credibly" }],
+    ...(favicon ? { icons: { icon: favicon, apple: favicon } } : {}),
+    appleWebApp: {
+      capable: true,
+      title: APP.name,
+      statusBarStyle: "black-translucent",
+    },
+    formatDetection: { telephone: false },
+    openGraph: {
+      type: "website",
+      siteName: APP.name,
+      title: defaultTitle,
+      description,
+      url: APP.url,
+      ...(ogImage ? { images: [{ url: ogImage }] } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: defaultTitle,
+      description,
+      ...(ogImage ? { images: [ogImage] } : {}),
+    },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#050507",

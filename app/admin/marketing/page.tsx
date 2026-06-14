@@ -45,12 +45,15 @@ import {
   blankStat,
   blankTestimonial,
   blankVideoTestimonial,
+  DEFAULT_HOMEPAGE_DEEP_DIVES,
   DEFAULT_MARKETING_CONTENT,
   mergeMarketingContent,
 } from "@/lib/marketing";
 import { toast } from "@/store/uiStore";
 import { cn } from "@/lib/utils";
 import type {
+  HomepageDeepDive,
+  HomepageDeepDiveBlob,
   MarketingContent,
   MarketingFaqItem,
   MarketingStat,
@@ -170,6 +173,39 @@ export default function AdminMarketingPage() {
           publish them to the live homepage.
         </div>
       )}
+
+      <HomepageBrandingEditor
+        branding={content.homepage?.branding}
+        onChange={(next) => {
+          setContent((prev) => ({
+            ...prev,
+            homepage: { ...(prev.homepage ?? {}), branding: next },
+          }));
+          setDirty(true);
+        }}
+      />
+
+      <HomepageSeoEditor
+        seo={content.homepage?.seo}
+        onChange={(next) => {
+          setContent((prev) => ({
+            ...prev,
+            homepage: { ...(prev.homepage ?? {}), seo: next },
+          }));
+          setDirty(true);
+        }}
+      />
+
+      <HomepageDeepDivesEditor
+        deepDives={content.homepage?.deepDives ?? DEFAULT_HOMEPAGE_DEEP_DIVES}
+        onChange={(next) => {
+          setContent((prev) => ({
+            ...prev,
+            homepage: { ...(prev.homepage ?? {}), deepDives: next },
+          }));
+          setDirty(true);
+        }}
+      />
 
       <TrustPhotoEditor
         photoUrl={content.trustPhotoUrl}
@@ -1225,6 +1261,230 @@ function TrustPhotoEditor({
             />
           </div>
         )}
+      </div>
+    </SectionCard>
+  );
+}
+
+/* ── Homepage: branding (logo + favicon) ──────────────────────── */
+
+type HomepageBranding = NonNullable<MarketingContent["homepage"]>["branding"];
+type HomepageSeo = NonNullable<MarketingContent["homepage"]>["seo"];
+
+function HomepageBrandingEditor({
+  branding,
+  onChange,
+}: {
+  branding: HomepageBranding;
+  onChange: (next: HomepageBranding) => void;
+}) {
+  const value = branding ?? {};
+  return (
+    <SectionCard
+      title="Homepage · Branding"
+      description="Logo + favicon shown across the public site."
+      defaultOpen={false}
+    >
+      <Field label="Logo URL" hint="Used in the marketing header + footer.">
+        <input
+          className={inputCx}
+          value={value.logoUrl ?? ""}
+          placeholder="https://…"
+          onChange={(e) => onChange({ ...value, logoUrl: e.target.value })}
+        />
+      </Field>
+      <Field label="Favicon URL" hint="32×32 PNG or ICO recommended.">
+        <input
+          className={inputCx}
+          value={value.faviconUrl ?? ""}
+          placeholder="https://…/favicon.png"
+          onChange={(e) => onChange({ ...value, faviconUrl: e.target.value })}
+        />
+      </Field>
+    </SectionCard>
+  );
+}
+
+/* ── Homepage: SEO ─────────────────────────────────────────────── */
+
+function HomepageSeoEditor({
+  seo,
+  onChange,
+}: {
+  seo: HomepageSeo;
+  onChange: (next: HomepageSeo) => void;
+}) {
+  const value = seo ?? {};
+  return (
+    <SectionCard
+      title="Homepage · SEO"
+      description="Page title + meta description + Open Graph image."
+      defaultOpen={false}
+    >
+      <Field label="Page title" hint="Shown in the browser tab + search results.">
+        <input
+          className={inputCx}
+          value={value.title ?? ""}
+          placeholder="Credibly — Look credible. Convert prospects."
+          onChange={(e) => onChange({ ...value, title: e.target.value })}
+        />
+      </Field>
+      <Field
+        label="Meta description"
+        hint="One-line snippet shown under the title in Google."
+      >
+        <textarea
+          className={`${inputCx} min-h-[80px]`}
+          value={value.description ?? ""}
+          placeholder="The complete platform for PH recruiters, coaches & online sellers…"
+          onChange={(e) => onChange({ ...value, description: e.target.value })}
+        />
+      </Field>
+      <Field
+        label="Open Graph image URL"
+        hint="1200×630 image shown when the link is shared on FB / Messenger / X."
+      >
+        <input
+          className={inputCx}
+          value={value.ogImageUrl ?? ""}
+          placeholder="https://…/og.png"
+          onChange={(e) => onChange({ ...value, ogImageUrl: e.target.value })}
+        />
+      </Field>
+    </SectionCard>
+  );
+}
+
+/* ── Homepage: deep-dive sections ──────────────────────────────── */
+
+const BLOB_OPTIONS: HomepageDeepDiveBlob[] = [
+  "lavender",
+  "mint",
+  "cream",
+  "butter",
+];
+
+function HomepageDeepDivesEditor({
+  deepDives,
+  onChange,
+}: {
+  deepDives: HomepageDeepDive[];
+  onChange: (next: HomepageDeepDive[]) => void;
+}) {
+  const update = (id: string, patch: Partial<HomepageDeepDive>) => {
+    onChange(
+      deepDives.map((d) => (d.id === id ? ({ ...d, ...patch } as HomepageDeepDive) : d)),
+    );
+  };
+  const updateBullet = (id: string, index: number, text: string) => {
+    onChange(
+      deepDives.map((d) => {
+        if (d.id !== id) return d;
+        const bullets = [...d.bullets];
+        bullets[index] = text;
+        return { ...d, bullets };
+      }),
+    );
+  };
+  const resetToDefault = (id: string) => {
+    const def = DEFAULT_HOMEPAGE_DEEP_DIVES.find((d) => d.id === id);
+    if (!def) return;
+    onChange(deepDives.map((d) => (d.id === id ? def : d)));
+  };
+  return (
+    <SectionCard
+      title="Homepage · Deep-Dive Sections"
+      description="The 4 feature spotlights between Features and Pricing. Paste a Credibly funnel/training URL to render it live inside the phone frame."
+      defaultOpen={false}
+    >
+      <div className="space-y-4">
+        {deepDives.map((d) => (
+          <div
+            key={d.id}
+            className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3"
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wider text-white/55">
+                {d.eyebrow || d.id}
+              </p>
+              <button
+                type="button"
+                onClick={() => resetToDefault(d.id)}
+                className="rounded-md px-2 py-1 text-[10px] font-medium text-white/45 hover:bg-white/[0.05] hover:text-white"
+              >
+                Reset to default
+              </button>
+            </div>
+            <div className="space-y-3">
+              <Field label="Eyebrow">
+                <input
+                  className={inputCx}
+                  value={d.eyebrow}
+                  onChange={(e) => update(d.id, { eyebrow: e.target.value })}
+                />
+              </Field>
+              <Field label="Headline">
+                <input
+                  className={inputCx}
+                  value={d.title}
+                  onChange={(e) => update(d.id, { title: e.target.value })}
+                />
+              </Field>
+              <Field label="Body">
+                <textarea
+                  className={`${inputCx} min-h-[90px]`}
+                  value={d.body}
+                  onChange={(e) => update(d.id, { body: e.target.value })}
+                />
+              </Field>
+              <Field label="Benefits (4 bullets)">
+                <div className="space-y-2">
+                  {[0, 1, 2, 3].map((idx) => (
+                    <input
+                      key={idx}
+                      className={inputCx}
+                      value={d.bullets[idx] ?? ""}
+                      placeholder={`Benefit ${idx + 1}`}
+                      onChange={(e) =>
+                        updateBullet(d.id, idx, e.target.value)
+                      }
+                    />
+                  ))}
+                </div>
+              </Field>
+              <Field
+                label="Embed URL (Credibly funnel / training)"
+                hint="Renders inside the phone frame. Leave blank to show a placeholder."
+              >
+                <input
+                  className={inputCx}
+                  value={d.embedUrl ?? ""}
+                  placeholder="https://crediblyai.com/dan/launch-funnel"
+                  onChange={(e) => update(d.id, { embedUrl: e.target.value })}
+                />
+              </Field>
+              <Field label="Pastel blob colour">
+                <div className="flex flex-wrap gap-2">
+                  {BLOB_OPTIONS.map((b) => (
+                    <button
+                      key={b}
+                      type="button"
+                      onClick={() => update(d.id, { blob: b })}
+                      className={cn(
+                        "rounded-md border px-3 py-1.5 text-xs font-medium capitalize transition-colors",
+                        d.blob === b
+                          ? "border-electric-500/40 bg-electric-500/15 text-electric-200"
+                          : "border-white/10 bg-white/[0.03] text-white/60 hover:text-white",
+                      )}
+                    >
+                      {b}
+                    </button>
+                  ))}
+                </div>
+              </Field>
+            </div>
+          </div>
+        ))}
       </div>
     </SectionCard>
   );
