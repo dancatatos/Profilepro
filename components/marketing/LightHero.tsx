@@ -22,7 +22,6 @@ import { ArrowRight } from "lucide-react";
 import type { Profile } from "@/types";
 import { PublicProfileView } from "@/components/public-profile/PublicProfileView";
 import { LogoMark } from "@/components/ui/Logo";
-import { MarkerUnderline } from "./MarkerUnderline";
 
 interface Hero {
   badge: string;
@@ -108,13 +107,13 @@ export function LightHero({
           <div className="flex items-center gap-1.5">
             <Link
               href="/login"
-              className="hidden rounded-full px-4 py-2 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-100 sm:inline-block"
+              className="rounded-full px-3 py-2 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-100 sm:px-4"
             >
               Log in
             </Link>
             <Link
               href="/signup"
-              className="inline-flex items-center gap-1.5 rounded-full bg-electric-500 px-5 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-pill-cta)] transition-transform hover:scale-[1.02] active:scale-[0.98]"
+              className="inline-flex items-center gap-1.5 rounded-full bg-electric-500 px-4 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-pill-cta)] transition-transform hover:scale-[1.02] active:scale-[0.98] sm:px-5"
             >
               Start free
               <ArrowRight className="h-3.5 w-3.5" />
@@ -135,7 +134,7 @@ export function LightHero({
 
             <h1 className="mt-5 font-display text-[2.5rem] font-bold leading-[1.05] tracking-[-0.025em] text-stone-900 sm:text-[3.2rem] lg:text-[4.25rem]">
               {hero.headlineLine1}{" "}
-              <MarkerUnderline>{hero.headlineGradient}</MarkerUnderline>{" "}
+              <span className="text-electric-500">{hero.headlineGradient}</span>{" "}
               {hero.headlineLine2}
             </h1>
 
@@ -194,39 +193,6 @@ export function LightHero({
                 <div className="no-scrollbar h-[600px] overflow-y-auto rounded-[1.9rem] bg-white">
                   <PublicProfileView profile={featuredProfile} />
                 </div>
-              </div>
-
-              {/* Hand-marker annotation — "real customer ✏" — sits
-                  slightly above + to the right of the phone, drawn at
-                  an angle. The marker font (Caveat) gives it the
-                  feel of someone scribbling a note. */}
-              <div
-                className="pointer-events-none absolute -top-4 -right-6 z-20 flex items-center gap-1.5 text-stone-700 sm:-top-6 sm:-right-10"
-                style={{ transform: "rotate(8deg)" }}
-              >
-                <span
-                  className="font-marker text-2xl text-stone-900 sm:text-3xl"
-                  style={{ fontFamily: "var(--font-marker)" }}
-                >
-                  real customer
-                </span>
-                {/* Hand-drawn arrow */}
-                <svg
-                  width="60"
-                  height="40"
-                  viewBox="0 0 60 40"
-                  fill="none"
-                  className="-mb-2"
-                >
-                  <path
-                    d="M 5 8 Q 25 0, 45 22 L 35 18 M 45 22 L 39 28"
-                    stroke="#1A1A1F"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    fill="none"
-                  />
-                </svg>
               </div>
             </div>
           </div>

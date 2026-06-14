@@ -329,7 +329,13 @@ service cloud.firestore {
       allow delete: if isAdmin()
         || (isSignedIn() && resource.data.userId == request.auth.uid)
         || (isSignedIn() && resource.data.ownerId == request.auth.uid);
-      allow update: if false;
+      // Self-update allowed so re-running joinTeamSpace (setDoc + merge)
+      // doesn't fail with "Missing or insufficient permissions" when the
+      // member already has a doc from a prior partial join. The userId
+      // is immutable — neither the data nor the path can change owners.
+      allow update: if isSignedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == resource.data.userId;
     }
 
     // ---- Team events ----
