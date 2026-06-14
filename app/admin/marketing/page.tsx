@@ -1502,12 +1502,20 @@ function HomepageDeepDivesEditor({
               </Field>
               <Field
                 label="Embed URL (Credibly funnel / training)"
-                hint="Renders inside the phone frame. Leave blank to show a placeholder."
+                hint={
+                  d.id === "followUp"
+                    ? "Use /showcase/pipelines/{username} for a public, anonymised view of your real pipeline — /pipelines requires login + Pro plan."
+                    : "Renders inside the phone frame. Leave blank to show a placeholder."
+                }
               >
                 <input
                   className={inputCx}
                   value={d.embedUrl ?? ""}
-                  placeholder="https://crediblyai.com/dan/launch-funnel"
+                  placeholder={
+                    d.id === "followUp"
+                      ? "https://crediblyai.com/showcase/pipelines/dan"
+                      : "https://crediblyai.com/dan/launch-funnel"
+                  }
                   onChange={(e) => update(d.id, { embedUrl: e.target.value })}
                 />
               </Field>
