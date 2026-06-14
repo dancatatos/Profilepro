@@ -63,7 +63,7 @@ export function LightPricing({ plans }: { plans: Plan[] }) {
           <h2 className="mt-4 font-display text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl lg:text-[2.75rem]">
             Simple, honest pricing
           </h2>
-          <p className="mx-auto mt-4 max-w-md text-base text-stone-500">
+          <p className="mx-auto mt-4 max-w-md text-base text-stone-600">
             Start free. Upgrade when you&apos;re ready to scale.
           </p>
         </div>
@@ -86,7 +86,7 @@ export function LightPricing({ plans }: { plans: Plan[] }) {
                 <h3 className={`font-display text-xl font-bold ${t.title}`}>
                   {plan.name}
                 </h3>
-                <p className="mt-1 text-sm text-stone-500">{plan.tagline}</p>
+                <p className="mt-1 text-sm text-stone-600">{plan.tagline}</p>
 
                 <div className="mt-6 flex items-baseline gap-1">
                   <span
@@ -95,7 +95,7 @@ export function LightPricing({ plans }: { plans: Plan[] }) {
                   >
                     ₱{plan.price.toLocaleString()}
                   </span>
-                  <span className="text-sm font-medium text-stone-500">
+                  <span className="text-base font-semibold text-stone-700">
                     {plan.billingPeriod === "annual" ? "/yr" : "/mo"}
                   </span>
                 </div>
@@ -113,7 +113,7 @@ export function LightPricing({ plans }: { plans: Plan[] }) {
                     <li
                       key={f.label}
                       className={`flex items-start gap-2.5 text-sm ${
-                        f.included ? "text-stone-700" : "text-stone-300"
+                        f.included ? "text-stone-700" : "text-stone-400 line-through"
                       }`}
                     >
                       <span
