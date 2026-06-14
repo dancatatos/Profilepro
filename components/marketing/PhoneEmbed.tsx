@@ -16,9 +16,9 @@
  *   - sandbox="allow-scripts allow-popups" (no allow-same-origin) —
  *     the embed can't touch the parent page's cookies, localStorage,
  *     or DOM. Safe to embed anything the admin pastes.
- *   - Pointer events disabled — this is a marketing showcase, not an
- *     interactive demo. Prevents the visitor accidentally interacting
- *     with the embedded funnel.
+ *   - Interactive (pointer events ON). Mirrors the hero profile
+ *     mockup, which visitors can scroll and tap. Letting them poke
+ *     around the embed is the whole point — it's the live demo.
  *   - When `url` is empty, renders a soft placeholder card so the
  *     section never breaks during admin setup.
  */
@@ -89,7 +89,7 @@ export function PhoneEmbed({
           loading="lazy"
           sandbox="allow-scripts allow-popups allow-forms allow-same-origin"
           referrerPolicy="no-referrer"
-          className="pointer-events-none absolute left-0 top-0 origin-top-left border-0"
+          className="absolute left-0 top-0 origin-top-left border-0"
           style={{
             width: "167%",
             height: "167%",
