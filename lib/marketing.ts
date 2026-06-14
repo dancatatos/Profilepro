@@ -257,15 +257,25 @@ function mergeHomepage(
 ): MarketingContent["homepage"] {
   const branding = override?.branding ? { ...override.branding } : undefined;
   const seo = override?.seo ? { ...override.seo } : undefined;
-  /* Merge deep-dives by id so adding a new slot later doesn't wipe
-     unrelated saved overrides. Unknown ids are dropped. */
-  const savedById = new Map(
-    (override?.deepDives ?? []).map((d) => [d.id, d] as const),
-  );
-  const deepDives = DEFAULT_HOMEPAGE_DEEP_DIVES.map(
-    (d) => savedById.get(d.id) ?? d,
-  );
-  return { branding, seo, deepDives };
+  /* Deep-dive merge rules:
+     - When the admin has saved a custom array, its ORDER wins. The
+       admin reorder UI exists specifically to control render order;
+       a previous version of this merger iterated DEFAULT_HOMEPAGE_
+       DEEP_DIVES and just looked up saved entries by id, which kept
+       the content but silently reverted the order on every render.
+     - Unknown ids in saved data are dropped (forward-compat for a
+       future code-level removal of a slot).
+     - Any default slot NOT in saved data is appended at the end so
+       a future new slot doesn't vanish for users who saved before
+       it shipped. */
+  if (!override?.deepDives) {
+    return { branding, seo, deepDives: DEFAULT_HOMEPAGE_DEEP_DIVES };
+  }
+  const defaultIds = new Set(DEFAULT_HOMEPAGE_DEEP_DIVES.map((d) => d.id));
+  const savedFiltered = override.deepDives.filter((d) => defaultIds.has(d.id));
+  const seen = new Set(savedFiltered.map((d) => d.id));
+  const missing = DEFAULT_HOMEPAGE_DEEP_DIVES.filter((d) => !seen.has(d.id));
+  return { branding, seo, deepDives: [...savedFiltered, ...missing] };
 }
 
 /** Factory: blank item with a fresh id — used by the admin "Add" buttons. */
