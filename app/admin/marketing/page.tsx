@@ -1391,29 +1391,77 @@ function HomepageDeepDivesEditor({
     if (!def) return;
     onChange(deepDives.map((d) => (d.id === id ? def : d)));
   };
+  const move = (id: string, dir: -1 | 1) => {
+    const i = deepDives.findIndex((d) => d.id === id);
+    if (i < 0) return;
+    const j = i + dir;
+    if (j < 0 || j >= deepDives.length) return;
+    const next = [...deepDives];
+    [next[i], next[j]] = [next[j], next[i]];
+    onChange(next);
+  };
+  const resetOrder = () => {
+    const byId = new Map(deepDives.map((d) => [d.id, d] as const));
+    onChange(DEFAULT_HOMEPAGE_DEEP_DIVES.map((d) => byId.get(d.id) ?? d));
+  };
   return (
     <SectionCard
       title="Homepage · Deep-Dive Sections"
-      description="The 4 feature spotlights between Features and Pricing. Paste a Credibly funnel/training URL to render it live inside the phone frame."
+      description="The 4 feature spotlights between Features and Pricing. Paste a Credibly funnel/training URL to render it live inside the phone frame. Use ↑/↓ to reorder."
       defaultOpen={false}
     >
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-[11px] text-white/45">
+          Render order on the homepage (top → bottom = section 1 → 4).
+        </p>
+        <button
+          type="button"
+          onClick={resetOrder}
+          className="rounded-md px-2 py-1 text-[10px] font-medium text-white/45 hover:bg-white/[0.05] hover:text-white"
+        >
+          Reset order
+        </button>
+      </div>
       <div className="space-y-4">
-        {deepDives.map((d) => (
+        {deepDives.map((d, i) => (
           <div
             key={d.id}
             className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3"
           >
-            <div className="mb-3 flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-wider text-white/55">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <p className="min-w-0 flex-1 truncate text-xs font-semibold uppercase tracking-wider text-white/55">
+                <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded bg-white/[0.06] text-[10px] text-white/65">
+                  {i + 1}
+                </span>
                 {d.eyebrow || d.id}
               </p>
-              <button
-                type="button"
-                onClick={() => resetToDefault(d.id)}
-                className="rounded-md px-2 py-1 text-[10px] font-medium text-white/45 hover:bg-white/[0.05] hover:text-white"
-              >
-                Reset to default
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => move(d.id, -1)}
+                  disabled={i === 0}
+                  aria-label="Move up"
+                  className="rounded-md p-1 text-white/55 hover:bg-white/[0.05] hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+                >
+                  <ArrowUp className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => move(d.id, 1)}
+                  disabled={i === deepDives.length - 1}
+                  aria-label="Move down"
+                  className="rounded-md p-1 text-white/55 hover:bg-white/[0.05] hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+                >
+                  <ArrowDown className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => resetToDefault(d.id)}
+                  className="ml-1 rounded-md px-2 py-1 text-[10px] font-medium text-white/45 hover:bg-white/[0.05] hover:text-white"
+                >
+                  Reset
+                </button>
+              </div>
             </div>
             <div className="space-y-3">
               <Field label="Eyebrow">

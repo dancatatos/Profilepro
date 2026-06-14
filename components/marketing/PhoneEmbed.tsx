@@ -87,7 +87,7 @@ export function PhoneEmbed({
           src={url}
           title={label}
           loading="lazy"
-          sandbox="allow-scripts allow-popups allow-forms"
+          sandbox="allow-scripts allow-popups allow-forms allow-same-origin"
           referrerPolicy="no-referrer"
           className="pointer-events-none absolute left-0 top-0 origin-top-left border-0"
           style={{
