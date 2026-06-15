@@ -1114,6 +1114,14 @@ export interface Pipeline {
   shareCode?: string;
   /** Tracking: how many other users have cloned this via the share code. */
   cloneCount?: number;
+  /**
+   * Set when this pipeline was cloned into the owner's account by a
+   * team onboarding bundle. Holds the id of the leader's source
+   * pipeline so re-running the bundle (e.g. recruit re-scans the team
+   * QR) can detect the existing clone and skip instead of duplicating.
+   * Absent on pipelines the user created themselves.
+   */
+  clonedFromBundleSource?: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -1242,6 +1250,14 @@ export interface Funnel {
    * have each one land in a separate, niche-appropriate pipeline.
    */
   pipelineId?: string;
+  /**
+   * Set when this funnel was cloned into the owner's account by a
+   * team onboarding bundle. Holds the id of the leader's source
+   * funnel so re-running the bundle (e.g. recruit re-scans the team
+   * QR) can detect the existing clone and skip instead of duplicating.
+   * Absent on funnels the user created themselves.
+   */
+  clonedFromBundleSource?: string;
   createdAt: number;
   updatedAt: number;
 }

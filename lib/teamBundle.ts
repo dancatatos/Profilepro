@@ -171,10 +171,19 @@ async function cloneFunnels(
   const existing = await listFunnels(account.uid).catch(() => []);
   /* Reserved slugs so we don't collide with the recruit's own funnels. */
   const usedSlugs = new Set(existing.map((f) => f.slug));
+  /* Source-id dedup: if the recruit already has a funnel cloned from
+     this source (from a prior bundle run), skip re-cloning. This is
+     what makes the "re-scan QR to sync" pattern safe. */
+  const alreadyClonedSources = new Set(
+    existing
+      .map((f) => f.clonedFromBundleSource)
+      .filter((s): s is string => Boolean(s)),
+  );
   let count = existing.length;
   let granted = 0;
   let skipped = 0;
   for (const fid of funnelIds) {
+    if (alreadyClonedSources.has(fid)) continue; /* re-scan: already have it */
     if (count >= cap) {
       skipped += 1;
       continue;
@@ -194,10 +203,12 @@ async function cloneFunnels(
         ownerId: account.uid,
         slug,
         status: "draft",
+        clonedFromBundleSource: fid,
         createdAt: now,
         updatedAt: now,
       };
       await saveFunnel(cloned);
+      alreadyClonedSources.add(fid);
       granted += 1;
       count += 1;
     } catch {
@@ -221,10 +232,18 @@ async function clonePipelines(
   if (pipelineIds.length === 0) return { ...EMPTY_SLOT };
   const cap = resolveUserPipelineLimit(account, plans);
   const existing = await listPipelinesForUser(account.uid).catch(() => []);
+  /* Source-id dedup so re-scanning the team QR doesn't duplicate
+     previously-cloned pipelines. See cloneFunnels for rationale. */
+  const alreadyClonedSources = new Set(
+    existing
+      .map((p) => p.clonedFromBundleSource)
+      .filter((s): s is string => Boolean(s)),
+  );
   let count = existing.length;
   let granted = 0;
   let skipped = 0;
   for (const pid of pipelineIds) {
+    if (alreadyClonedSources.has(pid)) continue; /* re-scan: already have it */
     if (count >= cap) {
       skipped += 1;
       continue;
@@ -243,6 +262,7 @@ async function clonePipelines(
         isDefault: false, /* never displace the recruit's own default */
         shareCode: undefined,
         cloneCount: undefined,
+        clonedFromBundleSource: pid,
         /* Fresh stage ids so the leader editing the source doesn't
            propagate to the recruit and vice-versa. */
         stages: source.stages.map((s) => ({
@@ -253,6 +273,7 @@ async function clonePipelines(
         updatedAt: now,
       };
       await upsertPipeline(cloned);
+      alreadyClonedSources.add(pid);
       granted += 1;
       count += 1;
     } catch {
