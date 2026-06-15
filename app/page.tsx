@@ -168,10 +168,12 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="relative">
+    <div className="relative bg-white">
       {/* Sticky marketing nav — lives at page root so it persists over
           every section (the hero clips its decorative blobs with
-          overflow-hidden, which would otherwise break sticky). */}
+          overflow-hidden, which would otherwise break sticky). The
+          wrapper bg-white covers the dark app body so the nav doesn't
+          float on a black strip above the hero. */}
       <MarketingNav navLinks={navLinks} />
 
       {/* ── NEW: Light marketing surface (Sessions 1 + 2) ───────────
