@@ -78,8 +78,10 @@ export function LightHero({
         }}
       />
 
-      {/* ── Floating pill nav ── */}
-      <div className="relative mx-auto mt-6 max-w-5xl px-4">
+      {/* ── Floating pill nav — sticky so it stays accessible from
+          every section of the homepage. z-50 keeps it above all
+          downstream marketing content (phone frames, etc.). */}
+      <div className="sticky top-4 z-50 mx-auto mt-6 max-w-5xl px-4">
         <nav
           className="flex items-center justify-between gap-3 rounded-full border border-stone-100 bg-white/85 py-2 pl-6 pr-2 shadow-[var(--shadow-card-soft)] backdrop-blur-xl"
           aria-label="Primary"
