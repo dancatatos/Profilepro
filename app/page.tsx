@@ -57,6 +57,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import { PublicProfileView } from "@/components/public-profile/PublicProfileView";
 import { LightHero } from "@/components/marketing/LightHero";
+import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { LightStats } from "@/components/marketing/LightStats";
 import { LightFeatures } from "@/components/marketing/LightFeatures";
 import { LightDeepDive } from "@/components/marketing/LightDeepDive";
@@ -168,11 +169,14 @@ export default function LandingPage() {
 
   return (
     <div className="relative">
+      {/* Sticky marketing nav — lives at page root so it persists over
+          every section (the hero clips its decorative blobs with
+          overflow-hidden, which would otherwise break sticky). */}
+      <MarketingNav navLinks={navLinks} />
+
       {/* ── NEW: Light marketing surface (Sessions 1 + 2) ───────────
           Hero → stats → features → 3 deep-dives → testimonials →
-          pricing. Everything light. Below this, the AI highlight,
-          How-it-works, FAQ, final CTA + footer stay dark for now
-          (Session 3 finishes the migration). */}
+          pricing. */}
       <LightHero hero={hero} navLinks={navLinks} featuredProfile={featured} />
 
       {socialProof.enabled && socialProof.stats.length > 0 && (

@@ -21,7 +21,6 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import type { Profile } from "@/types";
 import { PublicProfileView } from "@/components/public-profile/PublicProfileView";
-import { LogoMark } from "@/components/ui/Logo";
 
 interface Hero {
   badge: string;
@@ -78,51 +77,9 @@ export function LightHero({
         }}
       />
 
-      {/* ── Floating pill nav — sticky so it stays accessible from
-          every section of the homepage. z-50 keeps it above all
-          downstream marketing content (phone frames, etc.). */}
-      <div className="sticky top-4 z-50 mx-auto mt-6 max-w-5xl px-4">
-        <nav
-          className="flex items-center justify-between gap-3 rounded-full border border-stone-100 bg-white/85 py-2 pl-6 pr-2 shadow-[var(--shadow-card-soft)] backdrop-blur-xl"
-          aria-label="Primary"
-        >
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <LogoMark className="h-7 w-7 text-electric-500" />
-            <span className="font-display text-base font-bold text-stone-900">
-              Credibly
-            </span>
-          </Link>
-
-          <ul className="hidden items-center gap-7 md:flex">
-            {navLinks.map((l) => (
-              <li key={l.href}>
-                <a
-                  href={l.href}
-                  className="text-sm font-medium text-stone-700 transition-colors hover:text-stone-900"
-                >
-                  {l.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-
-          <div className="flex items-center gap-1.5">
-            <Link
-              href="/login"
-              className="rounded-full px-3 py-2 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-100 sm:px-4"
-            >
-              Log in
-            </Link>
-            <Link
-              href="/signup"
-              className="inline-flex items-center gap-1.5 rounded-full bg-electric-500 px-4 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-pill-cta)] transition-transform hover:scale-[1.02] active:scale-[0.98] sm:px-5"
-            >
-              Start free
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
-        </nav>
-      </div>
+      {/* Nav is rendered at page root now (components/marketing/MarketingNav)
+          so it can sticky across every section — putting it here trapped
+          it inside this section's overflow-hidden box. */}
 
       {/* ── Hero content ── */}
       <section className="relative mx-auto max-w-6xl px-4 pb-20 pt-14 lg:pb-32 lg:pt-24">
