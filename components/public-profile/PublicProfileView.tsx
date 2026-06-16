@@ -110,10 +110,20 @@ export function PublicProfileView({
       className={cn("min-h-full w-full", effectClasses, className)}
       style={themeStyle}
     >
-      <div className="mx-auto max-w-md px-4 pb-14 pt-8">
-        {/* Header — CSS fade-up replaces what framer-motion was doing.
-            Same visual cue, ~50 KB lighter on the public profile bundle. */}
-        <div className="cr-fade-up">
+      {/* @container enables container-query breakpoints (@xl:, @2xl:, @3xl:)
+          inside child sections so multi-item grids auto-flow into more
+          columns as the profile container widens on tablet + desktop.
+          Mobile stays at max-w-md so the look is bit-for-bit identical
+          to before; tablet expands to 2xl (~672px), desktop to 5xl
+          (~1024px) so the page reads as a real responsive website
+          instead of a narrow phone preview on big screens. */}
+      <div className="@container mx-auto max-w-md px-4 pb-14 pt-8 sm:max-w-2xl lg:max-w-5xl lg:px-6">
+        {/* Header — kept at mobile width even when the outer container
+            widens on tablet/desktop. Pattern: mobile-shaped "card"
+            header on top, full-width responsive section grid below.
+            Avoids the cover photo ballooning to 1024×819px and keeps
+            the headline/bio centered + readable. */}
+        <div className="mx-auto max-w-md cr-fade-up">
           {isHero ? (
             /* ── Hero cover-photo header ── */
             <div className="relative -mx-4 -mt-8">

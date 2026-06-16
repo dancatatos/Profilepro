@@ -496,7 +496,7 @@ export function SectionRenderer({
     case "benefits":
       return (
         <SectionShell title={section.title}>
-          <div className="grid gap-2.5 @xl:grid-cols-2">
+          <div className="grid gap-2.5 @xl:grid-cols-2 @3xl:grid-cols-3">
             {section.items.map((it) => (
               <div
                 key={it.id}
@@ -616,7 +616,7 @@ export function SectionRenderer({
     case "credibility":
       return (
         <SectionShell title={section.title}>
-          <div className="grid grid-cols-2 gap-2.5 @2xl:grid-cols-3">
+          <div className="grid grid-cols-2 gap-2.5 @2xl:grid-cols-3 @3xl:grid-cols-4">
             {section.items.map((it) => (
               <div key={it.id} className="p-3.5" style={V.card}>
                 <Icon
@@ -644,7 +644,7 @@ export function SectionRenderer({
     case "testimonials":
       return (
         <SectionShell title={section.title}>
-          <div className="grid gap-2.5 @xl:grid-cols-2">
+          <div className="grid gap-2.5 @xl:grid-cols-2 @3xl:grid-cols-3">
             {section.testimonials.map((t) => (
               <div key={t.id} className="p-4" style={V.card}>
                 {t.kind === "image" && t.mediaUrl && (
@@ -698,7 +698,7 @@ export function SectionRenderer({
     case "products":
       return (
         <SectionShell title={section.title}>
-          <div className="grid gap-2.5 @xl:grid-cols-2">
+          <div className="grid gap-2.5 @xl:grid-cols-2 @3xl:grid-cols-3 @5xl:grid-cols-4">
             {section.products.map((p) => (
               <div
                 key={p.id}
@@ -761,7 +761,7 @@ export function SectionRenderer({
     case "video":
       return (
         <SectionShell title={section.title}>
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 gap-3 @xl:grid-cols-2 @4xl:grid-cols-3">
             {section.videos.map((v) =>
               v.provider === "tiktok" ? (
                 <a
@@ -810,7 +810,7 @@ export function SectionRenderer({
     case "gallery":
       return (
         <SectionShell title={section.title}>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-2 @2xl:grid-cols-4 @4xl:grid-cols-5">
             {section.images.map((img) => (
               <div
                 key={img.id}
