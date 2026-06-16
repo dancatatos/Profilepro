@@ -913,7 +913,19 @@ export type ThemeId =
   | "sage-organic"
   | "brutalist-press"
   | "sunset-coral"
-  | "obsidian-emerald";
+  | "obsidian-emerald"
+  /* ── Premium themes (Session 5) ── */
+  | "citrus-pop"
+  | "clay-terracotta"
+  | "inkwell-zen"
+  | "vapor-violet"
+  | "mocha-bean"
+  | "cobalt-forge"
+  | "paper-rose"
+  | "archive-navy"
+  | "prairie-burnt"
+  | "canvas-gallery"
+  | "glacier-arctic";
 
 export interface ProfileTheme {
   id: ThemeId;
