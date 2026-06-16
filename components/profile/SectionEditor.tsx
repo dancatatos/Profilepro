@@ -1141,6 +1141,17 @@ function LeadCaptureEditor({ section }: { section: LeadCaptureSection }) {
     update(section.id, { fields: next });
   };
 
+  const questions = section.questions ?? [];
+  const patchQuestions = (next: LeadCaptureSection["questions"]) =>
+    update(section.id, { questions: next });
+  const editQuestion = (
+    id: string,
+    p: Partial<NonNullable<LeadCaptureSection["questions"]>[number]>,
+  ) =>
+    patchQuestions(
+      questions.map((q) => (q.id === id ? { ...q, ...p } : q)),
+    );
+
   return (
     <div className="space-y-3">
       <input
@@ -1176,6 +1187,71 @@ function LeadCaptureEditor({ section }: { section: LeadCaptureSection }) {
           ))}
         </div>
       </div>
+      {/* Custom questions — optional intake fields shown below the
+          standard Name/Email/Phone. Toggle disables a question without
+          deleting it (useful when running A/B variants). Same shape as
+          the Appointment editor's intake questions. */}
+      <div>
+        <p className="mb-1.5 text-xs font-medium text-white/65">
+          Custom questions · optional for visitors · max 5
+        </p>
+        <p className="mb-2 text-[10px] text-white/45">
+          Ask qualifying questions to know more about your leads before
+          you follow up (e.g. &quot;What&apos;s your biggest challenge?&quot;,
+          &quot;What&apos;s your budget?&quot;). Answers appear on the lead
+          detail in your Leads dashboard.
+        </p>
+        <div className="space-y-2">
+          {questions.map((q) => (
+            <div key={q.id} className="flex items-center gap-2">
+              <button
+                onClick={() => editQuestion(q.id, { enabled: !q.enabled })}
+                aria-label="Toggle question"
+                className={cn(
+                  "relative h-5 w-9 shrink-0 rounded-full transition-colors",
+                  q.enabled ? "bg-jade-500" : "bg-white/15",
+                )}
+              >
+                <span
+                  className={cn(
+                    "absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform",
+                    q.enabled ? "translate-x-[1.125rem]" : "translate-x-0.5",
+                  )}
+                />
+              </button>
+              <input
+                value={q.question}
+                onChange={(e) =>
+                  editQuestion(q.id, { question: e.target.value })
+                }
+                placeholder="Type your question here"
+                className={cn(FIELD, "h-9 flex-1 text-xs")}
+              />
+              <button
+                onClick={() =>
+                  patchQuestions(questions.filter((x) => x.id !== q.id))
+                }
+                aria-label="Remove question"
+                className="shrink-0 rounded-md p-1.5 text-white/30 hover:text-red-400"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+          {questions.length < 5 && (
+            <AddRow
+              label="Add question"
+              onClick={() =>
+                patchQuestions([
+                  ...questions,
+                  { id: uid("q"), question: "", enabled: true },
+                ])
+              }
+            />
+          )}
+        </div>
+      </div>
+
       <div className="space-y-2">
         <p className="text-xs font-medium text-white/65">Chat channels</p>
         <input

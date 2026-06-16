@@ -13,6 +13,7 @@ import { cn, isValidEmail, normalizeExternalUrl, toEmbedUrl } from "@/lib/utils"
 import type {
   AnalyticsEventType,
   FaqItem,
+  LeadCustomAnswer,
   PaymentMethod,
   ProfileSection,
   VideoEmbed,
@@ -33,6 +34,12 @@ export type LeadSubmitFn = (
     email?: string;
     phone?: string;
     source: string;
+    /**
+     * Snapshots of the answers to any custom Lead Capture questions
+     * the visitor filled in. Empty / absent when the form had no
+     * custom questions or the visitor left them blank.
+     */
+    customAnswers?: LeadCustomAnswer[];
   },
   options?: { skipAdvance?: boolean },
 ) => Promise<void> | void;
@@ -153,9 +160,14 @@ function LeadForm({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  /* Per-question answer state, keyed by question id. Only enabled
+     questions appear on the form; the rest are skipped at render. */
+  const [answers, setAnswers] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
+
+  const activeQuestions = (section.questions ?? []).filter((q) => q.enabled);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,9 +177,25 @@ function LeadForm({
     if (section.fields.includes("email") && !isValidEmail(email))
       return setError("Please enter a valid email.");
 
+    /* Snapshot the question text alongside the answer so renaming the
+       question in the editor later doesn't lose context for this lead. */
+    const customAnswers: LeadCustomAnswer[] = activeQuestions
+      .map((q) => ({
+        questionId: q.id,
+        question: q.question,
+        answer: (answers[q.id] ?? "").trim(),
+      }))
+      .filter((a) => a.answer.length > 0);
+
     setBusy(true);
     try {
-      await onLead({ name: name.trim(), email, phone, source: section.id });
+      await onLead({
+        name: name.trim(),
+        email,
+        phone,
+        source: section.id,
+        ...(customAnswers.length > 0 ? { customAnswers } : {}),
+      });
       track("lead_submit", section.id);
       setDone(true);
     } catch {
@@ -231,6 +259,25 @@ function LeadForm({
               style={V.input}
             />
           )}
+          {activeQuestions.map((q) => (
+            <div key={q.id} className="space-y-1.5">
+              <label
+                className="block text-xs font-medium"
+                style={V.text2}
+              >
+                {q.question}
+              </label>
+              <textarea
+                value={answers[q.id] ?? ""}
+                onChange={(e) =>
+                  setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))
+                }
+                rows={3}
+                className="min-h-[72px] w-full rounded-xl px-3.5 py-2.5 text-sm outline-none placeholder:opacity-40"
+                style={V.input}
+              />
+            </div>
+          ))}
           {error && (
             <p className="text-xs text-red-400">{error}</p>
           )}

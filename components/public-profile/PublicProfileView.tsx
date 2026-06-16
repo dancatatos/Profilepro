@@ -74,6 +74,9 @@ export function PublicProfileView({
       ...(data.email ? { email: data.email } : {}),
       ...(data.phone ? { phone: data.phone } : {}),
       source: data.source,
+      ...(data.customAnswers && data.customAnswers.length > 0
+        ? { customAnswers: data.customAnswers }
+        : {}),
     });
   };
 

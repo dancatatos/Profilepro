@@ -435,6 +435,12 @@ export default function LeadsPage() {
                         {lead.phone}
                       </span>
                     )}
+                    {lead.customAnswers && lead.customAnswers.length > 0 && (
+                      <span className="flex items-center gap-1 rounded-md bg-electric-500/12 px-1.5 py-0.5 text-[10px] font-medium text-electric-300">
+                        💬 {lead.customAnswers.length} answer
+                        {lead.customAnswers.length === 1 ? "" : "s"}
+                      </span>
+                    )}
                   </div>
                   {/* Pipeline + stage + source chips on one wrap-friendly
                       row. Source is now displayed inline as a tinted chip

@@ -102,6 +102,9 @@ export function FunnelView({
         ...(data.email ? { email: data.email } : {}),
         ...(data.phone ? { phone: data.phone } : {}),
         source: `funnel:${funnel.slug}`,
+        ...(data.customAnswers && data.customAnswers.length > 0
+          ? { customAnswers: data.customAnswers }
+          : {}),
       });
     }
     if (!options?.skipAdvance) advance();

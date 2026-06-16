@@ -341,6 +341,27 @@ export function LeadDetailModal({
           </div>
         </Card>
 
+        {/* Custom intake answers from the Lead Capture form. Only shown
+            when the visitor actually filled in at least one. Each row is
+            a snapshot of the question text + the visitor's reply. */}
+        {lead.customAnswers && lead.customAnswers.length > 0 && (
+          <Card className="space-y-2.5 p-3">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-white/45">
+              Intake answers
+            </p>
+            {lead.customAnswers.map((a) => (
+              <div key={a.questionId}>
+                <p className="text-[11px] font-medium text-white/55">
+                  {a.question}
+                </p>
+                <p className="mt-0.5 whitespace-pre-wrap text-xs text-white/80">
+                  {a.answer}
+                </p>
+              </div>
+            ))}
+          </Card>
+        )}
+
         {/* Move-to-stage row */}
         <div>
           <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-white/40">

@@ -684,11 +684,27 @@ export interface GallerySection extends SectionBase {
  */
 export type LeadCapturePostSubmitAction = "next" | "url" | "stay";
 
+/**
+ * One custom intake question on a Lead Capture form. Mirrors
+ * AppointmentQuestion: owner adds any number, toggles each on/off
+ * independently, and the public renderer shows one labeled textarea
+ * per enabled question below the standard Name/Email/Phone fields.
+ * The answer is stored on the Lead doc as a snapshot so renaming the
+ * question later doesn't lose context for already-captured leads.
+ */
+export interface LeadQuestion {
+  id: string;
+  question: string;
+  enabled: boolean;
+}
+
 export interface LeadCaptureSection extends SectionBase {
   type: "leadCapture";
   headline: string;
   subtext?: string;
   fields: LeadFieldKey[];
+  /** Custom intake questions — only enabled ones appear on the form. */
+  questions?: LeadQuestion[];
   channels: LeadCaptureChannels;
   /** Post-save navigation. Defaults to "next". */
   postSubmitAction?: LeadCapturePostSubmitAction;
@@ -986,6 +1002,20 @@ export interface Lead {
    * "Sent X ago" badge on each template card in the Lead Detail modal.
    */
   sentMessages?: SentMessageLog[];
+  /**
+   * Snapshots of any custom Lead Capture questions the visitor
+   * answered. `question` is denormalised so later renames don't lose
+   * context on historical leads. Empty / absent when the form had no
+   * custom questions or the visitor skipped them all.
+   */
+  customAnswers?: LeadCustomAnswer[];
+}
+
+export interface LeadCustomAnswer {
+  questionId: string;
+  /** Snapshot of the question text at submit time. */
+  question: string;
+  answer: string;
 }
 
 /* ---------------- Manual Payment Submissions ---------------- */
