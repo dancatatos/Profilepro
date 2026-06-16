@@ -1521,6 +1521,285 @@ export const THEME_CONFIGS: ThemeConfig[] = [
       shadow: "0 4px 32px rgba(6,182,212,0.12)",
     },
   },
+
+  /* ══════════════════════════════════════════════════════
+     PREMIUM THEMES — Session 4 lineup
+     Six distinct aesthetic directions. Each is hand-tuned
+     for a different audience and reads as "premium" rather
+     than "generic CSS palette swap."
+  ══════════════════════════════════════════════════════ */
+
+  /* ── Honey Editorial — yellow editorial luxury ────────
+     Warm cream page bg, deep mustard primary, refined serif.
+     Reads as "Kinfolk magazine" rather than "yellow website."
+     Hits the explicit yellow-theme requirement while staying
+     premium — generic yellow is amateur, editorial mustard
+     is sophisticated. */
+  {
+    id: "honey-editorial",
+    name: "Honey Editorial",
+    description: "Warm cream + mustard editorial. Kinfolk-grade luxury.",
+    tier: "premium",
+    categories: ["Luxury", "Coach", "Feminine", "Aesthetic"],
+    colorScheme: "light",
+    background:
+      "radial-gradient(120% 80% at 50% 0%,#FAF3E0 0%,#F5EAD0 60%,#EFE2C2 100%)",
+    fontFamily: ELEGANT,
+    effects: ["grain"],
+    previewGradient:
+      "linear-gradient(135deg,#FAF3E0 0%,#E8B600 70%,#7A4A0F 100%)",
+    accent: "gold",
+    vars: {
+      ...LIGHT_BASE,
+      card: "rgba(255,253,247,0.92)",
+      border: "rgba(232,182,0,0.18)",
+      text: "#2E1F0F",
+      text2: "rgba(46,31,15,0.78)",
+      text3: "rgba(46,31,15,0.50)",
+      accent: "#9A6B00",
+      btn: "linear-gradient(135deg,#E8B600 0%,#C99300 100%)",
+      btnText: "#2E1F0F",
+      btnRadius: "0.5rem",
+      btnBorder: "transparent",
+      cardRadius: "0.625rem",
+      marker: "#E8B600",
+      socialBg: "#FBF6E8",
+      socialBorder: "rgba(232,182,0,0.22)",
+      inputBg: "#FFFEF8",
+      inputBorder: "rgba(232,182,0,0.30)",
+      avatarRing: "rgba(232,182,0,0.40)",
+      shadow: "0 2px 28px rgba(154,107,0,0.10)",
+      successBg: "rgba(154,107,0,0.10)",
+      successText: "#7A4A0F",
+      statCard: "rgba(251,246,232,0.90)",
+      statBorder: "rgba(232,182,0,0.18)",
+    },
+  },
+
+  /* ── Midnight Platinum — silver chrome on near-black ──
+     Almost-black backdrop with cool silver typography and
+     ONE bright electric-blue highlight on the CTA. Feels
+     like a Bloomberg terminal mixed with a luxury watch
+     ad. For finance, B2B sales, professional services. */
+  {
+    id: "midnight-platinum",
+    name: "Midnight Platinum",
+    description: "Silver chrome on near-black. Bloomberg meets luxury.",
+    tier: "premium",
+    categories: ["Professional", "Business & Sales", "Masculine", "Corporate"],
+    colorScheme: "dark",
+    background:
+      "linear-gradient(180deg,#08090B 0%,#0C0E12 60%,#070809 100%)",
+    fontFamily: SANS,
+    effects: ["glow"],
+    previewGradient:
+      "linear-gradient(135deg,#08090B 0%,#C0C7D1 50%,#3B82F6 100%)",
+    accent: "white",
+    vars: {
+      ...DARK_BASE,
+      card: "rgba(192,199,209,0.04)",
+      border: "rgba(192,199,209,0.12)",
+      text: "#E8ECF1",
+      text2: "rgba(192,199,209,0.78)",
+      text3: "rgba(192,199,209,0.42)",
+      accent: "#C0C7D1",
+      btn: "linear-gradient(135deg,#3B82F6 0%,#1E40AF 100%)",
+      btnText: "#FFFFFF",
+      btnRadius: "0.375rem",
+      btnBorder: "rgba(59,130,246,0.45)",
+      cardRadius: "0.5rem",
+      marker: "#3B82F6",
+      socialBg: "rgba(192,199,209,0.06)",
+      socialBorder: "rgba(192,199,209,0.15)",
+      inputBg: "rgba(192,199,209,0.04)",
+      inputBorder: "rgba(192,199,209,0.18)",
+      avatarRing: "rgba(192,199,209,0.30)",
+      shadow: "0 4px 32px rgba(59,130,246,0.10)",
+      statCard: "rgba(192,199,209,0.04)",
+      statBorder: "rgba(192,199,209,0.10)",
+    },
+  },
+
+  /* ── Sage Organic — botanical cream + sage ────────────
+     Warm cream page, soft sage green accents, refined
+     serif. For wellness, women's health, organic coaches.
+     Calm, trustworthy, expensively understated. */
+  {
+    id: "sage-organic",
+    name: "Sage Organic",
+    description: "Cream + sage. Quiet, trustworthy, expensively calm.",
+    tier: "premium",
+    categories: ["Coach", "Feminine", "Minimal", "Aesthetic", "Luxury"],
+    colorScheme: "light",
+    background:
+      "linear-gradient(180deg,#F4F0E8 0%,#EDE7DA 100%)",
+    fontFamily: ELEGANT,
+    effects: ["grain"],
+    previewGradient:
+      "linear-gradient(135deg,#F4F0E8 0%,#A7B89A 60%,#5A6F4F 100%)",
+    accent: "jade",
+    vars: {
+      ...LIGHT_BASE,
+      card: "rgba(255,253,247,0.85)",
+      border: "rgba(124,149,115,0.18)",
+      text: "#2C3829",
+      text2: "rgba(44,56,41,0.75)",
+      text3: "rgba(44,56,41,0.48)",
+      accent: "#5A6F4F",
+      btn: "linear-gradient(135deg,#7C9573 0%,#5A6F4F 100%)",
+      btnText: "#FBFAF5",
+      btnRadius: "1rem",
+      btnBorder: "transparent",
+      cardRadius: "1.25rem",
+      marker: "#7C9573",
+      socialBg: "#F8F5EC",
+      socialBorder: "rgba(124,149,115,0.20)",
+      inputBg: "#FFFEF8",
+      inputBorder: "rgba(124,149,115,0.28)",
+      avatarRing: "rgba(124,149,115,0.35)",
+      shadow: "0 1px 24px rgba(90,111,79,0.08)",
+      successBg: "rgba(124,149,115,0.12)",
+      successText: "#3F5037",
+      statCard: "rgba(255,253,247,0.85)",
+      statBorder: "rgba(124,149,115,0.15)",
+    },
+  },
+
+  /* ── Brutalist Press — newsprint with electric red ───
+     Off-white #F5F5F3 page, stark black text, one shock
+     of #EF3340 red. Sharp corners (0 radius), heavy
+     borders, no shadows. Feels like a print magazine
+     editorial. For bold creators, fitness, masculine MLM. */
+  {
+    id: "brutalist-press",
+    name: "Brutalist Press",
+    description: "Newsprint + electric red. Print editorial, zero radius.",
+    tier: "premium",
+    categories: ["Creator", "Masculine", "Vibrant", "Influencer"],
+    colorScheme: "light",
+    background: "#F5F5F3",
+    fontFamily: SANS,
+    effects: [],
+    previewGradient:
+      "linear-gradient(135deg,#F5F5F3 0%,#0A0A0A 50%,#EF3340 100%)",
+    accent: "white",
+    vars: {
+      ...LIGHT_BASE,
+      card: "#FFFFFF",
+      border: "#0A0A0A",
+      text: "#0A0A0A",
+      text2: "rgba(10,10,10,0.78)",
+      text3: "rgba(10,10,10,0.55)",
+      accent: "#EF3340",
+      btn: "#0A0A0A",
+      btnText: "#FFFFFF",
+      btnRadius: "0",
+      btnBorder: "#0A0A0A",
+      cardRadius: "0",
+      marker: "#EF3340",
+      socialBg: "#FFFFFF",
+      socialBorder: "#0A0A0A",
+      inputBg: "#FFFFFF",
+      inputBorder: "#0A0A0A",
+      avatarRing: "#0A0A0A",
+      shadow: "none",
+      successBg: "rgba(239,51,64,0.08)",
+      successText: "#B91C1C",
+      statCard: "#FFFFFF",
+      statBorder: "#0A0A0A",
+    },
+  },
+
+  /* ── Sunset Coral — warm peach gradient evening ──────
+     Soft peach page bg, coral pink + sunset orange
+     gradient buttons, modern sans. For influencers and
+     feminine aesthetic brands. Sells "warmth + joy." */
+  {
+    id: "sunset-coral",
+    name: "Sunset Coral",
+    description: "Peach + coral gradient. Warm, joyful, aesthetic.",
+    tier: "premium",
+    categories: ["Influencer", "Feminine", "Aesthetic", "Creator"],
+    colorScheme: "light",
+    background:
+      "radial-gradient(140% 100% at 50% 0%,#FFE8D6 0%,#FFD4C2 50%,#FFBFA8 100%)",
+    fontFamily: SANS,
+    effects: [],
+    previewGradient:
+      "linear-gradient(135deg,#FFE8D6 0%,#FF7E5F 50%,#E84A5F 100%)",
+    accent: "gold",
+    vars: {
+      ...LIGHT_BASE,
+      card: "rgba(255,255,255,0.78)",
+      border: "rgba(232,74,95,0.14)",
+      text: "#2A1518",
+      text2: "rgba(42,21,24,0.72)",
+      text3: "rgba(42,21,24,0.45)",
+      accent: "#E84A5F",
+      btn: "linear-gradient(135deg,#FF7E5F 0%,#E84A5F 100%)",
+      btnText: "#FFFFFF",
+      btnRadius: "1.5rem",
+      btnBorder: "transparent",
+      cardRadius: "1.25rem",
+      marker: "#E84A5F",
+      socialBg: "rgba(255,255,255,0.65)",
+      socialBorder: "rgba(232,74,95,0.20)",
+      inputBg: "rgba(255,255,255,0.85)",
+      inputBorder: "rgba(232,74,95,0.25)",
+      avatarRing: "rgba(232,74,95,0.40)",
+      shadow: "0 4px 32px rgba(232,74,95,0.12)",
+      successBg: "rgba(232,74,95,0.10)",
+      successText: "#B91C1C",
+      statCard: "rgba(255,255,255,0.78)",
+      statBorder: "rgba(232,74,95,0.15)",
+    },
+  },
+
+  /* ── Obsidian Emerald — jewel-box dark luxury ────────
+     Pure black, deep emerald + gold accents, heavy
+     glassmorphism. The "high-ticket coach" vibe: looks
+     expensive, signals scarcity. For luxury affiliates,
+     premium courses, masterminds. */
+  {
+    id: "obsidian-emerald",
+    name: "Obsidian Emerald",
+    description: "Black + emerald + gold. Jewel-box dark luxury.",
+    tier: "premium",
+    categories: ["Luxury", "Dark Mode", "Business & Sales", "Coach"],
+    colorScheme: "dark",
+    background:
+      "radial-gradient(140% 90% at 50% 0%,#0F1F1A 0%,#070C0A 60%,#020403 100%)",
+    fontFamily: ELEGANT,
+    effects: ["glassmorphism", "glow"],
+    previewGradient:
+      "linear-gradient(135deg,#020403 0%,#0F5945 50%,#D4AF37 100%)",
+    accent: "jade",
+    vars: {
+      ...DARK_BASE,
+      card: "rgba(15,89,69,0.08)",
+      border: "rgba(212,175,55,0.18)",
+      text: "#F0EAD2",
+      text2: "rgba(240,234,210,0.78)",
+      text3: "rgba(240,234,210,0.48)",
+      accent: "#D4AF37",
+      btn: "linear-gradient(135deg,#0F5945 0%,#D4AF37 100%)",
+      btnText: "#0A0E0C",
+      btnRadius: "0.5rem",
+      btnBorder: "rgba(212,175,55,0.30)",
+      cardRadius: "0.75rem",
+      marker: "#D4AF37",
+      socialBg: "rgba(15,89,69,0.10)",
+      socialBorder: "rgba(212,175,55,0.20)",
+      inputBg: "rgba(15,89,69,0.06)",
+      inputBorder: "rgba(212,175,55,0.22)",
+      avatarRing: "rgba(212,175,55,0.40)",
+      shadow: "0 4px 32px rgba(212,175,55,0.10)",
+      successBg: "rgba(15,89,69,0.20)",
+      successText: "#6EE7B7",
+      statCard: "rgba(15,89,69,0.08)",
+      statBorder: "rgba(212,175,55,0.15)",
+    },
+  },
 ];
 
 /* ─────────────────────────────────────────────────────────────

@@ -906,7 +906,14 @@ export type ThemeId =
   | "affiliate-machine"
   | "webinar-launch"
   | "mlm-authority"
-  | "ai-personal-brand";
+  | "ai-personal-brand"
+  /* ── Premium themes (Session 4) ── */
+  | "honey-editorial"
+  | "midnight-platinum"
+  | "sage-organic"
+  | "brutalist-press"
+  | "sunset-coral"
+  | "obsidian-emerald";
 
 export interface ProfileTheme {
   id: ThemeId;
