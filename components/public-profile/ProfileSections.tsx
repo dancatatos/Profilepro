@@ -508,38 +508,171 @@ export function SectionRenderer({
         </SectionShell>
       );
 
-    case "hero":
+    case "hero": {
+      /* Existing heroes (no layout field) keep their stacked card look.
+         New heroes default to "overlay" — image full-bleed with text
+         on top, or pure full-bleed image when text fields are empty. */
+      const layout = section.layout ?? "stacked";
+
+      if (layout === "stacked") {
+        return (
+          <SectionShell title={section.title}>
+            <div
+              className="overflow-hidden"
+              style={{ ...V.card, padding: 0 }}
+            >
+              {section.backgroundUrl && (
+                <div
+                  className="aspect-[16/9] bg-cover bg-center"
+                  style={{ backgroundImage: `url("${section.backgroundUrl}")` }}
+                />
+              )}
+              <div className="px-5 py-6 text-center">
+                <h2
+                  className="font-display text-2xl font-bold leading-tight"
+                  style={V.text}
+                >
+                  {section.headline}
+                </h2>
+                {section.subtext && (
+                  <p
+                    className="mt-2 text-sm leading-relaxed"
+                    style={V.text2}
+                  >
+                    {section.subtext}
+                  </p>
+                )}
+              </div>
+            </div>
+          </SectionShell>
+        );
+      }
+
+      /* ── Overlay layout ────────────────────────────────────────
+         Image is full-bleed inside the section shell with optional
+         gradient overlay + headline / subhead / CTA layered on top.
+         When all three text fields + CTA are empty, renders as a
+         clean image-only block — user's "no headline = full-bleed
+         image" shortcut. */
+      const aspect = section.aspectRatio ?? "16:9";
+      const aspectClass =
+        aspect === "16:9"
+          ? "aspect-video"
+          : aspect === "4:3"
+            ? "aspect-[4/3]"
+            : aspect === "1:1"
+              ? "aspect-square"
+              : aspect === "21:9"
+                ? "aspect-[21/9]"
+                : "aspect-[3/4]";
+
+      const overlayLevel = section.overlay ?? "medium";
+      const overlayGradient =
+        overlayLevel === "none"
+          ? null
+          : overlayLevel === "light"
+            ? "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 100%)"
+            : overlayLevel === "medium"
+              ? "linear-gradient(180deg, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.55) 100%)"
+              : "linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.78) 100%)";
+
+      const align = section.align ?? "cc";
+      /* 9-position grid as Tailwind flex utilities. */
+      const verticalCls =
+        align.startsWith("t")
+          ? "items-start"
+          : align.startsWith("b")
+            ? "items-end"
+            : "items-center";
+      const horizontalCls =
+        align.endsWith("l")
+          ? "justify-start text-left"
+          : align.endsWith("r")
+            ? "justify-end text-right"
+            : "justify-center text-center";
+
+      const isLight = (section.textColor ?? "light") === "light";
+      const textCol = isLight ? "#FFFFFF" : "#0A0A0A";
+      const textShadow = isLight
+        ? "0 2px 18px rgba(0,0,0,0.55)"
+        : "0 1px 12px rgba(255,255,255,0.45)";
+
+      const hasContent = Boolean(
+        section.headline?.trim() ||
+          section.subtext?.trim() ||
+          section.ctaLabel?.trim(),
+      );
+
       return (
         <SectionShell title={section.title}>
           <div
-            className="overflow-hidden"
-            style={{ ...V.card, padding: 0 }}
+            className={cn(
+              "relative -mx-4 overflow-hidden sm:mx-0",
+              aspectClass,
+            )}
+            style={{
+              backgroundImage: section.backgroundUrl
+                ? `url("${section.backgroundUrl}")`
+                : undefined,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundColor: section.backgroundUrl
+                ? undefined
+                : "var(--tp-card)",
+              borderRadius: "var(--tp-card-radius)",
+            }}
           >
-            {section.backgroundUrl && (
+            {hasContent && overlayGradient && (
               <div
-                className="aspect-[16/9] bg-cover bg-center"
-                style={{ backgroundImage: `url("${section.backgroundUrl}")` }}
+                aria-hidden
+                className="absolute inset-0"
+                style={{ background: overlayGradient }}
               />
             )}
-            <div className="px-5 py-6 text-center">
-              <h2
-                className="font-display text-2xl font-bold leading-tight"
-                style={V.text}
+            {hasContent && (
+              <div
+                className={cn(
+                  "absolute inset-0 flex flex-col gap-3 p-6 sm:p-10",
+                  verticalCls,
+                  horizontalCls,
+                )}
               >
-                {section.headline}
-              </h2>
-              {section.subtext && (
-                <p
-                  className="mt-2 text-sm leading-relaxed"
-                  style={V.text2}
-                >
-                  {section.subtext}
-                </p>
-              )}
-            </div>
+                <div className={cn("max-w-2xl", horizontalCls.includes("text-center") && "mx-auto")}>
+                  {section.headline?.trim() && (
+                    <h2
+                      className="font-display text-3xl font-bold leading-[1.1] sm:text-4xl lg:text-5xl"
+                      style={{ color: textCol, textShadow }}
+                    >
+                      {section.headline}
+                    </h2>
+                  )}
+                  {section.subtext?.trim() && (
+                    <p
+                      className="mt-3 text-sm leading-relaxed sm:text-base"
+                      style={{ color: textCol, textShadow, opacity: 0.92 }}
+                    >
+                      {section.subtext}
+                    </p>
+                  )}
+                  {section.ctaLabel?.trim() && section.ctaUrl?.trim() && (
+                    <a
+                      href={normalizeExternalUrl(section.ctaUrl)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => track("cta_click", `hero-${section.id}`)}
+                      className="mt-5 inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold transition-transform active:scale-[0.98]"
+                      style={V.btn}
+                    >
+                      {section.ctaLabel}
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </SectionShell>
       );
+    }
 
     case "benefits":
       return (

@@ -597,12 +597,51 @@ export interface CountdownSection extends SectionBase {
   /** Shown once the countdown reaches zero. */
   expiredText: string;
 }
+/**
+ * Where the headline / subhead / CTA sit over the hero image when
+ * layout is "overlay". 9-position grid — first letter is vertical
+ * (top / center / bottom), second is horizontal (left / center / right).
+ */
+export type HeroAlign =
+  | "tl" | "tc" | "tr"
+  | "cl" | "cc" | "cr"
+  | "bl" | "bc" | "br";
+
+/** Darkness of the gradient overlay applied over the hero image so
+ *  text stays readable on busy backgrounds. */
+export type HeroOverlay = "none" | "light" | "medium" | "dark";
+
+/** Image aspect ratio for the hero. Defaults to 16:9. */
+export type HeroAspect = "16:9" | "4:3" | "1:1" | "21:9" | "3:4";
+
 export interface HeroSection extends SectionBase {
   type: "hero";
   headline: string;
   subtext: string;
   /** Optional background image URL. */
   backgroundUrl?: string;
+  /**
+   * Layout mode.
+   *   "stacked" (default for existing data) — image on top, text in a card below
+   *   "overlay" (default for new hero sections) — image is full-bleed, text
+   *      overlays on top with optional gradient. If all text fields + CTA are
+   *      empty, renders as a clean full-bleed image with no overlay.
+   * Undefined reads as "stacked" so heroes created before this change
+   * look exactly the same — owners opt in to overlay by switching it.
+   */
+  layout?: "stacked" | "overlay";
+  /** Optional CTA button label (overlay mode only). */
+  ctaLabel?: string;
+  /** Optional CTA destination URL (overlay mode only). */
+  ctaUrl?: string;
+  /** Gradient darkness over the hero image. Defaults to "medium". */
+  overlay?: HeroOverlay;
+  /** Where text sits over the image. Defaults to "cc" (centered). */
+  align?: HeroAlign;
+  /** Force-pick text color when image brightness is unpredictable. */
+  textColor?: "light" | "dark";
+  /** Image aspect ratio. Defaults to "16:9". */
+  aspectRatio?: HeroAspect;
 }
 export interface BenefitItem {
   id: string;

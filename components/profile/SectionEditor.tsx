@@ -370,26 +370,168 @@ function CountdownEditor({ section }: { section: CountdownSection }) {
 
 function HeroEditor({ section }: { section: HeroSection }) {
   const { updateSection: update } = useSections();
+  const layout = section.layout ?? "stacked";
+  const isOverlay = layout === "overlay";
+
   return (
     <div className="space-y-3">
+      {/* Layout — overlay (image full-bleed, text on top) or stacked
+          (image above text in a card). Overlay defaults for new
+          heroes; existing data without the field reads as stacked. */}
+      <div>
+        <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/45">
+          Layout
+        </label>
+        <Select
+          value={layout}
+          onChange={(v) =>
+            update(section.id, { layout: v as HeroSection["layout"] })
+          }
+          options={[
+            { value: "overlay", label: "Overlay — image full-bleed, text on top" },
+            { value: "stacked", label: "Stacked — image on top, text in card below" },
+          ]}
+        />
+        {isOverlay && (
+          <p className="mt-1 text-[10px] text-white/35">
+            Leave headline, subhead and CTA all empty for a clean
+            full-bleed image with no overlay.
+          </p>
+        )}
+      </div>
+
+      <ImageUploadField
+        value={section.backgroundUrl}
+        onChange={(url) => update(section.id, { backgroundUrl: url })}
+        folder="hero"
+      />
+
       <input
         value={section.headline}
         onChange={(e) => update(section.id, { headline: e.target.value })}
-        placeholder="Big bold headline"
+        placeholder={isOverlay ? "Big bold headline (optional)" : "Big bold headline"}
         className={FIELD}
       />
       <textarea
         value={section.subtext}
         onChange={(e) => update(section.id, { subtext: e.target.value })}
         rows={2}
-        placeholder="Short subhead"
+        placeholder={isOverlay ? "Short subhead (optional)" : "Short subhead"}
         className="w-full resize-none rounded-lg border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-electric-500/60"
       />
-      <ImageUploadField
-        value={section.backgroundUrl}
-        onChange={(url) => update(section.id, { backgroundUrl: url })}
-        folder="hero"
-      />
+
+      {isOverlay && (
+        <>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <input
+              value={section.ctaLabel ?? ""}
+              onChange={(e) =>
+                update(section.id, { ctaLabel: e.target.value })
+              }
+              placeholder="CTA label (optional)"
+              className={FIELD}
+            />
+            <input
+              value={section.ctaUrl ?? ""}
+              onChange={(e) => update(section.id, { ctaUrl: e.target.value })}
+              placeholder="CTA URL"
+              className={FIELD}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/45">
+                Aspect ratio
+              </label>
+              <Select
+                value={section.aspectRatio ?? "16:9"}
+                onChange={(v) =>
+                  update(section.id, {
+                    aspectRatio: v as HeroSection["aspectRatio"],
+                  })
+                }
+                options={[
+                  { value: "16:9", label: "16:9 widescreen" },
+                  { value: "4:3", label: "4:3 classic" },
+                  { value: "1:1", label: "1:1 square" },
+                  { value: "21:9", label: "21:9 cinematic" },
+                  { value: "3:4", label: "3:4 portrait" },
+                ]}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/45">
+                Overlay darkness
+              </label>
+              <Select
+                value={section.overlay ?? "medium"}
+                onChange={(v) =>
+                  update(section.id, {
+                    overlay: v as HeroSection["overlay"],
+                  })
+                }
+                options={[
+                  { value: "none", label: "None" },
+                  { value: "light", label: "Light" },
+                  { value: "medium", label: "Medium" },
+                  { value: "dark", label: "Dark" },
+                ]}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/45">
+              Text color
+            </label>
+            <Select
+              value={section.textColor ?? "light"}
+              onChange={(v) =>
+                update(section.id, {
+                  textColor: v as HeroSection["textColor"],
+                })
+              }
+              options={[
+                { value: "light", label: "Light (white text)" },
+                { value: "dark", label: "Dark (black text)" },
+              ]}
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/45">
+              Text position
+            </label>
+            <div className="grid grid-cols-3 gap-1.5">
+              {[
+                { v: "tl", l: "↖" }, { v: "tc", l: "↑" }, { v: "tr", l: "↗" },
+                { v: "cl", l: "←" }, { v: "cc", l: "•" }, { v: "cr", l: "→" },
+                { v: "bl", l: "↙" }, { v: "bc", l: "↓" }, { v: "br", l: "↘" },
+              ].map((p) => (
+                <button
+                  key={p.v}
+                  type="button"
+                  onClick={() =>
+                    update(section.id, {
+                      align: p.v as HeroSection["align"],
+                    })
+                  }
+                  className={cn(
+                    "rounded-md border py-2 text-lg transition-colors",
+                    (section.align ?? "cc") === p.v
+                      ? "border-electric-500/50 bg-electric-500/15 text-electric-200"
+                      : "border-white/10 bg-white/[0.03] text-white/55 hover:text-white",
+                  )}
+                  aria-label={`Align ${p.v}`}
+                >
+                  {p.l}
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

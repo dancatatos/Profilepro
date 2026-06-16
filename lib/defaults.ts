@@ -61,6 +61,15 @@ export function createSection(type: SectionType): ProfileSection {
         headline: "Your bold headline goes here",
         subtext:
           "A short subhead that explains who this is for and what they get.",
+        /* New heroes default to the overlay layout — image as section
+           background with text on top. Existing heroes (created before
+           this field existed) read as "stacked" via the renderer's
+           fallback so their look doesn't change overnight. */
+        layout: "overlay",
+        overlay: "medium",
+        align: "cc",
+        textColor: "light",
+        aspectRatio: "16:9",
       };
     case "benefits":
       return {
