@@ -2249,6 +2249,237 @@ export const THEME_CONFIGS: ThemeConfig[] = [
     },
   },
 
+  /* ══════════════════════════════════════════════════════
+     PREMIUM THEMES — Session 6 (orange lineup)
+     Five distinct orange directions — modern tech, dark
+     luxe, festival, leather-luxury, organic spice. Each
+     hits "orange premium" from a different angle so the
+     picker doesn't read as "five variations on the same
+     warm tone."
+  ══════════════════════════════════════════════════════ */
+
+  /* ── Persimmon Modern — bright modern orange ────────
+     Vivid persimmon #FF6A1F on white, geometric sans,
+     sharp corners. The "modern tech orange." For
+     startups, SaaS, productivity brands, modern coaches. */
+  {
+    id: "persimmon-modern",
+    name: "Persimmon Modern",
+    description: "Vivid persimmon + white. Modern tech-forward orange.",
+    tier: "premium",
+    categories: ["Vibrant", "Professional", "Business & Sales", "Creator"],
+    colorScheme: "light",
+    background: "#FFFFFF",
+    fontFamily: SANS,
+    effects: [],
+    previewGradient:
+      "linear-gradient(135deg,#FFFFFF 0%,#FF6A1F 60%,#C73E00 100%)",
+    accent: "gold",
+    vars: {
+      ...LIGHT_BASE,
+      card: "#FFFFFF",
+      border: "rgba(255,106,31,0.18)",
+      text: "#1A1208",
+      text2: "rgba(26,18,8,0.74)",
+      text3: "rgba(26,18,8,0.48)",
+      accent: "#FF6A1F",
+      btn: "#FF6A1F",
+      btnText: "#FFFFFF",
+      btnRadius: "0.25rem",
+      btnBorder: "transparent",
+      cardRadius: "0.5rem",
+      marker: "#FF6A1F",
+      socialBg: "#FFF4EC",
+      socialBorder: "rgba(255,106,31,0.22)",
+      inputBg: "#FFFFFF",
+      inputBorder: "rgba(255,106,31,0.28)",
+      avatarRing: "rgba(255,106,31,0.40)",
+      shadow: "0 4px 24px rgba(255,106,31,0.14)",
+      successBg: "rgba(255,106,31,0.10)",
+      successText: "#C73E00",
+      statCard: "#FFF4EC",
+      statBorder: "rgba(255,106,31,0.18)",
+    },
+  },
+
+  /* ── Amber Glow — dark theme with amber glow ────────
+     Near-black bg with warm amber #F59E0B glow on
+     accents. Pumpkin pie meets dark luxe. For premium
+     dark mode, finance, exclusive offers. */
+  {
+    id: "amber-glow",
+    name: "Amber Glow",
+    description: "Near-black + warm amber glow. Dark luxe with heat.",
+    tier: "premium",
+    categories: ["Luxury", "Dark Mode", "Business & Sales", "Masculine"],
+    colorScheme: "dark",
+    background:
+      "radial-gradient(140% 90% at 50% 0%,#1F1408 0%,#0F0904 60%,#050201 100%)",
+    fontFamily: SANS,
+    effects: ["glow", "glassmorphism"],
+    previewGradient:
+      "linear-gradient(135deg,#0F0904 0%,#F59E0B 60%,#F97316 100%)",
+    accent: "gold",
+    vars: {
+      ...DARK_BASE,
+      card: "rgba(245,158,11,0.05)",
+      border: "rgba(245,158,11,0.20)",
+      text: "#FAF1DC",
+      text2: "rgba(250,241,220,0.78)",
+      text3: "rgba(250,241,220,0.48)",
+      accent: "#F59E0B",
+      btn: "linear-gradient(135deg,#F59E0B 0%,#F97316 100%)",
+      btnText: "#1F1408",
+      btnRadius: "0.5rem",
+      btnBorder: "rgba(245,158,11,0.35)",
+      cardRadius: "0.625rem",
+      marker: "#F59E0B",
+      socialBg: "rgba(245,158,11,0.08)",
+      socialBorder: "rgba(245,158,11,0.22)",
+      inputBg: "rgba(245,158,11,0.04)",
+      inputBorder: "rgba(245,158,11,0.22)",
+      avatarRing: "rgba(245,158,11,0.45)",
+      shadow: "0 4px 36px rgba(245,158,11,0.18)",
+      successBg: "rgba(245,158,11,0.12)",
+      successText: "#FCD34D",
+      statCard: "rgba(245,158,11,0.05)",
+      statBorder: "rgba(245,158,11,0.20)",
+    },
+  },
+
+  /* ── Marigold Festival — saturated orange + purple ──
+     Vivid marigold #FF8C00 with deep aubergine purple
+     accents. Festival warmth, Indian textile vibe. For
+     coaches, lifestyle, cultural/spiritual brands. */
+  {
+    id: "marigold-festival",
+    name: "Marigold Festival",
+    description: "Vivid marigold + aubergine. Festival warmth, textile rich.",
+    tier: "premium",
+    categories: ["Vibrant", "Aesthetic", "Coach", "Feminine"],
+    colorScheme: "light",
+    background: "linear-gradient(180deg,#FFF1D6 0%,#FFE2A8 100%)",
+    fontFamily: ELEGANT,
+    effects: ["grain"],
+    previewGradient:
+      "linear-gradient(135deg,#FFE2A8 0%,#FF8C00 50%,#5B1A66 100%)",
+    accent: "gold",
+    vars: {
+      ...LIGHT_BASE,
+      card: "rgba(255,251,241,0.88)",
+      border: "rgba(91,26,102,0.16)",
+      text: "#2A0D2F",
+      text2: "rgba(42,13,47,0.74)",
+      text3: "rgba(42,13,47,0.45)",
+      accent: "#5B1A66",
+      btn: "#FF8C00",
+      btnText: "#2A0D2F",
+      btnRadius: "1.5rem",
+      btnBorder: "transparent",
+      cardRadius: "1rem",
+      marker: "#FF8C00",
+      socialBg: "#FFEFD4",
+      socialBorder: "rgba(91,26,102,0.18)",
+      inputBg: "#FFFAEC",
+      inputBorder: "rgba(91,26,102,0.22)",
+      avatarRing: "rgba(255,140,0,0.45)",
+      shadow: "0 4px 28px rgba(91,26,102,0.10)",
+      successBg: "rgba(255,140,0,0.12)",
+      successText: "#5B1A66",
+      statCard: "rgba(255,251,241,0.88)",
+      statBorder: "rgba(91,26,102,0.14)",
+    },
+  },
+
+  /* ── Ember Luxe — deep burnt orange + cream + black ─
+     Burnt orange #B33A0A on cream + jet black, refined
+     serif. Leather-bound luxury, masculine premium.
+     For luxury affiliates, high-ticket masterminds. */
+  {
+    id: "ember-luxe",
+    name: "Ember Luxe",
+    description: "Burnt orange + cream + black. Leather-bound luxury.",
+    tier: "premium",
+    categories: ["Luxury", "Masculine", "Business & Sales", "Professional"],
+    colorScheme: "light",
+    background: "linear-gradient(180deg,#F5EDDE 0%,#EBE0C9 100%)",
+    fontFamily: ELEGANT,
+    effects: ["grain"],
+    previewGradient:
+      "linear-gradient(135deg,#F5EDDE 0%,#B33A0A 50%,#0A0A0A 100%)",
+    accent: "gold",
+    vars: {
+      ...LIGHT_BASE,
+      card: "rgba(255,251,241,0.92)",
+      border: "rgba(10,10,10,0.18)",
+      text: "#0A0A0A",
+      text2: "rgba(10,10,10,0.78)",
+      text3: "rgba(10,10,10,0.48)",
+      accent: "#B33A0A",
+      btn: "#0A0A0A",
+      btnText: "#F5EDDE",
+      btnRadius: "0.125rem",
+      btnBorder: "transparent",
+      cardRadius: "0.25rem",
+      marker: "#B33A0A",
+      socialBg: "#F8EFDC",
+      socialBorder: "rgba(10,10,10,0.20)",
+      inputBg: "#FDFAF0",
+      inputBorder: "rgba(10,10,10,0.22)",
+      avatarRing: "rgba(179,58,10,0.40)",
+      shadow: "0 2px 20px rgba(10,10,10,0.10)",
+      successBg: "rgba(179,58,10,0.10)",
+      successText: "#5C1F08",
+      statCard: "rgba(255,251,241,0.92)",
+      statBorder: "rgba(10,10,10,0.15)",
+    },
+  },
+
+  /* ── Safran Spice — saffron + olive earthy organic ──
+     Warm saffron orange + olive green accents on
+     cream. Hand-feel display, Mediterranean. For
+     wellness, organic food brands, mediterranean
+     lifestyle coaches. */
+  {
+    id: "safran-spice",
+    name: "Safran Spice",
+    description: "Saffron + olive on cream. Mediterranean, organic, warm.",
+    tier: "premium",
+    categories: ["Aesthetic", "Coach", "Feminine", "Minimal"],
+    colorScheme: "light",
+    background: "linear-gradient(180deg,#FAF1D8 0%,#F2E1B8 100%)",
+    fontFamily: ELEGANT,
+    effects: ["grain"],
+    previewGradient:
+      "linear-gradient(135deg,#FAF1D8 0%,#E07B00 50%,#5C6B2F 100%)",
+    accent: "gold",
+    vars: {
+      ...LIGHT_BASE,
+      card: "rgba(254,248,232,0.90)",
+      border: "rgba(92,107,47,0.18)",
+      text: "#2E2410",
+      text2: "rgba(46,36,16,0.74)",
+      text3: "rgba(46,36,16,0.46)",
+      accent: "#5C6B2F",
+      btn: "#E07B00",
+      btnText: "#FAF1D8",
+      btnRadius: "1rem",
+      btnBorder: "transparent",
+      cardRadius: "0.75rem",
+      marker: "#E07B00",
+      socialBg: "#F7EBCA",
+      socialBorder: "rgba(92,107,47,0.20)",
+      inputBg: "#FDF7E2",
+      inputBorder: "rgba(92,107,47,0.25)",
+      avatarRing: "rgba(224,123,0,0.40)",
+      shadow: "0 2px 22px rgba(46,36,16,0.10)",
+      successBg: "rgba(92,107,47,0.12)",
+      successText: "#3F4A1E",
+      statCard: "rgba(254,248,232,0.90)",
+      statBorder: "rgba(92,107,47,0.16)",
+    },
+  },
+
   /* ── Glacier Arctic — frozen ice blue ───────────────
      Pale ice blue bg with deep navy + silver accents.
      Crisp modern sans. For fintech, B2B SaaS, anything

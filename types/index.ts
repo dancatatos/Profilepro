@@ -925,7 +925,13 @@ export type ThemeId =
   | "archive-navy"
   | "prairie-burnt"
   | "canvas-gallery"
-  | "glacier-arctic";
+  | "glacier-arctic"
+  /* ── Premium themes (Session 6 — orange lineup) ── */
+  | "persimmon-modern"
+  | "amber-glow"
+  | "marigold-festival"
+  | "ember-luxe"
+  | "safran-spice";
 
 export interface ProfileTheme {
   id: ThemeId;
