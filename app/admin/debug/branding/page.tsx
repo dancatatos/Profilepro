@@ -17,11 +17,15 @@ import { notFound } from "next/navigation";
 import {
   getPlansConfig,
   getProfileByUsername,
-  getUserDoc,
 } from "@/lib/firebase/firestore";
 import { PLANS as DEFAULT_PLANS } from "@/lib/constants";
 import { defaultFeatureKeysForPlan, planHasFeature } from "@/lib/features";
 import { isFirebaseConfigured } from "@/lib/firebase/config";
+import {
+  getAdminDb,
+  isAdminConfigured,
+} from "@/lib/firebase/admin";
+import type { AccountUser } from "@/types";
 
 export const dynamic = "force-dynamic";
 
@@ -58,8 +62,18 @@ export default async function BrandingDebugPage({
   }
 
   const ownerId = profile.ownerId;
+  const adminReady = isAdminConfigured();
   const [user, savedPlans] = await Promise.all([
-    getUserDoc(ownerId).catch(() => null),
+    adminReady
+      ? getAdminDb()
+          .collection("users")
+          .doc(ownerId)
+          .get()
+          .then((snap) =>
+            snap.exists ? (snap.data() as AccountUser) : null,
+          )
+          .catch(() => null)
+      : Promise.resolve(null),
     getPlansConfig().catch(() => null),
   ]);
 
@@ -87,7 +101,14 @@ export default async function BrandingDebugPage({
   return (
     <Shell title={`Diagnose @${username}`}>
       <Row label="Profile owner UID" value={ownerId} />
-      <Row label="User doc loaded?" value={user ? "yes" : "NO — that's the bug"} />
+      <Row
+        label="Admin SDK configured?"
+        value={adminReady ? "yes" : "NO — set FIREBASE_ADMIN_* env vars"}
+      />
+      <Row
+        label="User doc loaded (via Admin SDK)?"
+        value={user ? "yes" : "NO"}
+      />
       <Row label="User.plan (raw)" value={userPlanId ?? "(unset)"} />
       <Row
         label="Saved plans loaded"

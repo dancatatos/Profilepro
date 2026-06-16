@@ -1,15 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import {
-  getPlansConfig,
-  getProfileByUsername,
-  getUserDoc,
-} from "@/lib/firebase/firestore";
+import { getProfileByUsername } from "@/lib/firebase/firestore";
 import { isFirebaseConfigured } from "@/lib/firebase/config";
 import { DEMO_PROFILE } from "@/lib/defaults";
 import { PublicProfileView } from "@/components/public-profile/PublicProfileView";
-import { APP, PLANS as DEFAULT_PLANS } from "@/lib/constants";
-import { defaultFeatureKeysForPlan, planHasFeature } from "@/lib/features";
+import { APP } from "@/lib/constants";
+import { resolveCanRemoveBranding } from "@/lib/branding";
 import type { Profile } from "@/types";
 
 /* Edge-cache the rendered profile for 60s. Profile saves in the
@@ -30,37 +26,10 @@ async function resolveProfile(username: string): Promise<Profile | null> {
   }
 }
 
-/**
- * Resolve whether the profile's owner has the `remove_branding` feature
- * — when true, we hide the "Made with Credibly" footer on the public
- * profile. Fail-open (default to showing branding) on any error so the
- * footer is the safe default if the lookup hits permission issues or
- * the owner's doc is missing.
- */
-async function resolveCanRemoveBranding(ownerId: string): Promise<boolean> {
-  if (!isFirebaseConfigured) return false;
-  try {
-    const [user, savedPlans] = await Promise.all([
-      getUserDoc(ownerId),
-      getPlansConfig(),
-    ]);
-    if (!user) return false;
-    const plans =
-      savedPlans && savedPlans.length > 0 ? savedPlans : DEFAULT_PLANS;
-    const plan = plans.find((p) => p.id === user.plan);
-    if (!plan) return false;
-    /* Backfill featureKeys if the saved plan predates the catalogue
-       so an admin who hasn't re-saved their plans config yet still
-       sees the expected paid-tier behaviour. */
-    const planWithKeys =
-      plan.featureKeys && plan.featureKeys.length > 0
-        ? plan
-        : { ...plan, featureKeys: defaultFeatureKeysForPlan(plan.id) };
-    return planHasFeature(planWithKeys, "remove_branding");
-  } catch {
-    return false;
-  }
-}
+/* resolveCanRemoveBranding lives in lib/branding.ts now — both the
+   profile and funnel pages use the same Admin-SDK-backed resolver so
+   the /users/{uid} read isn't blocked by the owner-only Firestore
+   rule when public visitors hit the page server-side. */
 
 export async function generateMetadata({
   params,
