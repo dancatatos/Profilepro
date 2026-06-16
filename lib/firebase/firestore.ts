@@ -1205,10 +1205,23 @@ export async function updateUserDoc(
   patch: Partial<AccountUser>,
 ): Promise<void> {
   if (!isFirebaseConfigured) return;
-  await updateDoc(doc(db, COL.users, uid), {
-    ...patch,
-    updatedAt: Date.now(),
-  });
+  /* setDoc + merge instead of updateDoc so a missing /users/{uid} doc
+     doesn't throw permission-denied. updateDoc requires the doc to
+     exist; when it's missing the rule evaluator can't read
+     resource.data and falls through to a generic permission failure
+     that surfaces to the user as "Couldn't save changes." setDoc with
+     merge handles both cases (create or update) and the rules already
+     allow both for the owner — same effective semantics, no rule
+     change needed, and robust to corrupted signups where the user doc
+     went missing. */
+  await setDoc(
+    doc(db, COL.users, uid),
+    {
+      ...patch,
+      updatedAt: Date.now(),
+    },
+    { merge: true },
+  );
 }
 
 /* ---------------- Profiles ---------------- */
