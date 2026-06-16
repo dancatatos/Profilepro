@@ -39,6 +39,7 @@ export function FunnelView({
   ownerId,
   paymentMethods,
   live = false,
+  showBranding = true,
 }: {
   funnel: Funnel;
   profileId: string;
@@ -46,6 +47,14 @@ export function FunnelView({
   /** Owner's payment methods, threaded through to PaymentSection. */
   paymentMethods?: import("@/types").PaymentMethod[];
   live?: boolean;
+  /**
+   * Whether to render the "Made with Credibly" footer. Defaults to true
+   * (the safe / open path). Set to false only when the owner's plan
+   * grants the `remove_branding` feature — the public funnel page
+   * resolves this server-side before render, same pattern as
+   * PublicProfileView.
+   */
+  showBranding?: boolean;
 }) {
   const [stepIndex, setStepIndex] = useState(0);
   const loggedSteps = useRef<Set<number>>(new Set());
@@ -183,17 +192,19 @@ export function FunnelView({
           )}
         </div>
 
-        <Link
-          href="/"
-          className="mt-10 flex items-center justify-center gap-1.5 text-xs"
-          style={{ color: "var(--tp-text3)" }}
-        >
-          <LogoMark className="h-4 w-4" />
-          Made with{" "}
-          <span className="font-semibold" style={{ color: "var(--tp-text2)" }}>
-            Credibly
-          </span>
-        </Link>
+        {showBranding && (
+          <Link
+            href="/"
+            className="mt-10 flex items-center justify-center gap-1.5 text-xs"
+            style={{ color: "var(--tp-text3)" }}
+          >
+            <LogoMark className="h-4 w-4" />
+            Made with{" "}
+            <span className="font-semibold" style={{ color: "var(--tp-text2)" }}>
+              Credibly
+            </span>
+          </Link>
+        )}
       </div>
     </div>
   );
