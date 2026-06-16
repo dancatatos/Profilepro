@@ -15,6 +15,7 @@ import type {
   FaqItem,
   PaymentMethod,
   ProfileSection,
+  VideoEmbed,
 } from "@/types";
 import type { ThemeConfig } from "@/lib/themes";
 
@@ -758,54 +759,120 @@ export function SectionRenderer({
         </SectionShell>
       );
 
-    case "video":
+    case "video": {
+      /* Layout resolution. `auto` (or unset) inspects the video count:
+         1 = hero, 2-3 = row, 4+ = grid. Explicit values bypass the
+         heuristic so power users can pin a layout regardless of count
+         (e.g. "always show as Reels strip, no matter how many"). */
+      const explicit = section.layout && section.layout !== "auto"
+        ? section.layout
+        : null;
+      const auto =
+        section.videos.length === 1
+          ? "hero"
+          : section.videos.length <= 3
+            ? "row"
+            : "grid";
+      const layout = explicit ?? auto;
+
+      /* Render one video into a card. Aspect ratio is "video" (16:9)
+         by default; reels mode passes "portrait" for 9:16. TikTok
+         link-only items render as a tappable row card regardless of
+         layout (we don't have embed permission for TikTok previews). */
+      const renderCard = (v: VideoEmbed, aspect: "video" | "portrait") => {
+        if (v.provider === "tiktok") {
+          return (
+            <a
+              key={v.id}
+              href={normalizeExternalUrl(v.url)}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => track("cta_click", `video-${v.id}`)}
+              className="flex h-full items-center gap-3 p-3.5"
+              style={V.card}
+            >
+              <span
+                className="flex h-10 w-10 items-center justify-center rounded-xl"
+                style={{ background: "var(--tp-social-bg)" }}
+              >
+                <Icon name="Play" className="h-4 w-4" style={V.text} />
+              </span>
+              <span className="text-sm font-medium" style={V.text}>
+                {v.title || "Watch on TikTok"}
+              </span>
+            </a>
+          );
+        }
+        return (
+          <div
+            key={v.id}
+            className={cn(
+              "overflow-hidden",
+              aspect === "portrait" ? "aspect-[9/16]" : "aspect-video",
+            )}
+            style={{ ...V.card, padding: 0 }}
+          >
+            <iframe
+              src={toEmbedUrl(v.provider, v.url)}
+              className="h-full w-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              title={v.title || "Video"}
+            />
+          </div>
+        );
+      };
+
+      if (layout === "hero") {
+        const [first, ...rest] = section.videos;
+        return (
+          <SectionShell title={section.title}>
+            {first && renderCard(first, "video")}
+            {rest.length > 0 && (
+              <div className="mt-3 grid grid-cols-1 gap-3 @xl:grid-cols-2 @3xl:grid-cols-3">
+                {rest.map((v) => renderCard(v, "video"))}
+              </div>
+            )}
+          </SectionShell>
+        );
+      }
+
+      if (layout === "row") {
+        return (
+          <SectionShell title={section.title}>
+            <div className="space-y-3">
+              {section.videos.map((v) => renderCard(v, "video"))}
+            </div>
+          </SectionShell>
+        );
+      }
+
+      if (layout === "reels") {
+        return (
+          <SectionShell title={section.title}>
+            <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0">
+              {section.videos.map((v) => (
+                <div
+                  key={v.id}
+                  className="w-[180px] shrink-0 sm:w-[220px]"
+                >
+                  {renderCard(v, "portrait")}
+                </div>
+              ))}
+            </div>
+          </SectionShell>
+        );
+      }
+
+      /* "grid" — responsive 2-3 col grid. Default for 4+ videos. */
       return (
         <SectionShell title={section.title}>
           <div className="grid grid-cols-1 gap-3 @xl:grid-cols-2 @4xl:grid-cols-3">
-            {section.videos.map((v) =>
-              v.provider === "tiktok" ? (
-                <a
-                  key={v.id}
-                  href={normalizeExternalUrl(v.url)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => track("cta_click", `video-${v.id}`)}
-                  className="flex items-center gap-3 p-3.5"
-                  style={V.card}
-                >
-                  <span
-                    className="flex h-10 w-10 items-center justify-center rounded-xl"
-                    style={{ background: "var(--tp-social-bg)" }}
-                  >
-                    <Icon
-                      name="Play"
-                      className="h-4 w-4"
-                      style={V.text}
-                    />
-                  </span>
-                  <span className="text-sm font-medium" style={V.text}>
-                    {v.title || "Watch on TikTok"}
-                  </span>
-                </a>
-              ) : (
-                <div
-                  key={v.id}
-                  className="aspect-video overflow-hidden"
-                  style={{ ...V.card, padding: 0 }}
-                >
-                  <iframe
-                    src={toEmbedUrl(v.provider, v.url)}
-                    className="h-full w-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    title={v.title || "Video"}
-                  />
-                </div>
-              ),
-            )}
+            {section.videos.map((v) => renderCard(v, "video"))}
           </div>
         </SectionShell>
       );
+    }
 
     case "gallery":
       return (

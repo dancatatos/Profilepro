@@ -819,9 +819,45 @@ function VideoEditor({ section }: { section: VideoSection }) {
     update(section.id, { videos });
   const edit = (id: string, p: Partial<VideoSection["videos"][number]>) =>
     patch(section.videos.map((v) => (v.id === id ? { ...v, ...p } : v)));
+  const setLayout = (layout: VideoSection["layout"]) =>
+    update(section.id, { layout });
+
+  const layoutValue = section.layout ?? "auto";
 
   return (
     <div className="space-y-2.5">
+      {/* Layout picker — controls how the public renderer arranges
+          videos. "Auto" picks based on count (1=hero, 2-3=row, 4+=grid). */}
+      <div>
+        <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/45">
+          Layout
+        </label>
+        <Select
+          value={layoutValue}
+          onChange={(val) =>
+            setLayout(val as NonNullable<VideoSection["layout"]>)
+          }
+          options={[
+            { value: "auto", label: "Auto (smart default)" },
+            { value: "hero", label: "Hero — first big, rest in grid" },
+            { value: "row", label: "Row — every video full width" },
+            { value: "grid", label: "Grid — 2–3 columns" },
+            { value: "reels", label: "Reels — portrait scroll strip" },
+          ]}
+        />
+        <p className="mt-1 text-[10px] text-white/35">
+          {layoutValue === "auto"
+            ? "1 video → hero, 2–3 → row, 4+ → grid."
+            : layoutValue === "hero"
+              ? "First video full-width, remaining videos in a 2–3 col grid."
+              : layoutValue === "row"
+                ? "Every video at full container width, stacked."
+                : layoutValue === "grid"
+                  ? "2 columns on tablet, 3 on desktop."
+                  : "Portrait 9:16 aspect, horizontally scrollable. Best for TikTok / IG-style clips."}
+        </p>
+      </div>
+
       {section.videos.map((v) => (
         <RowCard
           key={v.id}

@@ -651,9 +651,24 @@ export interface ProductsSection extends SectionBase {
   type: "products";
   products: Product[];
 }
+/**
+ * How the video section lays out its embeds in the public renderer.
+ *   auto   → renderer picks based on count:
+ *              1 video  → "hero"
+ *              2-3      → "row"
+ *              4+       → "grid"
+ *   hero   → first video full-width, any remaining videos in a 2-col grid below
+ *   row    → every video at full container width, stacked vertically
+ *   grid   → responsive 2-3 col grid (best for short clips)
+ *   reels  → portrait 9:16 aspect, horizontal scrollable strip (TikTok/IG-style)
+ */
+export type VideoLayout = "auto" | "hero" | "row" | "grid" | "reels";
+
 export interface VideoSection extends SectionBase {
   type: "video";
   videos: VideoEmbed[];
+  /** Optional layout override. Defaults to "auto" when unset. */
+  layout?: VideoLayout;
 }
 export interface GallerySection extends SectionBase {
   type: "gallery";
