@@ -1337,6 +1337,15 @@ export interface FunnelStep {
   sections: ProfileSection[];
   /** Advance button. Omitted on a final thank-you step. */
   cta?: FunnelCta;
+  /**
+   * Optional URL slug used for deep-linking directly to this step
+   * from outside the funnel:
+   *   /{username}/{funnel-slug}?step={this-slug}
+   * Falls back to the step's 1-based index when unset (e.g. ?step=2).
+   * Slug-style values like "watch-training" are nicer to share than
+   * numeric indices; absent values still get a deep link via index.
+   */
+  slug?: string;
 }
 
 export type FunnelStatus = "draft" | "published";

@@ -67,6 +67,71 @@ function stepTypeLabel(type: FunnelStepType): string {
   return STEP_TYPES.find((t) => t.value === type)?.label ?? type;
 }
 
+/* ---------------- Step share link ---------------- */
+
+/**
+ * Per-step deep-link editor. Renders the step's share URL with a
+ * Copy button + an optional slug input. If the owner leaves slug
+ * blank we use the 1-based step index instead. Hidden on the first
+ * step since visitors landing at the funnel root already start there
+ * and a `?step=1` link would just look noisy.
+ */
+function StepShareLink({
+  funnel,
+  step,
+  stepIndex,
+  username,
+  onSlugChange,
+}: {
+  funnel: Funnel;
+  step: FunnelStep;
+  stepIndex: number;
+  username: string;
+  onSlugChange: (slug: string) => void;
+}) {
+  if (stepIndex <= 0) {
+    return null;
+  }
+  const slugPart = step.slug?.trim() || String(stepIndex + 1);
+  const shareUrl = `${getAppOrigin()}/${username}/${funnel.slug}?step=${encodeURIComponent(slugPart)}`;
+  const copy = () =>
+    copyToClipboard(shareUrl).then(
+      () => toast.success("Step link copied"),
+      () => toast.error("Couldn't copy — copy manually"),
+    );
+  return (
+    <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
+      <p className="mb-1.5 text-xs font-medium text-white/65">
+        Step share link
+      </p>
+      <p className="mb-2 text-[10px] text-white/45">
+        Send visitors directly to this step from anywhere — email,
+        DM, another funnel, social bios. Funnel still behaves
+        normally once they land.
+      </p>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto]">
+        <input
+          value={step.slug ?? ""}
+          onChange={(e) => onSlugChange(slugify(e.target.value))}
+          placeholder={`Optional URL slug (e.g. "watch-training" → ?step=watch-training)`}
+          className={FIELD}
+        />
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={copy}
+          leftIcon={<Copy className="h-3.5 w-3.5" />}
+        >
+          Copy link
+        </Button>
+      </div>
+      <p className="mt-2 break-all rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 py-2 font-mono text-[11px] text-electric-300">
+        {shareUrl}
+      </p>
+    </div>
+  );
+}
+
 /* ---------------- Step CTA editor ---------------- */
 
 function StepCtaEditor({
@@ -678,6 +743,18 @@ export default function FunnelBuilderPage() {
               />
             </div>
           </div>
+
+          {/* Deep-link slug + share URL — owners can send visitors
+              straight to any step from outside the funnel. Slug-style
+              values are nicer than ?step=2; if left blank we fall
+              back to the 1-based step index. */}
+          <StepShareLink
+            funnel={funnel}
+            stepIndex={funnel.steps.findIndex((s) => s.id === currentStep.id)}
+            step={currentStep}
+            username={account?.username || "you"}
+            onSlugChange={(slug) => patchStep(currentStep.id, { slug })}
+          />
 
           <StepCtaEditor
             step={currentStep}

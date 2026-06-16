@@ -56,20 +56,53 @@ export function FunnelView({
    */
   showBranding?: boolean;
 }) {
-  const [stepIndex, setStepIndex] = useState(0);
-  const loggedSteps = useRef<Set<number>>(new Set());
+  /* Resolve the initial step from the URL on first render.
+       /{username}/{funnel-slug}?step={slug-or-index}
+     Owners share these deep-link URLs to send visitors straight to a
+     specific step. The URL only controls the *initial* step — once
+     the visitor advances, the URL stays clean (no history pollution,
+     back button behaves predictably). */
+  const initialStepIndex = (() => {
+    if (typeof window === "undefined") return 0;
+    const param = new URLSearchParams(window.location.search).get("step");
+    if (!param) return 0;
+    const trimmed = param.trim().toLowerCase();
+    /* Try slug match first (owner-defined "watch-training" etc.). */
+    const bySlug = funnel.steps.findIndex(
+      (s) => (s.slug ?? "").toLowerCase() === trimmed,
+    );
+    if (bySlug >= 0) return bySlug;
+    /* Fall back to 1-based numeric index (?step=2 → index 1). */
+    const asNum = Number(trimmed);
+    if (Number.isFinite(asNum) && asNum >= 1 && asNum <= funnel.steps.length) {
+      return Math.floor(asNum) - 1;
+    }
+    return 0;
+  })();
 
-  /* Log each step the visitor reaches — once per session — for drop-off. */
+  const [stepIndex, setStepIndex] = useState(initialStepIndex);
+  const loggedSteps = useRef<Set<number>>(new Set());
+  /* Marker for analytics — distinguishes deep-link entries from
+     visitors who started at step 1 and walked the whole funnel. */
+  const enteredViaLink = initialStepIndex > 0;
+
+  /* Log each step the visitor reaches — once per session — for drop-off.
+     `entered_via_link` is suffixed onto the first event so analytics
+     can distinguish direct step landings from normal funnel flow. */
   useEffect(() => {
     if (!live || loggedSteps.current.has(stepIndex)) return;
+    const isFirstStepLogged = loggedSteps.current.size === 0;
     loggedSteps.current.add(stepIndex);
     logEvent({
       profileId,
       ownerId,
       type: "funnel_step",
-      target: `${funnel.id}#${stepIndex}`,
+      target:
+        isFirstStepLogged && enteredViaLink
+          ? `${funnel.id}#${stepIndex}#entered_via_link`
+          : `${funnel.id}#${stepIndex}`,
     }).catch(() => null);
-  }, [live, stepIndex, profileId, ownerId, funnel.id]);
+  }, [live, stepIndex, profileId, ownerId, funnel.id, enteredViaLink]);
 
   const tc = getThemeConfig(funnel.themeId);
   const themeStyle = buildThemeStyle(funnel.themeId);
