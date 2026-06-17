@@ -1208,6 +1208,57 @@ export function SectionRenderer({
                     decoding="async"
                   />
                 )}
+                {/* Author header — avatar + name + role on top, the
+                    classic testimonial layout. Avatar is optional;
+                    rendered as a circular ringed photo OR initials
+                    fallback if the owner didn't upload one. */}
+                <div className="mb-3 flex items-center gap-3">
+                  {t.authorAvatarUrl ? (
+                    <img
+                      src={t.authorAvatarUrl}
+                      alt={t.authorName}
+                      className="h-12 w-12 shrink-0 rounded-full object-cover ring-2"
+                      style={{
+                        borderColor: "var(--tp-accent)",
+                        // ring-2 uses the ring color; set via boxShadow
+                        // for theme awareness.
+                        boxShadow: "0 0 0 2px var(--tp-accent)",
+                      }}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ) : (
+                    <span
+                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-semibold"
+                      style={{
+                        background: "var(--tp-social-bg)",
+                        color: "var(--tp-text2)",
+                        boxShadow: "0 0 0 2px var(--tp-accent)",
+                      }}
+                    >
+                      {t.authorName
+                        .trim()
+                        .split(/\s+/)
+                        .map((w) => w[0] ?? "")
+                        .slice(0, 2)
+                        .join("")
+                        .toUpperCase() || "?"}
+                    </span>
+                  )}
+                  <div className="min-w-0">
+                    <p
+                      className="truncate text-sm font-semibold"
+                      style={V.text}
+                    >
+                      {t.authorName}
+                    </p>
+                    {t.authorRole && (
+                      <p className="truncate text-xs" style={V.text3}>
+                        {t.authorRole}
+                      </p>
+                    )}
+                  </div>
+                </div>
                 {typeof t.rating === "number" && (
                   <div className="mb-1.5 flex gap-0.5">
                     {Array.from({ length: 5 }).map((_, i) => (
@@ -1233,14 +1284,6 @@ export function SectionRenderer({
                     &ldquo;{t.quote}&rdquo;
                   </p>
                 )}
-                <p className="mt-2 text-xs font-semibold" style={V.text}>
-                  {t.authorName}
-                  {t.authorRole && (
-                    <span className="font-normal" style={V.text3}>
-                      {" "}· {t.authorRole}
-                    </span>
-                  )}
-                </p>
               </div>
             ))}
           </div>

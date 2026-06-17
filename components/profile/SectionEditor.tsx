@@ -974,6 +974,20 @@ function TestimonialsEditor({ section }: { section: TestimonialsSection }) {
               className={FIELD}
             />
           </div>
+          {/* Optional profile picture for the author. Renders as a
+              circular avatar with theme-accent ring next to their name.
+              Absent → falls back to initials in the public renderer. */}
+          <div>
+            <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/45">
+              Profile photo (optional)
+            </label>
+            <ImageUploadField
+              value={t.authorAvatarUrl}
+              onChange={(url) => edit(t.id, { authorAvatarUrl: url })}
+              folder="avatars"
+              round
+            />
+          </div>
           <div className="flex gap-1">
             {Array.from({ length: 5 }).map((_, i) => (
               <button

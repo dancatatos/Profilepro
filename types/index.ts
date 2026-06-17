@@ -467,6 +467,12 @@ export interface Testimonial {
   quote?: string;
   mediaUrl?: string; // image url or video embed url
   rating?: number;
+  /**
+   * Optional profile picture for the author. Rendered as a circular
+   * avatar next to the author's name regardless of testimonial kind —
+   * the screenshot layout: avatar + name on top, quote below.
+   */
+  authorAvatarUrl?: string;
 }
 
 export interface Product {
