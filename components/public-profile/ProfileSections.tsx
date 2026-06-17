@@ -1344,8 +1344,8 @@ export function SectionRenderer({
                   </p>
                   {p.description && (
                     <p
-                      className="mt-1 line-clamp-2 text-xs leading-relaxed"
-                      style={V.text3}
+                      className="mt-1.5 line-clamp-3 text-sm leading-relaxed"
+                      style={V.text2}
                     >
                       {p.description}
                     </p>
