@@ -606,11 +606,27 @@ export function SectionRenderer({
       return (
         <SectionShell title={section.title}>
           <div
-            className={cn(
-              "relative -mx-4 overflow-hidden sm:mx-0",
-              aspectClass,
-            )}
+            className={cn("relative overflow-hidden", aspectClass)}
             style={{
+              /* Break out of the funnel/profile content container so
+                 hero images span the FULL browser viewport — matches
+                 the way every modern website hero (Apple, Stripe,
+                 etc.) behaves. Without this the image would only span
+                 the centred max-w-5xl container with whitespace on
+                 either side at desktop widths.
+
+                 The classic `left: 50%; margin-left: -50vw; width: 100vw`
+                 trick — works on any nested depth without needing the
+                 parent to be overflow-visible since we're using
+                 position: relative not absolute. No rounded corners
+                 in this mode by design (full-bleed = no card framing). */
+              position: "relative",
+              left: "50%",
+              right: "50%",
+              marginLeft: "-50vw",
+              marginRight: "-50vw",
+              width: "100vw",
+              maxWidth: "100vw",
               backgroundImage: section.backgroundUrl
                 ? `url("${section.backgroundUrl}")`
                 : undefined,
@@ -619,7 +635,6 @@ export function SectionRenderer({
               backgroundColor: section.backgroundUrl
                 ? undefined
                 : "var(--tp-card)",
-              borderRadius: "var(--tp-card-radius)",
             }}
           >
             {hasContent && overlayGradient && (
