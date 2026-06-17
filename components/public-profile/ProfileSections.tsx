@@ -1198,7 +1198,15 @@ export function SectionRenderer({
         <SectionShell title={section.title} section={section}>
           <div className="grid gap-2.5 @xl:grid-cols-2 @3xl:grid-cols-3">
             {section.testimonials.map((t) => (
-              <div key={t.id} className="p-4" style={V.card}>
+              /* min-w-0 + overflow-hidden so the card can never grow
+                 past its grid cell — long author names / unbroken
+                 quote text don't push the layout horizontally and
+                 cut off content on mobile. */
+              <div
+                key={t.id}
+                className="min-w-0 overflow-hidden p-4"
+                style={V.card}
+              >
                 {t.kind === "image" && t.mediaUrl && (
                   <img
                     src={t.mediaUrl}
@@ -1280,7 +1288,10 @@ export function SectionRenderer({
                   </div>
                 )}
                 {t.quote && (
-                  <p className="text-sm leading-relaxed" style={V.text2}>
+                  <p
+                    className="break-words text-sm leading-relaxed"
+                    style={V.text2}
+                  >
                     &ldquo;{t.quote}&rdquo;
                   </p>
                 )}
