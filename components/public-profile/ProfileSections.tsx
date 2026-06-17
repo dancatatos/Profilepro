@@ -1302,62 +1302,73 @@ export function SectionRenderer({
       );
 
     case "products":
+      /* Showcase layout: hero image on top, title + description
+         centered, pill-style CTA at the bottom. Replaces the older
+         horizontal image+text+link card. Image is set to aspect-[4/5]
+         (portrait-leaning) which works for product photos, lifestyle
+         shots, course covers — the screenshot reference style. */
       return (
         <SectionShell title={section.title} section={section}>
-          <div className="grid gap-2.5 @xl:grid-cols-2 @3xl:grid-cols-3 @5xl:grid-cols-4">
+          <div className="grid gap-3 @xl:grid-cols-2 @3xl:grid-cols-3 @5xl:grid-cols-4">
             {section.products.map((p) => (
               <div
                 key={p.id}
-                className="overflow-hidden"
+                className="min-w-0 overflow-hidden p-3 sm:p-4"
                 style={V.card}
               >
-                <div className="flex gap-3 p-3">
-                  <div
-                    className="h-16 w-16 shrink-0 overflow-hidden rounded-xl"
-                    style={{ background: "var(--tp-btn)" }}
+                {/* Hero image — generous, rounded, dominant. Empty
+                    state keeps a soft tinted placeholder so the
+                    layout doesn't collapse when imageUrl is missing. */}
+                <div
+                  className="aspect-[4/5] overflow-hidden rounded-2xl"
+                  style={{ background: "var(--tp-input-bg)" }}
+                >
+                  {p.imageUrl && (
+                    <img
+                      src={p.imageUrl}
+                      alt={p.title}
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  )}
+                </div>
+                <div className="px-1 pt-4 text-center">
+                  <p
+                    className="font-display text-lg font-bold leading-tight"
+                    style={V.accent}
                   >
-                    {p.imageUrl && (
-                      <img
-                        src={p.imageUrl}
-                        alt={p.title}
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                        decoding="async"
-                        width={64}
-                        height={64}
-                      />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold" style={V.text}>
-                      {p.title}
-                    </p>
+                    {p.title}
+                  </p>
+                  {p.description && (
                     <p
-                      className="line-clamp-2 text-xs"
+                      className="mt-1 line-clamp-2 text-xs leading-relaxed"
                       style={V.text3}
                     >
                       {p.description}
                     </p>
-                    {p.price && (
-                      <p className="mt-0.5 text-xs font-semibold" style={V.accent}>
-                        {p.price}
-                      </p>
-                    )}
-                  </div>
+                  )}
+                  {p.price && (
+                    <p
+                      className="mt-1.5 text-sm font-semibold"
+                      style={V.accent}
+                    >
+                      {p.price}
+                    </p>
+                  )}
                 </div>
-                <a
-                  href={normalizeExternalUrl(p.ctaUrl)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => track("cta_click", `product-${p.id}`)}
-                  className="block border-t py-2.5 text-center text-xs font-semibold"
-                  style={{
-                    borderColor: "var(--tp-border)",
-                    color: "var(--tp-accent)",
-                  }}
-                >
-                  {p.ctaLabel}
-                </a>
+                {p.ctaLabel?.trim() && p.ctaUrl?.trim() && (
+                  <a
+                    href={normalizeExternalUrl(p.ctaUrl)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => track("cta_click", `product-${p.id}`)}
+                    className="mt-4 block w-full rounded-full py-2.5 text-center text-sm font-semibold uppercase tracking-wide transition-transform active:scale-[0.98]"
+                    style={V.btn}
+                  >
+                    {p.ctaLabel}
+                  </a>
+                )}
               </div>
             ))}
           </div>
