@@ -138,13 +138,19 @@ function resolveBgValue(value?: string): string | undefined {
 }
 
 /* Lightweight client-side luminance check. Accepts hex (#FFB800),
-   short hex (#FB0), or rgb(a) strings. Returns null for CSS vars or
-   anything unparseable — caller skips text auto-flip in that case
-   (the curated CSS-var swatches like "accent" + "inverse" rely on
-   the renderer's pre-set text colours instead). */
+   short hex (#FB0), or rgb(a) strings. Returns null when:
+   - The color is a CSS var (we can't compute against it server-side)
+   - The color is unparseable
+   - The color is semi-transparent (alpha < 0.7) — these are meant as
+     subtle tints over the existing theme bg, so the underlying theme
+     colours show through and the theme's text colours remain correct.
+     Without this check, "Soft" + "Subtle" gray overlays incorrectly
+     triggered a white-text flip on a still-mostly-light page,
+     making text invisible. */
 function luminanceOf(color: string): number | null {
   const c = color.trim();
   let r = 0, g = 0, b = 0;
+  let a = 1;
   if (c.startsWith("#")) {
     let hex = c.slice(1);
     if (hex.length === 3) hex = hex.split("").map((h) => h + h).join("");
@@ -156,9 +162,13 @@ function luminanceOf(color: string): number | null {
     const nums = c.match(/[\d.]+/g);
     if (!nums || nums.length < 3) return null;
     r = Number(nums[0]); g = Number(nums[1]); b = Number(nums[2]);
+    if (nums.length >= 4) a = Number(nums[3]);
   } else {
     return null;
   }
+  /* Bail out for semi-transparent colours — text flip would conflict
+     with whatever the theme bg shows through. */
+  if (a < 0.7) return null;
   /* Relative luminance per WCAG. Returns 0..1. */
   const norm = [r, g, b].map((v) => {
     const s = v / 255;
