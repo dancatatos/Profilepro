@@ -500,11 +500,38 @@ export interface LeadCaptureChannels {
   telegramUrl?: string;
 }
 
+/**
+ * Per-section background override. Owners can paint either the
+ * section's inner CARD tile (cardBg) or the full-width SECTION
+ * CONTAINER stripe behind it (containerBg) — or both. Either field
+ * accepts:
+ *   - A CSS color string ("#FFB800", "rgba(0,0,0,0.6)", "transparent")
+ *   - One of the curated swatches resolved by the renderer
+ *     ("accent" | "soft" | "subtle" | "inverse") — these read from
+ *     theme CSS vars so they always stay on-brand even when the
+ *     owner switches themes.
+ *   - Undefined → no override (theme default).
+ *
+ * Text color auto-flips for readability based on the resolved
+ * background luminance, so owners can't accidentally make a section
+ * unreadable.
+ */
+export type SectionBgValue =
+  | "accent"
+  | "soft"
+  | "subtle"
+  | "inverse"
+  | string;
+
 export interface SectionBase {
   id: string;
   enabled: boolean;
   /** heading shown above the section on the public profile */
   title?: string;
+  /** Override for the section's inner card tile colour. */
+  cardBg?: SectionBgValue;
+  /** Override for the full-width section container stripe colour. */
+  containerBg?: SectionBgValue;
 }
 
 /**

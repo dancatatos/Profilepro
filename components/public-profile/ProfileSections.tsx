@@ -108,15 +108,77 @@ const V = {
    Section shell
 ────────────────────────────────────────── */
 
+/* ──────────────────────────────────────────
+   Per-section background overrides
+
+   - Curated swatches are hardcoded clean colors that look on-brand
+     on most themes. Each maps to a specific hex/rgba value so we
+     can compute readable text colour against it client-side.
+   - Custom values are passed through as-is (must be a valid CSS
+     color).
+   - When either cardBg or containerBg is set we compute the
+     resolved bg's luminance and override --tp-text + --tp-text2 +
+     --tp-text3 on the section wrapper so text auto-flips dark/light
+     for readability. CSS variable cascade handles all child cards.
+────────────────────────────────────────── */
+
+const CURATED_BG_SWATCHES: Record<string, string> = {
+  /* Light, neutral panels — work on any theme. */
+  soft: "rgba(0,0,0,0.04)",
+  subtle: "rgba(0,0,0,0.08)",
+  /* Theme-tied (CSS var so it tracks theme changes). */
+  accent: "var(--tp-accent)",
+  inverse: "var(--tp-text)",
+};
+
+function resolveBgValue(value?: string): string | undefined {
+  if (!value) return undefined;
+  if (CURATED_BG_SWATCHES[value]) return CURATED_BG_SWATCHES[value];
+  return value;
+}
+
+/* Lightweight client-side luminance check. Accepts hex (#FFB800),
+   short hex (#FB0), or rgb(a) strings. Returns null for CSS vars or
+   anything unparseable — caller skips text auto-flip in that case
+   (the curated CSS-var swatches like "accent" + "inverse" rely on
+   the renderer's pre-set text colours instead). */
+function luminanceOf(color: string): number | null {
+  const c = color.trim();
+  let r = 0, g = 0, b = 0;
+  if (c.startsWith("#")) {
+    let hex = c.slice(1);
+    if (hex.length === 3) hex = hex.split("").map((h) => h + h).join("");
+    if (hex.length !== 6) return null;
+    r = parseInt(hex.slice(0, 2), 16);
+    g = parseInt(hex.slice(2, 4), 16);
+    b = parseInt(hex.slice(4, 6), 16);
+  } else if (c.startsWith("rgb")) {
+    const nums = c.match(/[\d.]+/g);
+    if (!nums || nums.length < 3) return null;
+    r = Number(nums[0]); g = Number(nums[1]); b = Number(nums[2]);
+  } else {
+    return null;
+  }
+  /* Relative luminance per WCAG. Returns 0..1. */
+  const norm = [r, g, b].map((v) => {
+    const s = v / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * norm[0] + 0.7152 * norm[1] + 0.0722 * norm[2];
+}
+
 function SectionShell({
   title,
   children,
   narrow,
+  section,
 }: {
   title?: string;
   children: React.ReactNode;
   /** Cap section to a readable/form-friendly width on wider containers. */
   narrow?: "md" | "2xl";
+  /** Section data — used to read optional cardBg/containerBg overrides. */
+  section?: { cardBg?: string; containerBg?: string };
 }) {
   const narrowCls =
     narrow === "md"
@@ -124,22 +186,72 @@ function SectionShell({
       : narrow === "2xl"
         ? "mx-auto max-w-2xl"
         : "";
+
+  const resolvedCardBg = resolveBgValue(section?.cardBg);
+  const resolvedContainerBg = resolveBgValue(section?.containerBg);
+
+  /* Auto-flip text colour for readability whenever EITHER bg is set.
+     containerBg takes priority because the title sits on it. Curated
+     CSS-var swatches return null from luminanceOf → we leave the
+     theme's text colour alone for those (they're designed to remain
+     readable against the theme). */
+  const bgForLuminance = resolvedContainerBg ?? resolvedCardBg;
+  const lum = bgForLuminance ? luminanceOf(bgForLuminance) : null;
+  const cssVars: Record<string, string> = {};
+  if (resolvedCardBg) cssVars["--tp-card"] = resolvedCardBg;
+  if (lum !== null) {
+    const isDarkBg = lum < 0.5;
+    cssVars["--tp-text"] = isDarkBg ? "#FFFFFF" : "#0A0A0A";
+    cssVars["--tp-text2"] = isDarkBg
+      ? "rgba(255,255,255,0.78)"
+      : "rgba(10,10,10,0.78)";
+    cssVars["--tp-text3"] = isDarkBg
+      ? "rgba(255,255,255,0.50)"
+      : "rgba(10,10,10,0.55)";
+  }
+
+  const titleNode = title ? (
+    <div className="mb-3 flex items-center gap-2">
+      <span
+        className="h-3.5 w-1 rounded-full"
+        style={{ background: "var(--tp-marker)" }}
+      />
+      <h2
+        className="font-display text-sm font-bold uppercase tracking-wide"
+        style={{ color: "var(--tp-text3)" }}
+      >
+        {title}
+      </h2>
+    </div>
+  ) : null;
+
+  /* containerBg paints a full-width stripe behind the section. To do
+     it cleanly we escape the parent's px-4 / lg:px-6 padding with
+     negative margins, then add the same padding back on the inside
+     so child content keeps its alignment. */
+  if (resolvedContainerBg) {
+    return (
+      <section
+        className={cn(
+          "-mx-4 px-4 py-5 lg:-mx-6 lg:px-6 lg:py-7",
+          narrowCls,
+        )}
+        style={{ ...cssVars, background: resolvedContainerBg }}
+      >
+        {titleNode}
+        {children}
+      </section>
+    );
+  }
+
+  /* No containerBg → keep the original transparent-section behaviour
+     but still apply cardBg if set (via the cascaded CSS var). */
   return (
-    <section className={narrowCls || undefined}>
-      {title && (
-        <div className="mb-3 flex items-center gap-2">
-          <span
-            className="h-3.5 w-1 rounded-full"
-            style={{ background: "var(--tp-marker)" }}
-          />
-          <h2
-            className="font-display text-sm font-bold uppercase tracking-wide"
-            style={{ color: "var(--tp-text3)" }}
-          >
-            {title}
-          </h2>
-        </div>
-      )}
+    <section
+      className={narrowCls || undefined}
+      style={Object.keys(cssVars).length > 0 ? cssVars : undefined}
+    >
+      {titleNode}
       {children}
     </section>
   );
@@ -500,7 +612,7 @@ export function SectionRenderer({
               align === "right" && "items-end",
             );
       return (
-        <SectionShell title={section.title} narrow="md">
+        <SectionShell title={section.title} narrow="md" section={section}>
           <div className={wrapperClass}>
             {section.buttons.map((b) => {
               /* Default to "url" for buttons created before the action
@@ -558,7 +670,7 @@ export function SectionRenderer({
 
     case "socials":
       return (
-        <SectionShell title={section.title}>
+        <SectionShell title={section.title} section={section}>
           <div className="flex flex-wrap justify-center gap-3">
             {section.links.map((l) => (
               <a
@@ -583,7 +695,7 @@ export function SectionRenderer({
 
     case "about":
       return (
-        <SectionShell title={section.title} narrow="2xl">
+        <SectionShell title={section.title} narrow="2xl" section={section}>
           <p
             className="whitespace-pre-line text-sm leading-relaxed"
             style={V.text2}
@@ -595,7 +707,7 @@ export function SectionRenderer({
 
     case "text":
       return (
-        <SectionShell title={section.title} narrow="2xl">
+        <SectionShell title={section.title} narrow="2xl" section={section}>
           <div className="text-sm leading-relaxed" style={V.text2}>
             <RichTextRenderer doc={section.doc} />
           </div>
@@ -604,7 +716,7 @@ export function SectionRenderer({
 
     case "countdown":
       return (
-        <SectionShell title={section.title}>
+        <SectionShell title={section.title} section={section}>
           <div className="p-4 text-center" style={V.card}>
             {section.headline && (
               <p className="mb-3 text-sm font-medium" style={V.text2}>
@@ -627,7 +739,7 @@ export function SectionRenderer({
 
       if (layout === "stacked") {
         return (
-          <SectionShell title={section.title}>
+          <SectionShell title={section.title} section={section}>
             <div
               className="overflow-hidden"
               style={{ ...V.card, padding: 0 }}
@@ -715,7 +827,7 @@ export function SectionRenderer({
       );
 
       return (
-        <SectionShell title={section.title}>
+        <SectionShell title={section.title} section={section}>
           <div
             className={cn(
               "relative -mx-4 overflow-hidden sm:mx-0",
@@ -843,7 +955,7 @@ export function SectionRenderer({
       );
 
       return (
-        <SectionShell title={section.title}>
+        <SectionShell title={section.title} section={section}>
           <div
             className={cn("relative overflow-hidden", aspectClass)}
             style={{
@@ -935,7 +1047,7 @@ export function SectionRenderer({
 
     case "benefits":
       return (
-        <SectionShell title={section.title}>
+        <SectionShell title={section.title} section={section}>
           <div className="grid gap-2.5 @xl:grid-cols-2 @3xl:grid-cols-3">
             {section.items.map((it) => (
               <div
@@ -966,14 +1078,14 @@ export function SectionRenderer({
 
     case "faq":
       return (
-        <SectionShell title={section.title} narrow="2xl">
+        <SectionShell title={section.title} narrow="2xl" section={section}>
           <FaqList items={section.items} />
         </SectionShell>
       );
 
     case "pricingCard":
       return (
-        <SectionShell title={section.title} narrow="md">
+        <SectionShell title={section.title} narrow="md" section={section}>
           <div className="overflow-hidden p-5" style={V.card}>
             <p
               className="text-center font-display text-base font-semibold"
@@ -1055,7 +1167,7 @@ export function SectionRenderer({
 
     case "credibility":
       return (
-        <SectionShell title={section.title}>
+        <SectionShell title={section.title} section={section}>
           <div className="grid grid-cols-2 gap-2.5 @2xl:grid-cols-3 @3xl:grid-cols-4">
             {section.items.map((it) => (
               <div key={it.id} className="p-3.5" style={V.card}>
@@ -1083,7 +1195,7 @@ export function SectionRenderer({
 
     case "testimonials":
       return (
-        <SectionShell title={section.title}>
+        <SectionShell title={section.title} section={section}>
           <div className="grid gap-2.5 @xl:grid-cols-2 @3xl:grid-cols-3">
             {section.testimonials.map((t) => (
               <div key={t.id} className="p-4" style={V.card}>
@@ -1137,7 +1249,7 @@ export function SectionRenderer({
 
     case "products":
       return (
-        <SectionShell title={section.title}>
+        <SectionShell title={section.title} section={section}>
           <div className="grid gap-2.5 @xl:grid-cols-2 @3xl:grid-cols-3 @5xl:grid-cols-4">
             {section.products.map((p) => (
               <div
@@ -1265,7 +1377,7 @@ export function SectionRenderer({
       if (layout === "hero") {
         const [first, ...rest] = section.videos;
         return (
-          <SectionShell title={section.title}>
+          <SectionShell title={section.title} section={section}>
             {first && renderCard(first, "video")}
             {rest.length > 0 && (
               <div className="mt-3 grid grid-cols-1 gap-3 @xl:grid-cols-2 @3xl:grid-cols-3">
@@ -1278,7 +1390,7 @@ export function SectionRenderer({
 
       if (layout === "row") {
         return (
-          <SectionShell title={section.title}>
+          <SectionShell title={section.title} section={section}>
             <div className="space-y-3">
               {section.videos.map((v) => renderCard(v, "video"))}
             </div>
@@ -1288,7 +1400,7 @@ export function SectionRenderer({
 
       if (layout === "reels") {
         return (
-          <SectionShell title={section.title}>
+          <SectionShell title={section.title} section={section}>
             <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0">
               {section.videos.map((v) => (
                 <div
@@ -1305,7 +1417,7 @@ export function SectionRenderer({
 
       /* "grid" — responsive 2-3 col grid. Default for 4+ videos. */
       return (
-        <SectionShell title={section.title}>
+        <SectionShell title={section.title} section={section}>
           <div className="grid grid-cols-1 gap-3 @xl:grid-cols-2 @4xl:grid-cols-3">
             {section.videos.map((v) => renderCard(v, "video"))}
           </div>
@@ -1315,7 +1427,7 @@ export function SectionRenderer({
 
     case "gallery":
       return (
-        <SectionShell title={section.title}>
+        <SectionShell title={section.title} section={section}>
           <div className="grid grid-cols-3 gap-2 @2xl:grid-cols-4 @4xl:grid-cols-5">
             {section.images.map((img) => (
               <div
@@ -1343,7 +1455,7 @@ export function SectionRenderer({
 
     case "embedHtml":
       return (
-        <SectionShell title={section.title}>
+        <SectionShell title={section.title} section={section}>
           <EmbedHtmlView section={section} />
         </SectionShell>
       );
@@ -1376,7 +1488,7 @@ export function SectionRenderer({
         />
       );
       return (
-        <SectionShell title={section.title}>
+        <SectionShell title={section.title} section={section}>
           <div className={wrapperClass}>
             {section.linkUrl ? (
               <a
@@ -1411,7 +1523,7 @@ export function SectionRenderer({
 
     case "leadCapture":
       return (
-        <SectionShell title={section.title} narrow="md">
+        <SectionShell title={section.title} narrow="md" section={section}>
           <LeadForm
             section={section}
             track={track}
@@ -1436,7 +1548,7 @@ export function SectionRenderer({
 
     case "appointment":
       return (
-        <SectionShell title={section.title}>
+        <SectionShell title={section.title} section={section}>
           <AppointmentBooking
             section={section}
             profileId={profileId}
@@ -1451,7 +1563,7 @@ export function SectionRenderer({
          its own empty state ("Payment methods not configured yet")
          which is more useful than silently hiding the section. */
       return (
-        <SectionShell title={section.title} narrow="md">
+        <SectionShell title={section.title} narrow="md" section={section}>
           <PaymentSectionView
             section={section}
             owner={{

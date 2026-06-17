@@ -106,6 +106,10 @@ function SectionCard({ section }: { section: ProfileSection }) {
                 className={FIELD}
               />
               <SectionEditor section={section} />
+              <BackgroundEditor
+                section={section}
+                onChange={(patch) => updateSection(section.id, patch)}
+              />
               <button
                 onClick={() => removeSection(section.id)}
                 className="flex items-center gap-1.5 text-xs font-medium text-red-300"
@@ -210,6 +214,191 @@ export function SectionsManager() {
           })}
         </div>
       </Modal>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────
+   Per-section background editor
+
+   Collapsible panel at the bottom of every section editor. Owner
+   can override the card tile bg AND/OR the section's full-width
+   container stripe bg. Two layers because they're independent
+   concerns — see SectionShell in ProfileSections.tsx.
+────────────────────────────────────────── */
+
+interface BgSwatch {
+  value: string;
+  label: string;
+  swatch: string; /* CSS background for the swatch preview chip. */
+}
+
+/* Curated palette — chosen for premium feel + works on most themes.
+   "Theme" values map to CSS vars so they track the active theme. */
+const BG_SWATCHES: BgSwatch[] = [
+  { value: "soft", label: "Soft", swatch: "rgba(120,120,120,0.10)" },
+  { value: "subtle", label: "Subtle", swatch: "rgba(120,120,120,0.20)" },
+  { value: "accent", label: "Accent", swatch: "linear-gradient(135deg,#2E6BFF,#1A52E0)" },
+  { value: "#FFFBEB", label: "Cream", swatch: "#FFFBEB" },
+  { value: "#FEF3C7", label: "Butter", swatch: "#FEF3C7" },
+  { value: "#FCE7F3", label: "Blush", swatch: "#FCE7F3" },
+  { value: "#DBEAFE", label: "Sky", swatch: "#DBEAFE" },
+  { value: "#D1FAE5", label: "Mint", swatch: "#D1FAE5" },
+  { value: "#EDE9FE", label: "Lavender", swatch: "#EDE9FE" },
+  { value: "#1F2937", label: "Ink", swatch: "#1F2937" },
+  { value: "#0A0A0A", label: "Black", swatch: "#0A0A0A" },
+];
+
+function BackgroundEditor({
+  section,
+  onChange,
+}: {
+  section: { cardBg?: string; containerBg?: string };
+  onChange: (patch: { cardBg?: string; containerBg?: string }) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const hasOverrides = Boolean(section.cardBg || section.containerBg);
+
+  return (
+    <div className="rounded-xl border border-white/[0.06] bg-white/[0.02]">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left"
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <span
+            className="h-4 w-4 shrink-0 rounded border border-white/15"
+            style={{
+              background:
+                section.containerBg
+                  ? (BG_SWATCHES.find((s) => s.value === section.containerBg)?.swatch ||
+                    section.containerBg)
+                  : section.cardBg
+                    ? (BG_SWATCHES.find((s) => s.value === section.cardBg)?.swatch ||
+                      section.cardBg)
+                    : "transparent",
+            }}
+          />
+          <span className="text-xs font-medium text-white/65">
+            Background {hasOverrides && <span className="text-electric-300">· overridden</span>}
+          </span>
+        </div>
+        <span className="text-xs text-white/45">{open ? "−" : "+"}</span>
+      </button>
+      {open && (
+        <div className="space-y-4 border-t border-white/[0.06] p-3">
+          <BgSwatchRow
+            label="Section container (full stripe)"
+            hint="Paints a colored band behind the whole section."
+            value={section.containerBg}
+            onChange={(v) => onChange({ containerBg: v })}
+          />
+          <BgSwatchRow
+            label="Card tile"
+            hint="Overrides the card colour for content inside this section."
+            value={section.cardBg}
+            onChange={(v) => onChange({ cardBg: v })}
+          />
+          <p className="text-[10px] text-white/35">
+            Text colour auto-flips light or dark for readability based on
+            the chosen background.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BgSwatchRow({
+  label,
+  hint,
+  value,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  value?: string;
+  onChange: (next: string | undefined) => void;
+}) {
+  const [customMode, setCustomMode] = useState(
+    value !== undefined && !BG_SWATCHES.some((s) => s.value === value),
+  );
+
+  return (
+    <div>
+      <p className="text-[11px] font-medium uppercase tracking-wider text-white/55">
+        {label}
+      </p>
+      <p className="mt-0.5 text-[10px] text-white/40">{hint}</p>
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        {/* None button — clears the override. */}
+        <button
+          type="button"
+          onClick={() => {
+            onChange(undefined);
+            setCustomMode(false);
+          }}
+          className={cn(
+            "rounded-md border px-2 py-1 text-[11px] font-medium",
+            !value
+              ? "border-electric-500/50 bg-electric-500/15 text-electric-200"
+              : "border-white/10 bg-white/[0.03] text-white/55 hover:text-white",
+          )}
+        >
+          None
+        </button>
+        {BG_SWATCHES.map((sw) => (
+          <button
+            key={sw.value}
+            type="button"
+            onClick={() => {
+              onChange(sw.value);
+              setCustomMode(false);
+            }}
+            title={sw.label}
+            className={cn(
+              "h-7 w-7 rounded-md border transition-transform hover:scale-110",
+              value === sw.value
+                ? "border-electric-500 ring-2 ring-electric-500/30"
+                : "border-white/15",
+            )}
+            style={{ background: sw.swatch }}
+          />
+        ))}
+        <button
+          type="button"
+          onClick={() => setCustomMode((v) => !v)}
+          className={cn(
+            "rounded-md border px-2 py-1 text-[11px] font-medium",
+            customMode
+              ? "border-electric-500/50 bg-electric-500/15 text-electric-200"
+              : "border-white/10 bg-white/[0.03] text-white/55 hover:text-white",
+          )}
+        >
+          Custom
+        </button>
+      </div>
+      {customMode && (
+        <div className="mt-2 flex items-center gap-2">
+          <input
+            type="color"
+            value={
+              value && value.startsWith("#") && value.length === 7
+                ? value
+                : "#FFFFFF"
+            }
+            onChange={(e) => onChange(e.target.value)}
+            className="h-9 w-12 cursor-pointer rounded-md border border-white/10 bg-transparent"
+          />
+          <input
+            value={value ?? ""}
+            onChange={(e) => onChange(e.target.value || undefined)}
+            placeholder="Any CSS color: #FFB800, rgba(0,0,0,0.5), transparent"
+            className={FIELD}
+          />
+        </div>
+      )}
     </div>
   );
 }
