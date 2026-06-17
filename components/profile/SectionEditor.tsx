@@ -1389,12 +1389,18 @@ function EmbedHtmlEditor({ section }: { section: EmbedHtmlSection }) {
           value={height}
           onChange={(v) => patch({ height: v as EmbedHtmlSection["height"] })}
           options={[
+            { value: "auto", label: "Auto — fits content, no scrollbar" },
             { value: "sm", label: "Small (320px)" },
             { value: "md", label: "Medium (480px)" },
             { value: "lg", label: "Large (720px)" },
             { value: "xl", label: "Very tall (1000px)" },
           ]}
         />
+        <p className="mt-1 text-[10px] text-white/35">
+          {height === "auto"
+            ? "Iframe grows with content — flows like a native section. Card framing is removed."
+            : "Fixed pixel height. Taller content scrolls inside; shorter leaves empty space."}
+        </p>
       </div>
       <p className="text-[11px] leading-relaxed text-white/40">
         Embeds run in a secure sandbox — they can show their content and run

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Check, ChevronDown, MessageCircle, Send, Star } from "lucide-react";
 import { Icon } from "@/components/ui/Icon";
 import { SocialIcon } from "@/components/ui/SocialIcon";
@@ -12,6 +12,7 @@ import { ctaButtonClasses } from "@/lib/theme";
 import { cn, isValidEmail, normalizeExternalUrl, toEmbedUrl } from "@/lib/utils";
 import type {
   AnalyticsEventType,
+  EmbedHtmlSection,
   FaqItem,
   LeadCustomAnswer,
   PaymentMethod,
@@ -311,6 +312,116 @@ function LeadForm({
         </div>
       )}
     </div>
+  );
+}
+
+/* ──────────────────────────────────────────
+   Embedded HTML — sandboxed iframe with optional
+   auto-resize so the embed flows with the page
+   instead of looking like a boxed iframe.
+────────────────────────────────────────── */
+
+function EmbedHtmlView({ section }: { section: EmbedHtmlSection }) {
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  /* Stable per-instance id used to filter postMessage events so two
+     embeds on the same page can't trigger each other's resize. */
+  const channelId = useId();
+  /* Auto mode tracks the iframe's content height live via postMessage.
+     Initial value 0 = "haven't measured yet" — we hide the iframe in
+     auto mode until the first measurement to avoid a 0px flash. */
+  const [autoHeight, setAutoHeight] = useState<number>(0);
+
+  const html = (section.html || "").trim();
+  const mode: NonNullable<EmbedHtmlSection["height"]> =
+    section.height ?? "md"; /* Existing embeds with no field stay at md. */
+  const isAuto = mode === "auto";
+
+  /* Fixed height presets — used when mode is sm/md/lg/xl. */
+  const fixedHeight =
+    mode === "sm"
+      ? 320
+      : mode === "lg"
+        ? 720
+        : mode === "xl"
+          ? 1000
+          : 480;
+
+  /* Listen for resize messages from the iframe and update height. */
+  useEffect(() => {
+    if (!isAuto) return;
+    const onMessage = (e: MessageEvent) => {
+      /* Only accept messages tagged with our channel id. Iframe is
+         sandboxed without allow-same-origin so e.origin is "null" —
+         we can't filter by origin, but the channelId tag prevents
+         cross-embed interference. */
+      const data = e.data as { _credibly?: string; height?: number } | null;
+      if (!data || data._credibly !== channelId) return;
+      const h = Math.max(0, Math.floor(Number(data.height) || 0));
+      if (h > 0) setAutoHeight(h);
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [isAuto, channelId]);
+
+  if (!html) return null;
+
+  /* Wrap the user's snippet in a minimal HTML doc. In auto mode we
+     also inject a tiny script that uses ResizeObserver to post the
+     content height to the parent on every resize. The script is
+     placed FIRST so it's installed before the user's HTML runs and
+     any `</body>` in their pasted code can't break us out. */
+  const autoScript = isAuto
+    ? `<script>(function(){var id=${JSON.stringify(channelId)};function send(){var h=Math.max(document.documentElement.scrollHeight,document.body?document.body.scrollHeight:0);parent.postMessage({_credibly:id,height:h},'*')}if(document.body){send()}else{document.addEventListener('DOMContentLoaded',send)}window.addEventListener('load',send);try{var ro=new ResizeObserver(send);ro.observe(document.documentElement);if(document.body)ro.observe(document.body);}catch(e){}setInterval(send,1500)})();</script>`
+    : "";
+
+  /* Drop body padding in auto mode so the embed truly flows; keep
+     small inset in fixed-height mode to mimic the original card
+     framing. */
+  const bodyPadding = isAuto ? "0" : "8px";
+
+  const srcdoc = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><base target="_blank"><style>html,body{margin:0;padding:0;background:transparent;color:inherit;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}body{padding:${bodyPadding}}*{box-sizing:border-box;max-width:100%}</style>${autoScript}</head><body>${html}</body></html>`;
+
+  /* Auto mode: iframe height grows to autoHeight. While waiting for
+     first measurement, use a minimum 40px to prevent layout shift.
+     Fixed mode: original look — card bg + radius + fixed height. */
+  const iframeStyle: React.CSSProperties = isAuto
+    ? {
+        width: "100%",
+        height: `${autoHeight || 40}px`,
+        border: 0,
+        background: "transparent",
+        display: "block",
+        opacity: autoHeight > 0 ? 1 : 0,
+        transition: "opacity 180ms ease",
+      }
+    : {
+        width: "100%",
+        height: `${fixedHeight}px`,
+        border: 0,
+        borderRadius: "var(--tp-card-radius)",
+        background: "var(--tp-card)",
+      };
+
+  return (
+    <>
+      <iframe
+        ref={iframeRef}
+        srcDoc={srcdoc}
+        sandbox="allow-scripts allow-popups allow-forms allow-popups-to-escape-sandbox"
+        referrerPolicy="no-referrer"
+        loading="lazy"
+        style={iframeStyle}
+        title={section.title || "Embedded content"}
+      />
+      {section.caption && (
+        <p
+          className="mt-2 text-center text-xs"
+          style={{ color: "var(--tp-muted)" }}
+        >
+          {section.caption}
+        </p>
+      )}
+    </>
   );
 }
 
@@ -1230,47 +1341,12 @@ export function SectionRenderer({
         </SectionShell>
       );
 
-    case "embedHtml": {
-      const html = (section.html || "").trim();
-      if (!html) return null;
-      /* Height presets keep the visual cadence consistent and avoid
-         the foot-gun of letting owners type giant pixel values. */
-      const height =
-        section.height === "sm"
-          ? 320
-          : section.height === "lg"
-            ? 720
-            : section.height === "xl"
-              ? 1000
-              : 480; // "md" default
-      /* Wrap the user's snippet in a minimal HTML document so scripts
-         have a place to run. body styles match the profile theme so
-         embeds blend in instead of showing a stark white background. */
-      const srcdoc = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><base target="_blank"><style>html,body{margin:0;padding:0;background:transparent;color:inherit;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}body{padding:8px}*{box-sizing:border-box;max-width:100%}</style></head><body>${html}</body></html>`;
+    case "embedHtml":
       return (
         <SectionShell title={section.title}>
-          <iframe
-            srcDoc={srcdoc}
-            sandbox="allow-scripts allow-popups allow-forms allow-popups-to-escape-sandbox"
-            referrerPolicy="no-referrer"
-            loading="lazy"
-            style={{
-              width: "100%",
-              height: `${height}px`,
-              border: "0",
-              borderRadius: "var(--tp-card-radius)",
-              background: "var(--tp-card)",
-            }}
-            title={section.title || "Embedded content"}
-          />
-          {section.caption && (
-            <p className="mt-2 text-center text-xs" style={{ color: "var(--tp-muted)" }}>
-              {section.caption}
-            </p>
-          )}
+          <EmbedHtmlView section={section} />
         </SectionShell>
       );
-    }
 
     case "image": {
       if (!section.url) return null;

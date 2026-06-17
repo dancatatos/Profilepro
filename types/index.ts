@@ -572,8 +572,25 @@ export interface EmbedHtmlSection extends SectionBase {
   type: "embedHtml";
   /** Raw HTML the owner pasted from the embed provider. */
   html: string;
-  /** Iframe height preset. Defaults to "md". */
-  height?: "sm" | "md" | "lg" | "xl";
+  /**
+   * Iframe height behaviour.
+   *   "auto" (default for new embeds) → iframe grows to fit content
+   *                                     via postMessage ResizeObserver.
+   *                                     No scrollbar, no empty space.
+   *                                     Card framing is dropped so the
+   *                                     embed visually merges with the
+   *                                     page.
+   *   "sm" | "md" | "lg" | "xl"       → fixed pixel height presets.
+   *                                     Content taller than the preset
+   *                                     scrolls inside the iframe; content
+   *                                     shorter leaves empty space. Kept
+   *                                     for back-compat and cases where
+   *                                     the owner wants a specific size
+   *                                     (e.g. small contact widget).
+   *   Undefined reads as "md" so heroes created before "auto" existed
+   *   stay visually identical.
+   */
+  height?: "auto" | "sm" | "md" | "lg" | "xl";
   /** Small caption shown under the embed (optional). */
   caption?: string;
 }

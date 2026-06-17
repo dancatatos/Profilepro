@@ -166,7 +166,11 @@ export function createSection(type: SectionType): ProfileSection {
         type: "embedHtml",
         title: "Embed",
         html: "",
-        height: "md",
+        /* New embeds default to auto-resize so the iframe flows with
+           content (no scrollbar, no empty space) and the visible card
+           framing is dropped. Existing embeds with no field saved keep
+           their "md" preset behaviour via the renderer's fallback. */
+        height: "auto",
       };
     case "leadCapture":
       return {
