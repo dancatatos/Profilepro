@@ -178,7 +178,17 @@ export function FunnelView({
   const sections = step.sections.filter((s) => s.enabled);
 
   return (
-    <div className={cn("min-h-full w-full", effectClasses)} style={themeStyle}>
+    <div
+      className={cn(
+        /* overflow-x: clip lets Cover sections break out to 100vw
+           without producing a horizontal scrollbar. Scoped to this
+           public funnel route only — body untouched so the rest of
+           the app (dashboard, settings, homepage) is unaffected. */
+        "min-h-full w-full overflow-x-clip",
+        effectClasses,
+      )}
+      style={themeStyle}
+    >
       <div className="@container mx-auto max-w-md px-4 pb-14 pt-10 sm:max-w-2xl lg:max-w-5xl lg:px-6">
         {/* Progress */}
         {funnel.steps.length > 1 && (

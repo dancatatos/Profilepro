@@ -110,7 +110,17 @@ export function PublicProfileView({
 
   return (
     <div
-      className={cn("min-h-full w-full", effectClasses, className)}
+      className={cn(
+        /* overflow-x: clip on the public profile container so Cover
+           sections can break out to 100vw without triggering a
+           horizontal scrollbar from the vertical-scrollbar overlap.
+           "clip" (not "hidden") avoids creating a scroll context that
+           would break sticky/fixed children. Scoped to this route
+           only — doesn't touch body globally. */
+        "min-h-full w-full overflow-x-clip",
+        effectClasses,
+        className,
+      )}
       style={themeStyle}
     >
       {/* @container enables container-query breakpoints (@xl:, @2xl:, @3xl:)

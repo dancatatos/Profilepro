@@ -734,11 +734,19 @@ export function SectionRenderer({
       return (
         <SectionShell title={section.title}>
           <div
-            className={cn(
-              "relative w-full overflow-hidden rounded-xl",
-              aspectClass,
-            )}
+            className={cn("relative overflow-hidden", aspectClass)}
             style={{
+              /* Full-viewport breakout: width: 100vw + symmetric
+                 negative margins anchor the element to the viewport
+                 regardless of how narrow the parent container is. The
+                 parent route (PublicProfileView / FunnelView) sets
+                 overflow-x: clip so the 100vw doesn't trigger a
+                 horizontal scrollbar (vw includes scrollbar width on
+                 desktop). Scoped to just those routes — body is left
+                 alone so the rest of the app is unaffected. */
+              width: "100vw",
+              marginLeft: "calc(50% - 50vw)",
+              marginRight: "calc(50% - 50vw)",
               backgroundImage: section.imageUrl
                 ? `url("${section.imageUrl}")`
                 : undefined,
