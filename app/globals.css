@@ -210,11 +210,6 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     overscroll-behavior-y: none;
-    /* Suppress horizontal scrollbar caused by full-bleed hero
-       sections that use the `100vw + margin-left: -50vw` viewport-
-       escape trick. 100vw includes the vertical scrollbar width
-       which would otherwise overflow the body by a few pixels. */
-    overflow-x: hidden;
   }
 
   ::selection {
