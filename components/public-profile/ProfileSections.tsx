@@ -1316,11 +1316,13 @@ export function SectionRenderer({
                 className="min-w-0 overflow-hidden p-3 sm:p-4"
                 style={V.card}
               >
-                {/* Hero image — generous, rounded, dominant. Empty
+                {/* Hero image — square aspect, rounded, well-sized.
+                    1:1 keeps cards balanced (4:5 portrait felt too
+                    tall and made each card feel oversized). Empty
                     state keeps a soft tinted placeholder so the
                     layout doesn't collapse when imageUrl is missing. */}
                 <div
-                  className="aspect-[4/5] overflow-hidden rounded-2xl"
+                  className="aspect-square overflow-hidden rounded-2xl"
                   style={{ background: "var(--tp-input-bg)" }}
                 >
                   {p.imageUrl && (
