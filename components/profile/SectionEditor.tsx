@@ -13,6 +13,7 @@ import type {
   AboutSection,
   AppointmentSection,
   CountdownSection,
+  CoverSection,
   CredibilitySection,
   CtaActionKind,
   CtaAlignment,
@@ -532,6 +533,140 @@ function HeroEditor({ section }: { section: HeroSection }) {
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+/* ---------------- Cover ---------------- */
+
+function CoverEditor({ section }: { section: CoverSection }) {
+  const { updateSection: update } = useSections();
+  const patch = (p: Partial<CoverSection>) => update(section.id, p);
+
+  return (
+    <div className="space-y-3">
+      <p className="text-[10px] text-white/45">
+        Full-width image with optional headline, subhead and CTA overlay.
+        Leave all text empty for a pure image banner.
+      </p>
+
+      <ImageUploadField
+        value={section.imageUrl}
+        onChange={(url) => patch({ imageUrl: url })}
+        folder="covers"
+      />
+
+      <input
+        value={section.headline ?? ""}
+        onChange={(e) => patch({ headline: e.target.value })}
+        placeholder="Big bold headline (optional)"
+        className={FIELD}
+      />
+      <textarea
+        value={section.subhead ?? ""}
+        onChange={(e) => patch({ subhead: e.target.value })}
+        rows={2}
+        placeholder="Short subhead (optional)"
+        className="w-full resize-none rounded-lg border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-electric-500/60"
+      />
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <input
+          value={section.ctaLabel ?? ""}
+          onChange={(e) => patch({ ctaLabel: e.target.value })}
+          placeholder="CTA label (optional)"
+          className={FIELD}
+        />
+        <input
+          value={section.ctaUrl ?? ""}
+          onChange={(e) => patch({ ctaUrl: e.target.value })}
+          placeholder="CTA URL"
+          className={FIELD}
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/45">
+            Aspect ratio
+          </label>
+          <Select
+            value={section.aspectRatio ?? "16:9"}
+            onChange={(v) =>
+              patch({ aspectRatio: v as CoverSection["aspectRatio"] })
+            }
+            options={[
+              { value: "16:9", label: "16:9 widescreen" },
+              { value: "4:3", label: "4:3 classic" },
+              { value: "1:1", label: "1:1 square" },
+              { value: "21:9", label: "21:9 cinematic" },
+              { value: "3:4", label: "3:4 portrait" },
+            ]}
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/45">
+            Overlay darkness
+          </label>
+          <Select
+            value={section.overlay ?? "medium"}
+            onChange={(v) =>
+              patch({ overlay: v as CoverSection["overlay"] })
+            }
+            options={[
+              { value: "none", label: "None" },
+              { value: "light", label: "Light" },
+              { value: "medium", label: "Medium" },
+              { value: "dark", label: "Dark" },
+            ]}
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/45">
+          Text color
+        </label>
+        <Select
+          value={section.textColor ?? "light"}
+          onChange={(v) =>
+            patch({ textColor: v as CoverSection["textColor"] })
+          }
+          options={[
+            { value: "light", label: "Light (white text)" },
+            { value: "dark", label: "Dark (black text)" },
+          ]}
+        />
+      </div>
+
+      <div>
+        <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/45">
+          Text position
+        </label>
+        <div className="grid grid-cols-3 gap-1.5">
+          {[
+            { v: "tl", l: "↖" }, { v: "tc", l: "↑" }, { v: "tr", l: "↗" },
+            { v: "cl", l: "←" }, { v: "cc", l: "•" }, { v: "cr", l: "→" },
+            { v: "bl", l: "↙" }, { v: "bc", l: "↓" }, { v: "br", l: "↘" },
+          ].map((p) => (
+            <button
+              key={p.v}
+              type="button"
+              onClick={() =>
+                patch({ align: p.v as CoverSection["align"] })
+              }
+              className={cn(
+                "rounded-md border py-2 text-lg transition-colors",
+                (section.align ?? "cc") === p.v
+                  ? "border-electric-500/50 bg-electric-500/15 text-electric-200"
+                  : "border-white/10 bg-white/[0.03] text-white/55 hover:text-white",
+              )}
+              aria-label={`Align ${p.v}`}
+            >
+              {p.l}
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -1665,6 +1800,8 @@ export function SectionEditor({ section }: { section: ProfileSection }) {
       return <CountdownEditor section={section} />;
     case "hero":
       return <HeroEditor section={section} />;
+    case "cover":
+      return <CoverEditor section={section} />;
     case "benefits":
       return <BenefitsEditor section={section} />;
     case "faq":

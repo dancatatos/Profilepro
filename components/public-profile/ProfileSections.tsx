@@ -674,6 +674,146 @@ export function SectionRenderer({
       );
     }
 
+    case "cover": {
+      /* Cover — full container-width image background with optional
+         text overlay. No viewport-escape tricks (those broke things
+         last time); just spans 100% of the funnel/profile container
+         width at every breakpoint. Aspect ratio drives the height.
+         Responsive by definition because the container itself caps
+         per breakpoint (mobile=md, tablet=2xl, desktop=5xl).
+         If imageUrl + all text fields are empty, renders a soft
+         placeholder so the editor preview doesn't look broken. */
+      const aspect = section.aspectRatio ?? "16:9";
+      const aspectClass =
+        aspect === "16:9"
+          ? "aspect-video"
+          : aspect === "4:3"
+            ? "aspect-[4/3]"
+            : aspect === "1:1"
+              ? "aspect-square"
+              : aspect === "21:9"
+                ? "aspect-[21/9]"
+                : "aspect-[3/4]";
+
+      const overlayLevel = section.overlay ?? "medium";
+      const overlayGradient =
+        overlayLevel === "none"
+          ? null
+          : overlayLevel === "light"
+            ? "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 100%)"
+            : overlayLevel === "medium"
+              ? "linear-gradient(180deg, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.55) 100%)"
+              : "linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.78) 100%)";
+
+      const align = section.align ?? "cc";
+      const verticalCls =
+        align.startsWith("t")
+          ? "items-start"
+          : align.startsWith("b")
+            ? "items-end"
+            : "items-center";
+      const horizontalCls =
+        align.endsWith("l")
+          ? "justify-start text-left"
+          : align.endsWith("r")
+            ? "justify-end text-right"
+            : "justify-center text-center";
+
+      const isLight = (section.textColor ?? "light") === "light";
+      const textCol = isLight ? "#FFFFFF" : "#0A0A0A";
+      const textShadow = isLight
+        ? "0 2px 18px rgba(0,0,0,0.55)"
+        : "0 1px 12px rgba(255,255,255,0.45)";
+
+      const hasContent = Boolean(
+        section.headline?.trim() ||
+          section.subhead?.trim() ||
+          section.ctaLabel?.trim(),
+      );
+
+      return (
+        <SectionShell title={section.title}>
+          <div
+            className={cn(
+              "relative w-full overflow-hidden rounded-xl",
+              aspectClass,
+            )}
+            style={{
+              backgroundImage: section.imageUrl
+                ? `url("${section.imageUrl}")`
+                : undefined,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundColor: section.imageUrl
+                ? undefined
+                : "var(--tp-card)",
+            }}
+          >
+            {!section.imageUrl && !hasContent && (
+              <div
+                className="absolute inset-0 flex items-center justify-center text-xs opacity-50"
+                style={V.text3}
+              >
+                Cover — add an image in the editor
+              </div>
+            )}
+            {hasContent && overlayGradient && section.imageUrl && (
+              <div
+                aria-hidden
+                className="absolute inset-0"
+                style={{ background: overlayGradient }}
+              />
+            )}
+            {hasContent && (
+              <div
+                className={cn(
+                  "absolute inset-0 flex flex-col gap-3 p-6 sm:p-10",
+                  verticalCls,
+                  horizontalCls,
+                )}
+              >
+                <div
+                  className={cn(
+                    "max-w-2xl",
+                    horizontalCls.includes("text-center") && "mx-auto",
+                  )}
+                >
+                  {section.headline?.trim() && (
+                    <h2
+                      className="font-display text-3xl font-bold leading-[1.1] sm:text-4xl lg:text-5xl"
+                      style={{ color: textCol, textShadow }}
+                    >
+                      {section.headline}
+                    </h2>
+                  )}
+                  {section.subhead?.trim() && (
+                    <p
+                      className="mt-3 text-sm leading-relaxed sm:text-base"
+                      style={{ color: textCol, textShadow, opacity: 0.92 }}
+                    >
+                      {section.subhead}
+                    </p>
+                  )}
+                  {section.ctaLabel?.trim() && section.ctaUrl?.trim() && (
+                    <a
+                      href={normalizeExternalUrl(section.ctaUrl)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => track("cta_click", `cover-${section.id}`)}
+                      className="mt-5 inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold transition-transform active:scale-[0.98]"
+                      style={V.btn}
+                    >
+                      {section.ctaLabel}
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </SectionShell>
+      );
+    }
+
     case "benefits":
       return (
         <SectionShell title={section.title}>

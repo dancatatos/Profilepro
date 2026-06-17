@@ -94,6 +94,12 @@ export const SECTION_CATALOG: SectionMeta[] = [
     icon: "Rocket",
   },
   {
+    type: "cover",
+    label: "Cover",
+    description: "Full-width image background with optional headline + CTA",
+    icon: "ImageIcon",
+  },
+  {
     type: "benefits",
     label: "Benefits",
     description: "Bullet list of value props",

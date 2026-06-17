@@ -363,6 +363,7 @@ export type SectionType =
   | "text"
   | "countdown"
   | "hero"
+  | "cover"
   | "benefits"
   | "faq"
   | "pricingCard"
@@ -614,6 +615,36 @@ export type HeroOverlay = "none" | "light" | "medium" | "dark";
 /** Image aspect ratio for the hero. Defaults to 16:9. */
 export type HeroAspect = "16:9" | "4:3" | "1:1" | "21:9" | "3:4";
 
+/**
+ * Cover — full-container-width image-as-background section with
+ * optional headline / subhead / CTA overlay. Distinct from Hero:
+ *
+ *   Hero   → opt-in card with image+text in stacked or overlay mode.
+ *            Lives inside the section's normal width.
+ *   Cover  → image spans the FULL width of the funnel/profile
+ *            content container at every breakpoint (mobile = full
+ *            mobile width, tablet = full tablet container, desktop =
+ *            full desktop container). Aspect ratio drives height.
+ *            Use for landing-page hero banners.
+ *
+ * Same field shape as Hero overlay so owners can switch between them
+ * intuitively. Behaviour difference is purely the render: Cover
+ * escapes the section card padding and bleeds to its parent
+ * container's edges; Hero stays inside the section card.
+ */
+export interface CoverSection extends SectionBase {
+  type: "cover";
+  imageUrl?: string;
+  headline?: string;
+  subhead?: string;
+  ctaLabel?: string;
+  ctaUrl?: string;
+  overlay?: HeroOverlay;
+  align?: HeroAlign;
+  textColor?: "light" | "dark";
+  aspectRatio?: HeroAspect;
+}
+
 export interface HeroSection extends SectionBase {
   type: "hero";
   headline: string;
@@ -825,6 +856,7 @@ export type ProfileSection =
   | TextSection
   | CountdownSection
   | HeroSection
+  | CoverSection
   | BenefitsSection
   | FaqSection
   | PricingCardSection

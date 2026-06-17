@@ -71,6 +71,17 @@ export function createSection(type: SectionType): ProfileSection {
         textColor: "light",
         aspectRatio: "16:9",
       };
+    case "cover":
+      return {
+        ...base,
+        type: "cover",
+        headline: "",
+        subhead: "",
+        overlay: "medium",
+        align: "cc",
+        textColor: "light",
+        aspectRatio: "16:9",
+      };
     case "benefits":
       return {
         ...base,

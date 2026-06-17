@@ -79,6 +79,20 @@ function freshSection(section: ProfileSection): ProfileSection {
           ? { backgroundUrl: section.backgroundUrl }
           : {}),
       };
+    case "cover":
+      return {
+        ...base,
+        type: "cover",
+        ...(section.imageUrl ? { imageUrl: section.imageUrl } : {}),
+        ...(section.headline ? { headline: section.headline } : {}),
+        ...(section.subhead ? { subhead: section.subhead } : {}),
+        ...(section.ctaLabel ? { ctaLabel: section.ctaLabel } : {}),
+        ...(section.ctaUrl ? { ctaUrl: section.ctaUrl } : {}),
+        ...(section.overlay ? { overlay: section.overlay } : {}),
+        ...(section.align ? { align: section.align } : {}),
+        ...(section.textColor ? { textColor: section.textColor } : {}),
+        ...(section.aspectRatio ? { aspectRatio: section.aspectRatio } : {}),
+      };
     case "benefits":
       return {
         ...base,
