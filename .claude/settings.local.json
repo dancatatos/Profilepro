@@ -72,7 +72,8 @@
       "Bash(grep -n \"^    </div>\\\\|^  </div>\\\\|^  \\);$\\\\|^}$\" app/page.tsx)",
       "PowerShell($lines = Get-Content 'app/page.tsx'; $kept = $lines[0..315] + $lines[554..\\($lines.Length-1\\)]; Set-Content -Path 'app/page.tsx' -Value $kept -Encoding utf8)",
       "Bash(git checkout *)",
-      "Bash(find app *)"
+      "Bash(find app *)",
+      "mcp__visualize__read_me"
     ]
   }
 }
