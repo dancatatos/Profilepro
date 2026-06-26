@@ -1342,24 +1342,47 @@ export function SectionRenderer({
       );
 
     case "products": {
-      /* Smart count-based column count: caps the grid at the number
-         of items so a row of 3 fills cleanly instead of leaving an
-         empty 4th slot on desktop. Keeps the default cascade for 4+
-         items (2 mobile / 3 tablet / 4 desktop). Special case: count
-         === 3 uses 1 col on mobile so the orphan disappears (3
-         single big cards reads more premium than 2+1).
-         count === 1 stays single-col everywhere (single hero card). */
+      /* Smart layout rules:
+         - Mobile stays at 2 cols ALWAYS (kept the premium small-card
+           feel the user explicitly asked for — single-col on mobile
+           made cards too big again).
+         - When the product count is odd, the last card spans both
+           columns AND is centered + half-width so it reads as
+           "balanced single feature" instead of "orphan in the
+           bottom-left." On tablet+ this is irrelevant because 3/5/7
+           items fit a different grid; the orphan-fix only fires on
+           mobile where the 2-col grid creates the imbalance.
+         - count caps still apply: 3 items → max 3 cols on wide,
+           4 items → max 4 cols, etc. Prevents empty trailing slots
+           on desktop. */
       const count = section.products.length;
-      const gridClass =
+      const isOdd = count % 2 === 1 && count > 1;
+      const desktopCascade =
         count === 1
-          ? "grid grid-cols-1 gap-3"
+          ? ""
           : count === 2
-            ? "grid grid-cols-2 gap-3"
+            ? ""
             : count === 3
-              ? "grid grid-cols-1 gap-3 @xl:grid-cols-3"
+              ? "@xl:grid-cols-3"
               : count === 4
-                ? "grid grid-cols-2 gap-3 @4xl:grid-cols-4"
-                : "grid grid-cols-2 gap-3 @3xl:grid-cols-3 @4xl:grid-cols-4";
+                ? "@4xl:grid-cols-4"
+                : "@3xl:grid-cols-3 @4xl:grid-cols-4";
+      const baseMobile = count === 1 ? "grid-cols-1" : "grid-cols-2";
+      /* Last-child override only kicks in on mobile (default).
+         At @xl+ the grid switches to N cols so the last-child rule
+         from the default state still applies — but since the grid
+         has exactly N items at @xl=3-col, it fills perfectly and
+         the col-span-2 on the last child becomes effectively
+         "span all". Override the override at @xl with col-span-1. */
+      const orphanFix = isOdd
+        ? "[&>*:last-child]:col-span-2 [&>*:last-child]:mx-auto [&>*:last-child]:w-[calc(50%-0.375rem)] @xl:[&>*:last-child]:col-span-1 @xl:[&>*:last-child]:w-full"
+        : "";
+      const gridClass = cn(
+        "grid gap-3",
+        baseMobile,
+        desktopCascade,
+        orphanFix,
+      );
       return (
         <SectionShell title={section.title} section={section}>
           <div className={gridClass}>
