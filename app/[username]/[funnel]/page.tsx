@@ -74,6 +74,7 @@ export default async function FunnelPage({
         funnel={resolved.funnel}
         profileId={resolved.profile.id}
         ownerId={resolved.profile.ownerId}
+        ownerUsername={resolved.profile.username}
         paymentMethods={resolved.profile.paymentMethods}
         live
         showBranding={!canRemoveBranding}

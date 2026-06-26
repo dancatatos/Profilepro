@@ -10,6 +10,7 @@ import {
   type LeadSubmitFn,
   type TrackFn,
 } from "./ProfileSections";
+import { useCrediblyLinks } from "./useCrediblyLinks";
 import type { BookingSubmitFn } from "./AppointmentBooking";
 import { buildThemeStyle, buildThemeEffectClasses, getThemeConfig } from "@/lib/themes";
 import { createBooking, createLead, logEvent } from "@/lib/firebase/firestore";
@@ -97,6 +98,15 @@ export function PublicProfileView({
 
   const { header } = profile;
   const sections = profile.sections.filter((s) => s.enabled);
+
+  /* Resolve Credibly Link CTAs to concrete URLs on this profile's
+     owner. Fetches the owner's funnels/trainings once on mount and
+     returns { buttonId → resolvedUrl | null }. */
+  const crediblyLinks = useCrediblyLinks(
+    profile.ownerId,
+    sections,
+    profile.username,
+  );
   const isLight = tc.colorScheme === "light";
   const isHero = tc.headerStyle === "hero";
   const initials =
@@ -304,6 +314,7 @@ export function PublicProfileView({
                   ownerId={profile.ownerId}
                   paymentMethods={profile.paymentMethods}
                   source="profile"
+                  crediblyLinks={crediblyLinks}
                 />
               </div>
             );

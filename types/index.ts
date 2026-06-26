@@ -420,7 +420,42 @@ export interface PaymentMethod {
  * Optional + defaults to "url" everywhere so existing CTAs keep
  * working without migration.
  */
-export type CtaActionKind = "url" | "next" | "none";
+export type CtaActionKind = "url" | "next" | "none" | "credibly";
+
+/**
+ * Credibly Link target — used when CTAButton.action === "credibly".
+ * Lets a button resolve to a route ON THE FUNNEL/PROFILE OWNER's
+ * account at view time, so a team-cloned hub funnel automatically
+ * points each recruit's visitors at the recruit's own content.
+ *
+ * Bucket A (no targetTag needed — one route per user):
+ *   "profile"           → /{owner.username}
+ *   "my-events"         → /my-events
+ *   "pipeline-today"    → /pipelines/today
+ *   "trainings-library" → /trainings
+ *
+ * Bucket B (targetTag identifies which one):
+ *   "funnel"   → /{owner.username}/{funnel-slug}   resolved by tag
+ *   "training" → /{owner.username}/t/{training-slug} resolved by tag
+ */
+export type CrediblyLinkTarget =
+  | "profile"
+  | "my-events"
+  | "pipeline-today"
+  | "trainings-library"
+  | "funnel"
+  | "training";
+
+export interface CrediblyLinkSpec {
+  /** Which Credibly surface to link to. */
+  targetType: CrediblyLinkTarget;
+  /**
+   * Stable identifier for "funnel" / "training" targets — matches the
+   * target item's `bundleTag` (or falls back to slug). Absent for the
+   * one-route-per-user buckets above.
+   */
+  targetTag?: string;
+}
 
 export interface CTAButton {
   id: string;
@@ -431,6 +466,14 @@ export interface CTAButton {
   accent: "blue" | "jade" | "gold" | "white";
   /** What happens when this button is clicked. Defaults to "url". */
   action?: CtaActionKind;
+  /**
+   * Set when action === "credibly". Resolved server-side at render
+   * time against the FUNNEL/PROFILE OWNER's account — so team-cloned
+   * hub funnels auto-route each recruit's visitors to the recruit's
+   * own funnels/trainings/profile/etc. without the leader having to
+   * touch hardcoded URLs.
+   */
+  credibly?: CrediblyLinkSpec;
 }
 
 export type SocialPlatform =
@@ -1458,6 +1501,15 @@ export interface Funnel {
    * Absent on funnels the user created themselves.
    */
   clonedFromBundleSource?: string;
+  /**
+   * Stable identifier for Credibly Links — survives slug renames by
+   * the recruit, so a team-cloned hub funnel's "Link to my funnel"
+   * buttons stay correctly wired even if Maria renames her cloned
+   * launch-guide funnel to my-2025-launch. Auto-assigned when the
+   * leader adds the funnel to a team bundle (typically equal to the
+   * slug at bundle-time) and preserved on every clone.
+   */
+  bundleTag?: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -1781,6 +1833,14 @@ export interface Training {
   /** How many other leaders have cloned this training. Maintained
    *  on the original whenever a clone is created. */
   cloneCount?: number;
+  /**
+   * Stable identifier for Credibly Links — same purpose as the field
+   * on Funnel. Auto-assigned when a leader adds the training to a
+   * team bundle, preserved on every clone. Lets hub funnels link to
+   * "my Onboarding training" robustly regardless of the recruit
+   * renaming slugs.
+   */
+  bundleTag?: string;
   /* ── Paid-mode settings ── */
   /** Price in PHP. Only meaningful when distribution === "paid". */
   price?: number;

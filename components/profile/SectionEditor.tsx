@@ -1,19 +1,26 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Plus, Star, X } from "lucide-react";
 import { useSections } from "./SectionsContext";
+import { useAuth } from "@/hooks/useAuth";
 import { Select } from "@/components/ui/Select";
 import { Icon } from "@/components/ui/Icon";
 import { ImageUploadField } from "./ImageUploadField";
 import dynamic from "next/dynamic";
 import { SOCIAL_PLATFORMS } from "@/lib/constants";
 import { useProfileStore } from "@/store/profileStore";
+import {
+  listFunnels,
+  listTrainingsByOwner,
+} from "@/lib/firebase/firestore";
 import { cn, uid } from "@/lib/utils";
 import type {
   AboutSection,
   AppointmentSection,
   CountdownSection,
   CoverSection,
+  CrediblyLinkSpec,
   CredibilitySection,
   CtaActionKind,
   CtaAlignment,
@@ -165,6 +172,12 @@ function CtaEditor({ section }: { section: CtaSection }) {
               className={FIELD}
             />
           )}
+          {action === "credibly" && (
+            <CrediblyLinkPicker
+              value={b.credibly}
+              onChange={(spec) => edit(b.id, { credibly: spec })}
+            />
+          )}
           <IconPicker
             icons={CTA_ICONS}
             value={b.icon}
@@ -183,6 +196,7 @@ function CtaEditor({ section }: { section: CtaSection }) {
               }
               options={[
                 { value: "url", label: "Open URL (new tab)" },
+                { value: "credibly", label: "Credibly Link (auto-routes for team)" },
                 { value: "next", label: "Go to next funnel step" },
                 { value: "none", label: "Do nothing" },
               ]}
@@ -234,6 +248,93 @@ function CtaEditor({ section }: { section: CtaSection }) {
           ])
         }
       />
+    </div>
+  );
+}
+
+/* ---------------- Credibly Link picker ---------------- */
+
+/**
+ * Renders the target picker for action === "credibly". Lets the owner
+ * choose between "single-route" targets (profile, /my-events, etc.)
+ * and "many-per-user" targets (a specific funnel or training).
+ * For the many targets, dropdown lists the owner's items by name and
+ * stores the slug as the bundleTag — when this CTA is later cloned
+ * to a team member, the resolver finds their matching item by tag.
+ */
+function CrediblyLinkPicker({
+  value,
+  onChange,
+}: {
+  value?: CrediblyLinkSpec;
+  onChange: (spec: CrediblyLinkSpec) => void;
+}) {
+  const { account } = useAuth();
+  const [funnels, setFunnels] = useState<{ slug: string; name: string }[]>([]);
+  const [trainings, setTrainings] = useState<{ slug: string; title: string }[]>([]);
+  const targetType = value?.targetType ?? "profile";
+
+  useEffect(() => {
+    if (!account?.uid) return;
+    listFunnels(account.uid)
+      .then((items) =>
+        setFunnels(items.map((f) => ({ slug: f.slug, name: f.name }))),
+      )
+      .catch(() => null);
+    listTrainingsByOwner(account.uid)
+      .then((items) =>
+        setTrainings(items.map((t) => ({ slug: t.slug, title: t.title }))),
+      )
+      .catch(() => null);
+  }, [account?.uid]);
+
+  const needsTag = targetType === "funnel" || targetType === "training";
+
+  return (
+    <div className="space-y-2 rounded-lg border border-electric-500/15 bg-electric-500/[0.04] p-2.5">
+      <p className="text-[10px] text-white/55">
+        Credibly Link auto-routes to the viewer&apos;s own copy when this
+        funnel is cloned to a team member. No hardcoded URLs.
+      </p>
+      <Select
+        value={targetType}
+        onChange={(v) =>
+          onChange({
+            targetType: v as CrediblyLinkSpec["targetType"],
+            ...(v === "funnel" || v === "training"
+              ? { targetTag: value?.targetTag }
+              : {}),
+          })
+        }
+        options={[
+          { value: "profile", label: "My profile (/{username})" },
+          { value: "my-events", label: "My events page (/my-events)" },
+          { value: "trainings-library", label: "My trainings library (/trainings)" },
+          { value: "pipeline-today", label: "My pipeline tasks (/pipelines/today)" },
+          { value: "funnel", label: "A specific funnel of mine" },
+          { value: "training", label: "A specific training of mine" },
+        ]}
+      />
+      {needsTag && targetType === "funnel" && (
+        <Select
+          value={value?.targetTag ?? ""}
+          onChange={(v) => onChange({ targetType: "funnel", targetTag: v })}
+          options={[
+            { value: "", label: "— Pick a funnel —" },
+            ...funnels.map((f) => ({ value: f.slug, label: f.name })),
+          ]}
+        />
+      )}
+      {needsTag && targetType === "training" && (
+        <Select
+          value={value?.targetTag ?? ""}
+          onChange={(v) => onChange({ targetType: "training", targetTag: v })}
+          options={[
+            { value: "", label: "— Pick a training —" },
+            ...trainings.map((t) => ({ value: t.slug, label: t.title })),
+          ]}
+        />
+      )}
     </div>
   );
 }

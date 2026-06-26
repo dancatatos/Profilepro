@@ -12,6 +12,7 @@ import {
   type LeadSubmitFn,
   type TrackFn,
 } from "./ProfileSections";
+import { useCrediblyLinks } from "./useCrediblyLinks";
 import type { BookingSubmitFn } from "./AppointmentBooking";
 import {
   buildThemeEffectClasses,
@@ -37,6 +38,7 @@ export function FunnelView({
   funnel,
   profileId,
   ownerId,
+  ownerUsername,
   paymentMethods,
   live = false,
   showBranding = true,
@@ -44,6 +46,10 @@ export function FunnelView({
   funnel: Funnel;
   profileId: string;
   ownerId: string;
+  /** Owner's username — needed to build /{username}/... URLs when
+   *  resolving Credibly Link CTAs. Optional for callers that don't
+   *  use credibly links. */
+  ownerUsername?: string;
   /** Owner's payment methods, threaded through to PaymentSection. */
   paymentMethods?: import("@/types").PaymentMethod[];
   live?: boolean;
@@ -177,6 +183,11 @@ export function FunnelView({
   const showCta = !!cta && !(isLast && cta.action === "next");
   const sections = step.sections.filter((s) => s.enabled);
 
+  /* Resolve Credibly Link CTAs to concrete URLs based on the funnel
+     owner's account. Each cloned recruit gets their own URLs at view
+     time — no leader URLs hardcoded into the cloned funnel. */
+  const crediblyLinks = useCrediblyLinks(ownerId, sections, ownerUsername);
+
   return (
     <div
       className={cn(
@@ -223,6 +234,7 @@ export function FunnelView({
               /* Plumb through so CTA buttons with action="next" and
                  pricing-card CTAs with ctaAction="next" can advance. */
               onAdvance={advance}
+              crediblyLinks={crediblyLinks}
             />
           ))}
 

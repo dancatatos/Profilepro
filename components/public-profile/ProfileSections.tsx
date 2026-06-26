@@ -63,6 +63,12 @@ interface RendererProps {
   /** Where the section is rendered — funnel slug or "profile". */
   source?: string;
   /**
+   * Pre-resolved Credibly Link URLs, keyed by CTA button id. Built by
+   * PublicProfileView/FunnelView from each credibly spec + the owner's
+   * funnels/trainings list. Missing entries → button is hidden.
+   */
+  crediblyLinks?: Record<string, string | null>;
+  /**
    * Funnel-only: advance to the next step. Passed by FunnelView so that
    * CTAButtons with action="next", PricingCard CTAs with ctaAction="next",
    * and LeadCapture sections with postSubmitAction="next" can navigate.
@@ -604,6 +610,7 @@ export function SectionRenderer({
   paymentMethods,
   source,
   onAdvance,
+  crediblyLinks,
 }: RendererProps) {
   switch (section.type) {
     case "cta": {
@@ -625,9 +632,7 @@ export function SectionRenderer({
         <SectionShell title={section.title} narrow="md" section={section}>
           <div className={wrapperClass}>
             {section.buttons.map((b) => {
-              /* Default to "url" for buttons created before the action
-                 field existed. Honor the three explicit modes otherwise. */
-              const action: "url" | "next" | "none" = b.action ?? "url";
+              const action = b.action ?? "url";
               const baseClasses = cn(
                 "flex items-center justify-center gap-2 px-5 py-4 text-sm font-semibold shadow-card transition-transform active:scale-[0.98]",
                 ctaButtonClasses(b),
@@ -635,6 +640,26 @@ export function SectionRenderer({
               const baseStyle = {
                 borderRadius: "var(--tp-btn-radius)",
               };
+
+              /* "credibly" → resolved URL from pre-computed map. Hide
+                 the button silently when the target doesn't exist on
+                 the funnel owner's account. */
+              if (action === "credibly") {
+                const resolved = crediblyLinks?.[b.id];
+                if (!resolved) return null;
+                return (
+                  <a
+                    key={b.id}
+                    href={resolved}
+                    onClick={() => track("cta_click", b.id)}
+                    className={baseClasses}
+                    style={baseStyle}
+                  >
+                    <Icon name={b.icon} className="h-4 w-4" />
+                    {b.label}
+                  </a>
+                );
+              }
 
               /* "url" → render as anchor so visitors can still
                  right-click / long-press to copy the link. */
@@ -1134,7 +1159,12 @@ export function SectionRenderer({
               </ul>
             )}
             {section.ctaLabel && (() => {
-              const action: "url" | "next" | "none" = section.ctaAction ?? "url";
+              /* Pricing card only supports url/next/none actions —
+                 narrow it down since CtaActionKind now also includes
+                 "credibly" (which is CTA-button only, not pricing-card). */
+              const raw = section.ctaAction ?? "url";
+              const action: "url" | "next" | "none" =
+                raw === "credibly" ? "url" : raw;
               const btnClasses =
                 "tp-btn-el block w-full px-5 py-3.5 text-center text-sm font-semibold transition-transform active:scale-[0.98]";
               const btnStyle = {

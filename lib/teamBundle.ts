@@ -197,6 +197,13 @@ async function cloneFunnels(
       const slug = uniqueSlug(slugify(source.name) || "funnel", usedSlugs);
       usedSlugs.add(slug);
       const now = Date.now();
+      /* bundleTag is the stable identifier Credibly Links use to find
+         the recruit's copy of this funnel. Inherit from the source if
+         the leader explicitly set one; otherwise derive from the
+         source's slug (so hub funnels with "Link to my funnel: launch-
+         guide" buttons keep working without the leader having to
+         manage tags manually). */
+      const bundleTag = source.bundleTag ?? source.slug;
       const cloned: Funnel = {
         ...source,
         id: uid("funnel"),
@@ -204,6 +211,7 @@ async function cloneFunnels(
         slug,
         status: "draft",
         clonedFromBundleSource: fid,
+        bundleTag,
         createdAt: now,
         updatedAt: now,
       };
