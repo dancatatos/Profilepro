@@ -1343,17 +1343,17 @@ export function SectionRenderer({
 
     case "products":
       /* Showcase layout: hero image on top, title + description
-         centered, pill-style CTA at the bottom. Replaces the older
-         horizontal image+text+link card. Image is set to aspect-[4/5]
-         (portrait-leaning) which works for product photos, lifestyle
-         shots, course covers — the screenshot reference style. */
+         centered, pill-style CTA at the bottom. Mobile shows 2 per
+         row (premium shopping-grid feel — full-width cards on mobile
+         felt oversized). Wide screens go up to 4 cols at @4xl which
+         is within the funnel container's natural max width. */
       return (
         <SectionShell title={section.title} section={section}>
-          <div className="grid gap-3 @xl:grid-cols-2 @3xl:grid-cols-3 @5xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 @3xl:grid-cols-3 @4xl:grid-cols-4">
             {section.products.map((p) => (
               <div
                 key={p.id}
-                className="min-w-0 overflow-hidden p-3 sm:p-4"
+                className="min-w-0 overflow-hidden p-2.5 sm:p-3"
                 style={V.card}
               >
                 {/* Hero image — square aspect, rounded, well-sized.
@@ -1399,18 +1399,46 @@ export function SectionRenderer({
                     </p>
                   )}
                 </div>
-                {p.ctaLabel?.trim() && p.ctaUrl?.trim() && (
-                  <a
-                    href={normalizeExternalUrl(p.ctaUrl)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => track("cta_click", `product-${p.id}`)}
-                    className="mt-4 block w-full rounded-full py-2.5 text-center text-sm font-semibold uppercase tracking-wide transition-transform active:scale-[0.98]"
-                    style={V.btn}
-                  >
-                    {p.ctaLabel}
-                  </a>
-                )}
+                {(() => {
+                  /* Product CTA — supports url / credibly / none, same
+                     model as CTA buttons. "url" is the legacy default
+                     so existing products keep working. */
+                  if (!p.ctaLabel?.trim()) return null;
+                  const productAction = p.ctaAction ?? "url";
+                  const buttonClass =
+                    "mt-4 block w-full rounded-full py-2.5 text-center text-sm font-semibold uppercase tracking-wide transition-transform active:scale-[0.98]";
+                  if (productAction === "none") {
+                    return null;
+                  }
+                  if (productAction === "credibly") {
+                    const resolved = crediblyLinks?.[p.id];
+                    if (!resolved) return null;
+                    return (
+                      <a
+                        href={resolved}
+                        onClick={() => track("cta_click", `product-${p.id}`)}
+                        className={buttonClass}
+                        style={V.btn}
+                      >
+                        {p.ctaLabel}
+                      </a>
+                    );
+                  }
+                  /* "url" path — render only when a URL is set. */
+                  if (!p.ctaUrl?.trim()) return null;
+                  return (
+                    <a
+                      href={normalizeExternalUrl(p.ctaUrl)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => track("cta_click", `product-${p.id}`)}
+                      className={buttonClass}
+                      style={V.btn}
+                    >
+                      {p.ctaLabel}
+                    </a>
+                  );
+                })()}
               </div>
             ))}
           </div>

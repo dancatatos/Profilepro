@@ -526,6 +526,11 @@ export interface Product {
   price?: string;
   ctaLabel: string;
   ctaUrl: string;
+  /** Same action options as CTA buttons. Defaults to "url" for back-compat. */
+  ctaAction?: CtaActionKind;
+  /** Set when ctaAction === "credibly". Resolves to the viewer's
+   *  own funnel/training/profile/etc. — same as CTA button behaviour. */
+  credibly?: CrediblyLinkSpec;
 }
 
 export interface VideoEmbed {

@@ -39,10 +39,20 @@ function collectCrediblyButtons(
 ): CrediblyButton[] {
   const out: CrediblyButton[] = [];
   for (const s of sections) {
-    if (s.type !== "cta") continue;
-    for (const b of s.buttons as CTAButton[]) {
-      if (b.action === "credibly" && b.credibly) {
-        out.push({ buttonId: b.id, spec: b.credibly });
+    if (s.type === "cta") {
+      for (const b of s.buttons as CTAButton[]) {
+        if (b.action === "credibly" && b.credibly) {
+          out.push({ buttonId: b.id, spec: b.credibly });
+        }
+      }
+    }
+    if (s.type === "products") {
+      /* Products keyed by product.id (not section.id) so the renderer
+         can look up each card's resolved URL independently. */
+      for (const p of s.products) {
+        if (p.ctaAction === "credibly" && p.credibly) {
+          out.push({ buttonId: p.id, spec: p.credibly });
+        }
       }
     }
   }

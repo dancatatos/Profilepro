@@ -1176,12 +1176,46 @@ function ProductsEditor({ section }: { section: ProductsSection }) {
               className={FIELD}
             />
           </div>
-          <input
-            value={p.ctaUrl}
-            onChange={(e) => edit(p.id, { ctaUrl: e.target.value })}
-            placeholder="Link / affiliate URL"
-            className={FIELD}
-          />
+          {(() => {
+            const productAction = p.ctaAction ?? "url";
+            return (
+              <>
+                {productAction === "url" && (
+                  <input
+                    value={p.ctaUrl}
+                    onChange={(e) => edit(p.id, { ctaUrl: e.target.value })}
+                    placeholder="Link / affiliate URL"
+                    className={FIELD}
+                  />
+                )}
+                {productAction === "credibly" && (
+                  <CrediblyLinkPicker
+                    value={p.credibly}
+                    onChange={(spec) => edit(p.id, { credibly: spec })}
+                  />
+                )}
+                <div>
+                  <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/45">
+                    After click
+                  </label>
+                  <Select
+                    value={productAction}
+                    onChange={(v) =>
+                      edit(p.id, { ctaAction: v as CtaActionKind })
+                    }
+                    options={[
+                      { value: "url", label: "Open URL (new tab)" },
+                      {
+                        value: "credibly",
+                        label: "Credibly Link (auto-routes for team)",
+                      },
+                      { value: "none", label: "Do nothing (display only)" },
+                    ]}
+                  />
+                </div>
+              </>
+            );
+          })()}
         </RowCard>
       ))}
       <AddRow
