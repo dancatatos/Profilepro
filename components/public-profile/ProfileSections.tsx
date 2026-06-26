@@ -1341,15 +1341,28 @@ export function SectionRenderer({
         </SectionShell>
       );
 
-    case "products":
-      /* Showcase layout: hero image on top, title + description
-         centered, pill-style CTA at the bottom. Mobile shows 2 per
-         row (premium shopping-grid feel — full-width cards on mobile
-         felt oversized). Wide screens go up to 4 cols at @4xl which
-         is within the funnel container's natural max width. */
+    case "products": {
+      /* Smart count-based column count: caps the grid at the number
+         of items so a row of 3 fills cleanly instead of leaving an
+         empty 4th slot on desktop. Keeps the default cascade for 4+
+         items (2 mobile / 3 tablet / 4 desktop). Special case: count
+         === 3 uses 1 col on mobile so the orphan disappears (3
+         single big cards reads more premium than 2+1).
+         count === 1 stays single-col everywhere (single hero card). */
+      const count = section.products.length;
+      const gridClass =
+        count === 1
+          ? "grid grid-cols-1 gap-3"
+          : count === 2
+            ? "grid grid-cols-2 gap-3"
+            : count === 3
+              ? "grid grid-cols-1 gap-3 @xl:grid-cols-3"
+              : count === 4
+                ? "grid grid-cols-2 gap-3 @4xl:grid-cols-4"
+                : "grid grid-cols-2 gap-3 @3xl:grid-cols-3 @4xl:grid-cols-4";
       return (
         <SectionShell title={section.title} section={section}>
-          <div className="grid grid-cols-2 gap-3 @3xl:grid-cols-3 @4xl:grid-cols-4">
+          <div className={gridClass}>
             {section.products.map((p) => (
               <div
                 key={p.id}
@@ -1444,6 +1457,7 @@ export function SectionRenderer({
           </div>
         </SectionShell>
       );
+    }
 
     case "video": {
       /* Layout resolution. `auto` (or unset) inspects the video count:
