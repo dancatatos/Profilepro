@@ -55,12 +55,9 @@ export function FunnelPhonePreview({
     funnel.steps.findIndex((s) => s.id === currentStepId),
   );
   const step = funnel.steps[stepIndex] ?? funnel.steps[0];
-  if (!step) return null;
-
-  const isLast = stepIndex >= funnel.steps.length - 1;
-  const cta = step.cta;
-  const showCta = !!cta && !(isLast && cta.action === "next");
-  const sections = step.sections.filter((s) => s.enabled);
+  /* Compute sections safely BEFORE the early-return so the hook
+     below isn't called conditionally (violates rules of hooks). */
+  const sections = step?.sections.filter((s) => s.enabled) ?? [];
 
   /* Resolve Credibly Link CTAs against the profile owner so buttons
      with action="credibly" actually render in the preview. Without
@@ -70,6 +67,12 @@ export function FunnelPhonePreview({
     sections,
     profile?.username,
   );
+
+  if (!step) return null;
+
+  const isLast = stepIndex >= funnel.steps.length - 1;
+  const cta = step.cta;
+  const showCta = !!cta && !(isLast && cta.action === "next");
 
   return (
     <div className="mx-auto w-[300px] max-w-full">
