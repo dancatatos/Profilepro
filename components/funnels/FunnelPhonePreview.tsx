@@ -6,6 +6,7 @@ import {
   type TrackFn,
 } from "@/components/public-profile/ProfileSections";
 import type { BookingSubmitFn } from "@/components/public-profile/AppointmentBooking";
+import { useCrediblyLinks } from "@/components/public-profile/useCrediblyLinks";
 import { useProfileStore } from "@/store/profileStore";
 import {
   buildThemeEffectClasses,
@@ -61,6 +62,15 @@ export function FunnelPhonePreview({
   const showCta = !!cta && !(isLast && cta.action === "next");
   const sections = step.sections.filter((s) => s.enabled);
 
+  /* Resolve Credibly Link CTAs against the profile owner so buttons
+     with action="credibly" actually render in the preview. Without
+     this the resolver map is undefined → button hides. */
+  const crediblyLinks = useCrediblyLinks(
+    profile?.ownerId,
+    sections,
+    profile?.username,
+  );
+
   return (
     <div className="mx-auto w-[300px] max-w-full">
       <div className="relative rounded-[2.6rem] border-4 border-ink-700 bg-ink-950 p-2 shadow-glass">
@@ -109,6 +119,7 @@ export function FunnelPhonePreview({
                        visibly tappable instead of inert, but nothing
                        moves the visible step. */
                     onAdvance={() => {}}
+                    crediblyLinks={crediblyLinks}
                   />
                 ))}
                 {showCta && cta && (
