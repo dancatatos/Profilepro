@@ -3,6 +3,23 @@
  * preview and the print-ready canvas card so the two always match.
  */
 
+/**
+ * Layout variant for the printable business card.
+ *   classic       — original layout: avatar top-left, identity right of it,
+ *                    divider, contact rows, QR panel on the right
+ *   minimal-mono  — type-only editorial: huge name, thin rule, tiny contacts,
+ *                    tiny QR in the corner
+ *   photo-forward — left half is the avatar (full-bleed), right half is
+ *                    identity + contacts + QR stacked
+ *   holographic   — classic layout but the background gets an iridescent
+ *                    multi-stop gradient for a chrome/holo look
+ */
+export type CardLayout =
+  | "classic"
+  | "minimal-mono"
+  | "photo-forward"
+  | "holographic";
+
 export interface CardTemplate {
   id: string;
   name: string;
@@ -22,6 +39,10 @@ export interface CardTemplate {
   avatarRing: string;
   avatarBg: string;
   avatarText: string;
+  /** Optional layout. Defaults to "classic" for back-compat — every
+   *  existing template renders identically until they opt into a
+   *  different layout. */
+  layout?: CardLayout;
 }
 
 export const CARD_TEMPLATES: CardTemplate[] = [
@@ -194,6 +215,94 @@ export const CARD_TEMPLATES: CardTemplate[] = [
     avatarRing: "rgba(0,0,0,0.10)",
     avatarBg: "#ddd0f1",
     avatarText: "#8b5cca",
+  },
+
+  /* ── New layout: minimal-mono ─────────────────────────
+     Type-only editorial card. Pure paper with sumi-ink black
+     text, a thin black hairline rule, tiny corner QR. For
+     designers, art directors, premium consultants who want
+     restraint over decoration. */
+  {
+    id: "mono-paper",
+    name: "Mono Paper",
+    scheme: "light",
+    layout: "minimal-mono",
+    bg: ["#F8F8F4", "#F4F4EE"],
+    glow: ["rgba(0,0,0,0)", "rgba(0,0,0,0)"],
+    nameColor: "#0A0A0A",
+    headlineColor: "#3A3A3A",
+    companyColor: "#6B6B6B",
+    contactColor: "#0A0A0A",
+    accent: "#0A0A0A",
+    divider: "#0A0A0A",
+    scanLabel: "#6B6B6B",
+    avatarRing: "#0A0A0A",
+    avatarBg: "#F0F0E8",
+    avatarText: "#0A0A0A",
+  },
+
+  /* ── New layout: photo-forward ────────────────────────
+     Left half of the card is the avatar (full-bleed); right
+     half is identity, contacts, QR. For influencers, coaches,
+     anyone whose face IS the brand. */
+  {
+    id: "portrait-noir",
+    name: "Portrait Noir",
+    scheme: "dark",
+    layout: "photo-forward",
+    bg: ["#0B0B12", "#03030A"],
+    glow: ["rgba(255,215,0,0.18)", "rgba(255,215,0,0)"],
+    nameColor: "#FFFFFF",
+    headlineColor: "#FFD700",
+    companyColor: "#9A9AA8",
+    contactColor: "#E8E8F0",
+    accent: "#FFD700",
+    divider: "rgba(255,255,255,0.15)",
+    scanLabel: "#8B8B98",
+    avatarRing: "rgba(255,215,0,0.30)",
+    avatarBg: "#1A1A24",
+    avatarText: "#FFD700",
+  },
+  {
+    id: "portrait-rose",
+    name: "Portrait Rose",
+    scheme: "light",
+    layout: "photo-forward",
+    bg: ["#FFF5F0", "#FFE2D6"],
+    glow: ["rgba(244,114,182,0.18)", "rgba(244,114,182,0)"],
+    nameColor: "#3D0A18",
+    headlineColor: "#DB2777",
+    companyColor: "#8B5A65",
+    contactColor: "#3D0A18",
+    accent: "#DB2777",
+    divider: "rgba(219,39,119,0.15)",
+    scanLabel: "#8B5A65",
+    avatarRing: "rgba(219,39,119,0.30)",
+    avatarBg: "#FFE0EB",
+    avatarText: "#DB2777",
+  },
+
+  /* ── New layout: holographic ──────────────────────────
+     Classic layout but with iridescent chrome gradient bg.
+     Futuristic premium feel — tech founders, AI-forward
+     personal brands, luxury affiliates. */
+  {
+    id: "holo-chrome",
+    name: "Holo Chrome",
+    scheme: "dark",
+    layout: "holographic",
+    bg: ["#1a0b33", "#0d1f3d"],
+    glow: ["rgba(168,85,247,0.30)", "rgba(0,255,255,0)"],
+    nameColor: "#FFFFFF",
+    headlineColor: "#E9D5FF",
+    companyColor: "#C4B5FD",
+    contactColor: "#F3E8FF",
+    accent: "#00FFFF",
+    divider: "rgba(255,255,255,0.18)",
+    scanLabel: "#C4B5FD",
+    avatarRing: "rgba(0,255,255,0.40)",
+    avatarBg: "#2A1B4A",
+    avatarText: "#00FFFF",
   },
 ];
 

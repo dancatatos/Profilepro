@@ -188,16 +188,49 @@ async function drawCard(
   }
   const fam =
     getComputedStyle(document.body).fontFamily || "system-ui, sans-serif";
-  const h = profile.header;
 
   ctx.clearRect(0, 0, CARD_W, CARD_H);
 
+  /* Layout dispatch — each branch is a self-contained drawing
+     pipeline. "classic" preserves the original look so every
+     existing template renders identically. */
+  const layout = theme.layout ?? "classic";
+  if (layout === "minimal-mono") {
+    return drawMinimalMono(ctx, qrCanvas, profile, websiteUrl, theme, fam);
+  }
+  if (layout === "photo-forward") {
+    return drawPhotoForward(ctx, qrCanvas, profile, websiteUrl, theme, fam);
+  }
+  /* "holographic" reuses the classic pipeline but paints an
+     iridescent multi-stop gradient as the bg first. Falls through
+     to the classic block below. */
+  const h = profile.header;
+
   /* Background */
-  const bg = ctx.createLinearGradient(0, 0, 0, CARD_H);
-  bg.addColorStop(0, theme.bg[0]);
-  bg.addColorStop(1, theme.bg[1]);
-  ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, CARD_W, CARD_H);
+  if (layout === "holographic") {
+    /* Iridescent diagonal sweep for the chrome/holo look. */
+    const bg = ctx.createLinearGradient(0, 0, CARD_W, CARD_H);
+    bg.addColorStop(0, "#1a0b33");
+    bg.addColorStop(0.35, "#3b0d63");
+    bg.addColorStop(0.55, "#0d3d6b");
+    bg.addColorStop(0.8, "#0d6b58");
+    bg.addColorStop(1, "#1a0b33");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, CARD_W, CARD_H);
+    /* Iridescent overlay sweep for that "shifting colour" feel. */
+    const sheen = ctx.createLinearGradient(0, 0, CARD_W, CARD_H);
+    sheen.addColorStop(0, "rgba(255,255,255,0)");
+    sheen.addColorStop(0.5, "rgba(255,255,255,0.08)");
+    sheen.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = sheen;
+    ctx.fillRect(0, 0, CARD_W, CARD_H);
+  } else {
+    const bg = ctx.createLinearGradient(0, 0, 0, CARD_H);
+    bg.addColorStop(0, theme.bg[0]);
+    bg.addColorStop(1, theme.bg[1]);
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, CARD_W, CARD_H);
+  }
 
   /* Accent glow */
   const glow = ctx.createRadialGradient(
@@ -349,6 +382,237 @@ async function drawCard(
   ctx.textAlign = "center";
   ctx.fillText("SCAN TO VIEW FULL PROFILE", qX + qW / 2, qY + qW + 40);
   ctx.textAlign = "left";
+}
+
+/* ──────────────────────────────────────────
+   Minimal-mono layout — typographic editorial.
+   Pure paper, sumi-ink black, big name, thin
+   rule, tiny contacts, tiny corner QR.
+────────────────────────────────────────── */
+
+async function drawMinimalMono(
+  ctx: CanvasRenderingContext2D,
+  qrCanvas: HTMLCanvasElement | null,
+  profile: Profile,
+  websiteUrl: string,
+  theme: CardTemplate,
+  fam: string,
+): Promise<void> {
+  const h = profile.header;
+  /* Flat paper bg. */
+  const bg = ctx.createLinearGradient(0, 0, 0, CARD_H);
+  bg.addColorStop(0, theme.bg[0]);
+  bg.addColorStop(1, theme.bg[1]);
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, CARD_W, CARD_H);
+
+  const PAD = 80;
+  ctx.textBaseline = "alphabetic";
+  ctx.textAlign = "left";
+
+  /* Tiny eyebrow label */
+  ctx.fillStyle = theme.companyColor;
+  ctx.font = `600 18px ${fam}`;
+  ctx.fillText("CREDIBLY PROFILE", PAD, PAD + 4);
+
+  /* Huge name, single line, hard-fit. */
+  fitFont(ctx, h.displayName, `800 {S}px ${fam}`, 76, 40, CARD_W - PAD * 2);
+  ctx.fillStyle = theme.nameColor;
+  ctx.fillText(
+    truncateToWidth(ctx, h.displayName, CARD_W - PAD * 2),
+    PAD,
+    PAD + 100,
+  );
+
+  /* Headline below name. */
+  if (h.headline) {
+    const { lines } = fitWrap(
+      ctx,
+      h.headline,
+      `400 {S}px ${fam}`,
+      26,
+      18,
+      CARD_W - PAD * 2,
+      2,
+    );
+    ctx.fillStyle = theme.headlineColor;
+    let hy = PAD + 145;
+    for (const ln of lines) {
+      ctx.fillText(ln, PAD, hy);
+      hy += 34;
+    }
+  }
+
+  /* Thin hairline rule */
+  ctx.strokeStyle = theme.divider;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(PAD, CARD_H - 180);
+  ctx.lineTo(CARD_W - PAD - 180, CARD_H - 180);
+  ctx.stroke();
+
+  /* Compact contact stack */
+  const contacts = [h.phone, h.email, websiteUrl.replace(/^https?:\/\//, "")]
+    .map((v) => (v ?? "").trim())
+    .filter((v) => v.length > 0);
+  ctx.font = `400 17px ${fam}`;
+  ctx.fillStyle = theme.contactColor;
+  let cy = CARD_H - 140;
+  for (const val of contacts) {
+    ctx.fillText(truncateToWidth(ctx, val, CARD_W - PAD * 2 - 200), PAD, cy);
+    cy += 28;
+  }
+
+  /* Tiny corner QR */
+  const qW = 140;
+  const qX = CARD_W - PAD - qW;
+  const qY = CARD_H - PAD - qW;
+  roundRectPath(ctx, qX, qY, qW, qW, 8);
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fill();
+  roundRectPath(ctx, qX, qY, qW, qW, 8);
+  ctx.strokeStyle = theme.divider;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  if (qrCanvas) {
+    const inner = 116;
+    const off = (qW - inner) / 2;
+    ctx.drawImage(qrCanvas, qX + off, qY + off, inner, inner);
+  }
+}
+
+/* ──────────────────────────────────────────
+   Photo-forward layout — left half is the
+   avatar full-bleed, right half is identity +
+   contacts + QR stacked.
+────────────────────────────────────────── */
+
+async function drawPhotoForward(
+  ctx: CanvasRenderingContext2D,
+  qrCanvas: HTMLCanvasElement | null,
+  profile: Profile,
+  websiteUrl: string,
+  theme: CardTemplate,
+  fam: string,
+): Promise<void> {
+  const h = profile.header;
+  const SPLIT = Math.round(CARD_W * 0.42); /* photo takes ~42% of width */
+
+  /* Right-half bg */
+  const bg = ctx.createLinearGradient(SPLIT, 0, CARD_W, CARD_H);
+  bg.addColorStop(0, theme.bg[0]);
+  bg.addColorStop(1, theme.bg[1]);
+  ctx.fillStyle = bg;
+  ctx.fillRect(SPLIT, 0, CARD_W - SPLIT, CARD_H);
+
+  /* Accent glow on the right */
+  const glow = ctx.createRadialGradient(
+    CARD_W - 130,
+    70,
+    0,
+    CARD_W - 130,
+    70,
+    400,
+  );
+  glow.addColorStop(0, theme.glow[0]);
+  glow.addColorStop(1, theme.glow[1]);
+  ctx.fillStyle = glow;
+  ctx.fillRect(SPLIT, 0, CARD_W - SPLIT, CARD_H);
+
+  /* Avatar — full-bleed on the left half */
+  const avatar = h.avatarUrl
+    ? await loadImage(`/api/img?url=${encodeURIComponent(h.avatarUrl)}`)
+    : null;
+  if (avatar) {
+    /* Cover-fit into SPLIT × CARD_H box */
+    const targetRatio = SPLIT / CARD_H;
+    const sourceRatio = avatar.width / avatar.height;
+    let sw: number, sh: number, sx: number, sy: number;
+    if (sourceRatio > targetRatio) {
+      sh = avatar.height;
+      sw = Math.round(sh * targetRatio);
+      sx = Math.round((avatar.width - sw) / 2);
+      sy = 0;
+    } else {
+      sw = avatar.width;
+      sh = Math.round(sw / targetRatio);
+      sx = 0;
+      sy = Math.round((avatar.height - sh) / 2);
+    }
+    ctx.drawImage(avatar, sx, sy, sw, sh, 0, 0, SPLIT, CARD_H);
+  } else {
+    ctx.fillStyle = theme.avatarBg;
+    ctx.fillRect(0, 0, SPLIT, CARD_H);
+    ctx.fillStyle = theme.avatarText;
+    ctx.font = `700 96px ${fam}`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(initialsOf(h.displayName), SPLIT / 2, CARD_H / 2);
+    ctx.textAlign = "left";
+    ctx.textBaseline = "alphabetic";
+  }
+
+  /* Right-half content */
+  const PAD = 48;
+  const textX = SPLIT + PAD;
+  const textMaxW = CARD_W - textX - PAD;
+  ctx.textBaseline = "alphabetic";
+  ctx.textAlign = "left";
+
+  fitFont(ctx, h.displayName, `700 {S}px ${fam}`, 40, 26, textMaxW);
+  ctx.fillStyle = theme.nameColor;
+  ctx.fillText(truncateToWidth(ctx, h.displayName, textMaxW), textX, PAD + 30);
+
+  let nextY = PAD + 70;
+  if (h.headline) {
+    const { size, lines } = fitWrap(
+      ctx,
+      h.headline,
+      `500 {S}px ${fam}`,
+      19,
+      14,
+      textMaxW,
+      2,
+    );
+    ctx.fillStyle = theme.headlineColor;
+    let hy = nextY;
+    for (const ln of lines) {
+      ctx.fillText(ln, textX, hy);
+      hy += Math.round(size * 1.3);
+      nextY = hy;
+    }
+  }
+
+  /* Contact rows */
+  const contacts = [h.phone, h.email, websiteUrl.replace(/^https?:\/\//, "")]
+    .map((v) => (v ?? "").trim())
+    .filter((v) => v.length > 0);
+  ctx.font = `400 14px ${fam}`;
+  ctx.fillStyle = theme.contactColor;
+  let cy = nextY + 24;
+  for (const val of contacts) {
+    ctx.fillStyle = theme.accent;
+    ctx.beginPath();
+    ctx.arc(textX + 4, cy - 5, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = theme.contactColor;
+    fitFont(ctx, val, `400 {S}px ${fam}`, 16, 11, textMaxW - 20);
+    ctx.fillText(truncateToWidth(ctx, val, textMaxW - 20), textX + 18, cy);
+    cy += 26;
+  }
+
+  /* QR — bottom-right corner of the right half */
+  const qW = 140;
+  const qX = CARD_W - PAD - qW;
+  const qY = CARD_H - PAD - qW;
+  roundRectPath(ctx, qX, qY, qW, qW, 12);
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fill();
+  if (qrCanvas) {
+    const inner = 116;
+    const off = (qW - inner) / 2;
+    ctx.drawImage(qrCanvas, qX + off, qY + off, inner, inner);
+  }
 }
 
 /* ── component ── */
