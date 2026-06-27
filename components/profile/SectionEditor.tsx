@@ -564,6 +564,31 @@ function HeroEditor({ section }: { section: HeroSection }) {
         className="w-full resize-none rounded-lg border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-electric-500/60"
       />
 
+      {/* Aspect ratio is meaningful in BOTH stacked and overlay — picks
+          the shape the image/video renders at. Lives outside isOverlay
+          so an owner with a 21:9 cinematic banner can pick the right
+          aspect even when they prefer the stacked card look. */}
+      <div>
+        <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/45">
+          Aspect ratio
+        </label>
+        <Select
+          value={section.aspectRatio ?? "16:9"}
+          onChange={(v) =>
+            update(section.id, {
+              aspectRatio: v as HeroSection["aspectRatio"],
+            })
+          }
+          options={[
+            { value: "16:9", label: "16:9 widescreen" },
+            { value: "4:3", label: "4:3 classic" },
+            { value: "1:1", label: "1:1 square" },
+            { value: "21:9", label: "21:9 cinematic" },
+            { value: "3:4", label: "3:4 portrait" },
+          ]}
+        />
+      </div>
+
       {isOverlay && (
         <>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -583,46 +608,24 @@ function HeroEditor({ section }: { section: HeroSection }) {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/45">
-                Aspect ratio
-              </label>
-              <Select
-                value={section.aspectRatio ?? "16:9"}
-                onChange={(v) =>
-                  update(section.id, {
-                    aspectRatio: v as HeroSection["aspectRatio"],
-                  })
-                }
-                options={[
-                  { value: "16:9", label: "16:9 widescreen" },
-                  { value: "4:3", label: "4:3 classic" },
-                  { value: "1:1", label: "1:1 square" },
-                  { value: "21:9", label: "21:9 cinematic" },
-                  { value: "3:4", label: "3:4 portrait" },
-                ]}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/45">
-                Overlay darkness
-              </label>
-              <Select
-                value={section.overlay ?? "medium"}
-                onChange={(v) =>
-                  update(section.id, {
-                    overlay: v as HeroSection["overlay"],
-                  })
-                }
-                options={[
-                  { value: "none", label: "None" },
-                  { value: "light", label: "Light" },
-                  { value: "medium", label: "Medium" },
-                  { value: "dark", label: "Dark" },
-                ]}
-              />
-            </div>
+          <div>
+            <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/45">
+              Overlay darkness
+            </label>
+            <Select
+              value={section.overlay ?? "medium"}
+              onChange={(v) =>
+                update(section.id, {
+                  overlay: v as HeroSection["overlay"],
+                })
+              }
+              options={[
+                { value: "none", label: "None" },
+                { value: "light", label: "Light" },
+                { value: "medium", label: "Medium" },
+                { value: "dark", label: "Dark" },
+              ]}
+            />
           </div>
 
           <div>

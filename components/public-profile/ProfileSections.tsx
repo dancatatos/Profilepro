@@ -773,6 +773,29 @@ export function SectionRenderer({
       const layout = section.layout ?? "stacked";
 
       if (layout === "stacked") {
+        /* Stacked now respects section.aspectRatio (same as overlay)
+           so the image isn't force-letterboxed into 16:9 when the
+           owner uploaded a 21:9 cinematic banner or a 4:3 graphic. */
+        const stackedAspect = section.aspectRatio ?? "16:9";
+        const stackedAspectClass =
+          stackedAspect === "16:9"
+            ? "aspect-video"
+            : stackedAspect === "4:3"
+              ? "aspect-[4/3]"
+              : stackedAspect === "1:1"
+                ? "aspect-square"
+                : stackedAspect === "21:9"
+                  ? "aspect-[21/9]"
+                  : "aspect-[3/4]";
+
+        /* Hide the text strip entirely when both fields are empty —
+           was rendering a ~80px dark band below the image just for
+           padding around an empty <h2>. Now image-only heroes feel
+           like image-only banners. */
+        const stackedHasText = Boolean(
+          section.headline?.trim() || section.subtext?.trim(),
+        );
+
         return (
           <SectionShell title={section.title} section={section}>
             <div
@@ -789,30 +812,37 @@ export function SectionRenderer({
                   loop
                   playsInline
                   preload="metadata"
-                  className="aspect-[16/9] w-full object-cover"
+                  className={cn("w-full object-cover", stackedAspectClass)}
                 />
               ) : section.backgroundUrl ? (
                 <div
-                  className="aspect-[16/9] bg-cover bg-center"
+                  className={cn(
+                    "bg-cover bg-center",
+                    stackedAspectClass,
+                  )}
                   style={{ backgroundImage: `url("${section.backgroundUrl}")` }}
                 />
               ) : null}
-              <div className="px-5 py-6 text-center">
-                <h2
-                  className="font-display text-2xl font-bold leading-tight"
-                  style={V.text}
-                >
-                  {section.headline}
-                </h2>
-                {section.subtext && (
-                  <p
-                    className="mt-2 text-sm leading-relaxed"
-                    style={V.text2}
-                  >
-                    {section.subtext}
-                  </p>
-                )}
-              </div>
+              {stackedHasText && (
+                <div className="px-5 py-6 text-center">
+                  {section.headline?.trim() && (
+                    <h2
+                      className="font-display text-2xl font-bold leading-tight"
+                      style={V.text}
+                    >
+                      {section.headline}
+                    </h2>
+                  )}
+                  {section.subtext?.trim() && (
+                    <p
+                      className="mt-2 text-sm leading-relaxed"
+                      style={V.text2}
+                    >
+                      {section.subtext}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </SectionShell>
         );
