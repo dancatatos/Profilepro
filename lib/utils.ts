@@ -124,21 +124,24 @@ export async function copyToClipboard(text: string): Promise<boolean> {
 }
 
 /**
- * Force-download a remote file by fetching → blob → object URL → anchor
- * click. The plain `<a href download>` attribute is ignored when the
- * href is cross-origin (true for every Firebase Storage URL we serve),
- * so the browser opens the image in a new tab instead of saving it.
- * Fetching it ourselves works around that.
+ * Force-download a remote file via our same-origin proxy. The plain
+ * `<a href download>` attribute is ignored on cross-origin links (true
+ * for every Firebase Storage URL), AND a direct cross-origin fetch
+ * gets blocked by CORS because Firebase Storage doesn't return the
+ * Access-Control-Allow-Origin header for our app domain. So we route
+ * through /api/download — server-side fetch is CORS-immune, the
+ * response is same-origin, and the anchor download attribute then
+ * works as the spec intended.
  *
- * Caller picks the saved filename. Extension is preserved from the URL
- * when present so /img.jpg stays a .jpg. Throws on network failure so
- * the caller can show a toast.
+ * Caller picks the saved filename. Throws on network / proxy failure
+ * so the caller can show a toast.
  */
 export async function downloadFromUrl(
   url: string,
   filename: string,
 ): Promise<void> {
-  const res = await fetch(url, { mode: "cors" });
+  const proxyUrl = `/api/download?url=${encodeURIComponent(url)}`;
+  const res = await fetch(proxyUrl);
   if (!res.ok) {
     throw new Error(`Download failed (${res.status})`);
   }
