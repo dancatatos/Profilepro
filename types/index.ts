@@ -457,13 +457,53 @@ export interface CrediblyLinkSpec {
   targetTag?: string;
 }
 
+/**
+ * Visual style of a CTA button. The original three (solid/gradient/
+ * outline) stay default for back-compat. Newer options give owners
+ * shape + treatment options for more distinctive marketing CTAs.
+ */
+export type CtaStyle =
+  | "solid"
+  | "gradient"
+  | "outline"
+  | "pill"
+  | "sharp"
+  | "pressed"
+  | "ghost"
+  | "soft";
+
+/**
+ * Accent color of a CTA button. The original four stay default; new
+ * options expand the palette to match the wider theme catalogue and
+ * give owners more on-brand button choices.
+ */
+export type CtaAccent =
+  | "blue"
+  | "jade"
+  | "gold"
+  | "white"
+  | "purple"
+  | "pink"
+  | "mint"
+  | "coral"
+  | "navy"
+  | "charcoal";
+
+/**
+ * Optional hover effect that fires when a visitor mouses over the
+ * button. Defaults to "none" for back-compat. "glow" adds a soft
+ * coloured halo, "shimmer" runs a light sweep across the surface,
+ * "lift" raises the button on hover with a deeper shadow.
+ */
+export type CtaHoverEffect = "none" | "glow" | "shimmer" | "lift";
+
 export interface CTAButton {
   id: string;
   label: string;
   url: string;
   icon: string; // lucide icon name or social key
-  style: "solid" | "gradient" | "outline";
-  accent: "blue" | "jade" | "gold" | "white";
+  style: CtaStyle;
+  accent: CtaAccent;
   /** What happens when this button is clicked. Defaults to "url". */
   action?: CtaActionKind;
   /**
@@ -474,6 +514,8 @@ export interface CTAButton {
    * touch hardcoded URLs.
    */
   credibly?: CrediblyLinkSpec;
+  /** Optional hover effect. Defaults to "none". */
+  hoverEffect?: CtaHoverEffect;
 }
 
 export type SocialPlatform =

@@ -209,9 +209,14 @@ function CtaEditor({ section }: { section: CtaSection }) {
                 edit(b.id, { style: v as CtaSection["buttons"][number]["style"] })
               }
               options={[
-                { value: "gradient", label: "Gradient" },
                 { value: "solid", label: "Solid" },
+                { value: "gradient", label: "Gradient" },
                 { value: "outline", label: "Outline" },
+                { value: "pill", label: "Pill (rounded + shadow)" },
+                { value: "sharp", label: "Sharp (brutalist hard shadow)" },
+                { value: "pressed", label: "Pressed (3D inset)" },
+                { value: "ghost", label: "Ghost (transparent fill)" },
+                { value: "soft", label: "Soft (low-saturation chip)" },
               ]}
             />
             <Select
@@ -226,6 +231,32 @@ function CtaEditor({ section }: { section: CtaSection }) {
                 { value: "jade", label: "Emerald" },
                 { value: "gold", label: "Gold" },
                 { value: "white", label: "White" },
+                { value: "purple", label: "Purple" },
+                { value: "pink", label: "Pink" },
+                { value: "mint", label: "Mint" },
+                { value: "coral", label: "Coral" },
+                { value: "navy", label: "Navy" },
+                { value: "charcoal", label: "Charcoal" },
+              ]}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/45">
+              Hover effect
+            </label>
+            <Select
+              value={b.hoverEffect ?? "none"}
+              onChange={(v) =>
+                edit(b.id, {
+                  hoverEffect:
+                    v as CtaSection["buttons"][number]["hoverEffect"],
+                })
+              }
+              options={[
+                { value: "none", label: "None" },
+                { value: "glow", label: "Glow halo on hover" },
+                { value: "shimmer", label: "Shimmer sweep on hover" },
+                { value: "lift", label: "Lift + deeper shadow on hover" },
               ]}
             />
           </div>
