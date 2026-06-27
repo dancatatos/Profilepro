@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Select } from "@/components/ui/Select";
 import { Icon } from "@/components/ui/Icon";
 import { ImageUploadField } from "./ImageUploadField";
+import { VideoUploadField } from "./VideoUploadField";
 import dynamic from "next/dynamic";
 import { SOCIAL_PLATFORMS } from "@/lib/constants";
 import { useProfileStore } from "@/store/profileStore";
@@ -537,6 +538,16 @@ function HeroEditor({ section }: { section: HeroSection }) {
         value={section.backgroundUrl}
         onChange={(url) => update(section.id, { backgroundUrl: url })}
         folder="hero"
+        label="Background image (or video poster)"
+      />
+
+      <VideoUploadField
+        value={section.backgroundVideoUrl}
+        onChange={(url) =>
+          update(section.id, { backgroundVideoUrl: url })
+        }
+        folder="hero"
+        label="Background video (autoplays muted, loops)"
       />
 
       <input
@@ -686,6 +697,14 @@ function CoverEditor({ section }: { section: CoverSection }) {
         value={section.imageUrl}
         onChange={(url) => patch({ imageUrl: url })}
         folder="covers"
+        label="Cover image (or video poster)"
+      />
+
+      <VideoUploadField
+        value={section.videoUrl}
+        onChange={(url) => patch({ videoUrl: url })}
+        folder="cover"
+        label="Cover video (autoplays muted, loops)"
       />
 
       <input

@@ -775,6 +775,14 @@ export type HeroAspect = "16:9" | "4:3" | "1:1" | "21:9" | "3:4";
 export interface CoverSection extends SectionBase {
   type: "cover";
   imageUrl?: string;
+  /**
+   * Optional background video URL (MP4 / WebM). Autoplays muted + looped
+   * + inline behind the cover overlay. `imageUrl` doubles as the poster
+   * frame and the fallback for slow / metered connections. Same shape as
+   * Hero.backgroundVideoUrl so owners get matching behaviour across both
+   * full-bleed sections.
+   */
+  videoUrl?: string;
   headline?: string;
   subhead?: string;
   ctaLabel?: string;
@@ -791,6 +799,15 @@ export interface HeroSection extends SectionBase {
   subtext: string;
   /** Optional background image URL. */
   backgroundUrl?: string;
+  /**
+   * Optional background video URL (MP4 / WebM). When set, the video
+   * autoplays muted + looped + inline behind the text overlay — the
+   * only autoplay shape browsers actually allow without user gesture.
+   * `backgroundUrl` (image) acts as the poster + pre-buffer frame, and
+   * remains the fallback when the video fails to load on a slow / metered
+   * connection. Set both for the best perceived load.
+   */
+  backgroundVideoUrl?: string;
   /**
    * Layout mode.
    *   "stacked" (default for existing data) — image on top, text in a card below

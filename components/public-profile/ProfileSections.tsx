@@ -779,12 +779,24 @@ export function SectionRenderer({
               className="overflow-hidden"
               style={{ ...V.card, padding: 0 }}
             >
-              {section.backgroundUrl && (
+              {section.backgroundVideoUrl ? (
+                <video
+                  key={section.backgroundVideoUrl}
+                  src={section.backgroundVideoUrl}
+                  poster={section.backgroundUrl}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  className="aspect-[16/9] w-full object-cover"
+                />
+              ) : section.backgroundUrl ? (
                 <div
                   className="aspect-[16/9] bg-cover bg-center"
                   style={{ backgroundImage: `url("${section.backgroundUrl}")` }}
                 />
-              )}
+              ) : null}
               <div className="px-5 py-6 text-center">
                 <h2
                   className="font-display text-2xl font-bold leading-tight"
@@ -869,17 +881,36 @@ export function SectionRenderer({
               aspectClass,
             )}
             style={{
-              backgroundImage: section.backgroundUrl
-                ? `url("${section.backgroundUrl}")`
-                : undefined,
+              /* When a video is set, the parent stays neutral and the
+                 <video> layer below paints the bg. Otherwise we keep
+                 the original inline background-image pattern so existing
+                 image-only heroes render byte-for-byte the same. */
+              backgroundImage:
+                !section.backgroundVideoUrl && section.backgroundUrl
+                  ? `url("${section.backgroundUrl}")`
+                  : undefined,
               backgroundSize: "cover",
               backgroundPosition: "center",
-              backgroundColor: section.backgroundUrl
-                ? undefined
-                : "var(--tp-card)",
+              backgroundColor:
+                section.backgroundVideoUrl || section.backgroundUrl
+                  ? undefined
+                  : "var(--tp-card)",
               borderRadius: "var(--tp-card-radius)",
             }}
           >
+            {section.backgroundVideoUrl && (
+              <video
+                key={section.backgroundVideoUrl}
+                src={section.backgroundVideoUrl}
+                poster={section.backgroundUrl}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            )}
             {hasContent && overlayGradient && (
               <div
                 aria-hidden
@@ -1005,25 +1036,42 @@ export function SectionRenderer({
               width: "100vw",
               marginLeft: "calc(50% - 50vw)",
               marginRight: "calc(50% - 50vw)",
-              backgroundImage: section.imageUrl
-                ? `url("${section.imageUrl}")`
-                : undefined,
+              /* Video wins; otherwise fall back to the image. Empty
+                 cover stays on tp-card so the placeholder reads. */
+              backgroundImage:
+                !section.videoUrl && section.imageUrl
+                  ? `url("${section.imageUrl}")`
+                  : undefined,
               backgroundSize: "cover",
               backgroundPosition: "center",
-              backgroundColor: section.imageUrl
-                ? undefined
-                : "var(--tp-card)",
+              backgroundColor:
+                section.videoUrl || section.imageUrl
+                  ? undefined
+                  : "var(--tp-card)",
             }}
           >
-            {!section.imageUrl && !hasContent && (
+            {section.videoUrl && (
+              <video
+                key={section.videoUrl}
+                src={section.videoUrl}
+                poster={section.imageUrl}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            )}
+            {!section.videoUrl && !section.imageUrl && !hasContent && (
               <div
                 className="absolute inset-0 flex items-center justify-center text-xs opacity-50"
                 style={V.text3}
               >
-                Cover — add an image in the editor
+                Cover — add an image or video in the editor
               </div>
             )}
-            {hasContent && overlayGradient && section.imageUrl && (
+            {hasContent && overlayGradient && (section.imageUrl || section.videoUrl) && (
               <div
                 aria-hidden
                 className="absolute inset-0"

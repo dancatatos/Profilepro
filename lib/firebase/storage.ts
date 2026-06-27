@@ -34,6 +34,34 @@ export async function uploadImage(
   return getDownloadURL(storageRef);
 }
 
+/**
+ * Upload a short background video (MP4 / WebM) used by Hero + Cover
+ * sections. Lands in a dedicated subfolder so storage.rules can apply
+ * the larger size cap + video MIME validation only to these paths —
+ * the regular /users/{uid}/... rule still enforces 5 MB image-only for
+ * everything else.
+ *
+ * Cap is enforced again client-side (in VideoUploadField) so the user
+ * gets a fast error before the upload starts; the rule is the source
+ * of truth in case devtools is open.
+ */
+export async function uploadVideo(
+  ownerId: string,
+  file: File,
+  folder: "hero" | "cover" = "hero",
+): Promise<string> {
+  if (!isFirebaseConfigured) {
+    return URL.createObjectURL(file);
+  }
+  const ext = file.name.split(".").pop()?.toLowerCase() || "mp4";
+  // hero → "hero-video", cover → "cover-video" (matches storage.rules)
+  const sub = folder === "hero" ? "hero-video" : "cover-video";
+  const path = `users/${ownerId}/${sub}/${uid("vid")}.${ext}`;
+  const storageRef = ref(storage, path);
+  await uploadBytes(storageRef, file, { contentType: file.type });
+  return getDownloadURL(storageRef);
+}
+
 export async function deleteImage(downloadUrl: string): Promise<void> {
   if (!isFirebaseConfigured || downloadUrl.startsWith("blob:")) return;
   try {
