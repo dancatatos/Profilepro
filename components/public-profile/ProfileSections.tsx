@@ -964,14 +964,14 @@ export function SectionRenderer({
     }
 
     case "cover": {
-      /* Cover — full container-width image background with optional
-         text overlay. No viewport-escape tricks (those broke things
-         last time); just spans 100% of the funnel/profile container
-         width at every breakpoint. Aspect ratio drives the height.
-         Responsive by definition because the container itself caps
-         per breakpoint (mobile=md, tablet=2xl, desktop=5xl).
-         If imageUrl + all text fields are empty, renders a soft
-         placeholder so the editor preview doesn't look broken. */
+      /* Cover — edge-to-edge banner with optional text/CTA overlay.
+         Goes full viewport-width on mobile & tablet, then caps at a
+         sane max width per aspect on huge desktop monitors so:
+           - 16:9 doesn't become 1920×1080 (overwhelming)
+           - 4:3 / 1:1 / 3:4 don't stretch to absurd heights
+         Below the cap, mobile/tablet still hit 100vw so the banner
+         feels properly cinematic. The parent route applies
+         overflow-x: clip so the breakout never spawns a side scrollbar. */
       const aspect = section.aspectRatio ?? "16:9";
       const aspectClass =
         aspect === "16:9"
@@ -984,6 +984,23 @@ export function SectionRenderer({
                 ? "aspect-[21/9]"
                 : "aspect-[3/4]";
 
+      /* Per-aspect desktop width cap. Mobile/tablet always go 100vw
+         since min() picks whichever is smaller. Numbers tuned so the
+         resulting cover height stays in the 600-900 range on most
+         desktops — never tall enough to push the rest of the page
+         off the fold. */
+      const maxWidthPx =
+        aspect === "21:9"
+          ? 1400
+          : aspect === "16:9"
+            ? 1280
+            : aspect === "4:3"
+              ? 1100
+              : aspect === "1:1"
+                ? 800
+                : 640; // 3:4
+      const halfWidthPx = maxWidthPx / 2;
+
       const overlayLevel = section.overlay ?? "medium";
       const overlayGradient =
         overlayLevel === "none"
@@ -994,19 +1011,34 @@ export function SectionRenderer({
               ? "linear-gradient(180deg, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.55) 100%)"
               : "linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.78) 100%)";
 
+      /* 9-position alignment via CSS Grid place-items — first token is
+         block-axis (vertical), second is inline-axis (horizontal). Way
+         cleaner than the old flex-col items/justify swap because grid
+         place-items semantics actually match the t/l/r/b letters. */
       const align = section.align ?? "cc";
-      const verticalCls =
-        align.startsWith("t")
-          ? "items-start"
-          : align.startsWith("b")
-            ? "items-end"
-            : "items-center";
-      const horizontalCls =
-        align.endsWith("l")
-          ? "justify-start text-left"
-          : align.endsWith("r")
-            ? "justify-end text-right"
-            : "justify-center text-center";
+      const placeItems =
+        align === "tl"
+          ? "start start"
+          : align === "tc"
+            ? "start center"
+            : align === "tr"
+              ? "start end"
+              : align === "cl"
+                ? "center start"
+                : align === "cc"
+                  ? "center"
+                  : align === "cr"
+                    ? "center end"
+                    : align === "bl"
+                      ? "end start"
+                      : align === "bc"
+                        ? "end center"
+                        : "end end"; // br
+      const textAlign: "left" | "center" | "right" = align.endsWith("l")
+        ? "left"
+        : align.endsWith("r")
+          ? "right"
+          : "center";
 
       const isLight = (section.textColor ?? "light") === "light";
       const textCol = isLight ? "#FFFFFF" : "#0A0A0A";
@@ -1025,19 +1057,13 @@ export function SectionRenderer({
           <div
             className={cn("relative overflow-hidden", aspectClass)}
             style={{
-              /* Full-viewport breakout: width: 100vw + symmetric
-                 negative margins anchor the element to the viewport
-                 regardless of how narrow the parent container is. The
-                 parent route (PublicProfileView / FunnelView) sets
-                 overflow-x: clip so the 100vw doesn't trigger a
-                 horizontal scrollbar (vw includes scrollbar width on
-                 desktop). Scoped to just those routes — body is left
-                 alone so the rest of the app is unaffected. */
-              width: "100vw",
-              marginLeft: "calc(50% - 50vw)",
-              marginRight: "calc(50% - 50vw)",
-              /* Video wins; otherwise fall back to the image. Empty
-                 cover stays on tp-card so the placeholder reads. */
+              /* min() = mobile/tablet hit 100vw, desktops cap at
+                 maxWidthPx. The matched max() margin keeps the element
+                 centered on the viewport when the cap is hit, and pulls
+                 it all the way to the edge when it isn't. */
+              width: `min(100vw, ${maxWidthPx}px)`,
+              marginLeft: `max(calc(50% - 50vw), calc(50% - ${halfWidthPx}px))`,
+              marginRight: `max(calc(50% - 50vw), calc(50% - ${halfWidthPx}px))`,
               backgroundImage:
                 !section.videoUrl && section.imageUrl
                   ? `url("${section.imageUrl}")`
@@ -1080,21 +1106,13 @@ export function SectionRenderer({
             )}
             {hasContent && (
               <div
-                className={cn(
-                  "absolute inset-0 flex flex-col gap-3 p-6 sm:p-10",
-                  verticalCls,
-                  horizontalCls,
-                )}
+                className="absolute inset-0 grid px-5 py-8 sm:px-10 sm:py-14 md:px-14 md:py-16 lg:px-20 lg:py-20"
+                style={{ placeItems }}
               >
-                <div
-                  className={cn(
-                    "max-w-2xl",
-                    horizontalCls.includes("text-center") && "mx-auto",
-                  )}
-                >
+                <div className="max-w-2xl" style={{ textAlign }}>
                   {section.headline?.trim() && (
                     <h2
-                      className="font-display text-3xl font-bold leading-[1.1] sm:text-4xl lg:text-5xl"
+                      className="font-display text-3xl font-bold leading-[1.05] sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl"
                       style={{ color: textCol, textShadow }}
                     >
                       {section.headline}
@@ -1102,7 +1120,7 @@ export function SectionRenderer({
                   )}
                   {section.subhead?.trim() && (
                     <p
-                      className="mt-3 text-sm leading-relaxed sm:text-base"
+                      className="mt-3 text-sm leading-relaxed sm:mt-4 sm:text-base md:text-lg lg:text-xl"
                       style={{ color: textCol, textShadow, opacity: 0.92 }}
                     >
                       {section.subhead}
@@ -1114,7 +1132,7 @@ export function SectionRenderer({
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={() => track("cta_click", `cover-${section.id}`)}
-                      className="mt-5 inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold transition-transform active:scale-[0.98]"
+                      className="mt-5 inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold transition-transform active:scale-[0.98] sm:mt-7 sm:px-8 sm:py-3.5 sm:text-base"
                       style={V.btn}
                     >
                       {section.ctaLabel}
