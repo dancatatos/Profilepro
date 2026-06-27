@@ -17,7 +17,6 @@
  *     annotation ("real customer ✏") that builds trust
  */
 
-import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import type { Profile } from "@/types";
 import { PublicProfileView } from "@/components/public-profile/PublicProfileView";
@@ -102,19 +101,22 @@ export function LightHero({
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link
+              {/* Plain <a> for the marketing CTAs — see MarketingNav
+                  for the full rationale. tl;dr: Next.js Link silently
+                  failed to navigate on production; <a> always works. */}
+              <a
                 href="/signup"
                 className="group inline-flex items-center gap-2 rounded-full bg-electric-500 px-6 py-3.5 text-sm font-semibold text-white shadow-[var(--shadow-pill-cta)] transition-transform hover:scale-[1.02] active:scale-[0.98] sm:text-base"
               >
                 {hero.primaryCta}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </Link>
-              <Link
+              </a>
+              <a
                 href="/demo"
                 className="inline-flex items-center gap-2 rounded-full border border-stone-300 bg-white px-6 py-3.5 text-sm font-semibold text-stone-900 transition-colors hover:bg-stone-100 sm:text-base"
               >
                 {hero.secondaryCta}
-              </Link>
+              </a>
             </div>
 
             <div className="mt-7 flex flex-wrap gap-1.5">

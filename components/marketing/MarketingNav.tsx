@@ -10,7 +10,14 @@
  * anchor links + Log in + Start free CTA.
  */
 
-import Link from "next/link";
+/* Plain <a> tags (not Next.js Link) for the marketing nav — the
+   homepage is a hard boundary between the marketing site and the
+   authenticated app shell. Next.js Link was silently failing to
+   navigate on production (preventDefault fired, but router.push
+   never completed) — full page reloads via <a> are bulletproof
+   AND right for marketing flows (every nav click is going to a
+   different route context anyway: /login, /signup, /demo). */
+
 import { ArrowRight } from "lucide-react";
 import { LogoMark } from "@/components/ui/Logo";
 
@@ -26,12 +33,12 @@ export function MarketingNav({ navLinks }: { navLinks: NavLink[] }) {
         className="flex items-center justify-between gap-3 rounded-full border border-stone-100 bg-white/85 py-2 pl-4 pr-2 shadow-[var(--shadow-card-soft)] backdrop-blur-xl sm:pl-6"
         aria-label="Primary"
       >
-        <Link href="/" className="flex shrink-0 items-center gap-2">
+        <a href="/" className="flex shrink-0 items-center gap-2">
           <LogoMark className="h-7 w-7 text-electric-500" />
           <span className="font-display text-base font-bold text-stone-900">
             Credibly
           </span>
-        </Link>
+        </a>
 
         <ul className="hidden items-center gap-7 md:flex">
           {navLinks.map((l) => (
@@ -47,19 +54,19 @@ export function MarketingNav({ navLinks }: { navLinks: NavLink[] }) {
         </ul>
 
         <div className="flex items-center gap-1.5">
-          <Link
+          <a
             href="/login"
             className="rounded-full px-3 py-2 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-100 sm:px-4"
           >
             Log in
-          </Link>
-          <Link
+          </a>
+          <a
             href="/signup"
             className="inline-flex items-center gap-1.5 rounded-full bg-electric-500 px-4 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-pill-cta)] transition-transform hover:scale-[1.02] active:scale-[0.98] sm:px-5"
           >
             Start free
             <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
+          </a>
         </div>
       </nav>
     </div>
