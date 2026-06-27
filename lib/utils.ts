@@ -123,6 +123,55 @@ export async function copyToClipboard(text: string): Promise<boolean> {
   }
 }
 
+/**
+ * Force-download a remote file by fetching → blob → object URL → anchor
+ * click. The plain `<a href download>` attribute is ignored when the
+ * href is cross-origin (true for every Firebase Storage URL we serve),
+ * so the browser opens the image in a new tab instead of saving it.
+ * Fetching it ourselves works around that.
+ *
+ * Caller picks the saved filename. Extension is preserved from the URL
+ * when present so /img.jpg stays a .jpg. Throws on network failure so
+ * the caller can show a toast.
+ */
+export async function downloadFromUrl(
+  url: string,
+  filename: string,
+): Promise<void> {
+  const res = await fetch(url, { mode: "cors" });
+  if (!res.ok) {
+    throw new Error(`Download failed (${res.status})`);
+  }
+  const blob = await res.blob();
+  const blobUrl = URL.createObjectURL(blob);
+  try {
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = filename;
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } finally {
+    URL.revokeObjectURL(blobUrl);
+  }
+}
+
+/**
+ * Pull the file extension off a remote URL (ignoring query string).
+ * Returns `fallback` when the URL has no recognisable extension —
+ * common for Firebase Storage download URLs with token-only paths.
+ */
+export function extFromUrl(url: string, fallback = "jpg"): string {
+  try {
+    const path = new URL(url).pathname;
+    const m = path.match(/\.([a-zA-Z0-9]{2,5})$/);
+    return m ? m[1].toLowerCase() : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 /** Human readable relative time. */
 export function timeAgo(ts: number): string {
   const diff = Date.now() - ts;

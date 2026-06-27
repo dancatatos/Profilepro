@@ -73,6 +73,7 @@ export default function NewEventPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [bannerUrl, setBannerUrl] = useState("");
+  const [invitationCardUrl, setInvitationCardUrl] = useState("");
   const defaultStart = useMemo(() => {
     const d = new Date();
     d.setMinutes(0, 0, 0);
@@ -167,6 +168,7 @@ export default function NewEventPage() {
         title: title.trim(),
         description: description.trim() || undefined,
         bannerUrl: bannerUrl || undefined,
+        invitationCardUrl: invitationCardUrl || undefined,
         startAt: startMs,
         endAt: endMs,
         timezone,
@@ -266,9 +268,29 @@ export default function NewEventPage() {
           <label className="mb-1 block text-xs font-medium text-white/55">
             Banner (optional)
           </label>
+          <p className="mb-1.5 text-[11px] text-white/40">
+            Small thumbnail shown on event cards in /my-events and the
+            dashboard.
+          </p>
           <ImageUploadField
             value={bannerUrl}
             onChange={(url) => setBannerUrl(url ?? "")}
+            folder="media"
+          />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-xs font-medium text-white/55">
+            Invitation card (optional)
+          </label>
+          <p className="mb-1.5 text-[11px] text-white/40">
+            The full share-graphic your team forwards to prospects on
+            Messenger / Facebook / Viber. Members get a one-tap
+            &ldquo;Download invitation card&rdquo; button on the event.
+          </p>
+          <ImageUploadField
+            value={invitationCardUrl}
+            onChange={(url) => setInvitationCardUrl(url ?? "")}
             folder="media"
           />
         </div>

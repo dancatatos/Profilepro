@@ -17,6 +17,7 @@ import {
   CalendarPlus,
   CheckCircle2,
   Clock,
+  Download,
   KeyRound,
   MapPin,
   Users,
@@ -37,7 +38,7 @@ import {
   listTeamMembershipsForUser,
   setEventRsvp,
 } from "@/lib/firebase/firestore";
-import { cn } from "@/lib/utils";
+import { cn, downloadFromUrl, extFromUrl } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 import type { EventRsvp, TeamEvent, TeamSpace } from "@/types";
 
@@ -404,9 +405,27 @@ function EventPreviewModal({
 }) {
   const { account } = useAuth();
   const [busy, setBusy] = useState(false);
+  const [downloadingCard, setDownloadingCard] = useState(false);
 
   if (!row) return null;
   const { event, team, rsvp } = row;
+
+  const handleCardDownload = async () => {
+    if (!event.invitationCardUrl) return;
+    setDownloadingCard(true);
+    try {
+      const ext = extFromUrl(event.invitationCardUrl, "jpg");
+      await downloadFromUrl(
+        event.invitationCardUrl,
+        `${slugify(event.title)}-invitation.${ext}`,
+      );
+      toast.success("Invitation card saved.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Download failed.");
+    } finally {
+      setDownloadingCard(false);
+    }
+  };
 
   const start = new Date(event.startAt);
   const end = new Date(event.endAt);
@@ -541,7 +560,8 @@ function EventPreviewModal({
           </div>
         </div>
 
-        {/* Actions row — Add to calendar + (for online events) Join call */}
+        {/* Actions row — Add to calendar + Download invitation card +
+            (for online events) Join call */}
         <div className="flex flex-wrap gap-2 pt-1">
           <a
             href={icsHref}
@@ -551,6 +571,17 @@ function EventPreviewModal({
             <CalendarPlus className="h-3.5 w-3.5" />
             Add to calendar
           </a>
+          {event.invitationCardUrl && (
+            <button
+              type="button"
+              onClick={handleCardDownload}
+              disabled={downloadingCard}
+              className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-white/75 hover:bg-white/[0.05] disabled:opacity-50"
+            >
+              <Download className="h-3.5 w-3.5" />
+              {downloadingCard ? "Saving…" : "Download invitation card"}
+            </button>
+          )}
           {event.locationUrl &&
             (event.locationType === "zoom" || event.locationType === "meet") && (
               <Link

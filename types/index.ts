@@ -2063,6 +2063,15 @@ export interface TeamEvent {
   title: string;
   description?: string;
   bannerUrl?: string;
+  /**
+   * Optional invitation card — the share-ready graphic the leader gives
+   * the team to forward to prospects (Messenger / FB / Viber). Different
+   * intent from `bannerUrl` (a small in-app thumbnail): this is the
+   * full-resolution downloadable asset displayed with a "Download
+   * invitation card" CTA on the event detail page + member /my-events
+   * preview. Stored as a Firebase Storage download URL.
+   */
+  invitationCardUrl?: string;
   /** Epoch ms (UTC). */
   startAt: number;
   /** Epoch ms (UTC). */

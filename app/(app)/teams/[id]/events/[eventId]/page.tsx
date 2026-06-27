@@ -16,11 +16,13 @@ import {
   Calendar as CalendarIcon,
   CheckCircle2,
   Copy,
+  Download,
   MapPin,
   QrCode,
   Trash2,
   XCircle,
 } from "lucide-react";
+import { ImageUploadField } from "@/components/profile/ImageUploadField";
 import { useAuth } from "@/hooks/useAuth";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card } from "@/components/ui/Card";
@@ -37,7 +39,14 @@ import {
   updateTeamEvent,
 } from "@/lib/firebase/firestore";
 import { auth as firebaseAuth } from "@/lib/firebase/client";
-import { cn, getAppOrigin, timeAgo } from "@/lib/utils";
+import {
+  cn,
+  downloadFromUrl,
+  extFromUrl,
+  getAppOrigin,
+  slugify,
+  timeAgo,
+} from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 import type { EventRsvp, TeamEvent } from "@/types";
 
@@ -54,6 +63,8 @@ export default function EventDetailPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [working, setWorking] = useState(false);
+  const [savingCard, setSavingCard] = useState(false);
+  const [downloadingCard, setDownloadingCard] = useState(false);
 
   const load = useCallback(async () => {
     if (!params.eventId) return;
@@ -168,6 +179,44 @@ export default function EventDetailPage() {
     );
   };
 
+  /* Persist a new / replaced / removed invitation card. Optimistically
+     update local state so the preview swap feels instant; rollback on
+     write failure so the UI never lies about what's saved. */
+  const handleCardChange = async (url: string) => {
+    if (!event) return;
+    const prev = event.invitationCardUrl;
+    const next = url || undefined;
+    setSavingCard(true);
+    setEvent({ ...event, invitationCardUrl: next });
+    try {
+      await updateTeamEvent(event.id, { invitationCardUrl: next ?? "" });
+      toast.success(
+        next ? "Invitation card saved." : "Invitation card removed.",
+      );
+    } catch (err) {
+      setEvent({ ...event, invitationCardUrl: prev });
+      toast.error(err instanceof Error ? err.message : "Save failed.");
+    } finally {
+      setSavingCard(false);
+    }
+  };
+
+  const handleCardDownload = async () => {
+    if (!event?.invitationCardUrl) return;
+    setDownloadingCard(true);
+    try {
+      const ext = extFromUrl(event.invitationCardUrl, "jpg");
+      await downloadFromUrl(
+        event.invitationCardUrl,
+        `${slugify(event.title)}-invitation.${ext}`,
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Download failed.");
+    } finally {
+      setDownloadingCard(false);
+    }
+  };
+
   return (
     <div className="space-y-5">
       <Button
@@ -221,6 +270,44 @@ export default function EventDetailPage() {
           <Badge tone="neutral" className="mt-2">
             Canceled
           </Badge>
+        )}
+      </Card>
+
+      {/* ── Invitation card — upload + download ──────────────────
+          Separate from the small banner thumbnail. This is the share-
+          ready graphic the team forwards to prospects on Messenger /
+          FB / Viber. Leader can upload from here too (not just at
+          create time), so they can swap in a refreshed version
+          without recreating the event. */}
+      <Card className="p-4">
+        <div className="mb-2 flex items-start justify-between gap-2">
+          <div>
+            <p className="text-xs font-medium text-white">Invitation card</p>
+            <p className="mt-0.5 text-[11px] text-white/45">
+              Share-ready graphic for your team. Members get a one-tap
+              download from /my-events.
+            </p>
+          </div>
+          {event.invitationCardUrl && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleCardDownload}
+              loading={downloadingCard}
+              disabled={downloadingCard}
+              leftIcon={<Download className="h-3.5 w-3.5" />}
+            >
+              Download
+            </Button>
+          )}
+        </div>
+        <ImageUploadField
+          value={event.invitationCardUrl}
+          onChange={(url) => handleCardChange(url)}
+          folder="media"
+        />
+        {savingCard && (
+          <p className="mt-2 text-[11px] text-white/45">Saving…</p>
         )}
       </Card>
 

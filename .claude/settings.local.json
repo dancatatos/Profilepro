@@ -76,7 +76,9 @@
       "mcp__visualize__read_me",
       "PowerShell(git push origin main)",
       "Bash(git revert *)",
-      "Bash(npx firebase *)"
+      "Bash(npx firebase *)",
+      "Bash(git ls-remote *)",
+      "Bash(echo \"EXIT_CODE=$?\")"
     ]
   }
 }
