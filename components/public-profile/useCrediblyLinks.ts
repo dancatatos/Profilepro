@@ -64,17 +64,29 @@ export function useCrediblyLinks(
   sections: ProfileSection[],
   ownerUsername: string | undefined,
 ): Record<string, string | null> {
-  const buttons = useMemo(() => collectCrediblyButtons(sections), [sections]);
+  /* Stable JSON key for the credibly button specs so the effect
+     only re-fires when the actual content changes — NOT on every
+     parent render. Callers commonly pass sections from
+     `profile.sections.filter(...)` which creates a new array
+     reference every render; without this hash the effect would
+     re-fire forever, setState-loop, freeze the browser. */
+  const buttonsKey = useMemo(() => {
+    const collected = collectCrediblyButtons(sections);
+    return JSON.stringify(collected);
+  }, [sections]);
+
   const [map, setMap] = useState<Record<string, string | null>>({});
 
   useEffect(() => {
+    const buttons = JSON.parse(buttonsKey) as CrediblyButton[];
+
     if (!ownerId || !ownerUsername || buttons.length === 0) {
-      setMap({});
+      /* Only clear if non-empty — avoids a setState ping-pong on
+         pages with zero credibly CTAs (the most common case). */
+      setMap((prev) => (Object.keys(prev).length === 0 ? prev : {}));
       return;
     }
 
-    /* Determine which lookups we actually need based on the targets
-       present — skip the funnel fetch if no buttons need it, etc. */
     const needsFunnels = buttons.some(
       (b) => b.spec.targetType === "funnel",
     );
@@ -109,7 +121,7 @@ export function useCrediblyLinks(
     return () => {
       cancelled = true;
     };
-  }, [ownerId, ownerUsername, buttons]);
+  }, [ownerId, ownerUsername, buttonsKey]);
 
   return map;
 }
