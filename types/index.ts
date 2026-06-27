@@ -1100,7 +1100,14 @@ export type ThemeId =
   | "amber-glow"
   | "marigold-festival"
   | "ember-luxe"
-  | "safran-spice";
+  | "safran-spice"
+  /* ── Premium themes (Session 7 — Green / Yellow / Purple pairs) ── */
+  | "emerald-mist"
+  | "forest-jade"
+  | "sunshine-pop"
+  | "midnight-amber"
+  | "lavender-luxe"
+  | "royal-violet";
 
 export interface ProfileTheme {
   id: ThemeId;

@@ -2524,6 +2524,277 @@ export const THEME_CONFIGS: ThemeConfig[] = [
       statBorder: "rgba(26,47,79,0.12)",
     },
   },
+
+  /* ══════════════════════════════════════════════════════
+     PREMIUM THEMES — Session 7 (Green / Yellow / Purple pairs)
+     One light + one dark for each colour family. Each tuned
+     against existing themes in the catalogue so they read
+     as a distinct direction, not a colour swap.
+  ══════════════════════════════════════════════════════ */
+
+  /* ── Emerald Mist — fresh green, light ──────────────
+     Soft cream-mint page with deep emerald accent. Cleaner
+     and more vibrant than Sage Organic (which leans olive). */
+  {
+    id: "emerald-mist",
+    name: "Emerald Mist",
+    description: "Cream-mint + deep emerald. Fresh, clean, wellness-modern.",
+    tier: "premium",
+    categories: ["Coach", "Minimal", "Aesthetic", "Professional"],
+    colorScheme: "light",
+    background: "linear-gradient(180deg,#F0F9F4 0%,#DDF2E6 100%)",
+    fontFamily: SANS,
+    effects: [],
+    previewGradient:
+      "linear-gradient(135deg,#F0F9F4 0%,#2E7D5C 60%,#0F4D3D 100%)",
+    accent: "jade",
+    vars: {
+      ...LIGHT_BASE,
+      card: "rgba(255,255,255,0.85)",
+      border: "rgba(46,125,92,0.16)",
+      text: "#0F2419",
+      text2: "rgba(15,36,25,0.78)",
+      text3: "rgba(15,36,25,0.50)",
+      accent: "#2E7D5C",
+      btn: "linear-gradient(135deg,#2E7D5C 0%,#0F4D3D 100%)",
+      btnText: "#FFFFFF",
+      btnRadius: "0.625rem",
+      btnBorder: "transparent",
+      cardRadius: "0.75rem",
+      marker: "#2E7D5C",
+      socialBg: "#E8F5EE",
+      socialBorder: "rgba(46,125,92,0.20)",
+      inputBg: "#FFFFFF",
+      inputBorder: "rgba(46,125,92,0.25)",
+      avatarRing: "rgba(46,125,92,0.40)",
+      shadow: "0 2px 24px rgba(15,77,61,0.10)",
+      successBg: "rgba(46,125,92,0.12)",
+      successText: "#0F4D3D",
+      statCard: "rgba(255,255,255,0.85)",
+      statBorder: "rgba(46,125,92,0.16)",
+    },
+  },
+
+  /* ── Forest Jade — deep green, dark ─────────────────
+     Near-black forest bg with bright jade accents. Different
+     from Royal Emerald (more dressed-up). Naturalist tech vibe. */
+  {
+    id: "forest-jade",
+    name: "Forest Jade",
+    description: "Forest-night green + bright jade. Naturalist + modern.",
+    tier: "premium",
+    categories: ["Dark Mode", "Aesthetic", "Coach", "Professional"],
+    colorScheme: "dark",
+    background:
+      "radial-gradient(140% 90% at 50% 0%,#0F2419 0%,#06120D 60%,#020805 100%)",
+    fontFamily: SANS,
+    effects: ["glow"],
+    previewGradient:
+      "linear-gradient(135deg,#06120D 0%,#1F5E47 50%,#4ADE80 100%)",
+    accent: "jade",
+    vars: {
+      ...DARK_BASE,
+      card: "rgba(74,222,128,0.05)",
+      border: "rgba(74,222,128,0.16)",
+      text: "#E8F5EE",
+      text2: "rgba(232,245,238,0.78)",
+      text3: "rgba(232,245,238,0.48)",
+      accent: "#4ADE80",
+      btn: "linear-gradient(135deg,#4ADE80 0%,#1F5E47 100%)",
+      btnText: "#06120D",
+      btnRadius: "0.625rem",
+      btnBorder: "rgba(74,222,128,0.35)",
+      cardRadius: "0.75rem",
+      marker: "#4ADE80",
+      socialBg: "rgba(74,222,128,0.08)",
+      socialBorder: "rgba(74,222,128,0.22)",
+      inputBg: "rgba(74,222,128,0.04)",
+      inputBorder: "rgba(74,222,128,0.22)",
+      avatarRing: "rgba(74,222,128,0.45)",
+      shadow: "0 4px 32px rgba(74,222,128,0.10)",
+      successBg: "rgba(74,222,128,0.15)",
+      successText: "#86EFAC",
+      statCard: "rgba(74,222,128,0.05)",
+      statBorder: "rgba(74,222,128,0.16)",
+    },
+  },
+
+  /* ── Sunshine Pop — cheerful yellow, light ──────────
+     Bright yellow on white with navy text. More cheerful + elegant
+     than Citrus Pop (bold inverted black) or Honey Editorial (mustard). */
+  {
+    id: "sunshine-pop",
+    name: "Sunshine Pop",
+    description: "Bright yellow + crisp navy. Cheerful, energetic, elegant.",
+    tier: "premium",
+    categories: ["Vibrant", "Creator", "Influencer", "Aesthetic"],
+    colorScheme: "light",
+    background: "#FFFEF5",
+    fontFamily: SANS,
+    effects: [],
+    previewGradient:
+      "linear-gradient(135deg,#FFFEF5 0%,#FFCC00 50%,#1E3A5F 100%)",
+    accent: "gold",
+    vars: {
+      ...LIGHT_BASE,
+      card: "rgba(255,255,255,0.95)",
+      border: "rgba(255,204,0,0.22)",
+      text: "#1E3A5F",
+      text2: "rgba(30,58,95,0.78)",
+      text3: "rgba(30,58,95,0.50)",
+      accent: "#1E3A5F",
+      btn: "#FFCC00",
+      btnText: "#1E3A5F",
+      btnRadius: "0.5rem",
+      btnBorder: "transparent",
+      cardRadius: "0.625rem",
+      marker: "#FFCC00",
+      socialBg: "#FFF9DB",
+      socialBorder: "rgba(255,204,0,0.28)",
+      inputBg: "#FFFFFF",
+      inputBorder: "rgba(255,204,0,0.30)",
+      avatarRing: "rgba(255,204,0,0.50)",
+      shadow: "0 4px 24px rgba(30,58,95,0.10)",
+      successBg: "rgba(255,204,0,0.18)",
+      successText: "#1E3A5F",
+      statCard: "#FFF9DB",
+      statBorder: "rgba(255,204,0,0.22)",
+    },
+  },
+
+  /* ── Midnight Amber — warm yellow, dark ─────────────
+     Near-black bg with vibrant amber-yellow accents.
+     More yellow-leaning than Amber Glow (which is more
+     orange) or Archive Navy (navy + gold). */
+  {
+    id: "midnight-amber",
+    name: "Midnight Amber",
+    description: "Near-black + vivid amber yellow. Premium dark with heat.",
+    tier: "premium",
+    categories: ["Luxury", "Dark Mode", "Masculine", "Business & Sales"],
+    colorScheme: "dark",
+    background:
+      "radial-gradient(140% 90% at 50% 0%,#0A0E1F 0%,#050810 60%,#020306 100%)",
+    fontFamily: SANS,
+    effects: ["glow"],
+    previewGradient:
+      "linear-gradient(135deg,#050810 0%,#FFD60A 50%,#FFA500 100%)",
+    accent: "gold",
+    vars: {
+      ...DARK_BASE,
+      card: "rgba(255,214,10,0.04)",
+      border: "rgba(255,214,10,0.18)",
+      text: "#FFF5C0",
+      text2: "rgba(255,245,192,0.78)",
+      text3: "rgba(255,245,192,0.48)",
+      accent: "#FFD60A",
+      btn: "#FFD60A",
+      btnText: "#0A0E1F",
+      btnRadius: "0.375rem",
+      btnBorder: "rgba(255,214,10,0.35)",
+      cardRadius: "0.5rem",
+      marker: "#FFD60A",
+      socialBg: "rgba(255,214,10,0.08)",
+      socialBorder: "rgba(255,214,10,0.22)",
+      inputBg: "rgba(255,214,10,0.04)",
+      inputBorder: "rgba(255,214,10,0.22)",
+      avatarRing: "rgba(255,214,10,0.45)",
+      shadow: "0 4px 36px rgba(255,214,10,0.15)",
+      successBg: "rgba(255,214,10,0.12)",
+      successText: "#FFE680",
+      statCard: "rgba(255,214,10,0.04)",
+      statBorder: "rgba(255,214,10,0.18)",
+    },
+  },
+
+  /* ── Lavender Luxe — refined purple, light ──────────
+     Soft lavender bg with deep royal purple accents.
+     More elevated than Lavender Mood (pastel feminine).
+     Elegant editorial purple. */
+  {
+    id: "lavender-luxe",
+    name: "Lavender Luxe",
+    description: "Soft lavender + deep royal purple. Refined, editorial.",
+    tier: "premium",
+    categories: ["Feminine", "Aesthetic", "Luxury", "Coach"],
+    colorScheme: "light",
+    background: "linear-gradient(180deg,#F5F0FF 0%,#E9DEFC 100%)",
+    fontFamily: ELEGANT,
+    effects: ["grain"],
+    previewGradient:
+      "linear-gradient(135deg,#F5F0FF 0%,#8B5CF6 50%,#4C1D95 100%)",
+    accent: "gold",
+    vars: {
+      ...LIGHT_BASE,
+      card: "rgba(255,255,255,0.85)",
+      border: "rgba(107,70,193,0.16)",
+      text: "#2E1065",
+      text2: "rgba(46,16,101,0.78)",
+      text3: "rgba(46,16,101,0.50)",
+      accent: "#6B46C1",
+      btn: "linear-gradient(135deg,#8B5CF6 0%,#6B46C1 100%)",
+      btnText: "#FFFFFF",
+      btnRadius: "1rem",
+      btnBorder: "transparent",
+      cardRadius: "0.875rem",
+      marker: "#8B5CF6",
+      socialBg: "rgba(255,255,255,0.80)",
+      socialBorder: "rgba(107,70,193,0.20)",
+      inputBg: "#FFFFFF",
+      inputBorder: "rgba(107,70,193,0.25)",
+      avatarRing: "rgba(139,92,246,0.45)",
+      shadow: "0 2px 28px rgba(46,16,101,0.10)",
+      successBg: "rgba(139,92,246,0.12)",
+      successText: "#4C1D95",
+      statCard: "rgba(255,255,255,0.85)",
+      statBorder: "rgba(107,70,193,0.16)",
+    },
+  },
+
+  /* ── Royal Violet — deep purple, dark ───────────────
+     Deep aubergine-violet bg with bright violet + gold
+     accent touches. Distinct from Vapor Violet (Y2K neon)
+     and Velvet Rose (rose-purple). Mastermind/luxury feel. */
+  {
+    id: "royal-violet",
+    name: "Royal Violet",
+    description: "Deep aubergine + bright violet + gold. Jewel-box royalty.",
+    tier: "premium",
+    categories: ["Luxury", "Dark Mode", "Feminine", "Coach"],
+    colorScheme: "dark",
+    background:
+      "radial-gradient(140% 90% at 50% 0%,#1A0B33 0%,#0D051F 60%,#02000A 100%)",
+    fontFamily: ELEGANT,
+    effects: ["glow", "glassmorphism"],
+    previewGradient:
+      "linear-gradient(135deg,#0D051F 0%,#A855F7 50%,#D4AF37 100%)",
+    accent: "gold",
+    vars: {
+      ...DARK_BASE,
+      card: "rgba(168,85,247,0.06)",
+      border: "rgba(212,175,55,0.20)",
+      text: "#F3E8FF",
+      text2: "rgba(243,232,255,0.78)",
+      text3: "rgba(243,232,255,0.48)",
+      accent: "#D4AF37",
+      btn: "linear-gradient(135deg,#A855F7 0%,#6B46C1 100%)",
+      btnText: "#FFFFFF",
+      btnRadius: "0.625rem",
+      btnBorder: "rgba(212,175,55,0.30)",
+      cardRadius: "0.75rem",
+      marker: "#A855F7",
+      socialBg: "rgba(168,85,247,0.10)",
+      socialBorder: "rgba(212,175,55,0.22)",
+      inputBg: "rgba(168,85,247,0.06)",
+      inputBorder: "rgba(212,175,55,0.22)",
+      avatarRing: "rgba(212,175,55,0.45)",
+      shadow: "0 4px 36px rgba(168,85,247,0.18)",
+      successBg: "rgba(168,85,247,0.15)",
+      successText: "#E9D5FF",
+      statCard: "rgba(168,85,247,0.06)",
+      statBorder: "rgba(212,175,55,0.18)",
+    },
+  },
 ];
 
 /* ─────────────────────────────────────────────────────────────
