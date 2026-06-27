@@ -102,8 +102,11 @@ export function LightHero({
 
             <div className="mt-8 flex flex-wrap gap-3">
               {/* Plain <a> for the marketing CTAs — see MarketingNav
-                  for the full rationale. tl;dr: Next.js Link silently
-                  failed to navigate on production; <a> always works. */}
+                  for rationale. Next.js Link silently failed to
+                  navigate on production; <a> always works. ESLint
+                  disabled because the rule assumes SPA navigation
+                  is always preferred. */}
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
               <a
                 href="/signup"
                 className="group inline-flex items-center gap-2 rounded-full bg-electric-500 px-6 py-3.5 text-sm font-semibold text-white shadow-[var(--shadow-pill-cta)] transition-transform hover:scale-[1.02] active:scale-[0.98] sm:text-base"
@@ -111,6 +114,7 @@ export function LightHero({
                 {hero.primaryCta}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </a>
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
               <a
                 href="/demo"
                 className="inline-flex items-center gap-2 rounded-full border border-stone-300 bg-white px-6 py-3.5 text-sm font-semibold text-stone-900 transition-colors hover:bg-stone-100 sm:text-base"
