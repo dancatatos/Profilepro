@@ -146,26 +146,26 @@ function PlanDropdown({
       <button
         onClick={() => setOpen((o) => !o)}
         disabled={saving}
-        className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-white/10 disabled:opacity-50 transition-colors"
+        className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100 px-2.5 py-1.5 text-xs font-medium text-slate-900 hover:bg-slate-200 disabled:opacity-50 transition-colors"
       >
         {saving ? (
-          <RefreshCw className="h-3 w-3 animate-spin text-white/50" />
+          <RefreshCw className="h-3 w-3 animate-spin text-slate-500" />
         ) : (
           <Badge tone={planTone(user.plan)}>
             {planLabel(user.plan, plans)}
           </Badge>
         )}
-        <ChevronDown className="h-3 w-3 text-white/40" />
+        <ChevronDown className="h-3 w-3 text-slate-400" />
       </button>
 
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 z-20 mt-1 w-72 overflow-hidden rounded-xl border border-white/10 bg-ink-900 shadow-xl">
+          <div className="absolute right-0 z-20 mt-1 w-72 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
             {/* Public plans */}
             {publicPlans.length > 0 && (
               <div>
-                <div className="border-b border-white/[0.06] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-white/35">
+                <div className="border-b border-slate-200 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                   Public plans
                 </div>
                 {publicPlans.map((p) => (
@@ -182,7 +182,7 @@ function PlanDropdown({
             {/* Affiliate plans */}
             {affiliatePlans.length > 0 && (
               <div>
-                <div className="flex items-center gap-1 border-y border-electric-500/20 bg-electric-500/[0.04] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-electric-300">
+                <div className="flex items-center gap-1 border-y border-electric-500/20 bg-electric-500/[0.04] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-electric-700">
                   <Lock className="h-2.5 w-2.5" />
                   Affiliate plans
                 </div>
@@ -220,19 +220,19 @@ function PlanOption({
     <button
       onClick={onSelect}
       className={cn(
-        "flex w-full flex-col items-stretch gap-0.5 px-3 py-2.5 text-left transition-colors hover:bg-white/[0.06]",
+        "flex w-full flex-col items-stretch gap-0.5 px-3 py-2.5 text-left transition-colors hover:bg-slate-100",
         affiliate && "hover:bg-electric-500/10",
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-semibold text-white">{plan.name}</span>
+        <span className="text-xs font-semibold text-slate-900">{plan.name}</span>
         <div className="flex items-center gap-2">
-          <span className="text-[11px] text-white/45">{priceLabel(plan)}</span>
-          {current && <Check className="h-3.5 w-3.5 text-jade-400" />}
+          <span className="text-[11px] text-slate-500">{priceLabel(plan)}</span>
+          {current && <Check className="h-3.5 w-3.5 text-jade-600" />}
         </div>
       </div>
       {affiliate && plan.commission && plan.commission > 0 ? (
-        <div className="flex items-center gap-1 text-[10px] text-electric-300/80">
+        <div className="flex items-center gap-1 text-[10px] text-electric-700/80">
           <Coins className="h-2.5 w-2.5" />
           ₱{plan.commission.toLocaleString()} commission per signup &amp; renewal
         </div>
@@ -337,8 +337,8 @@ export default function AdminUsersPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-2xl font-bold text-white">Users</h1>
-          <p className="text-sm text-white/45">
+          <h1 className="font-display text-2xl font-bold text-slate-900">Users</h1>
+          <p className="text-sm text-slate-500">
             Manage plans and account access.
           </p>
         </div>
@@ -361,15 +361,15 @@ export default function AdminUsersPage() {
               "rounded-xl border px-4 py-2 text-sm",
               s.affiliate
                 ? "border-electric-500/30 bg-electric-500/[0.05]"
-                : "border-white/[0.06] bg-white/[0.03]",
+                : "border-slate-200 bg-slate-50",
             )}
           >
             <span
-              className={s.affiliate ? "text-electric-300/80" : "text-white/40"}
+              className={s.affiliate ? "text-electric-700/80" : "text-slate-400"}
             >
               {s.label}:{" "}
             </span>
-            <span className="font-semibold text-white">
+            <span className="font-semibold text-slate-900">
               {fetching ? "…" : s.value}
             </span>
           </div>
@@ -379,11 +379,11 @@ export default function AdminUsersPage() {
       {/* User table */}
       <Card className="p-5">
         <div className="mb-5 flex items-center justify-between gap-4">
-          <h2 className="font-display text-base font-semibold text-white">
+          <h2 className="font-display text-base font-semibold text-slate-900">
             All Users
           </h2>
           <div className="relative w-64">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-300" />
             <Input
               placeholder="Search email or name…"
               value={search}
@@ -394,18 +394,18 @@ export default function AdminUsersPage() {
         </div>
 
         {fetching ? (
-          <div className="flex h-40 items-center justify-center text-sm text-white/40">
+          <div className="flex h-40 items-center justify-center text-sm text-slate-400">
             Loading users…
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex h-40 items-center justify-center text-sm text-white/40">
+          <div className="flex h-40 items-center justify-center text-sm text-slate-400">
             {search ? "No users match that search." : "No users found."}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-white/[0.06] text-xs text-white/40">
+                <tr className="border-b border-slate-200 text-xs text-slate-400">
                   <th className="pb-3 text-left font-medium">User</th>
                   <th className="pb-3 text-left font-medium">Username</th>
                   <th className="pb-3 text-left font-medium">Joined</th>
@@ -421,31 +421,31 @@ export default function AdminUsersPage() {
                        - amber  when 14 days or less remaining
                        - muted  when comfortably in the future */
                   const expiryTone = (() => {
-                    if (expiresAt == null) return "text-white/30";
+                    if (expiresAt == null) return "text-slate-300";
                     const days = daysUntil(expiresAt);
-                    if (days === 0) return "text-red-300";
-                    if (days <= 14) return "text-gold-300";
-                    return "text-white/55";
+                    if (days === 0) return "text-red-700";
+                    if (days <= 14) return "text-amber-700";
+                    return "text-slate-500";
                   })();
                   return (
                     <tr key={u.uid} className="group">
                       <td className="py-3 pr-4">
                         <div className="flex items-center gap-2.5">
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-bold text-white uppercase">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-900 uppercase">
                             {(u.displayName || u.email)[0]}
                           </div>
                           <div>
-                            <p className="font-medium text-white">
+                            <p className="font-medium text-slate-900">
                               {u.displayName || "—"}
                             </p>
-                            <p className="text-xs text-white/40">{u.email}</p>
+                            <p className="text-xs text-slate-400">{u.email}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="py-3 pr-4 text-white/50">
+                      <td className="py-3 pr-4 text-slate-500">
                         {u.username ? `@${u.username}` : "—"}
                       </td>
-                      <td className="py-3 pr-4 text-white/50">
+                      <td className="py-3 pr-4 text-slate-500">
                         {new Date(u.createdAt).toLocaleDateString()}
                       </td>
                       <td className={cn("py-3 pr-4 text-xs", expiryTone)}>
@@ -478,8 +478,8 @@ export default function AdminUsersPage() {
                             className={cn(
                               "rounded-lg p-1.5 transition-colors",
                               u.limitOverrides
-                                ? "bg-electric-500/15 text-electric-300"
-                                : "text-white/30 hover:bg-white/[0.06] hover:text-white",
+                                ? "bg-electric-500/15 text-electric-700"
+                                : "text-slate-300 hover:bg-slate-100 hover:text-slate-900",
                             )}
                           >
                             <Sliders className="h-3.5 w-3.5" />
@@ -500,14 +500,14 @@ export default function AdminUsersPage() {
         )}
 
         {filtered.length > 0 && (
-          <p className="mt-4 text-right text-xs text-white/30">
+          <p className="mt-4 text-right text-xs text-slate-300">
             Showing {filtered.length} of {users.length} users
           </p>
         )}
       </Card>
 
       <Card className="p-4">
-        <p className="text-xs text-white/35">
+        <p className="text-xs text-slate-400">
           Plan changes take effect immediately. The user will see their updated
           plan on their next page load or sign-in.
         </p>
@@ -652,7 +652,7 @@ function LimitOverridesModal({
     >
       <div className="space-y-4 pb-3">
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-white/55">
+          <label className="mb-1.5 block text-xs font-medium text-slate-500">
             Funnel limit
           </label>
           <Input
@@ -672,7 +672,7 @@ function LimitOverridesModal({
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-white/55">
+          <label className="mb-1.5 block text-xs font-medium text-slate-500">
             Shared-build slots
           </label>
           <Input
@@ -696,21 +696,21 @@ function LimitOverridesModal({
             Feature toggles that live outside the plan system —
             granted per-user by admin. Currently just Events; future
             add-ons append below using the same pattern. */}
-        <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
-          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-white/45">
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
             Add-ons
           </p>
 
-          <label className="flex items-start gap-2 text-sm text-white/80">
+          <label className="flex items-start gap-2 text-sm text-slate-700">
             <input
               type="checkbox"
               checked={eventsAddOn}
               onChange={(e) => setEventsAddOn(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-white/20 bg-white/[0.04] accent-electric-500"
+              className="mt-0.5 h-4 w-4 rounded border-slate-300 bg-slate-100 accent-electric-500"
             />
             <span className="min-w-0 flex-1">
-              <span className="block font-medium text-white">Team Events</span>
-              <span className="block text-[11px] text-white/55">
+              <span className="block font-medium text-slate-900">Team Events</span>
+              <span className="block text-[11px] text-slate-500">
                 Lets this user create team spaces + events with notifications.
                 Not part of any plan tier.
               </span>
@@ -720,7 +720,7 @@ function LimitOverridesModal({
           {eventsAddOn && (
             <div className="mt-3 grid gap-2 sm:grid-cols-3">
               <div>
-                <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/40">
+                <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-slate-400">
                   Team spaces cap
                 </label>
                 <Input
@@ -732,7 +732,7 @@ function LimitOverridesModal({
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/40">
+                <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-slate-400">
                   Events / month cap
                 </label>
                 <Input
@@ -744,7 +744,7 @@ function LimitOverridesModal({
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/40">
+                <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-slate-400">
                   Members per team cap
                 </label>
                 <Input
@@ -758,14 +758,14 @@ function LimitOverridesModal({
             </div>
           )}
           {eventsAddOn && (
-            <p className="mt-2 text-[10px] text-white/35">
+            <p className="mt-2 text-[10px] text-slate-400">
               Blank = use the default. <code>0</code> = blocked.{" "}
               <code>999</code> = effectively unlimited.
             </p>
           )}
         </div>
       </div>
-      <div className="flex gap-2 border-t border-white/[0.06] p-4 pb-safe">
+      <div className="flex gap-2 border-t border-slate-200 p-4 pb-safe">
         <Button variant="outline" onClick={clearAll} disabled={saving}>
           Clear both
         </Button>

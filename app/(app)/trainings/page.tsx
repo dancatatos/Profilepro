@@ -208,7 +208,7 @@ export default function TrainingsPage() {
       />
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-white/[0.07]">
+      <div className="flex gap-1 border-b border-slate-200">
         {(
           [
             { key: "created" as const, label: "Created by me" },
@@ -222,8 +222,8 @@ export default function TrainingsPage() {
             className={cn(
               "relative -mb-px px-3 py-2 text-sm font-medium transition-colors",
               tab === t.key
-                ? "text-white"
-                : "text-white/45 hover:text-white/75",
+                ? "text-slate-900"
+                : "text-slate-500 hover:text-slate-700",
             )}
           >
             {t.label}
@@ -262,10 +262,10 @@ export default function TrainingsPage() {
               if (e.key === "Enter" && !cloning && cloneCode.trim()) handleClone();
             }}
             placeholder="SHARE-XXXXX"
-            className="h-11 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 font-mono text-sm uppercase tracking-wider text-white outline-none placeholder:text-white/30 focus:border-electric-500/60"
+            className="h-11 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 font-mono text-sm uppercase tracking-wider text-slate-900 outline-none placeholder:text-slate-300 focus:border-electric-500/60"
             disabled={cloning}
           />
-          <p className="rounded-lg bg-white/[0.03] p-3 text-[11px] leading-relaxed text-white/55">
+          <p className="rounded-lg bg-slate-50 p-3 text-[11px] leading-relaxed text-slate-500">
             Cloning makes an independent copy that <strong>you own</strong>. You&apos;ll
             get your own activation code so progress from your team goes to you,
             not the original leader. Uses one of your training slots.
@@ -308,7 +308,7 @@ export default function TrainingsPage() {
               if (e.key === "Enter" && !creating && title.trim()) handleCreate();
             }}
             placeholder="e.g. Team Onboarding 101"
-            className="h-11 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-electric-500/60"
+            className="h-11 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 placeholder:text-slate-300 outline-none focus:border-electric-500/60"
             disabled={creating}
           />
           <div className="flex gap-2">
@@ -352,7 +352,7 @@ function CreatedTab({
   onCreate: () => void;
 }) {
   if (loading && trainings.length === 0) {
-    return <Card className="p-8 text-center text-sm text-white/40">Loading…</Card>;
+    return <Card className="p-8 text-center text-sm text-slate-400">Loading…</Card>;
   }
 
   if (!canCreate) {
@@ -391,7 +391,7 @@ function CreatedTab({
         <TrainingRow key={t.id} training={t} />
       ))}
       {remainingSlots > 0 && (
-        <p className="pt-1 text-xs text-white/35">
+        <p className="pt-1 text-xs text-slate-400">
           {remainingSlots} more training slot{remainingSlots === 1 ? "" : "s"} available.
         </p>
       )}
@@ -406,14 +406,14 @@ function TrainingRow({ training }: { training: Training }) {
       onClick={() => router.push(`/trainings/${training.id}`)}
       className="flex cursor-pointer items-center gap-3 p-3.5 transition-colors hover:border-electric-500/30"
     >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-electric-500/15 text-electric-300">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-electric-500/15 text-electric-700">
         <GraduationCap className="h-5 w-5" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-white">
+        <p className="truncate text-sm font-medium text-slate-900">
           {training.title}
         </p>
-        <p className="mt-0.5 text-xs text-white/45">
+        <p className="mt-0.5 text-xs text-slate-500">
           {training.lessons?.length ?? 0} lesson
           {(training.lessons?.length ?? 0) === 1 ? "" : "s"} · Updated{" "}
           {timeAgo(training.updatedAt)}
@@ -488,7 +488,7 @@ function LibraryTab() {
 
   if (loading) {
     return (
-      <Card className="p-8 text-center text-sm text-white/40">
+      <Card className="p-8 text-center text-sm text-slate-400">
         Loading your library…
       </Card>
     );
@@ -520,7 +520,7 @@ function LibraryTab() {
       <div className="pt-1 text-center">
         <Link
           href="/training"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-electric-300 hover:text-electric-200"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-electric-700 hover:text-electric-700"
         >
           <KeyRound className="h-3.5 w-3.5" />
           Have another code? Unlock more
@@ -538,12 +538,12 @@ function LibraryRowCard({ row }: { row: LibraryRow }) {
   return (
     <Link href={watchHref}>
       <Card className="flex cursor-pointer items-center gap-3 p-3.5 transition-colors hover:border-electric-500/30">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-electric-500/15 text-electric-300">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-electric-500/15 text-electric-700">
           <BookOpen className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-white">{t.title}</p>
-          <p className="mt-0.5 text-xs text-white/45">
+          <p className="truncate text-sm font-medium text-slate-900">{t.title}</p>
+          <p className="mt-0.5 text-xs text-slate-500">
             {t.lessons?.length ?? 0} lesson
             {(t.lessons?.length ?? 0) === 1 ? "" : "s"} · Unlocked{" "}
             {timeAgo(row.access.unlockedAt)}

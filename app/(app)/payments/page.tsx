@@ -118,7 +118,7 @@ export default function PaymentsPage() {
   if (!account) {
     return (
       <div className="flex h-[40vh] items-center justify-center">
-        <Loader2 className="h-5 w-5 animate-spin text-white/40" />
+        <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
       </div>
     );
   }
@@ -142,7 +142,7 @@ export default function PaymentsPage() {
       </div>
 
       {/* Status tabs */}
-      <div className="flex w-full overflow-x-auto rounded-xl bg-white/[0.03] p-1">
+      <div className="flex w-full overflow-x-auto rounded-xl bg-slate-50 p-1">
         {(["pending", "approved", "rejected"] as Tab[]).map((t) => (
           <button
             key={t}
@@ -151,12 +151,12 @@ export default function PaymentsPage() {
             className={cn(
               "flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium capitalize transition-colors",
               tab === t
-                ? "bg-electric-500/15 text-electric-200"
-                : "text-white/55 hover:text-white",
+                ? "bg-electric-500/15 text-electric-700"
+                : "text-slate-500 hover:text-slate-900",
             )}
           >
             {t}
-            <span className="rounded-full bg-white/[0.06] px-1.5 text-[10px] font-semibold">
+            <span className="rounded-full bg-slate-100 px-1.5 text-[10px] font-semibold">
               {counts[t]}
             </span>
           </button>
@@ -165,17 +165,17 @@ export default function PaymentsPage() {
 
       {/* List */}
       {loading && submissions.length === 0 ? (
-        <Card className="flex h-32 items-center justify-center text-sm text-white/40">
+        <Card className="flex h-32 items-center justify-center text-sm text-slate-400">
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           Loading payments…
         </Card>
       ) : visible.length === 0 ? (
         <Card className="flex flex-col items-center justify-center gap-3 p-10 text-center">
-          <Inbox className="h-7 w-7 text-white/20" />
-          <p className="text-sm font-medium text-white/55">
+          <Inbox className="h-7 w-7 text-slate-300" />
+          <p className="text-sm font-medium text-slate-500">
             No {tab} payments yet
           </p>
-          <p className="max-w-sm text-xs text-white/35">
+          <p className="max-w-sm text-xs text-slate-400">
             {tab === "pending"
               ? "When visitors upload receipts through a Payment section, they'll show up here for your review."
               : `You haven't ${tab} any payments yet.`}
@@ -218,10 +218,10 @@ function SubmissionRow({
     <button
       type="button"
       onClick={onOpen}
-      className="flex w-full items-center gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 text-left transition-colors hover:border-electric-500/30 hover:bg-white/[0.04]"
+      className="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-left transition-colors hover:border-electric-500/30 hover:bg-slate-100"
     >
       {/* Receipt thumbnail */}
-      <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-white/[0.07] bg-white/[0.04]">
+      <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
         {submission.receiptUrl && (
           <img
             src={submission.receiptUrl}
@@ -233,14 +233,14 @@ function SubmissionRow({
 
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <p className="truncate text-sm font-semibold text-white">
+          <p className="truncate text-sm font-semibold text-slate-900">
             {submission.visitorName}
           </p>
-          <span className="rounded-full bg-electric-500/12 px-1.5 py-0.5 text-[10px] font-bold text-electric-200">
+          <span className="rounded-full bg-electric-500/12 px-1.5 py-0.5 text-[10px] font-bold text-electric-700">
             {formatAmount(submission)}
           </span>
         </div>
-        <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-white/45">
+        <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-slate-500">
           {submission.visitorEmail && (
             <span className="flex items-center gap-1">
               <Mail className="h-3 w-3" />
@@ -258,7 +258,7 @@ function SubmissionRow({
             {submission.paymentMethodLabel}
           </span>
         </div>
-        <p className="mt-0.5 text-[10px] text-white/35">
+        <p className="mt-0.5 text-[10px] text-slate-400">
           {timeAgo(submission.submittedAt)}
           {submission.referenceNumber && ` · Ref ${submission.referenceNumber}`}
         </p>
@@ -269,11 +269,11 @@ function SubmissionRow({
         className={cn(
           "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase",
           submission.status === "pending" &&
-            "bg-gold-400/15 text-gold-300",
+            "bg-gold-400/15 text-amber-700",
           submission.status === "approved" &&
-            "bg-jade-500/15 text-jade-300",
+            "bg-jade-500/15 text-jade-600",
           submission.status === "rejected" &&
-            "bg-red-500/15 text-red-300",
+            "bg-red-500/15 text-red-700",
         )}
       >
         {submission.status}
@@ -468,7 +468,7 @@ function ReviewModal({
           href={submission.receiptUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="block overflow-hidden rounded-xl border border-white/10 bg-black"
+          className="block overflow-hidden rounded-xl border border-slate-200 bg-black"
         >
           <img
             src={submission.receiptUrl}
@@ -476,13 +476,13 @@ function ReviewModal({
             className="max-h-[55vh] w-full object-contain"
           />
         </a>
-        <p className="text-center text-[10px] text-white/35">
+        <p className="text-center text-[10px] text-slate-400">
           <ExternalLink className="mr-1 inline h-3 w-3" />
           Tap image to open full-size in new tab
         </p>
 
         {/* Submission details */}
-        <div className="grid grid-cols-2 gap-2 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3 text-xs">
+        <div className="grid grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs">
           <DetailRow label="Visitor" value={submission.visitorName} />
           {submission.visitorEmail && (
             <DetailRow label="Email" value={submission.visitorEmail} />
@@ -500,11 +500,11 @@ function ReviewModal({
         </div>
 
         {submission.userNote && (
-          <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
               Note from visitor
             </p>
-            <p className="mt-1 whitespace-pre-wrap text-sm text-white/80">
+            <p className="mt-1 whitespace-pre-wrap text-sm text-slate-700">
               {submission.userNote}
             </p>
           </div>
@@ -512,10 +512,10 @@ function ReviewModal({
 
         {submission.status === "rejected" && submission.rejectionReason && (
           <div className="rounded-xl border border-red-500/20 bg-red-500/[0.04] p-3">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-red-300">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-red-700">
               Rejection reason
             </p>
-            <p className="mt-1 text-sm text-white/80">
+            <p className="mt-1 text-sm text-slate-700">
               {submission.rejectionReason}
             </p>
           </div>
@@ -557,7 +557,7 @@ function ReviewModal({
               onChange={(e) => setRejectReason(e.target.value)}
               placeholder="e.g. Receipt unclear, amount doesn't match, wrong account…"
               rows={3}
-              className="w-full resize-none rounded-lg border border-red-500/20 bg-ink-950/40 p-2.5 text-sm text-white outline-none placeholder:text-white/25 focus:border-red-500/40"
+              className="w-full resize-none rounded-lg border border-red-500/20 bg-slate-50/40 p-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-300 focus:border-red-500/40"
             />
             <div className="flex gap-2">
               <Button
@@ -583,7 +583,7 @@ function ReviewModal({
         )}
 
         {!isPending && (
-          <p className="text-center text-[11px] text-white/40">
+          <p className="text-center text-[11px] text-slate-400">
             Reviewed{" "}
             {submission.reviewedAt ? timeAgo(submission.reviewedAt) : "—"}
           </p>
@@ -596,10 +596,10 @@ function ReviewModal({
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[10px] font-medium uppercase tracking-wider text-white/35">
+      <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400">
         {label}
       </p>
-      <p className="mt-0.5 truncate text-white/80">{value}</p>
+      <p className="mt-0.5 truncate text-slate-700">{value}</p>
     </div>
   );
 }

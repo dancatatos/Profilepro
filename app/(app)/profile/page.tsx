@@ -56,10 +56,10 @@ export default function ProfileBuilderPage() {
       {/* ── Action bar ── */}
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <div className="mr-auto">
-          <h1 className="font-display text-xl font-bold text-white">
+          <h1 className="font-display text-xl font-bold text-slate-900">
             Profile Builder
           </h1>
-          <p className="text-xs text-white/45">
+          <p className="text-xs text-slate-500">
             {dirty ? "Unsaved changes" : "All changes saved"}
           </p>
         </div>
@@ -67,7 +67,7 @@ export default function ProfileBuilderPage() {
           variant="outline"
           size="sm"
           onClick={() => setAiOpen(true)}
-          leftIcon={<Sparkles className="h-4 w-4 text-electric-400" />}
+          leftIcon={<Sparkles className="h-4 w-4 text-electric-600" />}
         >
           AI Generate
         </Button>
@@ -161,8 +161,8 @@ export default function ProfileBuilderPage() {
         </div>
 
         {/* Right: phone preview — always in view, no page scroll needed */}
-        <div className="hidden lg:flex lg:w-[400px] lg:shrink-0 lg:flex-col lg:items-center lg:overflow-y-auto lg:border-l lg:border-white/[0.06] lg:bg-ink-900/30 lg:px-6 lg:py-6">
-          <p className="mb-3 text-center text-xs font-medium text-white/40">
+        <div className="hidden lg:flex lg:w-[400px] lg:shrink-0 lg:flex-col lg:items-center lg:overflow-y-auto lg:border-l lg:border-slate-200 lg:bg-white/30 lg:px-6 lg:py-6">
+          <p className="mb-3 text-center text-xs font-medium text-slate-400">
             Live preview
           </p>
           <PhonePreview height={660} />

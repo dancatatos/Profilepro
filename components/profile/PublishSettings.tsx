@@ -61,27 +61,27 @@ export function PublishSettings() {
           rightSlot={
             availability === "checking" ? (
               <span className="p-2.5">
-                <Loader2 className="h-4 w-4 animate-spin text-white/40" />
+                <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
               </span>
             ) : availability === "ok" ? (
               <span className="p-2.5">
-                <Check className="h-4 w-4 text-jade-400" />
+                <Check className="h-4 w-4 text-jade-600" />
               </span>
             ) : availability === "taken" || availability === "reserved" ? (
               <span className="p-2.5">
-                <X className="h-4 w-4 text-red-400" />
+                <X className="h-4 w-4 text-red-600" />
               </span>
             ) : null
           }
         />
-        <p className="mt-1.5 text-xs text-white/40">
+        <p className="mt-1.5 text-xs text-slate-400">
           {getAppOrigin().replace(/^https?:\/\//, "")}/
-          <span className="text-electric-300">{username || "your-name"}</span>
+          <span className="text-electric-700">{username || "your-name"}</span>
           {availability === "taken" && (
-            <span className="ml-2 text-red-400">Already taken</span>
+            <span className="ml-2 text-red-600">Already taken</span>
           )}
           {availability === "reserved" && (
-            <span className="ml-2 text-red-400">Reserved word</span>
+            <span className="ml-2 text-red-600">Reserved word</span>
           )}
         </p>
       </div>
@@ -102,12 +102,12 @@ export function PublishSettings() {
       />
 
       {/* Publish */}
-      <div className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5">
+      <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-3.5">
         <div>
-          <p className="text-sm font-medium text-white">
+          <p className="text-sm font-medium text-slate-900">
             {profile.status === "published" ? "Published" : "Draft"}
           </p>
-          <p className="text-xs text-white/40">
+          <p className="text-xs text-slate-400">
             {profile.status === "published"
               ? "Your profile is live and shareable."
               : "Only you can see this profile."}
@@ -120,7 +120,7 @@ export function PublishSettings() {
       </div>
 
       {!isFirebaseConfigured && (
-        <p className="rounded-lg bg-gold-400/10 px-3 py-2 text-xs text-gold-300">
+        <p className="rounded-lg bg-gold-400/10 px-3 py-2 text-xs text-amber-700">
           Demo mode — connect Firebase in <code>.env.local</code> to save &amp;
           publish for real.
         </p>

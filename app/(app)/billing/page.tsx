@@ -90,13 +90,13 @@ export default function BillingPage() {
 
       {/* Current plan banner */}
       <Card className="flex items-center gap-3 p-4">
-        <ShieldCheck className="h-5 w-5 shrink-0 text-jade-400" />
+        <ShieldCheck className="h-5 w-5 shrink-0 text-jade-600" />
         <div className="flex-1">
-          <p className="text-sm font-medium text-white">
+          <p className="text-sm font-medium text-slate-900">
             You are on the{" "}
-            <span className="capitalize text-jade-300">{currentPlan}</span> plan
+            <span className="capitalize text-jade-600">{currentPlan}</span> plan
           </p>
-          <p className="text-xs text-white/40">
+          <p className="text-xs text-slate-400">
             {currentPlan === "free"
               ? "Upgrade to unlock AI generation, analytics and more."
               : "Thank you for supporting ProfilePro! 🙌"}
@@ -122,7 +122,7 @@ export default function BillingPage() {
               }
             >
               <div className="flex items-center justify-between">
-                <h3 className="font-display text-lg font-bold text-white">
+                <h3 className="font-display text-lg font-bold text-slate-900">
                   {plan.name}
                 </h3>
                 {isCurrent && <Badge tone="jade">Current</Badge>}
@@ -130,10 +130,10 @@ export default function BillingPage() {
                   <Badge tone="blue">Popular</Badge>
                 )}
               </div>
-              <p className="text-xs text-white/45">{plan.tagline}</p>
-              <p className="mt-3 font-display text-3xl font-bold text-white">
+              <p className="text-xs text-slate-500">{plan.tagline}</p>
+              <p className="mt-3 font-display text-3xl font-bold text-slate-900">
                 ₱{plan.price.toLocaleString()}
-                <span className="text-sm font-normal text-white/40">
+                <span className="text-sm font-normal text-slate-400">
                   {plan.billingPeriod === "annual" ? "/yr" : "/mo"}
                 </span>
               </p>
@@ -168,13 +168,13 @@ export default function BillingPage() {
                     key={i}
                     className={cn(
                       "flex items-center gap-2 text-sm",
-                      f.included ? "text-white/70" : "text-white/35",
+                      f.included ? "text-slate-600" : "text-slate-400",
                     )}
                   >
                     {f.included ? (
-                      <Check className="h-4 w-4 shrink-0 text-jade-400" />
+                      <Check className="h-4 w-4 shrink-0 text-jade-600" />
                     ) : (
-                      <X className="h-4 w-4 shrink-0 text-white/20" />
+                      <X className="h-4 w-4 shrink-0 text-slate-300" />
                     )}
                     {f.label}
                   </li>
@@ -189,12 +189,12 @@ export default function BillingPage() {
       {currentPlan === "free" && !activated && (
         <Card className="p-5">
           <div className="flex items-center gap-2 mb-4">
-            <KeyRound className="h-4 w-4 text-electric-400" />
-            <h3 className="font-display text-sm font-semibold text-white">
+            <KeyRound className="h-4 w-4 text-electric-600" />
+            <h3 className="font-display text-sm font-semibold text-slate-900">
               Already purchased? Activate your license
             </h3>
           </div>
-          <p className="mb-4 text-xs text-white/45">
+          <p className="mb-4 text-xs text-slate-500">
             After buying on Gumroad you&apos;ll receive a license key by email.
             Paste it below to instantly upgrade your account.
           </p>
@@ -220,15 +220,15 @@ export default function BillingPage() {
 
       {activated && (
         <Card className="flex items-center gap-3 p-4 border border-jade-500/30">
-          <Sparkles className="h-5 w-5 text-jade-400" />
-          <p className="text-sm text-jade-300 font-medium">
+          <Sparkles className="h-5 w-5 text-jade-600" />
+          <p className="text-sm text-jade-600 font-medium">
             License activated! Refresh the page to see your new features.
           </p>
         </Card>
       )}
 
       <Card className="p-4">
-        <p className="text-xs text-white/35">
+        <p className="text-xs text-slate-400">
           Payments are securely processed by Gumroad. License keys are
           single-use and tied to your account. Contact support if you have
           any issues activating.

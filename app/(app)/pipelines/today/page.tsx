@@ -65,7 +65,7 @@ const BUCKET_TONE: Record<
     pill: "gold",
   },
   soon: {
-    card: "border-white/[0.07] bg-white/[0.02]",
+    card: "border-slate-200 bg-slate-50",
     pill: "blue",
   },
 };
@@ -130,7 +130,7 @@ export default function PipelineTodayPage() {
   if (authLoading || !account) {
     return (
       <div className="flex h-[40vh] items-center justify-center">
-        <Loader2 className="h-5 w-5 animate-spin text-white/40" />
+        <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
       </div>
     );
   }
@@ -146,10 +146,10 @@ export default function PipelineTodayPage() {
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-300 to-gold-500">
             <Crown className="h-6 w-6 text-ink-950" />
           </div>
-          <h3 className="mt-3 font-display text-base font-bold text-gold-200">
+          <h3 className="mt-3 font-display text-base font-bold text-amber-700">
             Follow-Up is a Pro feature
           </h3>
-          <p className="mx-auto mt-1 max-w-sm text-sm text-white/55">
+          <p className="mx-auto mt-1 max-w-sm text-sm text-slate-500">
             Upgrade to unlock the daily task dashboard, follow-up pipelines
             and AI-assisted message scripts.
           </p>
@@ -213,19 +213,19 @@ export default function PipelineTodayPage() {
 
       {/* Empty state */}
       {loading ? (
-        <Card className="flex h-40 items-center justify-center text-sm text-white/40">
+        <Card className="flex h-40 items-center justify-center text-sm text-slate-400">
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           Loading tasks…
         </Card>
       ) : totalDue === 0 ? (
         <Card className="flex flex-col items-center justify-center gap-2 p-12 text-center">
           <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-jade-500/15">
-            <CheckCircle2 className="h-6 w-6 text-jade-300" />
+            <CheckCircle2 className="h-6 w-6 text-jade-600" />
           </span>
-          <p className="text-sm font-medium text-white">All caught up</p>
-          <p className="max-w-sm text-xs text-white/45">
+          <p className="text-sm font-medium text-slate-900">All caught up</p>
+          <p className="max-w-sm text-xs text-slate-500">
             No follow-ups due in the next 48 hours. Open your{" "}
-            <Link href="/pipelines" className="text-electric-300 hover:underline">
+            <Link href="/pipelines" className="text-electric-700 hover:underline">
               pipeline board
             </Link>{" "}
             to advance leads through stages.
@@ -239,7 +239,7 @@ export default function PipelineTodayPage() {
             return (
               <section key={bucket} className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <h2 className="font-display text-sm font-semibold text-white">
+                  <h2 className="font-display text-sm font-semibold text-slate-900">
                     {BUCKET_LABEL[bucket]}
                   </h2>
                   <Badge tone={BUCKET_TONE[bucket].pill}>{rows.length}</Badge>
@@ -310,10 +310,10 @@ function StatTile({
   const ring = BUCKET_TONE[tone].card;
   return (
     <Card className={cn("p-3", ring)}>
-      <p className="text-[10px] font-medium uppercase tracking-wider text-white/45">
+      <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">
         {label}
       </p>
-      <p className="mt-1 font-display text-xl font-bold text-white">{value}</p>
+      <p className="mt-1 font-display text-xl font-bold text-slate-900">{value}</p>
     </Card>
   );
 }
@@ -336,18 +336,18 @@ function TaskRow({
       type="button"
       onClick={onOpen}
       className={cn(
-        "flex w-full items-center justify-between gap-3 rounded-xl border p-3 text-left transition-colors hover:bg-white/[0.03]",
+        "flex w-full items-center justify-between gap-3 rounded-xl border p-3 text-left transition-colors hover:bg-slate-50",
         tone.card,
       )}
     >
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-white">{lead.name}</p>
-        <p className="truncate text-[11px] text-white/45">
+        <p className="truncate text-sm font-medium text-slate-900">{lead.name}</p>
+        <p className="truncate text-[11px] text-slate-500">
           {pipeline?.name ?? "No pipeline"}
           {stage ? ` · ${stage.name}` : ""}
         </p>
         {lead.taskNotes && (
-          <p className="mt-1 line-clamp-1 text-[11px] text-white/55">
+          <p className="mt-1 line-clamp-1 text-[11px] text-slate-500">
             📝 {lead.taskNotes}
           </p>
         )}

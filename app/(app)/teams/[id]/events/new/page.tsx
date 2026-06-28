@@ -239,7 +239,7 @@ export default function NewEventPage() {
 
       <Card className="space-y-3 p-4">
         <div>
-          <label className="mb-1 block text-xs font-medium text-white/55">
+          <label className="mb-1 block text-xs font-medium text-slate-500">
             Title
           </label>
           <input
@@ -247,12 +247,12 @@ export default function NewEventPage() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g. Sizzle Night"
-            className="h-10 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-electric-500/60"
+            className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none placeholder:text-slate-300 focus:border-electric-500/60"
           />
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-white/55">
+          <label className="mb-1 block text-xs font-medium text-slate-500">
             Description
           </label>
           <textarea
@@ -260,15 +260,15 @@ export default function NewEventPage() {
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
             placeholder="What's this event about?"
-            className="w-full resize-none rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-electric-500/60"
+            className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 outline-none placeholder:text-slate-300 focus:border-electric-500/60"
           />
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-white/55">
+          <label className="mb-1 block text-xs font-medium text-slate-500">
             Banner (optional)
           </label>
-          <p className="mb-1.5 text-[11px] text-white/40">
+          <p className="mb-1.5 text-[11px] text-slate-400">
             Small thumbnail shown on event cards in /my-events and the
             dashboard.
           </p>
@@ -280,10 +280,10 @@ export default function NewEventPage() {
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-white/55">
+          <label className="mb-1 block text-xs font-medium text-slate-500">
             Invitation card (optional)
           </label>
-          <p className="mb-1.5 text-[11px] text-white/40">
+          <p className="mb-1.5 text-[11px] text-slate-400">
             The full share-graphic your team forwards to prospects on
             Messenger / Facebook / Viber. Members get a one-tap
             &ldquo;Download invitation card&rdquo; button on the event.
@@ -297,7 +297,7 @@ export default function NewEventPage() {
 
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
-            <label className="mb-1 flex items-center gap-1.5 text-xs font-medium text-white/55">
+            <label className="mb-1 flex items-center gap-1.5 text-xs font-medium text-slate-500">
               <Calendar className="h-3.5 w-3.5" />
               Starts
             </label>
@@ -305,11 +305,11 @@ export default function NewEventPage() {
               type="datetime-local"
               value={startAt}
               onChange={(e) => setStartAt(e.target.value)}
-              className="h-10 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 text-sm text-white outline-none focus:border-electric-500/60"
+              className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none focus:border-electric-500/60"
             />
           </div>
           <div>
-            <label className="mb-1 flex items-center gap-1.5 text-xs font-medium text-white/55">
+            <label className="mb-1 flex items-center gap-1.5 text-xs font-medium text-slate-500">
               <Calendar className="h-3.5 w-3.5" />
               Ends
             </label>
@@ -317,13 +317,13 @@ export default function NewEventPage() {
               type="datetime-local"
               value={endAt}
               onChange={(e) => setEndAt(e.target.value)}
-              className="h-10 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 text-sm text-white outline-none focus:border-electric-500/60"
+              className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none focus:border-electric-500/60"
             />
           </div>
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-white/55">
+          <label className="mb-1 block text-xs font-medium text-slate-500">
             Timezone
           </label>
           <Select
@@ -335,7 +335,7 @@ export default function NewEventPage() {
 
         <div className="grid gap-3 sm:grid-cols-[180px_1fr]">
           <div>
-            <label className="mb-1 flex items-center gap-1.5 text-xs font-medium text-white/55">
+            <label className="mb-1 flex items-center gap-1.5 text-xs font-medium text-slate-500">
               <MapPin className="h-3.5 w-3.5" />
               Location type
             </label>
@@ -346,7 +346,7 @@ export default function NewEventPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-white/55">
+            <label className="mb-1 block text-xs font-medium text-slate-500">
               {locationType === "in-person" ? "Address" : "Meeting link"}
             </label>
             <input
@@ -357,7 +357,7 @@ export default function NewEventPage() {
                   ? "e.g. Cebu Coliseum"
                   : "https://…"
               }
-              className="h-10 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-electric-500/60"
+              className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none placeholder:text-slate-300 focus:border-electric-500/60"
             />
           </div>
         </div>
@@ -366,37 +366,37 @@ export default function NewEventPage() {
       {/* Notifications block — flags are persisted now; actual sends
           ship in Session 3 when the email infra is wired. */}
       <Card className="space-y-2 p-4">
-        <p className="text-[10px] font-medium uppercase tracking-wider text-white/45">
+        <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">
           Notifications
         </p>
-        <label className="flex items-center gap-2 text-sm text-white/70">
+        <label className="flex items-center gap-2 text-sm text-slate-600">
           <input
             type="checkbox"
             checked={notifyOnCreate}
             onChange={(e) => setNotifyOnCreate(e.target.checked)}
-            className="h-4 w-4 rounded border-white/20 bg-white/[0.04] accent-electric-500"
+            className="h-4 w-4 rounded border-slate-300 bg-slate-100 accent-electric-500"
           />
           Email all team members now
         </label>
-        <label className="flex items-center gap-2 text-sm text-white/70">
+        <label className="flex items-center gap-2 text-sm text-slate-600">
           <input
             type="checkbox"
             checked={notifyDayBefore}
             onChange={(e) => setNotifyDayBefore(e.target.checked)}
-            className="h-4 w-4 rounded border-white/20 bg-white/[0.04] accent-electric-500"
+            className="h-4 w-4 rounded border-slate-300 bg-slate-100 accent-electric-500"
           />
           Email reminder 1 day before
         </label>
-        <label className="flex items-center gap-2 text-sm text-white/70">
+        <label className="flex items-center gap-2 text-sm text-slate-600">
           <input
             type="checkbox"
             checked={pushDayBefore}
             onChange={(e) => setPushDayBefore(e.target.checked)}
-            className="h-4 w-4 rounded border-white/20 bg-white/[0.04] accent-electric-500"
+            className="h-4 w-4 rounded border-slate-300 bg-slate-100 accent-electric-500"
           />
           Push notification 1 day before
         </label>
-        <p className="text-[11px] text-white/40">
+        <p className="text-[11px] text-slate-400">
           Send pipeline ships in the next update — your preferences are
           saved with the event so it goes out automatically when ready.
         </p>

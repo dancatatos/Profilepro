@@ -77,7 +77,7 @@ export default function PipelinesPageWrapper() {
     <Suspense
       fallback={
         <div className="flex h-[40vh] items-center justify-center">
-          <Loader2 className="h-5 w-5 animate-spin text-white/40" />
+          <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
         </div>
       }
     >
@@ -175,7 +175,7 @@ function PipelinesPage() {
   if (authLoading || !account) {
     return (
       <div className="flex h-[40vh] items-center justify-center">
-        <Loader2 className="h-5 w-5 animate-spin text-white/40" />
+        <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
       </div>
     );
   }
@@ -191,10 +191,10 @@ function PipelinesPage() {
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-300 to-gold-500">
             <Crown className="h-6 w-6 text-ink-950" />
           </div>
-          <h3 className="mt-3 font-display text-base font-bold text-gold-200">
+          <h3 className="mt-3 font-display text-base font-bold text-amber-700">
             Follow-Up is a Pro feature
           </h3>
-          <p className="mx-auto mt-1 max-w-sm text-sm text-white/55">
+          <p className="mx-auto mt-1 max-w-sm text-sm text-slate-500">
             Upgrade to unlock follow-up pipelines, daily task dashboard, and
             AI-assisted message scripts that turn cold leads into closed deals.
           </p>
@@ -439,14 +439,14 @@ function TemplatePicker({
             key={t.industry}
             type="button"
             onClick={() => onPick(i)}
-            className="group flex flex-col items-start gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4 text-left transition-colors hover:border-electric-500/40 hover:bg-electric-500/[0.04]"
+            className="group flex flex-col items-start gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left transition-colors hover:border-electric-500/40 hover:bg-electric-500/[0.04]"
           >
             <span className="text-2xl">{t.icon}</span>
-            <p className="font-display text-sm font-semibold text-white">
+            <p className="font-display text-sm font-semibold text-slate-900">
               {t.name}
             </p>
-            <p className="text-xs text-white/45">{t.description}</p>
-            <p className="text-[10px] uppercase tracking-wider text-white/30">
+            <p className="text-xs text-slate-500">{t.description}</p>
+            <p className="text-[10px] uppercase tracking-wider text-slate-300">
               {t.stages.length} stages
             </p>
           </button>
@@ -455,7 +455,7 @@ function TemplatePicker({
       <button
         type="button"
         onClick={onCustom}
-        className="flex w-full items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-white/[0.12] py-4 text-sm font-medium text-white/55 transition-colors hover:border-electric-500/40 hover:text-electric-300"
+        className="flex w-full items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-white/[0.12] py-4 text-sm font-medium text-slate-500 transition-colors hover:border-electric-500/40 hover:text-electric-700"
       >
         <Sparkles className="h-4 w-4" />
         Build your own (3 starter stages, fully editable)
@@ -489,7 +489,7 @@ function PipelineSwitcher({
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 z-20 mt-1 w-64 overflow-hidden rounded-xl border border-white/10 bg-ink-900 shadow-xl">
+          <div className="absolute right-0 z-20 mt-1 w-64 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
             {pipelines.map((p) => (
               <button
                 key={p.id}
@@ -499,15 +499,15 @@ function PipelineSwitcher({
                   setOpen(false);
                 }}
                 className={cn(
-                  "flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-xs transition-colors hover:bg-white/[0.06]",
+                  "flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-xs transition-colors hover:bg-slate-100",
                   p.id === activeId && "bg-electric-500/10",
                 )}
               >
                 <div className="flex items-center gap-2">
-                  {p.isDefault && <Pin className="h-3 w-3 text-electric-300" />}
-                  <span className="font-medium text-white">{p.name}</span>
+                  {p.isDefault && <Pin className="h-3 w-3 text-electric-700" />}
+                  <span className="font-medium text-slate-900">{p.name}</span>
                 </div>
-                <span className="text-[10px] text-white/30">
+                <span className="text-[10px] text-slate-300">
                   {p.stages.length} stages
                 </span>
               </button>
@@ -613,11 +613,11 @@ function PipelineBoard({
       <Card className="flex flex-wrap items-center justify-between gap-3 p-3">
         <div className="flex items-center gap-2">
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-electric-500/15">
-            <KanbanSquare className="h-4 w-4 text-electric-300" />
+            <KanbanSquare className="h-4 w-4 text-electric-700" />
           </span>
           <div>
-            <p className="text-sm font-semibold text-white">{pipeline.name}</p>
-            <p className="text-[11px] text-white/40">
+            <p className="text-sm font-semibold text-slate-900">{pipeline.name}</p>
+            <p className="text-[11px] text-slate-400">
               {leads.length} lead{leads.length === 1 ? "" : "s"} ·{" "}
               {sortedStages.length} stages
               {pipeline.isDefault && " · default"}
@@ -672,7 +672,7 @@ function PipelineBoard({
 
       {/* Board — horizontal scroll on desktop, stacked on mobile */}
       {loading ? (
-        <div className="flex h-40 items-center justify-center text-sm text-white/40">
+        <div className="flex h-40 items-center justify-center text-sm text-slate-400">
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           Loading leads…
         </div>
@@ -759,19 +759,19 @@ function StageColumn({
   return (
     <div
       className={cn(
-        "flex w-72 shrink-0 flex-col gap-2 rounded-xl border border-white/[0.07] p-3 lg:w-auto",
-        stage.color ?? "bg-white/[0.02]",
+        "flex w-72 shrink-0 flex-col gap-2 rounded-xl border border-slate-200 p-3 lg:w-auto",
+        stage.color ?? "bg-slate-50",
       )}
     >
       <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold uppercase tracking-wider text-white/65">
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-600">
           {stage.name}
         </p>
         <Badge tone="neutral">{leads.length}</Badge>
       </div>
       <div className="space-y-2">
         {leads.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-white/[0.06] p-3 text-center text-[11px] text-white/30">
+          <p className="rounded-lg border border-dashed border-slate-200 p-3 text-center text-[11px] text-slate-300">
             No leads here
           </p>
         ) : (
@@ -820,19 +820,19 @@ function LeadCard({
           onOpen();
         }
       }}
-      className="cursor-pointer rounded-lg border border-white/[0.07] bg-ink-950/40 p-3 transition-colors hover:border-electric-500/40 hover:bg-ink-950/60"
+      className="cursor-pointer rounded-lg border border-slate-200 bg-slate-50/40 p-3 transition-colors hover:border-electric-500/40 hover:bg-slate-50/60"
     >
-      <p className="text-sm font-medium text-white">{lead.name}</p>
+      <p className="text-sm font-medium text-slate-900">{lead.name}</p>
       {lead.email && (
-        <p className="mt-0.5 truncate text-[11px] text-white/45">
+        <p className="mt-0.5 truncate text-[11px] text-slate-500">
           {lead.email}
         </p>
       )}
       {lead.phone && !lead.email && (
-        <p className="mt-0.5 text-[11px] text-white/45">{lead.phone}</p>
+        <p className="mt-0.5 text-[11px] text-slate-500">{lead.phone}</p>
       )}
       <div className="mt-2 flex items-center justify-between gap-2">
-        <span className="text-[10px] text-white/30">
+        <span className="text-[10px] text-slate-300">
           {timeAgo(lead.stageEnteredAt ?? lead.createdAt)}
         </span>
         <div className="relative">
@@ -844,7 +844,7 @@ function LeadCard({
               e.stopPropagation();
               setOpen((o) => !o);
             }}
-            className="flex items-center gap-1 rounded-md border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[11px] font-medium text-white/65 hover:bg-white/[0.08]"
+            className="flex items-center gap-1 rounded-md border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 hover:bg-slate-200"
           >
             <ArrowLeft className="h-3 w-3 -rotate-90" />
             Move
@@ -858,7 +858,7 @@ function LeadCard({
                   setOpen(false);
                 }}
               />
-              <div className="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded-xl border border-white/10 bg-ink-900 shadow-xl">
+              <div className="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
                 {otherStages.map((s) => (
                   <button
                     key={s.id}
@@ -868,7 +868,7 @@ function LeadCard({
                       onMove(s.id);
                       setOpen(false);
                     }}
-                    className="block w-full px-3 py-2 text-left text-[11px] font-medium text-white hover:bg-white/[0.06]"
+                    className="block w-full px-3 py-2 text-left text-[11px] font-medium text-slate-900 hover:bg-slate-100"
                   >
                     {s.name}
                   </button>
@@ -887,14 +887,14 @@ function LeadCard({
 function EmptyBoardState() {
   return (
     <Card className="p-10 text-center">
-      <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.04]">
-        <KanbanSquare className="h-6 w-6 text-white/30" />
+      <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100">
+        <KanbanSquare className="h-6 w-6 text-slate-300" />
       </span>
-      <p className="mt-3 text-sm font-medium text-white">No leads here yet</p>
-      <p className="mx-auto mt-1 max-w-sm text-xs text-white/45">
+      <p className="mt-3 text-sm font-medium text-slate-900">No leads here yet</p>
+      <p className="mx-auto mt-1 max-w-sm text-xs text-slate-500">
         New leads captured via your Credibly profile auto-enrol into your
         default pipeline. You can also add existing leads manually from{" "}
-        <Link href="/leads" className="text-electric-300 hover:underline">
+        <Link href="/leads" className="text-electric-700 hover:underline">
           /leads
         </Link>
         .

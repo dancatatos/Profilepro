@@ -201,7 +201,7 @@ export function AIGenerateModal({
             key={i}
             className={cn(
               "h-1 flex-1 rounded-full transition-colors",
-              i <= step ? "bg-electric-500" : "bg-white/10",
+              i <= step ? "bg-electric-500" : "bg-slate-200",
             )}
           />
         ))}
@@ -210,22 +210,22 @@ export function AIGenerateModal({
       {generating ? (
         <div className="flex flex-col items-center py-10 text-center">
           <span className="flex h-14 w-14 animate-pulse items-center justify-center rounded-2xl bg-brand-gradient shadow-glow-blue">
-            <Sparkles className="h-7 w-7 text-white" />
+            <Sparkles className="h-7 w-7 text-slate-900" />
           </span>
-          <p className="mt-4 font-display text-sm font-semibold text-white">
+          <p className="mt-4 font-display text-sm font-semibold text-slate-900">
             Writing your profile…
           </p>
-          <p className="mt-1 text-xs text-white/45">
+          <p className="mt-1 text-xs text-slate-500">
             Generating headline, bio, CTAs and credibility copy.
           </p>
         </div>
       ) : pendingContent ? (
         <div className="space-y-5 pb-2">
           <div>
-            <p className="font-display text-sm font-semibold text-white">
+            <p className="font-display text-sm font-semibold text-slate-900">
               Pick your headline
             </p>
-            <p className="mt-0.5 text-xs text-white/45">
+            <p className="mt-0.5 text-xs text-slate-500">
               The AI wrote a few angles — choose the one that sounds most like you.
             </p>
             <div className="mt-2.5 space-y-1.5">
@@ -249,10 +249,10 @@ export function AIGenerateModal({
             />
           </div>
           <div>
-            <p className="font-display text-sm font-semibold text-white">
+            <p className="font-display text-sm font-semibold text-slate-900">
               Pick your bio
             </p>
-            <p className="mt-0.5 text-xs text-white/45">
+            <p className="mt-0.5 text-xs text-slate-500">
               You can always edit it after — this is just the starting point.
             </p>
             <div className="mt-2.5 space-y-1.5">
@@ -286,7 +286,7 @@ export function AIGenerateModal({
             }))}
           />
           <div>
-            <p className="mb-1.5 text-xs font-medium text-white/65">
+            <p className="mb-1.5 text-xs font-medium text-slate-600">
               Language
             </p>
             <div className="flex gap-2">
@@ -297,8 +297,8 @@ export function AIGenerateModal({
                   className={cn(
                     "flex flex-1 items-center justify-center gap-1.5 rounded-xl border py-2.5 text-sm font-medium capitalize",
                     language === lang
-                      ? "border-electric-500 bg-electric-500/15 text-electric-300"
-                      : "border-white/10 text-white/55",
+                      ? "border-electric-500 bg-electric-500/15 text-electric-700"
+                      : "border-slate-200 text-slate-500",
                   )}
                 >
                   <Languages className="h-4 w-4" />
@@ -307,7 +307,7 @@ export function AIGenerateModal({
               ))}
             </div>
             {language === "taglish" && (
-              <p className="mt-1.5 text-xs text-white/40">
+              <p className="mt-1.5 text-xs text-slate-400">
                 Natural Filipino-English mix — perfect for PH prospects.
               </p>
             )}
@@ -315,7 +315,7 @@ export function AIGenerateModal({
         </div>
       ) : (
         <div className="pb-2">
-          <p className="font-display text-base font-semibold text-white">
+          <p className="font-display text-base font-semibold text-slate-900">
             {question.question}
           </p>
           <textarea
@@ -326,7 +326,7 @@ export function AIGenerateModal({
             }
             placeholder={question.placeholder}
             rows={3}
-            className="mt-3 w-full resize-none rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-electric-500/60"
+            className="mt-3 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 placeholder:text-slate-300 outline-none focus:border-electric-500/60"
           />
         </div>
       )}
@@ -401,7 +401,7 @@ function FeedbackRow({
           if (e.key === "Enter" && !busy && value.trim()) onSubmit();
         }}
         placeholder={placeholder}
-        className="flex-1 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-white placeholder:text-white/30 outline-none focus:border-electric-500/60"
+        className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 placeholder:text-slate-300 outline-none focus:border-electric-500/60"
       />
       <button
         type="button"
@@ -410,8 +410,8 @@ function FeedbackRow({
         className={cn(
           "flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors",
           busy || !value.trim()
-            ? "border-white/10 text-white/30"
-            : "border-electric-500/40 bg-electric-500/10 text-electric-300 hover:bg-electric-500/20",
+            ? "border-slate-200 text-slate-300"
+            : "border-electric-500/40 bg-electric-500/10 text-electric-700 hover:bg-electric-500/20",
         )}
       >
         {busy ? (
@@ -441,8 +441,8 @@ function VariantOption({
       className={cn(
         "flex w-full items-start gap-2.5 rounded-xl border p-3 text-left text-sm transition-colors",
         selected
-          ? "border-electric-500/70 bg-electric-500/10 text-white"
-          : "border-white/10 bg-white/[0.02] text-white/70 hover:border-white/20 hover:text-white",
+          ? "border-electric-500/70 bg-electric-500/10 text-slate-900"
+          : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 hover:text-slate-900",
       )}
     >
       <span
@@ -451,7 +451,7 @@ function VariantOption({
           selected ? "border-electric-400 bg-electric-500" : "border-white/25",
         )}
       >
-        {selected && <Check className="h-2.5 w-2.5 text-white" />}
+        {selected && <Check className="h-2.5 w-2.5 text-slate-900" />}
       </span>
       <span className="flex-1 leading-snug">{text}</span>
     </button>

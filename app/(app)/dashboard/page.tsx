@@ -90,8 +90,8 @@ export default function DashboardPage() {
   return (
     <div className="space-y-5">
       <div>
-        <p className="text-sm text-white/45">Welcome back,</p>
-        <h1 className="font-display text-2xl font-bold text-white">
+        <p className="text-sm text-slate-500">Welcome back,</p>
+        <h1 className="font-display text-2xl font-bold text-slate-900">
           {firstName} &#128075;
         </h1>
       </div>
@@ -117,10 +117,10 @@ export default function DashboardPage() {
         <div className="flex items-center gap-5">
           <ScoreRing value={score} accent={score >= 70 ? "jade" : "blue"} label="ready" />
           <div className="min-w-0 flex-1">
-            <h2 className="font-display text-base font-semibold text-white">
+            <h2 className="font-display text-base font-semibold text-slate-900">
               Your profile is {score}% ready
             </h2>
-            <p className="mt-0.5 text-xs text-white/45">
+            <p className="mt-0.5 text-xs text-slate-500">
               {score >= 80
                 ? "Looking sharp — share it with prospects!"
                 : "Finish the steps below to build instant trust."}
@@ -135,15 +135,15 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-        <div className="mt-4 grid gap-1.5 border-t border-white/[0.06] pt-4 sm:grid-cols-2">
+        <div className="mt-4 grid gap-1.5 border-t border-slate-200 pt-4 sm:grid-cols-2">
           {checklist.slice(0, 6).map((c) => (
             <div key={c.label} className="flex items-center gap-2 text-xs">
               {c.done ? (
-                <CheckCircle2 className="h-4 w-4 shrink-0 text-jade-400" />
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-jade-600" />
               ) : (
-                <Circle className="h-4 w-4 shrink-0 text-white/20" />
+                <Circle className="h-4 w-4 shrink-0 text-slate-300" />
               )}
-              <span className={c.done ? "text-white/50 line-through" : "text-white/70"}>
+              <span className={c.done ? "text-slate-500 line-through" : "text-slate-600"}>
                 {c.label}
               </span>
             </div>
@@ -161,7 +161,7 @@ export default function DashboardPage() {
 
       {/* Quick actions */}
       <div>
-        <h3 className="mb-2.5 font-display text-sm font-semibold text-white">
+        <h3 className="mb-2.5 font-display text-sm font-semibold text-slate-900">
           Quick actions
         </h3>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -175,7 +175,7 @@ export default function DashboardPage() {
               <Link href={q.href}>
                 <Card className="flex items-center gap-3 p-4 transition-transform active:scale-[0.98]">
                   <StatIcon icon={q.icon} accent={q.accent} />
-                  <span className="text-sm font-medium text-white">
+                  <span className="text-sm font-medium text-slate-900">
                     {q.label}
                   </span>
                 </Card>
@@ -187,21 +187,21 @@ export default function DashboardPage() {
 
       {/* Modules */}
       <div>
-        <h3 className="mb-2.5 font-display text-sm font-semibold text-white">
+        <h3 className="mb-2.5 font-display text-sm font-semibold text-slate-900">
           Explore Credibly
         </h3>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {MODULES.map((m) => (
             <Link key={m.label} href={m.href}>
               <Card className="flex items-center gap-3 p-4 transition-transform active:scale-[0.98]">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.05]">
-                  <Icon name={m.icon} className="h-5 w-5 text-white/55" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100">
+                  <Icon name={m.icon} className="h-5 w-5 text-slate-500" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-white">{m.label}</p>
-                  <p className="truncate text-xs text-white/40">{m.desc}</p>
+                  <p className="text-sm font-medium text-slate-900">{m.label}</p>
+                  <p className="truncate text-xs text-slate-400">{m.desc}</p>
                 </div>
-                <ArrowRight className="ml-auto h-4 w-4 text-white/25" />
+                <ArrowRight className="ml-auto h-4 w-4 text-slate-300" />
               </Card>
             </Link>
           ))}
@@ -213,10 +213,10 @@ export default function DashboardPage() {
 
 function StatIcon({ icon, accent }: { icon: string; accent: string }) {
   const map: Record<string, string> = {
-    blue: "text-electric-400 bg-electric-500/10",
-    jade: "text-jade-400 bg-jade-500/10",
-    gold: "text-gold-300 bg-gold-400/10",
-    white: "text-white bg-white/10",
+    blue: "text-electric-600 bg-electric-500/10",
+    jade: "text-jade-600 bg-jade-500/10",
+    gold: "text-amber-700 bg-gold-400/10",
+    white: "text-slate-900 bg-slate-200",
   };
   return (
     <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${map[accent]}`}>
@@ -263,19 +263,19 @@ function TodayTasksCard() {
     urgent: {
       ring: "border-red-500/30",
       bg: "bg-gradient-to-br from-red-500/[0.10] via-red-500/[0.04] to-transparent",
-      icon: "bg-red-500/20 text-red-300",
+      icon: "bg-red-500/20 text-red-700",
       label: "Action needed",
     },
     today: {
       ring: "border-amber-500/30",
       bg: "bg-gradient-to-br from-amber-500/[0.10] via-amber-500/[0.04] to-transparent",
-      icon: "bg-amber-500/20 text-amber-300",
+      icon: "bg-amber-500/20 text-amber-700",
       label: "Today's follow-ups",
     },
     soft: {
       ring: "border-electric-500/25",
       bg: "bg-gradient-to-br from-electric-500/[0.08] via-electric-500/[0.03] to-transparent",
-      icon: "bg-electric-500/15 text-electric-300",
+      icon: "bg-electric-500/15 text-electric-700",
       label: "Coming up",
     },
   }[tone];
@@ -319,35 +319,35 @@ function TodayTasksCard() {
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-white/55">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
               {palette.label}
             </p>
-            <h2 className="mt-0.5 font-display text-lg font-bold text-white sm:text-xl">
+            <h2 className="mt-0.5 font-display text-lg font-bold text-slate-900 sm:text-xl">
               {headline}
             </h2>
-            <p className="mt-0.5 text-xs text-white/55">
+            <p className="mt-0.5 text-xs text-slate-500">
               Open the daily task list to copy a message and mark done.
             </p>
           </div>
-          <ArrowRight className="hidden h-5 w-5 shrink-0 text-white/40 sm:block" />
+          <ArrowRight className="hidden h-5 w-5 shrink-0 text-slate-400 sm:block" />
         </div>
 
         {/* Mini chip row for the secondary buckets — gives more
             granular info without forcing the user to navigate. */}
         {(overdue > 0 || today > 0 || soon > 0) && (
-          <div className="mt-4 flex flex-wrap gap-1.5 border-t border-white/[0.06] pt-3">
+          <div className="mt-4 flex flex-wrap gap-1.5 border-t border-slate-200 pt-3">
             {overdue > 0 && (
-              <span className="rounded-md bg-red-500/15 px-2 py-0.5 text-[11px] font-semibold text-red-300">
+              <span className="rounded-md bg-red-500/15 px-2 py-0.5 text-[11px] font-semibold text-red-700">
                 {overdue} overdue
               </span>
             )}
             {today > 0 && (
-              <span className="rounded-md bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-300">
+              <span className="rounded-md bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
                 {today} due today
               </span>
             )}
             {soon > 0 && (
-              <span className="rounded-md bg-electric-500/15 px-2 py-0.5 text-[11px] font-semibold text-electric-300">
+              <span className="rounded-md bg-electric-500/15 px-2 py-0.5 text-[11px] font-semibold text-electric-700">
                 {soon} coming up
               </span>
             )}
@@ -421,18 +421,18 @@ function UpcomingEventsCard() {
     return (
       <Link href="/join" className="block">
         <Card className="flex items-center gap-3 p-4 transition-colors hover:border-electric-500/30">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-electric-500/15 text-electric-300">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-electric-500/15 text-electric-700">
             <CalendarIcon className="h-4 w-4" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-white">
+            <p className="text-sm font-medium text-slate-900">
               Got a team join code?
             </p>
-            <p className="text-xs text-white/55">
+            <p className="text-xs text-slate-500">
               Enter it to unlock your team&apos;s events + reminders.
             </p>
           </div>
-          <ArrowRight className="h-4 w-4 shrink-0 text-white/40" />
+          <ArrowRight className="h-4 w-4 shrink-0 text-slate-400" />
         </Card>
       </Link>
     );
@@ -442,20 +442,20 @@ function UpcomingEventsCard() {
     <Link href="/my-events" className="block">
       <Card className="p-4 transition-colors hover:border-electric-500/30 sm:p-5">
         <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-electric-500/15 text-electric-300">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-electric-500/15 text-electric-700">
             <CalendarIcon className="h-5 w-5" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="font-display text-sm font-semibold text-white">
+            <p className="font-display text-sm font-semibold text-slate-900">
               Upcoming events
             </p>
-            <p className="text-xs text-white/55">
+            <p className="text-xs text-slate-500">
               From teams you&apos;ve joined
             </p>
           </div>
-          <ArrowRight className="hidden h-5 w-5 shrink-0 text-white/40 sm:block" />
+          <ArrowRight className="hidden h-5 w-5 shrink-0 text-slate-400 sm:block" />
         </div>
-        <div className="mt-3 space-y-1.5 border-t border-white/[0.06] pt-3">
+        <div className="mt-3 space-y-1.5 border-t border-slate-200 pt-3">
           {rows.map((row) => {
             const d = new Date(row.event.startAt);
             const when = d.toLocaleString(undefined, {
@@ -469,17 +469,17 @@ function UpcomingEventsCard() {
                 key={row.event.id}
                 className="flex items-center gap-2 text-xs"
               >
-                <span className="shrink-0 rounded bg-white/[0.05] px-1.5 py-0.5 text-[10px] font-medium text-white/55">
+                <span className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
                   {when}
                 </span>
-                <span className="min-w-0 flex-1 truncate text-white/80">
+                <span className="min-w-0 flex-1 truncate text-slate-700">
                   {row.event.title}
                 </span>
-                <span className="hidden shrink-0 truncate text-[10px] text-white/40 sm:block">
+                <span className="hidden shrink-0 truncate text-[10px] text-slate-400 sm:block">
                   {row.teamName}
                 </span>
                 {row.event.locationLabel && (
-                  <MapPin className="hidden h-3 w-3 shrink-0 text-white/30 sm:block" />
+                  <MapPin className="hidden h-3 w-3 shrink-0 text-slate-300 sm:block" />
                 )}
               </div>
             );

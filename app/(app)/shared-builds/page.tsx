@@ -291,10 +291,10 @@ export default function SharedBuildsPage() {
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-300 to-gold-500">
             <Crown className="h-6 w-6 text-ink-950" />
           </div>
-          <h3 className="mt-3 font-display text-base font-bold text-gold-200">
+          <h3 className="mt-3 font-display text-base font-bold text-amber-700">
             Shared Builds is a Pro feature
           </h3>
-          <p className="mx-auto mt-1 max-w-sm text-sm text-white/50">
+          <p className="mx-auto mt-1 max-w-sm text-sm text-slate-500">
             Upgrade to publish your profile as a template, and save builds
             shared with you by your team.
           </p>
@@ -330,10 +330,10 @@ export default function SharedBuildsPage() {
 
       {/* Add a build with a code */}
       <Card className="p-4">
-        <h2 className="text-sm font-semibold text-white">
+        <h2 className="text-sm font-semibold text-slate-900">
           Add a build with a code
         </h2>
-        <p className="mt-0.5 text-xs text-white/45">
+        <p className="mt-0.5 text-xs text-slate-500">
           Got a share code from someone? Paste it to preview their build.
         </p>
         <div className="mt-3 flex gap-2">
@@ -344,7 +344,7 @@ export default function SharedBuildsPage() {
               if (e.key === "Enter") findCode();
             }}
             placeholder="ABC-XXXXXX"
-            className="h-11 flex-1 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 text-sm tracking-widest text-white outline-none placeholder:text-white/25 focus:border-electric-500/60"
+            className="h-11 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm tracking-widest text-slate-900 outline-none placeholder:text-slate-300 focus:border-electric-500/60"
           />
           <Button
             onClick={findCode}
@@ -356,17 +356,17 @@ export default function SharedBuildsPage() {
         </div>
 
         {found && (
-          <div className="mt-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-3">
+          <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
             <div className="flex items-center gap-3">
               <div
                 className="h-12 w-12 shrink-0 rounded-lg"
                 style={{ background: themeBackground(found.themeId) }}
               />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-white">
+                <p className="truncate text-sm font-semibold text-slate-900">
                   {found.name}
                 </p>
-                <p className="truncate text-xs text-white/45">
+                <p className="truncate text-xs text-slate-500">
                   Shared by {found.ownerName} · {found.build.sections.length}{" "}
                   sections
                 </p>
@@ -391,16 +391,16 @@ export default function SharedBuildsPage() {
 
       {/* Locker */}
       <div>
-        <h2 className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-white/35">
+        <h2 className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-slate-400">
           Your saved builds ({saved.length}/{slots})
         </h2>
         {saved.length === 0 ? (
           <Card className="p-6 text-center">
-            <Package className="mx-auto h-7 w-7 text-white/20" />
-            <p className="mt-2 text-sm font-medium text-white">
+            <Package className="mx-auto h-7 w-7 text-slate-300" />
+            <p className="mt-2 text-sm font-medium text-slate-900">
               No saved builds yet
             </p>
-            <p className="mx-auto mt-0.5 max-w-xs text-xs text-white/45">
+            <p className="mx-auto mt-0.5 max-w-xs text-xs text-slate-500">
               Enter a share code above to save a build you can apply any time.
             </p>
           </Card>
@@ -414,10 +414,10 @@ export default function SharedBuildsPage() {
                     style={{ background: themeBackground(s.themeId) }}
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-white">
+                    <p className="truncate text-sm font-semibold text-slate-900">
                       {s.name}
                     </p>
-                    <p className="truncate text-xs text-white/45">
+                    <p className="truncate text-xs text-slate-500">
                       Shared by {s.ownerName} · saved {timeAgo(s.savedAt)}
                     </p>
                   </div>
@@ -430,7 +430,7 @@ export default function SharedBuildsPage() {
                     onClick={() => removeSaved(s.id)}
                     disabled={busyId === s.id}
                     aria-label="Remove saved build"
-                    className="shrink-0 rounded-lg p-2 text-white/30 transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
+                    className="shrink-0 rounded-lg p-2 text-slate-300 transition-colors hover:bg-red-500/10 hover:text-red-600 disabled:opacity-40"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -443,22 +443,22 @@ export default function SharedBuildsPage() {
 
       {/* Published builds */}
       <div>
-        <h2 className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-white/35">
+        <h2 className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-slate-400">
           Builds you&apos;ve shared ({published.length})
         </h2>
         {published.length === 0 ? (
           <Card className="p-6 text-center">
-            <Sparkles className="mx-auto h-7 w-7 text-white/20" />
-            <p className="mt-2 text-sm font-medium text-white">
+            <Sparkles className="mx-auto h-7 w-7 text-slate-300" />
+            <p className="mt-2 text-sm font-medium text-slate-900">
               You haven&apos;t shared a build
             </p>
-            <p className="mx-auto mt-0.5 max-w-xs text-xs text-white/45">
+            <p className="mx-auto mt-0.5 max-w-xs text-xs text-slate-500">
               Open the Profile Builder and tap &ldquo;Publish Build&rdquo; to
               share yours with a code.
             </p>
             <Link
               href="/profile"
-              className="mt-3 inline-flex rounded-xl border border-white/12 px-4 py-2 text-xs font-medium text-white/70 hover:bg-white/5"
+              className="mt-3 inline-flex rounded-xl border border-white/12 px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100"
             >
               Open Profile Builder
             </Link>
@@ -469,13 +469,13 @@ export default function SharedBuildsPage() {
               <Card key={b.id} className="p-3.5">
                 <div className="flex items-center gap-3">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-white">
+                    <p className="truncate text-sm font-semibold text-slate-900">
                       {b.name}
                     </p>
-                    <p className="mt-0.5 text-xs text-white/45">
+                    <p className="mt-0.5 text-xs text-slate-500">
                       Created {timeAgo(b.createdAt)}
                       {b.revoked && (
-                        <span className="text-red-400"> · disabled</span>
+                        <span className="text-red-600"> · disabled</span>
                       )}
                     </p>
                   </div>
@@ -485,15 +485,15 @@ export default function SharedBuildsPage() {
                     className={cn(
                       "flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 font-display text-xs font-bold tracking-widest transition-colors",
                       b.revoked
-                        ? "border-white/10 text-white/30"
-                        : "border-electric-500/30 bg-electric-500/10 text-electric-300 hover:bg-electric-500/15",
+                        ? "border-slate-200 text-slate-300"
+                        : "border-electric-500/30 bg-electric-500/10 text-electric-700 hover:bg-electric-500/15",
                     )}
                   >
                     {b.shareCode}
                     <Copy className="h-3 w-3" />
                   </button>
                 </div>
-                <div className="mt-2.5 flex items-center gap-2 border-t border-white/[0.06] pt-2.5">
+                <div className="mt-2.5 flex items-center gap-2 border-t border-slate-200 pt-2.5">
                   <Button
                     variant="outline"
                     size="sm"
@@ -513,7 +513,7 @@ export default function SharedBuildsPage() {
                     onClick={() => removePublished(b.id)}
                     disabled={busyId === b.id}
                     aria-label="Delete shared build"
-                    className="ml-auto shrink-0 rounded-lg p-2 text-white/30 transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
+                    className="ml-auto shrink-0 rounded-lg p-2 text-slate-300 transition-colors hover:bg-red-500/10 hover:text-red-600 disabled:opacity-40"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -525,7 +525,7 @@ export default function SharedBuildsPage() {
       </div>
 
       <Card className="p-4">
-        <p className="text-xs text-white/45">
+        <p className="text-xs text-slate-500">
           Applying a build replaces your current theme, sections, headline and
           bio. Your name, photo and contact details always stay yours, and
           shared links come in blank so you add your own.
@@ -545,21 +545,21 @@ export default function SharedBuildsPage() {
       >
         {applyFor && (
           <div className="space-y-3 pb-2">
-            <p className="text-xs text-white/45">Choose how to apply it:</p>
+            <p className="text-xs text-slate-500">Choose how to apply it:</p>
             <button
               onClick={() => setApplyMode("exact")}
               className={cn(
                 "w-full rounded-xl border p-3 text-left transition-colors",
                 applyMode === "exact"
                   ? "border-electric-500 bg-electric-500/10"
-                  : "border-white/10 hover:border-white/20",
+                  : "border-slate-200 hover:border-slate-300",
               )}
             >
-              <p className="flex items-center gap-1.5 text-sm font-semibold text-white">
-                <Copy className="h-4 w-4 text-electric-400" />
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
+                <Copy className="h-4 w-4 text-electric-600" />
                 Exact copy
               </p>
-              <p className="mt-0.5 text-xs text-white/45">
+              <p className="mt-0.5 text-xs text-slate-500">
                 Copy the theme, layout and copy as-is — then edit it yourself.
               </p>
             </button>
@@ -569,19 +569,19 @@ export default function SharedBuildsPage() {
                 "w-full rounded-xl border p-3 text-left transition-colors",
                 applyMode === "ai"
                   ? "border-electric-500 bg-electric-500/10"
-                  : "border-white/10 hover:border-white/20",
+                  : "border-slate-200 hover:border-slate-300",
               )}
             >
-              <p className="flex items-center gap-1.5 text-sm font-semibold text-white">
-                <Wand2 className="h-4 w-4 text-electric-400" />
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
+                <Wand2 className="h-4 w-4 text-electric-600" />
                 AI rewrite
               </p>
-              <p className="mt-0.5 text-xs text-white/45">
+              <p className="mt-0.5 text-xs text-slate-500">
                 AI rewrites the copy so the build reads as original to you.
               </p>
             </button>
-            <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
-              <p className="text-xs leading-relaxed text-white/45">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <p className="text-xs leading-relaxed text-slate-500">
                 This replaces your current theme, sections, headline and bio.
                 Your name, photo and contact details stay yours.
               </p>
@@ -606,21 +606,21 @@ export default function SharedBuildsPage() {
               key={s.id}
               onClick={() => replaceFor && saveToLocker(replaceFor, s.id)}
               disabled={savingCode}
-              className="flex w-full items-center gap-3 rounded-xl border border-white/10 p-2.5 text-left transition-colors hover:border-white/25 disabled:opacity-50"
+              className="flex w-full items-center gap-3 rounded-xl border border-slate-200 p-2.5 text-left transition-colors hover:border-white/25 disabled:opacity-50"
             >
               <div
                 className="h-9 w-9 shrink-0 rounded-md"
                 style={{ background: themeBackground(s.themeId) }}
               />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-white">
+                <p className="truncate text-sm font-medium text-slate-900">
                   {s.name}
                 </p>
-                <p className="truncate text-xs text-white/40">
+                <p className="truncate text-xs text-slate-400">
                   Shared by {s.ownerName}
                 </p>
               </div>
-              <span className="shrink-0 text-xs font-medium text-red-400">
+              <span className="shrink-0 text-xs font-medium text-red-600">
                 Replace
               </span>
             </button>

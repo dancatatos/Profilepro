@@ -49,21 +49,21 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-ink-950 p-4">
+    <div className="flex min-h-dvh items-center justify-center bg-slate-50 p-4">
       <div className="w-full max-w-sm">
         {/* Header */}
         <div className="mb-8 text-center">
           <div className="mb-4 flex justify-center">
             <Logo />
           </div>
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-gold-400/12 px-3 py-1 text-xs font-medium text-gold-300">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-gold-400/12 px-3 py-1 text-xs font-medium text-amber-700">
             <ShieldCheck className="h-3.5 w-3.5" />
             Admin Portal
           </div>
-          <h1 className="mt-3 font-display text-2xl font-bold text-white">
+          <h1 className="mt-3 font-display text-2xl font-bold text-slate-900">
             Admin Sign In
           </h1>
-          <p className="mt-1 text-sm text-white/45">
+          <p className="mt-1 text-sm text-slate-500">
             Restricted to authorized administrators only.
           </p>
         </div>
@@ -71,7 +71,7 @@ export default function AdminLoginPage() {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-white/60">
+            <label className="mb-1.5 block text-xs font-medium text-slate-500">
               Email address
             </label>
             <Input
@@ -85,7 +85,7 @@ export default function AdminLoginPage() {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-white/60">
+            <label className="mb-1.5 block text-xs font-medium text-slate-500">
               Password
             </label>
             <div className="relative">
@@ -101,7 +101,7 @@ export default function AdminLoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPw((p) => !p)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
               >
                 {showPw ? (
                   <EyeOff className="h-4 w-4" />
@@ -113,7 +113,7 @@ export default function AdminLoginPage() {
           </div>
 
           {error && (
-            <p className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-400">
+            <p className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-600">
               {error}
             </p>
           )}
@@ -129,7 +129,7 @@ export default function AdminLoginPage() {
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-white/25">
+        <p className="mt-6 text-center text-xs text-slate-300">
           This portal is for platform administrators only.
           <br />
           Unauthorized access is prohibited.

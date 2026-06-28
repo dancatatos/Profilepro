@@ -2,15 +2,15 @@ import { forwardRef, type HTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
-  /** Use the lighter glass treatment for nested surfaces. */
+  /** Use the lighter inset treatment for nested surfaces (subtler bg). */
   inset?: boolean;
 }
 
 /**
- * Glassmorphism surface used across the dashboard. forwardRef so
- * callers can measure or animate the underlying div (e.g. the QR page
- * uses a ResizeObserver to compute a responsive QR size from the
- * card's actual width).
+ * Premium SaaS card surface — white background with a soft 1px slate
+ * border and the layered soft-card shadow from globals.css. Sits on
+ * the slate-50 workspace canvas. Inset variant uses slate-50 + a
+ * lighter border for nested rows (lists inside a card, etc.).
  */
 export const Card = forwardRef<HTMLDivElement, CardProps>(function Card(
   { inset, className, children, ...rest },
@@ -21,7 +21,9 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(function Card(
       ref={ref}
       className={cn(
         "rounded-2xl",
-        inset ? "border border-white/[0.05] bg-white/[0.02]" : "glass-card",
+        inset
+          ? "border border-slate-200 bg-slate-50"
+          : "border border-slate-200 bg-white shadow-card-soft",
         className,
       )}
       {...rest}
@@ -45,11 +47,11 @@ export function CardHeader({
   return (
     <div className={cn("flex items-start justify-between gap-3", className)}>
       <div className="min-w-0">
-        <h3 className="font-display text-sm font-semibold text-white">
+        <h3 className="font-display text-sm font-semibold text-slate-900">
           {title}
         </h3>
         {subtitle && (
-          <p className="mt-0.5 text-xs text-white/45">{subtitle}</p>
+          <p className="mt-0.5 text-xs text-slate-500">{subtitle}</p>
         )}
       </div>
       {action}

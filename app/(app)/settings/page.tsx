@@ -77,8 +77,8 @@ export default function SettingsPage() {
       <Card className="p-5">
         <CardHeader title="Your profile" subtitle="Public URL & editing" />
         <div className="mt-4 space-y-3">
-          <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-1.5 pl-3">
-            <span className="flex-1 truncate text-sm text-white/65">
+          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1.5 pl-3">
+            <span className="flex-1 truncate text-sm text-slate-600">
               {profileUrl}
             </span>
             <Button
@@ -116,7 +116,7 @@ export default function SettingsPage() {
             <Badge tone={account.plan === "free" ? "neutral" : "blue"}>
               {currentPlan?.name?.toUpperCase() || account.plan.toUpperCase()}
             </Badge>
-            <span className="text-sm text-white/55">
+            <span className="text-sm text-slate-500">
               {account.plan === "free"
                 ? "Free plan"
                 : `${currentPlan?.name ?? account.plan} plan active`}
@@ -139,8 +139,8 @@ export default function SettingsPage() {
 
       {!isFirebaseConfigured && (
         <Card className="border border-gold-400/20 bg-gold-400/[0.04] p-4">
-          <p className="text-sm font-medium text-gold-200">Demo mode</p>
-          <p className="mt-0.5 text-xs text-white/55">
+          <p className="text-sm font-medium text-amber-700">Demo mode</p>
+          <p className="mt-0.5 text-xs text-slate-500">
             Connect your Firebase project in <code>.env.local</code> to enable
             real accounts, saving and authentication.
           </p>
@@ -152,7 +152,7 @@ export default function SettingsPage() {
         fullWidth
         onClick={signOut}
         leftIcon={<LogOut className="h-4 w-4" />}
-        className="border-red-500/20 text-red-300"
+        className="border-red-500/20 text-red-700"
       >
         Sign out
       </Button>

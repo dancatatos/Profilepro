@@ -127,7 +127,7 @@ export default function TeamEditorPage() {
 
       <PageHeader title={space.name} subtitle={space.description ?? "Team space"} />
 
-      <div className="flex gap-1 border-b border-white/[0.07]">
+      <div className="flex gap-1 border-b border-slate-200">
         {(
           [
             { key: "events" as const, label: "Events", icon: Calendar },
@@ -142,8 +142,8 @@ export default function TeamEditorPage() {
             className={cn(
               "relative -mb-px flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors",
               tab === t.key
-                ? "text-white"
-                : "text-white/45 hover:text-white/75",
+                ? "text-slate-900"
+                : "text-slate-500 hover:text-slate-700",
             )}
           >
             <t.icon className="h-3.5 w-3.5" />
@@ -213,14 +213,14 @@ function EventsTab({ space }: { space: TeamSpace }) {
       </div>
 
       {loading ? (
-        <Card className="p-6 text-center text-sm text-white/40">Loading events…</Card>
+        <Card className="p-6 text-center text-sm text-slate-400">Loading events…</Card>
       ) : events.length === 0 ? (
         <Card className="p-8 text-center">
-          <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-white/[0.05]">
-            <Calendar className="h-6 w-6 text-white/40" />
+          <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
+            <Calendar className="h-6 w-6 text-slate-400" />
           </span>
-          <p className="text-sm font-medium text-white">No events yet</p>
-          <p className="mt-1 text-xs text-white/50">
+          <p className="text-sm font-medium text-slate-900">No events yet</p>
+          <p className="mt-1 text-xs text-slate-500">
             Create your first event and your members get notified by email + push
             once you publish.
           </p>
@@ -229,7 +229,7 @@ function EventsTab({ space }: { space: TeamSpace }) {
         <>
           {upcoming.length > 0 && (
             <div className="space-y-2.5">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-white/45">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                 Upcoming
               </p>
               {upcoming.map((e) => (
@@ -239,7 +239,7 @@ function EventsTab({ space }: { space: TeamSpace }) {
           )}
           {past.length > 0 && (
             <div className="space-y-2.5">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-white/45">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                 Past + canceled
               </p>
               {past.map((e) => (
@@ -280,12 +280,12 @@ function EventRow({
         dimmed && "opacity-60",
       )}
     >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-electric-500/15 text-electric-300">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-electric-500/15 text-electric-700">
         <Calendar className="h-5 w-5" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-white">{event.title}</p>
-        <p className="mt-0.5 text-xs text-white/45">
+        <p className="truncate text-sm font-medium text-slate-900">{event.title}</p>
+        <p className="mt-0.5 text-xs text-slate-500">
           {when} · {event.timezone}
         </p>
       </div>
@@ -319,7 +319,7 @@ function MembersTab({ spaceId }: { spaceId: string }) {
 
   if (loading) {
     return (
-      <Card className="p-6 text-center text-sm text-white/40">
+      <Card className="p-6 text-center text-sm text-slate-400">
         Loading members…
       </Card>
     );
@@ -327,14 +327,14 @@ function MembersTab({ spaceId }: { spaceId: string }) {
 
   if (members.length === 0) {
     return (
-      <Card className="p-8 text-center text-sm text-white/55">
+      <Card className="p-8 text-center text-sm text-slate-500">
         No members yet. Share your join link or QR from the Settings tab.
       </Card>
     );
   }
 
   return (
-    <Card className="divide-y divide-white/[0.06] p-0">
+    <Card className="divide-y divide-slate-200 p-0">
       {members.map((m) => {
         /* Prefer the denormalised display name + email saved at join
            time. Falls back to the raw uid only for legacy memberships
@@ -351,18 +351,18 @@ function MembersTab({ spaceId }: { spaceId: string }) {
                 className="h-9 w-9 shrink-0 rounded-xl object-cover"
               />
             ) : (
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.05] text-white/55">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
                 <Users className="h-4 w-4" />
               </span>
             )}
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-white">{name}</p>
+              <p className="truncate text-sm font-medium text-slate-900">{name}</p>
               {subtitle && (
-                <p className="truncate text-[11px] text-white/45">
+                <p className="truncate text-[11px] text-slate-500">
                   {subtitle}
                 </p>
               )}
-              <p className="mt-0.5 text-xs text-white/45">
+              <p className="mt-0.5 text-xs text-slate-500">
                 Joined {timeAgo(m.joinedAt)} · via {m.joinedVia}
               </p>
             </div>
@@ -438,15 +438,15 @@ function SettingsTab({
     <div className="space-y-4">
       {/* Join link + code + QR */}
       <Card className="space-y-3 p-4">
-        <p className="text-[10px] font-medium uppercase tracking-wider text-white/45">
+        <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">
           Invite to team
         </p>
-        <p className="text-xs text-white/55">
+        <p className="text-xs text-slate-500">
           Share this link, code, or QR with your team. Anyone who opens
           it can sign up + join in two taps.
         </p>
         <div className="flex items-center gap-2">
-          <code className="flex-1 truncate rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 font-mono text-xs text-electric-300">
+          <code className="flex-1 truncate rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-xs text-electric-700">
             {joinUrl}
           </code>
           <Button
@@ -459,7 +459,7 @@ function SettingsTab({
           </Button>
         </div>
         <div className="flex items-center gap-2">
-          <code className="flex-1 truncate rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 font-mono text-xs text-white/80">
+          <code className="flex-1 truncate rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-xs text-slate-700">
             {space.activationCode}
           </code>
           <Button
@@ -482,21 +482,21 @@ function SettingsTab({
 
       {/* Details */}
       <Card className="space-y-3 p-4">
-        <p className="text-[10px] font-medium uppercase tracking-wider text-white/45">
+        <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">
           Details
         </p>
         <div>
-          <label className="mb-1 block text-xs font-medium text-white/55">
+          <label className="mb-1 block text-xs font-medium text-slate-500">
             Name
           </label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="h-10 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 text-sm text-white outline-none focus:border-electric-500/60"
+            className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none focus:border-electric-500/60"
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-white/55">
+          <label className="mb-1 block text-xs font-medium text-slate-500">
             Description
           </label>
           <textarea
@@ -504,11 +504,11 @@ function SettingsTab({
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
             placeholder="What is this team for?"
-            className="w-full resize-none rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-electric-500/60"
+            className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 outline-none placeholder:text-slate-300 focus:border-electric-500/60"
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-white/55">
+          <label className="mb-1 block text-xs font-medium text-slate-500">
             Banner
           </label>
           <ImageUploadField
@@ -526,10 +526,10 @@ function SettingsTab({
 
       {/* Danger zone */}
       <Card className="space-y-2 border-red-500/15 bg-red-500/[0.02] p-4">
-        <p className="text-[10px] font-medium uppercase tracking-wider text-red-300/80">
+        <p className="text-[10px] font-medium uppercase tracking-wider text-red-700/80">
           Danger zone
         </p>
-        <p className="text-xs text-white/55">
+        <p className="text-xs text-slate-500">
           Deleting removes the team, all events, all memberships, all RSVPs.
           Cannot be undone.
         </p>
@@ -537,7 +537,7 @@ function SettingsTab({
           variant="outline"
           onClick={() => setConfirmDelete(true)}
           leftIcon={<Trash2 className="h-3.5 w-3.5" />}
-          className="!border-red-500/30 !text-red-300 hover:!bg-red-500/10"
+          className="!border-red-500/30 !text-red-700 hover:!bg-red-500/10"
         >
           Delete team
         </Button>
@@ -566,7 +566,7 @@ function SettingsTab({
       >
         <div className="space-y-3 pb-2">
           <QRBlock value={joinUrl} display={260} fileName={`team-${space.id}`} />
-          <p className="text-center text-[11px] text-white/45">
+          <p className="text-center text-[11px] text-slate-500">
             Or share the direct link: <code>{joinUrl}</code>
           </p>
         </div>
@@ -660,10 +660,10 @@ function BundleEditor({
   return (
     <Card className="space-y-4 p-4">
       <div>
-        <p className="text-[10px] font-medium uppercase tracking-wider text-white/45">
+        <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">
           Onboarding bundle
         </p>
-        <p className="mt-1 text-xs text-white/55">
+        <p className="mt-1 text-xs text-slate-500">
           When someone joins this team, automatically grant access to these
           items. Plan caps apply on the recruit&apos;s side — over-cap items
           are silently skipped.
@@ -671,7 +671,7 @@ function BundleEditor({
       </div>
 
       {loading ? (
-        <p className="text-xs text-white/45">Loading your library…</p>
+        <p className="text-xs text-slate-500">Loading your library…</p>
       ) : (
         <>
           <BundleGroup
@@ -706,8 +706,8 @@ function BundleEditor({
             onChange={setEventIds}
           />
 
-          <div className="flex items-center justify-between border-t border-white/[0.06] pt-3">
-            <p className="text-xs text-white/55">
+          <div className="flex items-center justify-between border-t border-slate-200 pt-3">
+            <p className="text-xs text-slate-500">
               {totalSelected === 0
                 ? "No items selected. New members get team access only."
                 : `${totalSelected} item${totalSelected === 1 ? "" : "s"} will be granted on join.`}
@@ -745,15 +745,15 @@ function BundleGroup({
   };
   return (
     <div>
-      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-white/70">
+      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-600">
         {label} {selected.length > 0 && (
-          <span className="ml-1 rounded bg-electric-500/15 px-1.5 py-0.5 text-[10px] text-electric-300">
+          <span className="ml-1 rounded bg-electric-500/15 px-1.5 py-0.5 text-[10px] text-electric-700">
             {selected.length}
           </span>
         )}
       </p>
       {items.length === 0 ? (
-        <p className="text-[11px] italic text-white/35">{empty}</p>
+        <p className="text-[11px] italic text-slate-400">{empty}</p>
       ) : (
         <div className="flex flex-wrap gap-1.5">
           {items.map((it) => {
@@ -767,7 +767,7 @@ function BundleGroup({
                   "max-w-full truncate rounded-md border px-2 py-1 text-xs transition-colors",
                   active
                     ? "border-electric-500/50 bg-electric-500/15 text-electric-100"
-                    : "border-white/10 bg-white/[0.02] text-white/55 hover:text-white",
+                    : "border-slate-200 bg-slate-50 text-slate-500 hover:text-slate-900",
                 )}
               >
                 {it.label}

@@ -109,12 +109,12 @@ export function PaymentMethodsEditor() {
       />
 
       {methods.length === 0 ? (
-        <div className="mt-4 rounded-xl border border-dashed border-white/10 py-6 text-center">
-          <Wallet className="mx-auto mb-2 h-6 w-6 text-white/20" />
-          <p className="text-sm font-medium text-white/55">
+        <div className="mt-4 rounded-xl border border-dashed border-slate-200 py-6 text-center">
+          <Wallet className="mx-auto mb-2 h-6 w-6 text-slate-300" />
+          <p className="text-sm font-medium text-slate-500">
             No payment methods yet
           </p>
-          <p className="mt-1 text-xs text-white/35">
+          <p className="mt-1 text-xs text-slate-400">
             Add your GCash, Maya, or bank account so you can accept
             manual payments through your funnels.
           </p>
@@ -177,27 +177,27 @@ function PaymentMethodRow({
       className={cn(
         "rounded-xl border p-3",
         method.enabled
-          ? "border-white/[0.07] bg-white/[0.02]"
-          : "border-white/[0.05] bg-white/[0.01] opacity-60",
+          ? "border-slate-200 bg-slate-50"
+          : "border-slate-200 bg-white/[0.01] opacity-60",
       )}
     >
       <div className="mb-2 flex items-center gap-2">
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-electric-500/15 text-electric-300">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-electric-500/15 text-electric-700">
           {methodIcon(method.type)}
         </span>
         <input
           value={method.label}
           onChange={(e) => onChange({ label: e.target.value })}
           placeholder="Display label (e.g. Main GCash)"
-          className="h-8 flex-1 rounded border border-white/[0.07] bg-white/[0.03] px-2 text-sm text-white outline-none focus:border-electric-500/40"
+          className="h-8 flex-1 rounded border border-slate-200 bg-slate-50 px-2 text-sm text-slate-900 outline-none focus:border-electric-500/40"
         />
         {/* Enable / disable toggle */}
-        <label className="flex shrink-0 items-center gap-1.5 text-[10px] text-white/55">
+        <label className="flex shrink-0 items-center gap-1.5 text-[10px] text-slate-500">
           <input
             type="checkbox"
             checked={method.enabled}
             onChange={(e) => onChange({ enabled: e.target.checked })}
-            className="h-3.5 w-3.5 cursor-pointer rounded border-white/20 bg-white/[0.04] accent-electric-500"
+            className="h-3.5 w-3.5 cursor-pointer rounded border-slate-300 bg-slate-100 accent-electric-500"
           />
           Active
         </label>
@@ -205,7 +205,7 @@ function PaymentMethodRow({
           type="button"
           onClick={onRemove}
           aria-label="Remove method"
-          className="rounded p-1 text-white/25 hover:bg-red-500/10 hover:text-red-400"
+          className="rounded p-1 text-slate-300 hover:bg-red-500/10 hover:text-red-600"
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>
@@ -225,7 +225,7 @@ function PaymentMethodRow({
               ? "Phone number (e.g. 0917-xxx-xxxx)"
               : "Account number"
           }
-          className="h-10 rounded-xl border border-white/[0.07] bg-white/[0.03] px-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-electric-500/40"
+          className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none placeholder:text-slate-300 focus:border-electric-500/40"
         />
       </div>
 
@@ -233,7 +233,7 @@ function PaymentMethodRow({
         value={method.accountName}
         onChange={(e) => onChange({ accountName: e.target.value })}
         placeholder="Account name (visitors verify this matches before sending)"
-        className="mt-2 h-10 w-full rounded-xl border border-white/[0.07] bg-white/[0.03] px-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-electric-500/40"
+        className="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none placeholder:text-slate-300 focus:border-electric-500/40"
       />
 
       {/* Optional QR code upload */}
@@ -241,10 +241,10 @@ function PaymentMethodRow({
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-white/[0.03] transition-colors hover:border-electric-500/40"
+          className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-50 transition-colors hover:border-electric-500/40"
         >
           {uploading ? (
-            <Loader2 className="h-4 w-4 animate-spin text-white/40" />
+            <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
           ) : method.qrImageUrl ? (
             <img
               src={method.qrImageUrl}
@@ -252,7 +252,7 @@ function PaymentMethodRow({
               className="h-full w-full object-cover"
             />
           ) : (
-            <ImagePlus className="h-4 w-4 text-white/30" />
+            <ImagePlus className="h-4 w-4 text-slate-300" />
           )}
         </button>
         <input
@@ -263,10 +263,10 @@ function PaymentMethodRow({
           className="hidden"
         />
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-medium text-white/65">
-            QR code <span className="text-white/35">(optional)</span>
+          <p className="text-[11px] font-medium text-slate-600">
+            QR code <span className="text-slate-400">(optional)</span>
           </p>
-          <p className="text-[10px] text-white/35">
+          <p className="text-[10px] text-slate-400">
             Upload your in-app QR so visitors can scan & pay faster.
           </p>
         </div>
@@ -274,7 +274,7 @@ function PaymentMethodRow({
           <button
             type="button"
             onClick={() => onChange({ qrImageUrl: undefined })}
-            className="text-[10px] text-red-300/80 hover:text-red-300"
+            className="text-[10px] text-red-700/80 hover:text-red-700"
           >
             Remove
           </button>

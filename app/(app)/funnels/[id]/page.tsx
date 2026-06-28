@@ -54,7 +54,7 @@ import type {
 } from "@/types";
 
 const FIELD =
-  "h-10 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-electric-500/60";
+  "h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 placeholder:text-slate-300 outline-none focus:border-electric-500/60";
 
 const STEP_TYPES: { value: FunnelStepType; label: string; hint: string }[] = [
   { value: "optin", label: "Opt-In", hint: "Capture a name + contact" },
@@ -100,11 +100,11 @@ function StepShareLink({
       () => toast.error("Couldn't copy — copy manually"),
     );
   return (
-    <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
-      <p className="mb-1.5 text-xs font-medium text-white/65">
+    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+      <p className="mb-1.5 text-xs font-medium text-slate-600">
         Step share link
       </p>
-      <p className="mb-2 text-[10px] text-white/45">
+      <p className="mb-2 text-[10px] text-slate-500">
         Send visitors directly to this step from anywhere — email,
         DM, another funnel, social bios. Funnel still behaves
         normally once they land.
@@ -125,7 +125,7 @@ function StepShareLink({
           Copy link
         </Button>
       </div>
-      <p className="mt-2 break-all rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 py-2 font-mono text-[11px] text-electric-300">
+      <p className="mt-2 break-all rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-[11px] text-electric-700">
         {shareUrl}
       </p>
     </div>
@@ -146,7 +146,7 @@ function StepCtaEditor({
     return (
       <button
         onClick={() => onChange({ label: "Continue", action: "next" })}
-        className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/15 py-2.5 text-xs font-medium text-white/55 hover:border-electric-500/40 hover:text-white"
+        className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-300 py-2.5 text-xs font-medium text-slate-500 hover:border-electric-500/40 hover:text-slate-900"
       >
         <Plus className="h-4 w-4" />
         Add a button
@@ -154,12 +154,12 @@ function StepCtaEditor({
     );
   }
   return (
-    <div className="space-y-2 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
+    <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-medium text-white/65">Step button</p>
+        <p className="text-xs font-medium text-slate-600">Step button</p>
         <button
           onClick={() => onChange(undefined)}
-          className="text-xs text-white/35 hover:text-red-400"
+          className="text-xs text-slate-400 hover:text-red-600"
         >
           Remove
         </button>
@@ -332,11 +332,11 @@ export default function FunnelBuilderPage() {
   if (!funnel) {
     return (
       <Card className="p-8 text-center">
-        <p className="text-sm font-medium text-white">Funnel not found</p>
-        <p className="mt-1 text-xs text-white/45">It may have been deleted.</p>
+        <p className="text-sm font-medium text-slate-900">Funnel not found</p>
+        <p className="mt-1 text-xs text-slate-500">It may have been deleted.</p>
         <Link
           href="/funnels"
-          className="mt-4 inline-flex rounded-xl border border-white/12 px-4 py-2 text-xs font-medium text-white/70 hover:bg-white/5"
+          className="mt-4 inline-flex rounded-xl border border-white/12 px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100"
         >
           Back to Funnels
         </Link>
@@ -347,12 +347,12 @@ export default function FunnelBuilderPage() {
   if (account && funnel.ownerId !== account.uid) {
     return (
       <Card className="p-8 text-center">
-        <p className="text-sm font-medium text-white">
+        <p className="text-sm font-medium text-slate-900">
           This isn&apos;t your funnel
         </p>
         <Link
           href="/funnels"
-          className="mt-4 inline-flex rounded-xl border border-white/12 px-4 py-2 text-xs font-medium text-white/70 hover:bg-white/5"
+          className="mt-4 inline-flex rounded-xl border border-white/12 px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100"
         >
           Back to Funnels
         </Link>
@@ -411,15 +411,15 @@ export default function FunnelBuilderPage() {
           <Link
             href="/funnels"
             aria-label="Back to Funnels"
-            className="rounded-lg p-1.5 text-white/40 hover:bg-white/5 hover:text-white"
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-900"
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div className="min-w-0 flex-1">
-            <h1 className="truncate font-display text-xl font-bold text-white">
+            <h1 className="truncate font-display text-xl font-bold text-slate-900">
               {funnel.name}
             </h1>
-            <p className="text-xs text-white/45">
+            <p className="text-xs text-slate-500">
               {dirty ? "Unsaved changes" : "All changes saved"}
             </p>
           </div>
@@ -514,7 +514,7 @@ export default function FunnelBuilderPage() {
         <CardHeader title="Funnel settings" subtitle="Name, link and status" />
         <div className="mt-3 space-y-3">
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-white/65">
+            <label className="mb-1.5 block text-xs font-medium text-slate-600">
               Funnel name
             </label>
             <input
@@ -524,7 +524,7 @@ export default function FunnelBuilderPage() {
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-white/65">
+            <label className="mb-1.5 block text-xs font-medium text-slate-600">
               Link slug
             </label>
             <input
@@ -536,7 +536,7 @@ export default function FunnelBuilderPage() {
                 can grab the link without opening any modal. The Link
                 button opens the full share sheet (native share / QR). */}
             <div className="mt-1.5 flex items-center gap-1.5">
-              <p className="min-w-0 flex-1 truncate text-[11px] text-white/35">
+              <p className="min-w-0 flex-1 truncate text-[11px] text-slate-400">
                 {publicPath}
               </p>
               <button
@@ -547,7 +547,7 @@ export default function FunnelBuilderPage() {
                   else toast.error("Couldn't copy — long-press to copy.");
                 }}
                 aria-label="Copy funnel link"
-                className="shrink-0 rounded-md p-1 text-white/40 hover:bg-white/5 hover:text-white"
+                className="shrink-0 rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-900"
               >
                 <Copy className="h-3.5 w-3.5" />
               </button>
@@ -555,33 +555,33 @@ export default function FunnelBuilderPage() {
                 type="button"
                 onClick={() => setLinkOpen(true)}
                 aria-label="Open share sheet"
-                className="shrink-0 rounded-md p-1 text-white/40 hover:bg-white/5 hover:text-electric-300"
+                className="shrink-0 rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-electric-700"
               >
                 <Link2 className="h-3.5 w-3.5" />
               </button>
             </div>
           </div>
           <div>
-            <p className="mb-1.5 text-xs font-medium text-white/65">Theme</p>
+            <p className="mb-1.5 text-xs font-medium text-slate-600">Theme</p>
             <button
               onClick={() => setThemeOpen(true)}
-              className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-2 text-left transition-colors hover:border-white/25"
+              className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-2 text-left transition-colors hover:border-white/25"
             >
               <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md">
                 <ThemeMiniPreview theme={currentTheme} />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-white">
+                <p className="truncate text-sm font-medium text-slate-900">
                   {currentTheme.name}
                 </p>
-                <p className="text-[11px] text-white/40">Tap to change</p>
+                <p className="text-[11px] text-slate-400">Tap to change</p>
               </div>
             </button>
           </div>
-          <div className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
+          <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-3">
             <div>
-              <p className="text-sm font-medium text-white">Published</p>
-              <p className="text-xs text-white/45">
+              <p className="text-sm font-medium text-slate-900">Published</p>
+              <p className="text-xs text-slate-500">
                 {funnel.status === "published"
                   ? "Live at your funnel link"
                   : "Only you can see it"}
@@ -603,17 +603,17 @@ export default function FunnelBuilderPage() {
               actually has pipelines set up — otherwise the dropdown would
               be empty and confusing. */}
           {pipelines.length > 0 && (
-            <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
               <div className="mb-1.5 flex items-center justify-between gap-2">
-                <p className="text-sm font-medium text-white">Lead destination</p>
+                <p className="text-sm font-medium text-slate-900">Lead destination</p>
                 <Link
                   href="/pipelines"
-                  className="text-[10px] text-electric-400 hover:text-electric-300"
+                  className="text-[10px] text-electric-600 hover:text-electric-700"
                 >
                   Open pipelines →
                 </Link>
               </div>
-              <p className="mb-2 text-xs text-white/45">
+              <p className="mb-2 text-xs text-slate-500">
                 Where new leads from this funnel will land. They start in
                 the first stage of the chosen pipeline.
               </p>
@@ -654,20 +654,20 @@ export default function FunnelBuilderPage() {
                 "flex items-center gap-2 rounded-xl border p-2",
                 step.id === currentStep.id
                   ? "border-electric-500 bg-electric-500/10"
-                  : "border-white/[0.07] bg-white/[0.02]",
+                  : "border-slate-200 bg-slate-50",
               )}
             >
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/[0.06] text-xs text-white/50">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-100 text-xs text-slate-500">
                 {i + 1}
               </span>
               <button
                 onClick={() => setCurrentStepId(step.id)}
                 className="min-w-0 flex-1 text-left"
               >
-                <p className="truncate text-sm font-medium text-white">
+                <p className="truncate text-sm font-medium text-slate-900">
                   {step.name}
                 </p>
-                <p className="text-xs text-white/40">
+                <p className="text-xs text-slate-400">
                   {stepTypeLabel(step.type)}
                 </p>
               </button>
@@ -675,7 +675,7 @@ export default function FunnelBuilderPage() {
                 onClick={() => moveStep(i, -1)}
                 disabled={i === 0}
                 aria-label="Move step up"
-                className="rounded-md p-1 text-white/35 hover:text-white disabled:opacity-25"
+                className="rounded-md p-1 text-slate-400 hover:text-slate-900 disabled:opacity-25"
               >
                 <ChevronUp className="h-4 w-4" />
               </button>
@@ -683,7 +683,7 @@ export default function FunnelBuilderPage() {
                 onClick={() => moveStep(i, 1)}
                 disabled={i === funnel.steps.length - 1}
                 aria-label="Move step down"
-                className="rounded-md p-1 text-white/35 hover:text-white disabled:opacity-25"
+                className="rounded-md p-1 text-slate-400 hover:text-slate-900 disabled:opacity-25"
               >
                 <ChevronDown className="h-4 w-4" />
               </button>
@@ -691,7 +691,7 @@ export default function FunnelBuilderPage() {
                 onClick={() => removeStep(step.id)}
                 disabled={funnel.steps.length <= 1}
                 aria-label="Delete step"
-                className="rounded-md p-1 text-white/30 hover:text-red-400 disabled:opacity-25"
+                className="rounded-md p-1 text-slate-300 hover:text-red-600 disabled:opacity-25"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -699,7 +699,7 @@ export default function FunnelBuilderPage() {
           ))}
           <button
             onClick={() => setAddStepOpen(true)}
-            className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/15 py-2.5 text-xs font-medium text-white/55 hover:border-electric-500/40 hover:text-white"
+            className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-300 py-2.5 text-xs font-medium text-slate-500 hover:border-electric-500/40 hover:text-slate-900"
           >
             <Plus className="h-4 w-4" />
             Add step
@@ -716,7 +716,7 @@ export default function FunnelBuilderPage() {
         <div className="mt-3 space-y-3">
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-white/65">
+              <label className="mb-1.5 block text-xs font-medium text-slate-600">
                 Step name
               </label>
               <input
@@ -728,7 +728,7 @@ export default function FunnelBuilderPage() {
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-white/65">
+              <label className="mb-1.5 block text-xs font-medium text-slate-600">
                 Step type
               </label>
               <Select
@@ -762,7 +762,7 @@ export default function FunnelBuilderPage() {
           />
 
           <div>
-            <p className="mb-2 text-xs font-medium text-white/65">
+            <p className="mb-2 text-xs font-medium text-slate-600">
               Page content
             </p>
             <SectionsProvider value={sectionsApi}>
@@ -783,13 +783,13 @@ export default function FunnelBuilderPage() {
             onClick={loadAnalytics}
             disabled={analyticsLoading}
             aria-label="Refresh analytics"
-            className="shrink-0 rounded-lg p-1.5 text-white/40 hover:bg-white/5 hover:text-white disabled:opacity-40"
+            className="shrink-0 rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40"
           >
             <RefreshCw className="h-4 w-4" />
           </button>
         </div>
         {entered === 0 ? (
-          <p className="mt-3 text-xs text-white/45">
+          <p className="mt-3 text-xs text-slate-500">
             No visits yet — publish your funnel and share its link to start
             tracking step-by-step drop-off.
           </p>
@@ -802,14 +802,14 @@ export default function FunnelBuilderPage() {
                 return (
                   <div key={step.id}>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="truncate text-white/70">
+                      <span className="truncate text-slate-600">
                         {i + 1}. {step.name}
                       </span>
-                      <span className="shrink-0 text-white/45">
+                      <span className="shrink-0 text-slate-500">
                         {views} view{views === 1 ? "" : "s"}
                       </span>
                     </div>
-                    <div className="mt-1 h-2 overflow-hidden rounded-full bg-white/[0.06]">
+                    <div className="mt-1 h-2 overflow-hidden rounded-full bg-slate-100">
                       <div
                         className="h-full rounded-full bg-electric-500"
                         style={{ width: `${pct}%` }}
@@ -819,7 +819,7 @@ export default function FunnelBuilderPage() {
                 );
               })}
             </div>
-            <p className="mt-3 text-xs text-white/45">
+            <p className="mt-3 text-xs text-slate-500">
               {entered} entered · {finished} reached the end · {completion}%
               completion
             </p>
@@ -829,8 +829,8 @@ export default function FunnelBuilderPage() {
 
           </div>
         </div>
-        <div className="hidden lg:flex lg:w-[400px] lg:shrink-0 lg:flex-col lg:items-center lg:overflow-y-auto lg:border-l lg:border-white/[0.06] lg:bg-ink-900/30 lg:px-6 lg:py-6">
-          <p className="mb-3 text-center text-xs font-medium text-white/40">
+        <div className="hidden lg:flex lg:w-[400px] lg:shrink-0 lg:flex-col lg:items-center lg:overflow-y-auto lg:border-l lg:border-slate-200 lg:bg-white/30 lg:px-6 lg:py-6">
+          <p className="mb-3 text-center text-xs font-medium text-slate-400">
             Live preview · {currentStep.name}
           </p>
           <FunnelPhonePreview
@@ -853,10 +853,10 @@ export default function FunnelBuilderPage() {
             <button
               key={t.value}
               onClick={() => addStep(t.value)}
-              className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3 text-left hover:border-electric-500/40"
+              className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-left hover:border-electric-500/40"
             >
-              <p className="text-sm font-medium text-white">{t.label}</p>
-              <p className="text-xs text-white/45">{t.hint}</p>
+              <p className="text-sm font-medium text-slate-900">{t.label}</p>
+              <p className="text-xs text-slate-500">{t.hint}</p>
             </button>
           ))}
         </div>

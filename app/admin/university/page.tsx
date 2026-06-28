@@ -273,10 +273,10 @@ export default function AdminUniversityPage() {
           gets squeezed off-screen at narrow widths. */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <h1 className="font-display text-xl font-bold text-white sm:text-2xl">
+          <h1 className="font-display text-xl font-bold text-slate-900 sm:text-2xl">
             Credibly University
           </h1>
-          <p className="text-xs text-white/45 sm:text-sm">
+          <p className="text-xs text-slate-500 sm:text-sm">
             Manage training topic cards shown on /university.
           </p>
         </div>
@@ -303,16 +303,16 @@ export default function AdminUniversityPage() {
       </div>
 
       {loading && topics.length === 0 ? (
-        <Card className="flex h-40 items-center justify-center text-sm text-white/40">
+        <Card className="flex h-40 items-center justify-center text-sm text-slate-400">
           Loading topics…
         </Card>
       ) : sorted.length === 0 ? (
         <Card className="flex flex-col items-center justify-center gap-3 p-10 text-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.04]">
-            <GraduationCap className="h-6 w-6 text-white/30" />
+          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100">
+            <GraduationCap className="h-6 w-6 text-slate-300" />
           </span>
-          <p className="text-sm font-medium text-white">No topics yet</p>
-          <p className="max-w-sm text-xs text-white/45">
+          <p className="text-sm font-medium text-slate-900">No topics yet</p>
+          <p className="max-w-sm text-xs text-slate-500">
             Click <strong>New topic</strong> to create your first lesson card.
           </p>
         </Card>
@@ -439,7 +439,7 @@ function TopicEditor({
              state stays as short as physically possible. */
           "overflow-hidden p-0",
           topic.active
-            ? "border border-white/[0.06]"
+            ? "border border-slate-200"
             : "border border-gold-400/30 bg-gold-400/[0.02]",
           isDragging && "ring-2 ring-electric-500/50",
         )}
@@ -452,7 +452,7 @@ function TopicEditor({
             non-control area (title + thumb) to expand/collapse. */}
         <div
           className={cn(
-            "flex items-center gap-2 border-b border-white/[0.06] bg-white/[0.02] px-3 py-2",
+            "flex items-center gap-2 border-b border-slate-200 bg-slate-50 px-3 py-2",
             !expanded && "border-b-transparent",
           )}
         >
@@ -463,7 +463,7 @@ function TopicEditor({
             {...attributes}
             {...listeners}
             aria-label="Drag to reorder"
-            className="cursor-grab rounded-md p-1 text-white/30 hover:text-white/65 active:cursor-grabbing"
+            className="cursor-grab rounded-md p-1 text-slate-300 hover:text-slate-600 active:cursor-grabbing"
           >
             <GripVertical className="h-4 w-4" />
           </button>
@@ -473,7 +473,7 @@ function TopicEditor({
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
-            className="flex h-9 w-16 shrink-0 items-center justify-center overflow-hidden rounded border border-white/10 bg-white/[0.04]"
+            className="flex h-9 w-16 shrink-0 items-center justify-center overflow-hidden rounded border border-slate-200 bg-slate-100"
             aria-label={expanded ? "Collapse topic" : "Expand topic"}
           >
             {topic.bannerUrl ? (
@@ -483,7 +483,7 @@ function TopicEditor({
                 className="h-full w-full object-cover"
               />
             ) : (
-              <ImagePlus className="h-3.5 w-3.5 text-white/30" />
+              <ImagePlus className="h-3.5 w-3.5 text-slate-300" />
             )}
           </button>
 
@@ -497,12 +497,12 @@ function TopicEditor({
             <p
               className={cn(
                 "truncate text-sm font-semibold",
-                topic.title ? "text-white" : "italic text-white/35",
+                topic.title ? "text-slate-900" : "italic text-slate-400",
               )}
             >
               {topic.title || "Untitled topic"}
             </p>
-            <p className="truncate text-[10px] text-white/40">
+            <p className="truncate text-[10px] text-slate-400">
               {topic.category || "Uncategorised"} · #{topic.sortOrder}
               {lessonCount > 0 && ` · ${lessonCount} lesson${lessonCount === 1 ? "" : "s"}`}
             </p>
@@ -516,7 +516,7 @@ function TopicEditor({
               {topic.active ? "Active" : "Draft"}
             </Badge>
             {dirty && (
-              <span className="rounded-md bg-electric-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-electric-300">
+              <span className="rounded-md bg-electric-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-electric-700">
                 Unsaved
               </span>
             )}
@@ -541,8 +541,8 @@ function TopicEditor({
             className={cn(
               "flex shrink-0 items-center gap-1.5 rounded-md border px-2 py-1.5 text-[11px] font-semibold transition-colors disabled:opacity-40 sm:px-2.5",
               dirty
-                ? "border-electric-500/40 bg-electric-500/15 text-electric-200 hover:bg-electric-500/25"
-                : "border-white/[0.07] bg-white/[0.03] text-white/40",
+                ? "border-electric-500/40 bg-electric-500/15 text-electric-700 hover:bg-electric-500/25"
+                : "border-slate-200 bg-slate-50 text-slate-400",
             )}
           >
             {saving ? (
@@ -560,7 +560,7 @@ function TopicEditor({
             type="button"
             onClick={() => setExpanded((v) => !v)}
             aria-label={expanded ? "Collapse" : "Expand"}
-            className="shrink-0 rounded-md p-1.5 text-white/40 transition-colors hover:bg-white/[0.05] hover:text-white"
+            className="shrink-0 rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900"
           >
             {expanded ? (
               <ChevronUp className="h-4 w-4" />
@@ -576,7 +576,7 @@ function TopicEditor({
             onClick={onDelete}
             disabled={saving}
             aria-label="Delete topic"
-            className="shrink-0 rounded-md p-1.5 text-white/30 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
+            className="shrink-0 rounded-md p-1.5 text-slate-300 hover:bg-red-500/10 hover:text-red-600 disabled:opacity-40"
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -589,13 +589,13 @@ function TopicEditor({
             doesn't eat half the screen. Desktop keeps the full
             260px column. */}
         <div>
-          <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-white/40">
+          <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-slate-400">
             Banner
           </label>
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="relative mx-auto flex aspect-video w-full max-w-[260px] items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-white/[0.03] transition-colors hover:border-electric-500/40 lg:max-w-none"
+            className="relative mx-auto flex aspect-video w-full max-w-[260px] items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50 transition-colors hover:border-electric-500/40 lg:max-w-none"
           >
             {topic.bannerUrl ? (
               <img
@@ -604,14 +604,14 @@ function TopicEditor({
                 className="h-full w-full object-cover"
               />
             ) : (
-              <div className="flex flex-col items-center gap-2 text-white/40">
+              <div className="flex flex-col items-center gap-2 text-slate-400">
                 <ImagePlus className="h-8 w-8" />
                 <span className="text-xs">Click to upload (16:9)</span>
               </div>
             )}
             {uploading && (
               <span className="absolute inset-0 flex items-center justify-center bg-black/60">
-                <Loader2 className="h-5 w-5 animate-spin text-white" />
+                <Loader2 className="h-5 w-5 animate-spin text-slate-900" />
               </span>
             )}
           </button>
@@ -626,7 +626,7 @@ function TopicEditor({
             <button
               type="button"
               onClick={() => onChange({ bannerUrl: "" })}
-              className="mt-2 flex items-center gap-1 text-[11px] text-red-300/80 hover:text-red-300"
+              className="mt-2 flex items-center gap-1 text-[11px] text-red-700/80 hover:text-red-700"
             >
               <Trash2 className="h-3 w-3" />
               Remove banner
@@ -644,7 +644,7 @@ function TopicEditor({
           />
 
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-white/55">
+            <label className="mb-1.5 block text-xs font-medium text-slate-500">
               Description / subtitle
             </label>
             <textarea
@@ -652,7 +652,7 @@ function TopicEditor({
               onChange={(e) => onChange({ description: e.target.value })}
               placeholder="One or two sentences — appears under the title on the card."
               rows={2}
-              className="w-full rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-electric-500/40"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 outline-none placeholder:text-slate-300 focus:border-electric-500/40"
             />
           </div>
 
@@ -666,8 +666,8 @@ function TopicEditor({
 
           {/* Fallback button — used only when the topic has NO lessons.
               For new topics, leave both blank and add lessons below. */}
-          <details className="rounded-xl border border-white/[0.07] bg-white/[0.02]">
-            <summary className="cursor-pointer px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-white/40 hover:text-white/65">
+          <details className="rounded-xl border border-slate-200 bg-slate-50">
+            <summary className="cursor-pointer px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-slate-400 hover:text-slate-600">
               Legacy fallback button (used only if no lessons added)
             </summary>
             <div className="grid gap-3 px-3 pb-3 sm:grid-cols-2">
@@ -698,7 +698,7 @@ function TopicEditor({
 
           {/* Plan visibility */}
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-white/55">
+            <label className="mb-1.5 block text-xs font-medium text-slate-500">
               Visible to plans
             </label>
             <div className="flex flex-wrap gap-1.5">
@@ -711,8 +711,8 @@ function TopicEditor({
                     onClick={() => togglePlan(p.id)}
                     className={
                       on
-                        ? "rounded-lg border border-electric-500/50 bg-electric-500/15 px-2.5 py-1 text-xs font-medium text-electric-300"
-                        : "rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs font-medium text-white/55 hover:bg-white/[0.08]"
+                        ? "rounded-lg border border-electric-500/50 bg-electric-500/15 px-2.5 py-1 text-xs font-medium text-electric-700"
+                        : "rounded-lg border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500 hover:bg-slate-200"
                     }
                   >
                     {p.name}
@@ -720,7 +720,7 @@ function TopicEditor({
                 );
               })}
             </div>
-            <p className="mt-1 text-[11px] text-white/35">
+            <p className="mt-1 text-[11px] text-slate-400">
               {topic.allowedPlans.length === 0
                 ? "Visible to ALL users (no plan filter)."
                 : `Visible only to: ${topic.allowedPlans
@@ -731,13 +731,13 @@ function TopicEditor({
 
           {/* Active toggle — the Save button now lives in the
               compact header so it stays reachable while collapsed. */}
-          <div className="flex items-center gap-3 border-t border-white/[0.06] pt-3">
-            <label className="flex items-center gap-2 text-xs text-white/65">
+          <div className="flex items-center gap-3 border-t border-slate-200 pt-3">
+            <label className="flex items-center gap-2 text-xs text-slate-600">
               <input
                 type="checkbox"
                 checked={topic.active}
                 onChange={(e) => onChange({ active: e.target.checked })}
-                className="h-4 w-4 cursor-pointer rounded border-white/20 bg-white/[0.04] accent-electric-500"
+                className="h-4 w-4 cursor-pointer rounded border-slate-300 bg-slate-100 accent-electric-500"
               />
               Show on /university (uncheck to hide without deleting)
             </label>
@@ -807,11 +807,11 @@ function LessonsEditor({
   return (
     <div className="rounded-xl border border-electric-500/15 bg-electric-500/[0.03] p-3">
       <div className="mb-3 flex items-center justify-between">
-        <label className="flex items-center gap-1.5 text-xs font-semibold text-white">
-          <Film className="h-3.5 w-3.5 text-electric-300" />
+        <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-900">
+          <Film className="h-3.5 w-3.5 text-electric-700" />
           Lessons
           {lessons.length > 0 && (
-            <span className="rounded-full bg-electric-500/15 px-1.5 text-[10px] text-electric-300">
+            <span className="rounded-full bg-electric-500/15 px-1.5 text-[10px] text-electric-700">
               {lessons.length}
             </span>
           )}
@@ -827,11 +827,11 @@ function LessonsEditor({
       </div>
 
       {lessons.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-white/10 py-5 text-center">
-          <p className="text-xs text-white/45">
+        <div className="rounded-lg border border-dashed border-slate-200 py-5 text-center">
+          <p className="text-xs text-slate-500">
             No lessons yet. Add one to enable the in-app player.
           </p>
-          <p className="mt-1 text-[10px] text-white/30">
+          <p className="mt-1 text-[10px] text-slate-300">
             Or leave empty and rely on the legacy button URL above.
           </p>
         </div>
@@ -910,24 +910,24 @@ function LessonRow({
   };
 
   return (
-    <div className="rounded-lg border border-white/[0.07] bg-white/[0.02] p-3">
+    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
       {/* Header row — index, title, reorder + delete */}
       <div className="mb-2 flex items-center gap-2">
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/[0.06] text-[11px] font-semibold text-white/55">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-100 text-[11px] font-semibold text-slate-500">
           {index + 1}
         </span>
         <input
           value={lesson.title}
           onChange={(e) => onChange({ title: e.target.value })}
           placeholder="Lesson title — e.g. Intro: Mindset reset"
-          className="h-8 flex-1 rounded border border-white/[0.07] bg-white/[0.03] px-2 text-xs text-white outline-none focus:border-electric-500/40"
+          className="h-8 flex-1 rounded border border-slate-200 bg-slate-50 px-2 text-xs text-slate-900 outline-none focus:border-electric-500/40"
         />
         <button
           type="button"
           onClick={onMoveUp}
           disabled={index === 0}
           aria-label="Move up"
-          className="rounded p-1 text-white/30 hover:text-white/65 disabled:opacity-25"
+          className="rounded p-1 text-slate-300 hover:text-slate-600 disabled:opacity-25"
         >
           <ArrowUp className="h-3.5 w-3.5" />
         </button>
@@ -936,7 +936,7 @@ function LessonRow({
           onClick={onMoveDown}
           disabled={index === total - 1}
           aria-label="Move down"
-          className="rounded p-1 text-white/30 hover:text-white/65 disabled:opacity-25"
+          className="rounded p-1 text-slate-300 hover:text-slate-600 disabled:opacity-25"
         >
           <ArrowDown className="h-3.5 w-3.5" />
         </button>
@@ -944,7 +944,7 @@ function LessonRow({
           type="button"
           onClick={onRemove}
           aria-label="Remove lesson"
-          className="rounded p-1 text-white/25 transition-colors hover:bg-red-500/10 hover:text-red-400"
+          className="rounded p-1 text-slate-300 transition-colors hover:bg-red-500/10 hover:text-red-600"
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>
@@ -952,7 +952,7 @@ function LessonRow({
 
       {/* Video URL */}
       <div className="mb-2">
-        <label className="mb-1 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-white/40">
+        <label className="mb-1 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-slate-400">
           <Film className="h-3 w-3" />
           Video URL (YouTube, Adilo, Vimeo, or .mp4)
         </label>
@@ -960,16 +960,16 @@ function LessonRow({
           value={lesson.videoUrl ?? ""}
           onChange={(e) => onChange({ videoUrl: e.target.value })}
           placeholder="https://youtu.be/… or https://adilo.bigcommand.com/watch/…"
-          className="h-8 w-full rounded border border-white/[0.07] bg-white/[0.03] px-2 text-xs text-white outline-none focus:border-electric-500/40"
+          className="h-8 w-full rounded border border-slate-200 bg-slate-50 px-2 text-xs text-slate-900 outline-none focus:border-electric-500/40"
         />
         <p
           className={cn(
             "mt-1 text-[10px]",
             parsed
-              ? "text-jade-300"
+              ? "text-jade-600"
               : lesson.videoUrl
-                ? "text-amber-300"
-                : "text-white/30",
+                ? "text-amber-700"
+                : "text-slate-300",
           )}
         >
           {videoStatus}
@@ -982,7 +982,7 @@ function LessonRow({
           value={lesson.description ?? ""}
           onChange={(e) => onChange({ description: e.target.value })}
           placeholder="One-line description (optional)"
-          className="h-8 w-full rounded border border-white/[0.07] bg-white/[0.03] px-2 text-xs text-white outline-none focus:border-electric-500/40"
+          className="h-8 w-full rounded border border-slate-200 bg-slate-50 px-2 text-xs text-slate-900 outline-none focus:border-electric-500/40"
         />
         <input
           type="number"
@@ -996,13 +996,13 @@ function LessonRow({
             })
           }
           placeholder="Duration (min)"
-          className="h-8 w-full rounded border border-white/[0.07] bg-white/[0.03] px-2 text-xs text-white outline-none focus:border-electric-500/40"
+          className="h-8 w-full rounded border border-slate-200 bg-slate-50 px-2 text-xs text-slate-900 outline-none focus:border-electric-500/40"
         />
       </div>
 
       {/* Body / notes */}
       <div className="mb-2">
-        <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/40">
+        <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-slate-400">
           Lesson notes (shown below the video)
         </label>
         <textarea
@@ -1010,25 +1010,25 @@ function LessonRow({
           onChange={(e) => onChange({ body: e.target.value })}
           placeholder="Key takeaways, action steps, anything you want learners to read…"
           rows={4}
-          className="w-full resize-none rounded border border-white/[0.07] bg-white/[0.03] p-2 text-xs leading-relaxed text-white outline-none placeholder:text-white/25 focus:border-electric-500/40"
+          className="w-full resize-none rounded border border-slate-200 bg-slate-50 p-2 text-xs leading-relaxed text-slate-900 outline-none placeholder:text-slate-300 focus:border-electric-500/40"
         />
       </div>
 
       {/* Free preview toggle */}
-      <label className="mb-2 flex items-center gap-2 text-[11px] text-white/65">
+      <label className="mb-2 flex items-center gap-2 text-[11px] text-slate-600">
         <input
           type="checkbox"
           checked={lesson.freePreview}
           onChange={(e) => onChange({ freePreview: e.target.checked })}
-          className="h-3.5 w-3.5 cursor-pointer rounded border-white/20 bg-white/[0.04] accent-electric-500"
+          className="h-3.5 w-3.5 cursor-pointer rounded border-slate-300 bg-slate-100 accent-electric-500"
         />
         {lesson.freePreview ? (
-          <span className="flex items-center gap-1 text-jade-300">
+          <span className="flex items-center gap-1 text-jade-600">
             <Eye className="h-3 w-3" />
             Free preview — anyone can watch
           </span>
         ) : (
-          <span className="flex items-center gap-1 text-white/55">
+          <span className="flex items-center gap-1 text-slate-500">
             <Lock className="h-3 w-3" />
             Locked — only plans listed on this topic can watch
           </span>
@@ -1036,8 +1036,8 @@ function LessonRow({
       </label>
 
       {/* Downloads */}
-      <details className="rounded border border-white/[0.05] bg-white/[0.02]">
-        <summary className="cursor-pointer px-2 py-1.5 text-[10px] font-medium uppercase tracking-wider text-white/40 hover:text-white/65">
+      <details className="rounded border border-slate-200 bg-slate-50">
+        <summary className="cursor-pointer px-2 py-1.5 text-[10px] font-medium uppercase tracking-wider text-slate-400 hover:text-slate-600">
           <Paperclip className="mr-1 inline h-3 w-3" />
           Downloads ({(lesson.resources ?? []).length})
         </summary>
@@ -1047,7 +1047,7 @@ function LessonRow({
                collapse to a 150px sliver. Side-by-side on sm+. */
             <div
               key={r.id}
-              className="flex flex-col gap-1.5 rounded border border-white/[0.05] bg-white/[0.02] p-1.5 sm:flex-row sm:items-center sm:border-transparent sm:bg-transparent sm:p-0"
+              className="flex flex-col gap-1.5 rounded border border-slate-200 bg-slate-50 p-1.5 sm:flex-row sm:items-center sm:border-transparent sm:bg-transparent sm:p-0"
             >
               <div className="flex items-center gap-1.5 sm:contents">
                 <input
@@ -1056,13 +1056,13 @@ function LessonRow({
                     updateResource(rIdx, { label: e.target.value })
                   }
                   placeholder="Script PDF"
-                  className="h-7 flex-1 rounded border border-white/[0.07] bg-white/[0.03] px-2 text-[11px] text-white outline-none focus:border-electric-500/40 sm:w-32 sm:flex-none"
+                  className="h-7 flex-1 rounded border border-slate-200 bg-slate-50 px-2 text-[11px] text-slate-900 outline-none focus:border-electric-500/40 sm:w-32 sm:flex-none"
                 />
                 <button
                   type="button"
                   onClick={() => removeResource(rIdx)}
                   aria-label="Remove download"
-                  className="rounded p-1 text-white/25 hover:text-red-400 sm:order-last"
+                  className="rounded p-1 text-slate-300 hover:text-red-600 sm:order-last"
                 >
                   <Trash2 className="h-3 w-3" />
                 </button>
@@ -1073,14 +1073,14 @@ function LessonRow({
                   updateResource(rIdx, { url: e.target.value })
                 }
                 placeholder="https://…"
-                className="h-7 w-full rounded border border-white/[0.07] bg-white/[0.03] px-2 text-[11px] text-white outline-none focus:border-electric-500/40 sm:flex-1"
+                className="h-7 w-full rounded border border-slate-200 bg-slate-50 px-2 text-[11px] text-slate-900 outline-none focus:border-electric-500/40 sm:flex-1"
               />
             </div>
           ))}
           <button
             type="button"
             onClick={addResource}
-            className="flex items-center gap-1 rounded px-2 py-1 text-[10px] font-medium text-electric-300 hover:bg-electric-500/10"
+            className="flex items-center gap-1 rounded px-2 py-1 text-[10px] font-medium text-electric-700 hover:bg-electric-500/10"
           >
             <Link2 className="h-3 w-3" />
             Add download link

@@ -166,7 +166,7 @@ export default function AffiliateDetailPage() {
   if (loading) {
     return (
       <div className="flex h-dvh items-center justify-center">
-        <div className="flex items-center gap-2 text-sm text-white/55">
+        <div className="flex items-center gap-2 text-sm text-slate-500">
           <Loader2 className="h-4 w-4 animate-spin" />
           Loading affiliate…
         </div>
@@ -177,7 +177,7 @@ export default function AffiliateDetailPage() {
   if (!affiliate) {
     return (
       <div className="flex h-dvh flex-col items-center justify-center gap-4 p-6">
-        <p className="text-sm text-white/55">Affiliate not found.</p>
+        <p className="text-sm text-slate-500">Affiliate not found.</p>
         <Link href="/admin/affiliates">
           <Button variant="outline" leftIcon={<ArrowLeft className="h-4 w-4" />}>
             Back to affiliates
@@ -192,17 +192,17 @@ export default function AffiliateDetailPage() {
       <div>
         <Link
           href="/admin/affiliates"
-          className="mb-3 inline-flex items-center gap-1.5 text-xs font-medium text-white/45 hover:text-white"
+          className="mb-3 inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-900"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           All affiliates
         </Link>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="font-display text-2xl font-bold text-white">
+            <h1 className="font-display text-2xl font-bold text-slate-900">
               {affiliate.displayName}
             </h1>
-            <p className="text-sm text-white/45">
+            <p className="text-sm text-slate-500">
               {affiliate.email} · joined {timeAgo(affiliate.createdAt)}
             </p>
           </div>
@@ -244,7 +244,7 @@ export default function AffiliateDetailPage() {
       <Card className="p-5">
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <p className="text-[11px] font-medium uppercase tracking-wider text-white/40">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
               Status
             </p>
             <div className="mt-1.5">
@@ -254,10 +254,10 @@ export default function AffiliateDetailPage() {
             </div>
           </div>
           <div>
-            <p className="text-[11px] font-medium uppercase tracking-wider text-white/40">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
               Referral code
             </p>
-            <p className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-electric-500/12 px-2 py-1 font-mono text-sm font-semibold text-electric-300">
+            <p className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-electric-500/12 px-2 py-1 font-mono text-sm font-semibold text-electric-700">
               <Handshake className="h-3.5 w-3.5" />
               {affiliate.code}
             </p>
@@ -283,10 +283,10 @@ export default function AffiliateDetailPage() {
           },
         ].map((s) => (
           <Card key={s.label} className="p-4">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-white/40">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
               {s.label}
             </p>
-            <p className="mt-1 font-display text-xl font-bold text-white">
+            <p className="mt-1 font-display text-xl font-bold text-slate-900">
               {s.value}
             </p>
           </Card>
@@ -296,8 +296,8 @@ export default function AffiliateDetailPage() {
       {/* Upcoming renewals — soft-fails to nothing if there are none */}
       <Card className="p-5">
         <div className="mb-3 flex items-center gap-2">
-          <CalendarClock className="h-4 w-4 text-electric-300" />
-          <h2 className="font-display text-sm font-semibold text-white">
+          <CalendarClock className="h-4 w-4 text-electric-700" />
+          <h2 className="font-display text-sm font-semibold text-slate-900">
             Upcoming renewals (next 30 days)
           </h2>
           {renewals.length > 0 && (
@@ -305,13 +305,13 @@ export default function AffiliateDetailPage() {
           )}
         </div>
         {renewals.length === 0 ? (
-          <p className="text-xs text-white/45">
+          <p className="text-xs text-slate-500">
             No referrals are up for renewal in the next 30 days. Renewals
             appear here once you upgrade a referred user to a paid plan.
           </p>
         ) : (
           <>
-            <p className="mb-3 text-xs text-white/45">
+            <p className="mb-3 text-xs text-slate-500">
               Reach out to these customers (or coordinate with{" "}
               {affiliate.displayName.split(" ")[0]}) to renew them before
               their cycle ends. Each renewal credits another commission to
@@ -327,26 +327,26 @@ export default function AffiliateDetailPage() {
                     className={
                       expiresSoon
                         ? "flex items-center justify-between gap-3 rounded-xl border border-gold-400/30 bg-gold-400/[0.05] p-3"
-                        : "flex items-center justify-between gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3"
+                        : "flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3"
                     }
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-white">
+                      <p className="truncate text-sm font-medium text-slate-900">
                         {r.displayName}
                       </p>
-                      <p className="truncate text-[11px] text-white/45">
+                      <p className="truncate text-[11px] text-slate-500">
                         {r.emailMasked} · {r.planName}
                       </p>
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className="text-sm font-bold text-white">
+                      <p className="text-sm font-bold text-slate-900">
                         ₱{r.commission.toLocaleString()}
                       </p>
                       <p
                         className={
                           expiresSoon
-                            ? "text-[11px] text-gold-300"
-                            : "text-[11px] text-white/45"
+                            ? "text-[11px] text-amber-700"
+                            : "text-[11px] text-slate-500"
                         }
                       >
                         {timeUntil(r.expiresAt)}
@@ -362,11 +362,11 @@ export default function AffiliateDetailPage() {
 
       {/* Payout */}
       <Card className="space-y-4 p-5">
-        <h2 className="font-display text-sm font-semibold text-white">
+        <h2 className="font-display text-sm font-semibold text-slate-900">
           Payout method
         </h2>
         <div>
-          <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-white/40">
+          <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-slate-400">
             How they want to be paid
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -380,8 +380,8 @@ export default function AffiliateDetailPage() {
                 }}
                 className={
                   payoutType === m.id
-                    ? "rounded-lg border border-electric-500/50 bg-electric-500/15 px-3 py-1.5 text-xs font-medium text-electric-300"
-                    : "rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-white/55 hover:bg-white/[0.08]"
+                    ? "rounded-lg border border-electric-500/50 bg-electric-500/15 px-3 py-1.5 text-xs font-medium text-electric-700"
+                    : "rounded-lg border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-200"
                 }
               >
                 {m.label}
@@ -411,7 +411,7 @@ export default function AffiliateDetailPage() {
 
       {/* Admin notes */}
       <Card className="p-5">
-        <h2 className="mb-3 font-display text-sm font-semibold text-white">
+        <h2 className="mb-3 font-display text-sm font-semibold text-slate-900">
           Admin notes
         </h2>
         <textarea
@@ -422,7 +422,7 @@ export default function AffiliateDetailPage() {
             setDirty(true);
           }}
           placeholder="Private notes about this affiliate — never shown to them."
-          className="w-full rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-electric-500/40"
+          className="w-full rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 outline-none placeholder:text-slate-300 focus:border-electric-500/40"
         />
       </Card>
 

@@ -391,26 +391,26 @@ const SECTION_LABELS: Record<SectionType, string> = {
 };
 
 const SECTION_COLORS: Record<SectionType, string> = {
-  cta: "bg-electric-500/20 text-electric-300",
+  cta: "bg-electric-500/20 text-electric-700",
   socials: "bg-blue-500/20 text-blue-300",
-  about: "bg-white/10 text-white/60",
-  credibility: "bg-gold-400/20 text-gold-300",
-  testimonials: "bg-jade-500/20 text-jade-300",
+  about: "bg-slate-200 text-slate-500",
+  credibility: "bg-gold-400/20 text-amber-700",
+  testimonials: "bg-jade-500/20 text-jade-600",
   products: "bg-purple-500/20 text-purple-300",
-  video: "bg-red-500/20 text-red-300",
+  video: "bg-red-500/20 text-red-700",
   gallery: "bg-pink-500/20 text-pink-300",
   image: "bg-pink-500/20 text-pink-300",
-  embedHtml: "bg-white/10 text-white/60",
-  leadCapture: "bg-jade-500/20 text-jade-300",
-  appointment: "bg-electric-500/20 text-electric-300",
-  text: "bg-white/10 text-white/60",
-  countdown: "bg-gold-400/20 text-gold-300",
-  hero: "bg-electric-500/20 text-electric-300",
+  embedHtml: "bg-slate-200 text-slate-500",
+  leadCapture: "bg-jade-500/20 text-jade-600",
+  appointment: "bg-electric-500/20 text-electric-700",
+  text: "bg-slate-200 text-slate-500",
+  countdown: "bg-gold-400/20 text-amber-700",
+  hero: "bg-electric-500/20 text-electric-700",
   cover: "bg-pink-500/20 text-pink-300",
-  benefits: "bg-jade-500/20 text-jade-300",
-  faq: "bg-white/10 text-white/60",
-  pricingCard: "bg-gold-400/20 text-gold-300",
-  payment: "bg-jade-500/20 text-jade-300",
+  benefits: "bg-jade-500/20 text-jade-600",
+  faq: "bg-slate-200 text-slate-500",
+  pricingCard: "bg-gold-400/20 text-amber-700",
+  payment: "bg-jade-500/20 text-jade-600",
 };
 
 /* ---- Mini preview component ---- */
@@ -519,8 +519,8 @@ export default function TemplatesPage() {
             className={cn(
               "shrink-0 rounded-full px-4 py-1.5 text-xs font-medium transition-colors",
               activeCategory === cat
-                ? "bg-electric-500/20 text-electric-300 ring-1 ring-electric-500/40"
-                : "bg-white/[0.06] text-white/50 hover:bg-white/10 hover:text-white",
+                ? "bg-electric-500/20 text-electric-700 ring-1 ring-electric-500/40"
+                : "bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-900",
             )}
           >
             {cat}
@@ -532,7 +532,7 @@ export default function TemplatesPage() {
       {featured.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-white/30">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-300">
               ⭐ Featured
             </h2>
           </div>
@@ -553,7 +553,7 @@ export default function TemplatesPage() {
       {rest.length > 0 && (
         <div className="space-y-3">
           {featured.length > 0 && (
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-white/30">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-300">
               All Templates
             </h2>
           )}
@@ -571,7 +571,7 @@ export default function TemplatesPage() {
       )}
 
       <Card className="p-4">
-        <p className="text-xs text-white/45">
+        <p className="text-xs text-slate-500">
           Applying a template replaces your current sections &amp; theme. Your
           name, photo and social links stay intact. Save your profile after
           applying to go live.
@@ -599,7 +599,7 @@ function TemplateCard({
 
       <div className="p-4">
         <div className="flex items-start justify-between gap-2 mb-1">
-          <h3 className="font-display text-sm font-semibold text-white leading-tight">
+          <h3 className="font-display text-sm font-semibold text-slate-900 leading-tight">
             {template.name}
           </h3>
           <Badge tone="blue" className="shrink-0 text-[10px]">
@@ -607,7 +607,7 @@ function TemplateCard({
           </Badge>
         </div>
 
-        <p className="text-xs text-white/45 mb-3 line-clamp-2">
+        <p className="text-xs text-slate-500 mb-3 line-clamp-2">
           {template.headline}
         </p>
 

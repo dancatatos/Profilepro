@@ -155,7 +155,7 @@ export default function UniversityPage() {
   if (loading) {
     return (
       <div className="flex h-[40vh] items-center justify-center">
-        <div className="flex items-center gap-2 text-sm text-white/55">
+        <div className="flex items-center gap-2 text-sm text-slate-500">
           <Loader2 className="h-4 w-4 animate-spin" />
           Loading lessons…
         </div>
@@ -172,11 +172,11 @@ export default function UniversityPage() {
 
       {visible.length === 0 ? (
         <Card className="flex flex-col items-center justify-center gap-3 p-10 text-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.04]">
-            <GraduationCap className="h-6 w-6 text-white/30" />
+          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100">
+            <GraduationCap className="h-6 w-6 text-slate-300" />
           </span>
-          <p className="text-sm font-medium text-white">Lessons coming soon</p>
-          <p className="max-w-sm text-xs text-white/45">
+          <p className="text-sm font-medium text-slate-900">Lessons coming soon</p>
+          <p className="max-w-sm text-xs text-slate-500">
             Your admin is curating the training library. Check back here once
             new lessons are published.
           </p>
@@ -185,10 +185,10 @@ export default function UniversityPage() {
         grouped.map(([category, items]) => (
           <section key={category} className="space-y-3">
             <div className="flex items-center gap-2">
-              <h2 className="font-display text-base font-semibold text-white">
+              <h2 className="font-display text-base font-semibold text-slate-900">
                 {category}
               </h2>
-              <span className="text-xs text-white/35">
+              <span className="text-xs text-slate-400">
                 {items.length} {items.length === 1 ? "course" : "courses"}
               </span>
             </div>
@@ -300,7 +300,7 @@ function TopicCard({
           to a slim header strip so the player takes the prominent slot. */}
       <div
         className={cn(
-          "relative w-full overflow-hidden bg-white/[0.04]",
+          "relative w-full overflow-hidden bg-slate-100",
           expanded ? "aspect-[16/4]" : "aspect-video",
         )}
       >
@@ -312,7 +312,7 @@ function TopicCard({
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
-            <GraduationCap className="h-10 w-10 text-white/15" />
+            <GraduationCap className="h-10 w-10 text-slate-900/15" />
           </div>
         )}
         {/* Gradient overlay so the title is legible over any image. */}
@@ -326,7 +326,7 @@ function TopicCard({
               onCollapse();
             }}
             aria-label="Close course"
-            className="absolute right-3 top-3 rounded-full bg-black/40 p-1.5 text-white/80 backdrop-blur transition-colors hover:bg-black/60 hover:text-white"
+            className="absolute right-3 top-3 rounded-full bg-black/40 p-1.5 text-slate-700 backdrop-blur transition-colors hover:bg-black/60 hover:text-slate-900"
           >
             <X className="h-4 w-4" />
           </button>
@@ -340,14 +340,14 @@ function TopicCard({
         <div className="absolute inset-x-0 bottom-0 p-4">
           <h3
             className={cn(
-              "font-display font-bold text-white",
+              "font-display font-bold text-slate-900",
               expanded ? "text-xl" : "text-base",
             )}
           >
             {topic.title}
           </h3>
           {expanded && (
-            <p className="mt-1 max-w-xl text-sm text-white/65">
+            <p className="mt-1 max-w-xl text-sm text-slate-600">
               {topic.description}
             </p>
           )}
@@ -357,7 +357,7 @@ function TopicCard({
       {/* Compact view body — description + progress + CTA */}
       {!expanded && (
         <div className="flex flex-1 flex-col p-5">
-          <p className="text-sm text-white/55">{topic.description}</p>
+          <p className="text-sm text-slate-500">{topic.description}</p>
           {/* Progress strip — only shows when there are lessons */}
           {hasLessons && (
             <ProgressStrip
@@ -435,13 +435,13 @@ function ProgressStrip({
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   return (
     <div className={className}>
-      <div className="mb-1 flex items-center justify-between text-[10px] text-white/45">
+      <div className="mb-1 flex items-center justify-between text-[10px] text-slate-500">
         <span>
           {done} of {total} {total === 1 ? "lesson" : "lessons"}
         </span>
         <span>{pct}%</span>
       </div>
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]">
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
         <div
           className={cn(
             "h-full rounded-full transition-all",
@@ -509,7 +509,7 @@ function ExpandedPlayer({
         {/* Left column: video + notes */}
         <div className="space-y-3">
           {/* Video player area */}
-          <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-white/[0.06] bg-black">
+          <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-slate-200 bg-black">
             {!canPlay ? (
               <LessonLocked />
             ) : !normalized ? (
@@ -535,26 +535,26 @@ function ExpandedPlayer({
 
           {/* Lesson title + free-preview badge */}
           <div className="flex flex-wrap items-center gap-2">
-            <h4 className="text-sm font-semibold text-white">
+            <h4 className="text-sm font-semibold text-slate-900">
               {activeIdx + 1}. {activeLesson.title}
             </h4>
             {activeLesson.freePreview && (
-              <span className="rounded-full bg-jade-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-jade-300">
+              <span className="rounded-full bg-jade-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-jade-600">
                 Free preview
               </span>
             )}
           </div>
           {activeLesson.description && (
-            <p className="text-xs text-white/55">{activeLesson.description}</p>
+            <p className="text-xs text-slate-500">{activeLesson.description}</p>
           )}
 
           {/* Notes */}
           {activeLesson.body && (
-            <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
-              <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-white/40">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                 Notes
               </p>
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/80">
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
                 {activeLesson.body}
               </p>
             </div>
@@ -562,8 +562,8 @@ function ExpandedPlayer({
 
           {/* Downloads */}
           {(activeLesson.resources?.length ?? 0) > 0 && (
-            <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
-              <p className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-white/40">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <p className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                 <Download className="h-3 w-3" />
                 Downloads
               </p>
@@ -574,7 +574,7 @@ function ExpandedPlayer({
                     href={r.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.02] p-2 text-xs text-electric-300 transition-colors hover:bg-electric-500/[0.05]"
+                    className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs text-electric-700 transition-colors hover:bg-electric-500/[0.05]"
                   >
                     <Download className="h-3.5 w-3.5 shrink-0" />
                     <span className="flex-1 truncate">{r.label || r.url}</span>
@@ -613,7 +613,7 @@ function ExpandedPlayer({
 
         {/* Right column: lesson list */}
         <div>
-          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-white/40">
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
             All lessons
           </p>
           <div className="space-y-1.5">
@@ -630,7 +630,7 @@ function ExpandedPlayer({
                     "flex w-full items-start gap-2 rounded-lg border p-2.5 text-left transition-colors",
                     isActive
                       ? "border-electric-500/40 bg-electric-500/10"
-                      : "border-white/[0.07] bg-white/[0.02] hover:bg-white/[0.05]",
+                      : "border-slate-200 bg-slate-50 hover:bg-slate-100",
                   )}
                 >
                   {/* Status icon — done / playing / locked / queued */}
@@ -638,12 +638,12 @@ function ExpandedPlayer({
                     className={cn(
                       "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold",
                       isDone
-                        ? "bg-jade-500/20 text-jade-300"
+                        ? "bg-jade-500/20 text-jade-600"
                         : isActive
-                          ? "bg-electric-500/25 text-electric-200"
+                          ? "bg-electric-500/25 text-electric-700"
                           : isLocked
-                            ? "bg-white/[0.05] text-white/30"
-                            : "bg-white/[0.05] text-white/45",
+                            ? "bg-slate-100 text-slate-300"
+                            : "bg-slate-100 text-slate-500",
                     )}
                   >
                     {isDone ? (
@@ -658,17 +658,17 @@ function ExpandedPlayer({
                     <p
                       className={cn(
                         "truncate text-xs font-medium",
-                        isActive ? "text-white" : "text-white/75",
+                        isActive ? "text-slate-900" : "text-slate-700",
                       )}
                     >
                       {l.title}
                     </p>
-                    <div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-white/35">
+                    <div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-slate-400">
                       {l.durationMinutes ? (
                         <span>{l.durationMinutes} min</span>
                       ) : null}
                       {l.freePreview && (
-                        <span className="rounded-full bg-jade-500/15 px-1 text-jade-300">
+                        <span className="rounded-full bg-jade-500/15 px-1 text-jade-600">
                           Free
                         </span>
                       )}
@@ -683,9 +683,9 @@ function ExpandedPlayer({
           {!allowedByTopic && (
             <Link
               href="/billing"
-              className="mt-3 flex items-center gap-2 rounded-xl border border-gold-400/30 bg-gradient-to-r from-gold-400/[0.08] to-transparent p-3 text-xs text-gold-200 transition-colors hover:from-gold-400/[0.15]"
+              className="mt-3 flex items-center gap-2 rounded-xl border border-gold-400/30 bg-gradient-to-r from-gold-400/[0.08] to-transparent p-3 text-xs text-amber-700 transition-colors hover:from-gold-400/[0.15]"
             >
-              <Crown className="h-4 w-4 shrink-0 text-gold-300" />
+              <Crown className="h-4 w-4 shrink-0 text-amber-700" />
               <span>
                 Upgrade to unlock all lessons in this course.
               </span>
@@ -703,10 +703,10 @@ function LessonLocked() {
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-gradient-to-br from-ink-900 to-ink-950 p-6 text-center">
       <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gold-400/15">
-        <Lock className="h-5 w-5 text-gold-300" />
+        <Lock className="h-5 w-5 text-amber-700" />
       </span>
-      <p className="text-sm font-semibold text-white">Lesson locked</p>
-      <p className="max-w-xs text-xs text-white/55">
+      <p className="text-sm font-semibold text-slate-900">Lesson locked</p>
+      <p className="max-w-xs text-xs text-slate-500">
         This lesson is part of a paid course. Upgrade your plan to unlock
         all lessons.
       </p>
@@ -723,8 +723,8 @@ function LessonLocked() {
 
 function NoVideoPlaceholder() {
   return (
-    <div className="flex h-full w-full items-center justify-center bg-white/[0.02]">
-      <div className="flex flex-col items-center gap-2 text-white/35">
+    <div className="flex h-full w-full items-center justify-center bg-slate-50">
+      <div className="flex flex-col items-center gap-2 text-slate-400">
         <Film className="h-8 w-8" />
         <p className="text-xs">No video for this lesson yet.</p>
       </div>

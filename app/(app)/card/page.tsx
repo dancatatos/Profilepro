@@ -230,10 +230,10 @@ export default function DigitalCardPage() {
 
         {/* Printable business card */}
         <div className="mt-8">
-          <h2 className="font-display text-sm font-semibold text-white">
+          <h2 className="font-display text-sm font-semibold text-slate-900">
             Printable business card
           </h2>
-          <p className="mb-3 mt-0.5 text-xs text-white/45">
+          <p className="mb-3 mt-0.5 text-xs text-slate-500">
             A print-ready card for events, tarps and handouts. Add your phone
             &amp; email in the Profile Builder header to fill it out.
           </p>

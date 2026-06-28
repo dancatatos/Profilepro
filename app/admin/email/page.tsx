@@ -147,8 +147,8 @@ export default function AdminEmailPage() {
   return (
     <div className="space-y-4 p-4 sm:space-y-6 sm:p-6">
       <div>
-        <h1 className="font-display text-2xl font-bold text-white">Email</h1>
-        <p className="text-sm text-white/45">
+        <h1 className="font-display text-2xl font-bold text-slate-900">Email</h1>
+        <p className="text-sm text-slate-500">
           Transactional email infrastructure. Used for renewal reminders,
           commission notifications and affiliate invites.
         </p>
@@ -157,27 +157,27 @@ export default function AdminEmailPage() {
       {/* Status overview */}
       <Card className="p-5">
         <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 className="font-display text-sm font-semibold text-white">
+          <h2 className="font-display text-sm font-semibold text-slate-900">
             Resend status
           </h2>
           <Badge tone="jade">Phase 6B</Badge>
         </div>
-        <div className="space-y-2 text-xs text-white/55">
+        <div className="space-y-2 text-xs text-slate-500">
           <p>
-            ✅ <strong className="text-white/85">SDK installed</strong> · Resend
+            ✅ <strong className="text-slate-800">SDK installed</strong> · Resend
             client + send helper are in place.
           </p>
           <p>
             ✅{" "}
-            <strong className="text-white/85">Test endpoint live</strong> ·{" "}
-            <code className="rounded bg-white/[0.06] px-1 py-0.5 text-[11px] text-white/70">
+            <strong className="text-slate-800">Test endpoint live</strong> ·{" "}
+            <code className="rounded bg-slate-100 px-1 py-0.5 text-[11px] text-slate-600">
               POST /api/email/test
             </code>{" "}
             wraps the send helper.
           </p>
           <p>
             ⚙️{" "}
-            <strong className="text-white/85">
+            <strong className="text-slate-800">
               Needs RESEND_API_KEY set in Vercel
             </strong>{" "}
             — if you see &ldquo;not configured&rdquo; below, add it in
@@ -185,23 +185,23 @@ export default function AdminEmailPage() {
           </p>
           <p>
             ⚙️{" "}
-            <strong className="text-white/85">
+            <strong className="text-slate-800">
               Needs custom domain verified in Resend
             </strong>{" "}
             (so emails come from{" "}
-            <code className="rounded bg-white/[0.06] px-1 py-0.5 text-[11px] text-white/70">
+            <code className="rounded bg-slate-100 px-1 py-0.5 text-[11px] text-slate-600">
               noreply@crediblyai.com
             </code>{" "}
             instead of the fallback{" "}
-            <code className="rounded bg-white/[0.06] px-1 py-0.5 text-[11px] text-white/70">
+            <code className="rounded bg-slate-100 px-1 py-0.5 text-[11px] text-slate-600">
               onboarding@resend.dev
             </code>
             ). Once verified, set{" "}
-            <code className="rounded bg-white/[0.06] px-1 py-0.5 text-[11px] text-white/70">
+            <code className="rounded bg-slate-100 px-1 py-0.5 text-[11px] text-slate-600">
               EMAIL_FROM
             </code>{" "}
             env var to{" "}
-            <code className="rounded bg-white/[0.06] px-1 py-0.5 text-[11px] text-white/70">
+            <code className="rounded bg-slate-100 px-1 py-0.5 text-[11px] text-slate-600">
               Credibly &lt;noreply@crediblyai.com&gt;
             </code>
             .
@@ -212,12 +212,12 @@ export default function AdminEmailPage() {
       {/* Send test */}
       <Card className="space-y-4 p-5">
         <div className="flex items-center gap-2">
-          <Mail className="h-4 w-4 text-electric-300" />
-          <h2 className="font-display text-sm font-semibold text-white">
+          <Mail className="h-4 w-4 text-electric-700" />
+          <h2 className="font-display text-sm font-semibold text-slate-900">
             Send a test email
           </h2>
         </div>
-        <p className="text-xs text-white/45">
+        <p className="text-xs text-slate-500">
           Useful right after adding the API key — confirms end-to-end
           delivery before we wire up renewal reminders.
         </p>
@@ -248,7 +248,7 @@ export default function AdminEmailPage() {
         </Button>
 
         {status === "sent" && (
-          <div className="flex items-start gap-2 rounded-xl border border-jade-500/30 bg-jade-500/[0.05] p-3 text-xs text-jade-300">
+          <div className="flex items-start gap-2 rounded-xl border border-jade-500/30 bg-jade-500/[0.05] p-3 text-xs text-jade-600">
             <CheckCircle2 className="h-4 w-4 shrink-0" />
             <p>
               Sent. Check the inbox at <strong>{to.trim()}</strong>. If it
@@ -259,13 +259,13 @@ export default function AdminEmailPage() {
           </div>
         )}
         {status === "error" && (
-          <div className="flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/[0.05] p-3 text-xs text-red-300">
+          <div className="flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/[0.05] p-3 text-xs text-red-700">
             <AlertTriangle className="h-4 w-4 shrink-0" />
             <p>{errorMessage}</p>
           </div>
         )}
         {status === "sending" && (
-          <div className="flex items-center gap-2 text-xs text-white/55">
+          <div className="flex items-center gap-2 text-xs text-slate-500">
             <Loader2 className="h-4 w-4 animate-spin" />
             Sending…
           </div>
@@ -275,20 +275,20 @@ export default function AdminEmailPage() {
       {/* Renewal reminder cron — Phase 6C */}
       <Card className="space-y-4 p-5">
         <div className="flex items-center gap-2">
-          <CalendarClock className="h-4 w-4 text-electric-300" />
-          <h2 className="font-display text-sm font-semibold text-white">
+          <CalendarClock className="h-4 w-4 text-electric-700" />
+          <h2 className="font-display text-sm font-semibold text-slate-900">
             Renewal reminders cron
           </h2>
           <Badge tone="blue">Daily 9 AM PHT</Badge>
         </div>
-        <p className="text-xs text-white/55">
+        <p className="text-xs text-slate-500">
           Runs once a day and emails: a heads-up to customers whose plan
           expires in 14 days or 3 days, plus a commission-opportunity ping
           to their affiliate. Also sends a recovery prompt the day after
           a plan has expired. Each (user, window, day) combo is dedup&apos;d via
           Firestore so re-runs are safe.
         </p>
-        <p className="text-xs text-white/55">
+        <p className="text-xs text-slate-500">
           You can trigger it manually below for testing — useful if you want
           to send today&apos;s reminders before the morning cron fires.
         </p>
@@ -302,7 +302,7 @@ export default function AdminEmailPage() {
             Run renewal cron now
           </Button>
           {cronStatus === "running" && (
-            <span className="inline-flex items-center gap-1.5 text-xs text-white/55">
+            <span className="inline-flex items-center gap-1.5 text-xs text-slate-500">
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
               Scanning users…
             </span>
@@ -310,7 +310,7 @@ export default function AdminEmailPage() {
         </div>
         {cronStatus === "done" && cronResult && (
           <div className="space-y-3">
-            <div className="flex items-start gap-2 rounded-xl border border-jade-500/30 bg-jade-500/[0.05] p-3 text-xs text-jade-300">
+            <div className="flex items-start gap-2 rounded-xl border border-jade-500/30 bg-jade-500/[0.05] p-3 text-xs text-jade-600">
               <CheckCircle2 className="h-4 w-4 shrink-0" />
               <div>
                 <p className="font-medium">
@@ -321,7 +321,7 @@ export default function AdminEmailPage() {
                   {cronResult.emailsFailed} failed.
                 </p>
                 {cronResult.windowsMatched === 0 && (
-                  <p className="mt-1 text-jade-300/75">
+                  <p className="mt-1 text-jade-600/75">
                     No users currently fall in any of the reminder windows —
                     that&apos;s expected if no subscriptions are within 14
                     days of expiring.
@@ -334,24 +334,24 @@ export default function AdminEmailPage() {
                 {cronResult.windows.map((w) => (
                   <div
                     key={w.label}
-                    className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3"
+                    className="rounded-xl border border-slate-200 bg-slate-50 p-3"
                   >
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-white/45">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">
                       {w.label}
                     </p>
-                    <p className="mt-1 text-xs text-white">
-                      <span className="font-semibold text-jade-300">
+                    <p className="mt-1 text-xs text-slate-900">
+                      <span className="font-semibold text-jade-600">
                         {w.sent}
                       </span>{" "}
                       sent
                       {w.skipped > 0 && (
-                        <span className="text-white/40">
+                        <span className="text-slate-400">
                           {" "}
                           · {w.skipped} skipped
                         </span>
                       )}
                       {w.failed > 0 && (
-                        <span className="text-red-300">
+                        <span className="text-red-700">
                           {" "}
                           · {w.failed} failed
                         </span>
@@ -364,7 +364,7 @@ export default function AdminEmailPage() {
           </div>
         )}
         {cronStatus === "error" && (
-          <div className="flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/[0.05] p-3 text-xs text-red-300">
+          <div className="flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/[0.05] p-3 text-xs text-red-700">
             <AlertTriangle className="h-4 w-4 shrink-0" />
             <p>{cronError}</p>
           </div>
@@ -373,25 +373,25 @@ export default function AdminEmailPage() {
 
       {/* Setup checklist for Phase 6C */}
       <Card className="border border-electric-500/20 bg-electric-500/[0.04] p-5">
-        <h3 className="font-display text-sm font-semibold text-white">
+        <h3 className="font-display text-sm font-semibold text-slate-900">
           Phase 6C setup — extra env vars needed
         </h3>
-        <p className="mt-1 text-xs text-white/55">
+        <p className="mt-1 text-xs text-slate-500">
           The cron needs server-side Firebase Admin credentials and a
           random secret. Add these to Vercel → Settings → Environment
           Variables, then redeploy.
         </p>
-        <ul className="mt-3 space-y-2 text-xs text-white/65">
+        <ul className="mt-3 space-y-2 text-xs text-slate-600">
           <li>
-            <code className="rounded bg-white/[0.06] px-1 py-0.5 text-[11px] text-white/85">
+            <code className="rounded bg-slate-100 px-1 py-0.5 text-[11px] text-slate-800">
               FIREBASE_ADMIN_PROJECT_ID
             </code>
             ,{" "}
-            <code className="rounded bg-white/[0.06] px-1 py-0.5 text-[11px] text-white/85">
+            <code className="rounded bg-slate-100 px-1 py-0.5 text-[11px] text-slate-800">
               FIREBASE_ADMIN_CLIENT_EMAIL
             </code>
             ,{" "}
-            <code className="rounded bg-white/[0.06] px-1 py-0.5 text-[11px] text-white/85">
+            <code className="rounded bg-slate-100 px-1 py-0.5 text-[11px] text-slate-800">
               FIREBASE_ADMIN_PRIVATE_KEY
             </code>{" "}
             — generate at Firebase Console → Project Settings → Service
@@ -399,11 +399,11 @@ export default function AdminEmailPage() {
             three values from the downloaded JSON.
           </li>
           <li>
-            <code className="rounded bg-white/[0.06] px-1 py-0.5 text-[11px] text-white/85">
+            <code className="rounded bg-slate-100 px-1 py-0.5 text-[11px] text-slate-800">
               CRON_SECRET
             </code>{" "}
             — any random string (e.g.{" "}
-            <code className="rounded bg-white/[0.06] px-1 py-0.5 text-[11px] text-white/85">
+            <code className="rounded bg-slate-100 px-1 py-0.5 text-[11px] text-slate-800">
               openssl rand -hex 32
             </code>
             ). Vercel automatically passes it as a Bearer token when
@@ -413,11 +413,11 @@ export default function AdminEmailPage() {
       </Card>
 
       {/* What's next */}
-      <Card className="border border-white/[0.06] bg-white/[0.02] p-5">
-        <h3 className="font-display text-sm font-semibold text-white">
+      <Card className="border border-slate-200 bg-slate-50 p-5">
+        <h3 className="font-display text-sm font-semibold text-slate-900">
           Coming after Phase 6C
         </h3>
-        <ul className="mt-2 space-y-1.5 text-xs text-white/60">
+        <ul className="mt-2 space-y-1.5 text-xs text-slate-500">
           <li>• Commission-earned email to affiliate (on admin upgrade).</li>
           <li>• Commission-paid email to affiliate (on payout marking).</li>
           <li>• Auto-sent invite emails (replacing copy-paste).</li>

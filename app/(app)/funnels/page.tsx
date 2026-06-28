@@ -145,10 +145,10 @@ export default function FunnelsPage() {
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-300 to-gold-500">
             <Crown className="h-6 w-6 text-ink-950" />
           </div>
-          <h3 className="mt-3 font-display text-base font-bold text-gold-200">
+          <h3 className="mt-3 font-display text-base font-bold text-amber-700">
             Funnels is a Pro feature
           </h3>
-          <p className="mx-auto mt-1 max-w-sm text-sm text-white/50">
+          <p className="mx-auto mt-1 max-w-sm text-sm text-slate-500">
             Upgrade to build mobile-first opt-in, sales and opportunity
             funnels — each with its own shareable link.
           </p>
@@ -237,16 +237,16 @@ export default function FunnelsPage() {
       </div>
 
       {loading && funnels.length === 0 ? (
-        <Card className="p-8 text-center text-sm text-white/40">
+        <Card className="p-8 text-center text-sm text-slate-400">
           Loading funnels…
         </Card>
       ) : funnels.length === 0 ? (
         <Card className="p-8 text-center">
-          <Filter className="mx-auto h-8 w-8 text-white/20" />
-          <p className="mt-3 text-sm font-medium text-white">
+          <Filter className="mx-auto h-8 w-8 text-slate-300" />
+          <p className="mt-3 text-sm font-medium text-slate-900">
             No funnels yet
           </p>
-          <p className="mx-auto mt-1 max-w-sm text-xs text-white/45">
+          <p className="mx-auto mt-1 max-w-sm text-xs text-slate-500">
             Create your first funnel — a short, mobile-first flow that turns
             visitors into leads.
           </p>
@@ -267,18 +267,18 @@ export default function FunnelsPage() {
                       knows its width can be smaller than the natural
                       content width. Without it, truncate is a no-op. */}
                   <div className="flex min-w-0 items-center gap-2">
-                    <p className="min-w-0 flex-1 truncate text-sm font-semibold text-white">
+                    <p className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-900">
                       {f.name}
                     </p>
                     <Badge tone={f.status === "published" ? "blue" : "neutral"}>
                       {f.status}
                     </Badge>
                   </div>
-                  <p className="mt-1 truncate text-xs text-white/45">
+                  <p className="mt-1 truncate text-xs text-slate-500">
                     {f.steps.length} step{f.steps.length === 1 ? "" : "s"} ·
                     /{account.username || "you"}/{f.slug}
                   </p>
-                  <p className="mt-0.5 text-[11px] text-white/30">
+                  <p className="mt-0.5 text-[11px] text-slate-300">
                     Updated {timeAgo(f.updatedAt)}
                   </p>
                 </div>
@@ -286,14 +286,14 @@ export default function FunnelsPage() {
                   onClick={() => setPendingDelete(f)}
                   disabled={busyId === f.id}
                   aria-label="Delete funnel"
-                  className="shrink-0 rounded-lg p-2 text-white/30 transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
+                  className="shrink-0 rounded-lg p-2 text-slate-300 transition-colors hover:bg-red-500/10 hover:text-red-600 disabled:opacity-40"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
               <Link
                 href={`/funnels/${f.id}`}
-                className="mt-3 inline-flex items-center justify-center rounded-xl border border-white/12 py-2 text-xs font-medium text-white/75 transition-colors hover:bg-white/5"
+                className="mt-3 inline-flex items-center justify-center rounded-xl border border-white/12 py-2 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100"
               >
                 Open builder
               </Link>
@@ -311,18 +311,18 @@ export default function FunnelsPage() {
       >
         <div className="space-y-4 pb-2">
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-white/65">
+            <label className="mb-1.5 block text-xs font-medium text-slate-600">
               Funnel name
             </label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Free Training Funnel"
-              className="w-full rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-electric-500/60"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 outline-none placeholder:text-slate-300 focus:border-electric-500/60"
             />
           </div>
           <div className="space-y-2">
-            <p className="text-xs font-medium text-white/65">Starting layout</p>
+            <p className="text-xs font-medium text-slate-600">Starting layout</p>
             {FUNNEL_TEMPLATES.map((t) => {
               const theme = THEME_CONFIGS.find((c) => c.id === t.themeId);
               const selected = templateId === t.id;
@@ -335,7 +335,7 @@ export default function FunnelsPage() {
                     "flex w-full items-start gap-3 rounded-xl border p-3 text-left transition-colors",
                     selected
                       ? "border-electric-500 bg-electric-500/10"
-                      : "border-white/10 hover:border-white/20",
+                      : "border-slate-200 hover:border-slate-300",
                   )}
                 >
                   {/* Theme swatch — tiny preview of the colours the
@@ -352,17 +352,17 @@ export default function FunnelsPage() {
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <p className="text-sm font-semibold text-white">
+                      <p className="text-sm font-semibold text-slate-900">
                         {t.name}
                       </p>
-                      <span className="rounded-full bg-white/[0.06] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider text-white/55">
+                      <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider text-slate-500">
                         {t.category}
                       </span>
-                      <span className="rounded-full bg-electric-500/15 px-1.5 py-0.5 text-[9px] font-medium text-electric-300">
+                      <span className="rounded-full bg-electric-500/15 px-1.5 py-0.5 text-[9px] font-medium text-electric-700">
                         {t.stepCount} steps
                       </span>
                     </div>
-                    <p className="mt-0.5 text-xs leading-relaxed text-white/45">
+                    <p className="mt-0.5 text-xs leading-relaxed text-slate-500">
                       {t.description}
                     </p>
                   </div>
@@ -405,12 +405,12 @@ export default function FunnelsPage() {
           pendingDelete ? (
             <>
               <p>
-                <strong className="text-white">{pendingDelete.name}</strong>{" "}
+                <strong className="text-slate-900">{pendingDelete.name}</strong>{" "}
                 will be permanently deleted, along with its{" "}
                 {pendingDelete.steps.length} step
                 {pendingDelete.steps.length === 1 ? "" : "s"}.
               </p>
-              <p className="mt-1 text-xs text-white/45">
+              <p className="mt-1 text-xs text-slate-500">
                 This can&apos;t be undone. Existing leads stay in your account
                 — only the funnel itself is removed.
               </p>

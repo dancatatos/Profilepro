@@ -58,25 +58,25 @@ export function ImageUploadField({
   return (
     <div className={className}>
       {label && (
-        <p className="mb-1.5 text-xs font-medium text-white/65">{label}</p>
+        <p className="mb-1.5 text-xs font-medium text-slate-600">{label}</p>
       )}
       <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
           className={cn(
-            "relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden border border-white/10 bg-white/[0.03]",
+            "relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden border border-slate-200 bg-slate-50",
             round ? "rounded-full" : "rounded-2xl",
           )}
         >
           {value ? (
             <img src={value} alt="" className="h-full w-full object-cover" />
           ) : (
-            <ImagePlus className="h-6 w-6 text-white/35" />
+            <ImagePlus className="h-6 w-6 text-slate-400" />
           )}
           {busy && (
             <span className="absolute inset-0 flex items-center justify-center bg-black/60">
-              <Loader2 className="h-5 w-5 animate-spin text-white" />
+              <Loader2 className="h-5 w-5 animate-spin text-slate-900" />
             </span>
           )}
         </button>
@@ -84,7 +84,7 @@ export function ImageUploadField({
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-white/75 hover:bg-white/5"
+            className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
           >
             {value ? "Replace" : "Upload"}
           </button>
@@ -92,7 +92,7 @@ export function ImageUploadField({
             <button
               type="button"
               onClick={() => onChange("")}
-              className="flex items-center gap-1 px-1 text-xs text-red-300/80"
+              className="flex items-center gap-1 px-1 text-xs text-red-700/80"
             >
               <Trash2 className="h-3 w-3" />
               Remove

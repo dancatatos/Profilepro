@@ -231,7 +231,7 @@ export default function TrainingEditorPage() {
       />
 
       {/* Tabs */}
-      <div className="flex flex-wrap gap-1 border-b border-white/[0.07]">
+      <div className="flex flex-wrap gap-1 border-b border-slate-200">
         {(
           [
             { key: "content" as const, label: "Content" },
@@ -247,8 +247,8 @@ export default function TrainingEditorPage() {
             className={cn(
               "relative -mb-px px-3 py-2 text-sm font-medium transition-colors",
               tab === t.key
-                ? "text-white"
-                : "text-white/45 hover:text-white/75",
+                ? "text-slate-900"
+                : "text-slate-500 hover:text-slate-700",
             )}
           >
             {t.label}
@@ -296,10 +296,10 @@ export default function TrainingEditorPage() {
           Clones don't accidentally trip it. */}
       {tab === "content" && (
         <Card className="space-y-2 border-red-500/15 bg-red-500/[0.02] p-4">
-          <p className="text-[10px] font-medium uppercase tracking-wider text-red-300/80">
+          <p className="text-[10px] font-medium uppercase tracking-wider text-red-700/80">
             Danger zone
           </p>
-          <p className="text-xs text-white/55">
+          <p className="text-xs text-slate-500">
             Deleting removes this training and revokes every learner&apos;s
             access. Cannot be undone.
           </p>
@@ -307,7 +307,7 @@ export default function TrainingEditorPage() {
             variant="outline"
             onClick={() => setConfirmDelete(true)}
             leftIcon={<Trash2 className="h-3.5 w-3.5" />}
-            className="!border-red-500/30 !text-red-300 hover:!bg-red-500/10"
+            className="!border-red-500/30 !text-red-700 hover:!bg-red-500/10"
           >
             Delete training
           </Button>
@@ -323,7 +323,7 @@ export default function TrainingEditorPage() {
         confirmLabel="Delete training"
         body={
           <p>
-            <span className="font-medium text-white">{training.title}</span>{" "}
+            <span className="font-medium text-slate-900">{training.title}</span>{" "}
             and every learner&apos;s access record will be permanently
             removed. This can&apos;t be undone.
           </p>
@@ -395,7 +395,7 @@ function ContentTab({
     <div className="space-y-4">
       {/* Save reminder */}
       {dirty && (
-        <div className="sticky top-2 z-10 flex items-center justify-between gap-3 rounded-xl border border-electric-500/30 bg-electric-500/[0.08] px-4 py-2.5 text-xs text-electric-200 backdrop-blur">
+        <div className="sticky top-2 z-10 flex items-center justify-between gap-3 rounded-xl border border-electric-500/30 bg-electric-500/[0.08] px-4 py-2.5 text-xs text-electric-700 backdrop-blur">
           <span>You have unsaved changes.</span>
           <Button
             size="sm"
@@ -410,22 +410,22 @@ function ContentTab({
 
       {/* Details */}
       <Card className="space-y-3 p-4">
-        <p className="text-[10px] font-medium uppercase tracking-wider text-white/45">
+        <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">
           Details
         </p>
         <div>
-          <label className="mb-1 block text-xs font-medium text-white/55">
+          <label className="mb-1 block text-xs font-medium text-slate-500">
             Title
           </label>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g. Team Onboarding 101"
-            className="h-10 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-electric-500/60"
+            className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none placeholder:text-slate-300 focus:border-electric-500/60"
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-white/55">
+          <label className="mb-1 block text-xs font-medium text-slate-500">
             Description
           </label>
           <textarea
@@ -433,11 +433,11 @@ function ContentTab({
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
             placeholder="What will learners get from this training?"
-            className="w-full resize-none rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-electric-500/60"
+            className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 outline-none placeholder:text-slate-300 focus:border-electric-500/60"
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-white/55">
+          <label className="mb-1 block text-xs font-medium text-slate-500">
             Banner image
           </label>
           <ImageUploadField
@@ -452,10 +452,10 @@ function ContentTab({
       <Card className="space-y-3 p-4">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-wider text-white/45">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">
               Lessons
             </p>
-            <p className="mt-0.5 text-xs text-white/55">
+            <p className="mt-0.5 text-xs text-slate-500">
               {lessons.length} of {MAX_LESSONS} lessons
             </p>
           </div>
@@ -471,7 +471,7 @@ function ContentTab({
         </div>
 
         {lessons.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-white/10 p-6 text-center text-xs text-white/45">
+          <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center text-xs text-slate-500">
             No lessons yet. Add your first lesson — a 10-minute intro video is a
             great starting point.
           </div>
@@ -551,23 +551,23 @@ function LessonRow({
   };
 
   return (
-    <div className="rounded-lg border border-white/[0.07] bg-white/[0.02] p-3">
+    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
       <div className="mb-2 flex items-center gap-2">
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/[0.06] text-[11px] font-semibold text-white/55">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-100 text-[11px] font-semibold text-slate-500">
           {index + 1}
         </span>
         <input
           value={lesson.title}
           onChange={(e) => onChange({ title: e.target.value })}
           placeholder="Lesson title"
-          className="h-8 flex-1 rounded border border-white/[0.07] bg-white/[0.03] px-2 text-xs text-white outline-none focus:border-electric-500/40"
+          className="h-8 flex-1 rounded border border-slate-200 bg-slate-50 px-2 text-xs text-slate-900 outline-none focus:border-electric-500/40"
         />
         <button
           type="button"
           onClick={onMoveUp}
           disabled={index === 0}
           aria-label="Move up"
-          className="rounded p-1 text-white/30 hover:text-white/65 disabled:opacity-25"
+          className="rounded p-1 text-slate-300 hover:text-slate-600 disabled:opacity-25"
         >
           <ArrowUp className="h-3.5 w-3.5" />
         </button>
@@ -576,7 +576,7 @@ function LessonRow({
           onClick={onMoveDown}
           disabled={index === total - 1}
           aria-label="Move down"
-          className="rounded p-1 text-white/30 hover:text-white/65 disabled:opacity-25"
+          className="rounded p-1 text-slate-300 hover:text-slate-600 disabled:opacity-25"
         >
           <ArrowDown className="h-3.5 w-3.5" />
         </button>
@@ -584,14 +584,14 @@ function LessonRow({
           type="button"
           onClick={onRemove}
           aria-label="Remove lesson"
-          className="rounded p-1 text-white/25 transition-colors hover:bg-red-500/10 hover:text-red-400"
+          className="rounded p-1 text-slate-300 transition-colors hover:bg-red-500/10 hover:text-red-600"
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>
       </div>
 
       <div className="mb-2">
-        <label className="mb-1 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-white/40">
+        <label className="mb-1 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-slate-400">
           <Film className="h-3 w-3" />
           Video URL (YouTube, Adilo, Vimeo, or .mp4)
         </label>
@@ -599,12 +599,12 @@ function LessonRow({
           value={lesson.videoUrl ?? ""}
           onChange={(e) => onChange({ videoUrl: e.target.value })}
           placeholder="https://youtu.be/… or https://adilo.bigcommand.com/watch/…"
-          className="h-8 w-full rounded border border-white/[0.07] bg-white/[0.03] px-2 text-xs text-white outline-none focus:border-electric-500/40"
+          className="h-8 w-full rounded border border-slate-200 bg-slate-50 px-2 text-xs text-slate-900 outline-none focus:border-electric-500/40"
         />
         <p
           className={cn(
             "mt-1 text-[10px]",
-            parsed ? "text-jade-300" : lesson.videoUrl ? "text-amber-300" : "text-white/30",
+            parsed ? "text-jade-600" : lesson.videoUrl ? "text-amber-700" : "text-slate-300",
           )}
         >
           {videoStatus}
@@ -616,7 +616,7 @@ function LessonRow({
           value={lesson.description ?? ""}
           onChange={(e) => onChange({ description: e.target.value })}
           placeholder="One-line description (optional)"
-          className="h-8 w-full rounded border border-white/[0.07] bg-white/[0.03] px-2 text-xs text-white outline-none focus:border-electric-500/40"
+          className="h-8 w-full rounded border border-slate-200 bg-slate-50 px-2 text-xs text-slate-900 outline-none focus:border-electric-500/40"
         />
         <input
           type="number"
@@ -628,12 +628,12 @@ function LessonRow({
             })
           }
           placeholder="Duration (min)"
-          className="h-8 w-full rounded border border-white/[0.07] bg-white/[0.03] px-2 text-xs text-white outline-none focus:border-electric-500/40"
+          className="h-8 w-full rounded border border-slate-200 bg-slate-50 px-2 text-xs text-slate-900 outline-none focus:border-electric-500/40"
         />
       </div>
 
       <div className="mb-2">
-        <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/40">
+        <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-slate-400">
           Notes (shown below the video)
         </label>
         <textarea
@@ -641,32 +641,32 @@ function LessonRow({
           onChange={(e) => onChange({ body: e.target.value })}
           placeholder="Key takeaways, action steps, anything you want learners to read…"
           rows={4}
-          className="w-full resize-none rounded border border-white/[0.07] bg-white/[0.03] p-2 text-xs leading-relaxed text-white outline-none placeholder:text-white/25 focus:border-electric-500/40"
+          className="w-full resize-none rounded border border-slate-200 bg-slate-50 p-2 text-xs leading-relaxed text-slate-900 outline-none placeholder:text-slate-300 focus:border-electric-500/40"
         />
       </div>
 
-      <label className="mb-2 flex items-center gap-2 text-[11px] text-white/65">
+      <label className="mb-2 flex items-center gap-2 text-[11px] text-slate-600">
         <input
           type="checkbox"
           checked={lesson.freePreview}
           onChange={(e) => onChange({ freePreview: e.target.checked })}
-          className="h-3.5 w-3.5 cursor-pointer rounded border-white/20 bg-white/[0.04] accent-electric-500"
+          className="h-3.5 w-3.5 cursor-pointer rounded border-slate-300 bg-slate-100 accent-electric-500"
         />
         {lesson.freePreview ? (
-          <span className="flex items-center gap-1 text-jade-300">
+          <span className="flex items-center gap-1 text-jade-600">
             <Eye className="h-3 w-3" />
             Free preview — visible to non-learners on the public page
           </span>
         ) : (
-          <span className="flex items-center gap-1 text-white/55">
+          <span className="flex items-center gap-1 text-slate-500">
             <Lock className="h-3 w-3" />
             Locked — only activated learners can watch
           </span>
         )}
       </label>
 
-      <details className="rounded border border-white/[0.05] bg-white/[0.02]">
-        <summary className="cursor-pointer px-2 py-1.5 text-[10px] font-medium uppercase tracking-wider text-white/40 hover:text-white/65">
+      <details className="rounded border border-slate-200 bg-slate-50">
+        <summary className="cursor-pointer px-2 py-1.5 text-[10px] font-medium uppercase tracking-wider text-slate-400 hover:text-slate-600">
           <Paperclip className="mr-1 inline h-3 w-3" />
           Downloads ({(lesson.resources ?? []).length})
         </summary>
@@ -674,25 +674,25 @@ function LessonRow({
           {(lesson.resources ?? []).map((r, rIdx) => (
             <div
               key={r.id}
-              className="flex flex-col gap-1.5 rounded border border-white/[0.05] bg-white/[0.02] p-1.5 sm:flex-row sm:items-center sm:border-transparent sm:bg-transparent sm:p-0"
+              className="flex flex-col gap-1.5 rounded border border-slate-200 bg-slate-50 p-1.5 sm:flex-row sm:items-center sm:border-transparent sm:bg-transparent sm:p-0"
             >
               <input
                 value={r.label}
                 onChange={(e) => updateResource(rIdx, { label: e.target.value })}
                 placeholder="Script PDF"
-                className="h-7 rounded border border-white/[0.07] bg-white/[0.03] px-2 text-[11px] text-white outline-none focus:border-electric-500/40 sm:w-32"
+                className="h-7 rounded border border-slate-200 bg-slate-50 px-2 text-[11px] text-slate-900 outline-none focus:border-electric-500/40 sm:w-32"
               />
               <input
                 value={r.url}
                 onChange={(e) => updateResource(rIdx, { url: e.target.value })}
                 placeholder="https://…"
-                className="h-7 flex-1 rounded border border-white/[0.07] bg-white/[0.03] px-2 text-[11px] text-white outline-none focus:border-electric-500/40"
+                className="h-7 flex-1 rounded border border-slate-200 bg-slate-50 px-2 text-[11px] text-slate-900 outline-none focus:border-electric-500/40"
               />
               <button
                 type="button"
                 onClick={() => removeResource(rIdx)}
                 aria-label="Remove download"
-                className="rounded p-1 text-white/25 hover:text-red-400"
+                className="rounded p-1 text-slate-300 hover:text-red-600"
               >
                 <Trash2 className="h-3 w-3" />
               </button>
@@ -701,7 +701,7 @@ function LessonRow({
           <button
             type="button"
             onClick={addResource}
-            className="flex items-center gap-1 rounded px-2 py-1 text-[10px] font-medium text-electric-300 hover:bg-electric-500/10"
+            className="flex items-center gap-1 rounded px-2 py-1 text-[10px] font-medium text-electric-700 hover:bg-electric-500/10"
           >
             <Link2 className="h-3 w-3" />
             Add download link
@@ -769,7 +769,7 @@ function DistributionTab({
     <div className="space-y-4">
       {/* Mode selector */}
       <Card className="space-y-3 p-4">
-        <p className="text-[10px] font-medium uppercase tracking-wider text-white/45">
+        <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">
           Who can watch this training?
         </p>
         <div className="space-y-2">
@@ -798,7 +798,7 @@ function DistributionTab({
           activation code for the post-purchase unlock flow). */}
       {codeOnlyDisplayed && (
         <Card className="space-y-4 p-4">
-          <p className="text-[10px] font-medium uppercase tracking-wider text-white/45">
+          <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">
             Codes
           </p>
           <CodeRow
@@ -824,11 +824,11 @@ function DistributionTab({
       {/* Paid-mode settings */}
       {training.distribution === "paid" && (
         <Card className="space-y-3 p-4">
-          <p className="text-[10px] font-medium uppercase tracking-wider text-white/45">
+          <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">
             Paid mode settings
           </p>
           <div>
-            <label className="mb-1 block text-xs font-medium text-white/55">
+            <label className="mb-1 block text-xs font-medium text-slate-500">
               Price (PHP)
             </label>
             <input
@@ -841,9 +841,9 @@ function DistributionTab({
                 })
               }
               placeholder="e.g. 2499"
-              className="h-10 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-electric-500/60 sm:w-48"
+              className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none placeholder:text-slate-300 focus:border-electric-500/60 sm:w-48"
             />
-            <p className="mt-1 text-[11px] text-white/40">
+            <p className="mt-1 text-[11px] text-slate-400">
               Buyers will see this on the public training page and pay via
               your GCash / Maya / bank methods configured on your profile.
               Approve receipts in <code>/payments</code> — if the buyer
@@ -900,10 +900,10 @@ function AutoGrantBlock({
   return (
     <Card className="space-y-3 p-4">
       <div>
-        <p className="text-[10px] font-medium uppercase tracking-wider text-white/45">
+        <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">
           Pipeline auto-grant (optional)
         </p>
-        <p className="mt-1 text-xs text-white/55">
+        <p className="mt-1 text-xs text-slate-500">
           Auto-unlock this training when a lead enters a specific
           pipeline stage. Works only if the lead&apos;s email matches
           a Credibly account.
@@ -911,7 +911,7 @@ function AutoGrantBlock({
       </div>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/40">
+          <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-slate-400">
             Pipeline
           </label>
           <select
@@ -924,7 +924,7 @@ function AutoGrantBlock({
                 autoGrantStageId: undefined,
               })
             }
-            className="h-10 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 text-sm text-white outline-none focus:border-electric-500/60"
+            className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none focus:border-electric-500/60"
           >
             <option value="">— None —</option>
             {pipelines.map((p) => (
@@ -935,7 +935,7 @@ function AutoGrantBlock({
           </select>
         </div>
         <div>
-          <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/40">
+          <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-slate-400">
             Stage
           </label>
           <select
@@ -944,7 +944,7 @@ function AutoGrantBlock({
               onPatch({ autoGrantStageId: e.target.value || undefined })
             }
             disabled={!selectedPipeline}
-            className="h-10 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 text-sm text-white outline-none focus:border-electric-500/60 disabled:opacity-50"
+            className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none focus:border-electric-500/60 disabled:opacity-50"
           >
             <option value="">— Pick a stage —</option>
             {(selectedPipeline?.stages ?? []).map((s) => (
@@ -999,7 +999,7 @@ function ModeRadio({
         "flex w-full items-start gap-3 rounded-xl border p-3 text-left transition-colors",
         checked
           ? "border-electric-500/60 bg-electric-500/[0.08]"
-          : "border-white/10 bg-white/[0.02] hover:border-white/20",
+          : "border-slate-200 bg-slate-50 hover:border-slate-300",
       )}
     >
       <span
@@ -1011,8 +1011,8 @@ function ModeRadio({
         {checked && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-white">{title}</p>
-        <p className="mt-0.5 text-xs leading-relaxed text-white/55">
+        <p className="text-sm font-medium text-slate-900">{title}</p>
+        <p className="mt-0.5 text-xs leading-relaxed text-slate-500">
           {description}
         </p>
       </div>
@@ -1039,13 +1039,13 @@ function CodeRow({
 }) {
   return (
     <div>
-      <p className="mb-1 text-sm font-medium text-white">{label}</p>
-      <p className="mb-2 text-xs text-white/45">{hint}</p>
+      <p className="mb-1 text-sm font-medium text-slate-900">{label}</p>
+      <p className="mb-2 text-xs text-slate-500">{hint}</p>
       <div className="flex flex-wrap items-center gap-2">
         <code
           className={cn(
-            "flex-1 truncate rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 font-mono text-sm",
-            primary ? "text-electric-300" : "text-white/80",
+            "flex-1 truncate rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-sm",
+            primary ? "text-electric-700" : "text-slate-700",
           )}
         >
           {value}
@@ -1111,7 +1111,7 @@ function LearnersTab({ trainingId }: { trainingId: string }) {
 
   if (loading) {
     return (
-      <Card className="p-6 text-center text-sm text-white/40">
+      <Card className="p-6 text-center text-sm text-slate-400">
         Loading learners…
       </Card>
     );
@@ -1120,11 +1120,11 @@ function LearnersTab({ trainingId }: { trainingId: string }) {
   if (accesses.length === 0) {
     return (
       <Card className="p-8 text-center">
-        <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-white/[0.05]">
-          <Users className="h-6 w-6 text-white/40" />
+        <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
+          <Users className="h-6 w-6 text-slate-400" />
         </span>
-        <p className="text-sm font-medium text-white">No learners yet</p>
-        <p className="mt-1 text-xs text-white/50">
+        <p className="text-sm font-medium text-slate-900">No learners yet</p>
+        <p className="mt-1 text-xs text-slate-500">
           When someone activates this training with your code, they&apos;ll
           appear here with their progress.
         </p>
@@ -1133,24 +1133,24 @@ function LearnersTab({ trainingId }: { trainingId: string }) {
   }
 
   return (
-    <Card className="divide-y divide-white/[0.06] p-0">
+    <Card className="divide-y divide-slate-200 p-0">
       {accesses.map((a) => {
         const done = progressByUser.get(a.userId) ?? 0;
         return (
           <div key={a.id} className="flex items-center gap-3 p-3.5">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-electric-500/15 text-electric-300">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-electric-500/15 text-electric-700">
               <Users className="h-5 w-5" />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-white">
+              <p className="truncate text-sm font-medium text-slate-900">
                 {a.userId}
               </p>
-              <p className="mt-0.5 text-xs text-white/45">
+              <p className="mt-0.5 text-xs text-slate-500">
                 Unlocked {timeAgo(a.unlockedAt)} · via {a.unlockedVia}
               </p>
             </div>
-            <div className="flex shrink-0 items-center gap-1.5 text-xs text-white/60">
-              <CheckCircle2 className="h-3.5 w-3.5 text-jade-400" />
+            <div className="flex shrink-0 items-center gap-1.5 text-xs text-slate-500">
+              <CheckCircle2 className="h-3.5 w-3.5 text-jade-600" />
               <span>{done} done</span>
             </div>
           </div>
@@ -1185,7 +1185,7 @@ function ClonesTab({ training }: { training: Training }) {
 
   if (loading) {
     return (
-      <Card className="p-6 text-center text-sm text-white/40">
+      <Card className="p-6 text-center text-sm text-slate-400">
         Loading clones…
       </Card>
     );
@@ -1194,13 +1194,13 @@ function ClonesTab({ training }: { training: Training }) {
   if (clones.length === 0) {
     return (
       <Card className="p-8 text-center">
-        <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-white/[0.05]">
-          <GraduationCap className="h-6 w-6 text-white/40" />
+        <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
+          <GraduationCap className="h-6 w-6 text-slate-400" />
         </span>
-        <p className="text-sm font-medium text-white">
+        <p className="text-sm font-medium text-slate-900">
           No other leaders have cloned this yet
         </p>
-        <p className="mt-1 text-xs text-white/50">
+        <p className="mt-1 text-xs text-slate-500">
           Share your training&apos;s share code with other leaders so they
           can clone it and track their own downline separately.
         </p>
@@ -1209,26 +1209,26 @@ function ClonesTab({ training }: { training: Training }) {
   }
 
   return (
-    <Card className="divide-y divide-white/[0.06] p-0">
-      <div className="border-b border-white/[0.06] p-3.5">
-        <p className="text-xs font-medium text-white">
+    <Card className="divide-y divide-slate-200 p-0">
+      <div className="border-b border-slate-200 p-3.5">
+        <p className="text-xs font-medium text-slate-900">
           {clones.length} leader{clones.length === 1 ? "" : "s"} cloned this
         </p>
-        <p className="mt-0.5 text-[11px] text-white/45">
+        <p className="mt-0.5 text-[11px] text-slate-500">
           You can only see the clone count + when it was made. The
           learner lists inside each clone belong to that leader, not you.
         </p>
       </div>
       {clones.map((c) => (
         <div key={c.id} className="flex items-center gap-3 p-3.5">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.05] text-white/55">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
             <GraduationCap className="h-4 w-4" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-white">
+            <p className="truncate text-sm font-medium text-slate-900">
               {c.title || "Untitled clone"}
             </p>
-            <p className="mt-0.5 text-xs text-white/45">
+            <p className="mt-0.5 text-xs text-slate-500">
               Cloned {timeAgo(c.createdAt)} ·{" "}
               {c.status === "published" ? "Published" : "Draft"}
             </p>

@@ -60,17 +60,17 @@ export function ConfirmDialog({
         {/* Visual cue + body. We always render the warning glyph for
             danger-toned dialogs so the action's severity registers
             without forcing the caller to bring their own icon. */}
-        <div className="flex gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
+        <div className="flex gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
           <span
             className={
               tone === "danger"
-                ? "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-500/15 text-red-300"
-                : "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-electric-500/15 text-electric-300"
+                ? "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-500/10 text-red-600"
+                : "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-electric-500/10 text-electric-600"
             }
           >
             <AlertTriangle className="h-4 w-4" />
           </span>
-          <div className="min-w-0 flex-1 text-sm text-white/75">
+          <div className="min-w-0 flex-1 text-sm text-slate-700">
             {body ?? (
               <p>This action can&apos;t be undone — make sure you mean it.</p>
             )}

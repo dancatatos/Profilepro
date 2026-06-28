@@ -46,7 +46,7 @@ import type {
 } from "@/types";
 
 const inputCls =
-  "h-9 w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 text-sm text-white outline-none transition-colors focus:border-electric-500/50";
+  "h-9 w-full rounded-lg border border-slate-200 bg-slate-100 px-3 text-sm text-slate-900 outline-none transition-colors focus:border-electric-500/50";
 
 /* ── Pill switch ── */
 function Switch({
@@ -383,25 +383,25 @@ export default function AdminSubscriptionsPage() {
       label: "Free",
       value: fetching ? "…" : String(counts.free),
       sub: `₱${priceOf("free").toLocaleString()}${periodSuffix("free")}`,
-      color: "text-white/60",
+      color: "text-slate-500",
     },
     {
       label: "Pro",
       value: fetching ? "…" : String(counts.pro),
       sub: `₱${priceOf("pro").toLocaleString()}${periodSuffix("pro")} each`,
-      color: "text-electric-400",
+      color: "text-electric-600",
     },
     {
       label: "Team",
       value: fetching ? "…" : String(counts.team),
       sub: `₱${priceOf("team").toLocaleString()}${periodSuffix("team")} each`,
-      color: "text-gold-400",
+      color: "text-amber-700",
     },
     {
       label: "Est. MRR",
       value: fetching ? "…" : `₱${mrr.toLocaleString()}`,
       sub: `${paid} paid ${paid === 1 ? "user" : "users"} · annual ÷ 12`,
-      color: "text-jade-400",
+      color: "text-jade-600",
     },
   ];
 
@@ -410,10 +410,10 @@ export default function AdminSubscriptionsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-2xl font-bold text-white">
+          <h1 className="font-display text-2xl font-bold text-slate-900">
             Subscriptions
           </h1>
-          <p className="text-sm text-white/45">
+          <p className="text-sm text-slate-500">
             Plan distribution and editable pricing.
           </p>
         </div>
@@ -439,10 +439,10 @@ export default function AdminSubscriptionsPage() {
             >
               {s.label}
             </p>
-            <p className="font-display text-3xl font-bold text-white">
+            <p className="font-display text-3xl font-bold text-slate-900">
               {s.value}
             </p>
-            <p className="mt-1 text-xs text-white/40">{s.sub}</p>
+            <p className="mt-1 text-xs text-slate-400">{s.sub}</p>
           </Card>
         ))}
       </div>
@@ -451,10 +451,10 @@ export default function AdminSubscriptionsPage() {
       <div>
         <div className="mb-3 flex items-center justify-between gap-3">
           <div>
-            <h2 className="font-display text-sm font-semibold text-white">
+            <h2 className="font-display text-sm font-semibold text-slate-900">
               Plan Definitions
             </h2>
-            <p className="text-xs text-white/40">
+            <p className="text-xs text-slate-400">
               Edits go live on the public billing page once saved.
             </p>
           </div>
@@ -498,15 +498,15 @@ export default function AdminSubscriptionsPage() {
                     className={cn(
                       "rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
                       isAffiliate
-                        ? "bg-electric-500/15 text-electric-300"
-                        : "bg-white/[0.06] text-white/45",
+                        ? "bg-electric-500/15 text-electric-700"
+                        : "bg-slate-100 text-slate-500",
                     )}
                   >
                     {plan.id}
                   </span>
                   {isAffiliate && (
                     <span
-                      className="inline-flex items-center gap-1 rounded-md bg-electric-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-electric-300"
+                      className="inline-flex items-center gap-1 rounded-md bg-electric-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-electric-700"
                       title="Hidden from the public website"
                     >
                       <Lock className="h-2.5 w-2.5" />
@@ -514,13 +514,13 @@ export default function AdminSubscriptionsPage() {
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-1.5 text-[11px] font-medium text-white/50">
+                <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
                   <Star
                     className={cn(
                       "h-3.5 w-3.5",
                       plan.highlighted
-                        ? "fill-gold-400 text-gold-400"
-                        : "text-white/30",
+                        ? "fill-gold-400 text-amber-700"
+                        : "text-slate-300",
                     )}
                   />
                   Popular
@@ -536,7 +536,7 @@ export default function AdminSubscriptionsPage() {
                       type="button"
                       onClick={() => removePlan(pIdx)}
                       aria-label={`Delete ${plan.name}`}
-                      className="ml-1 rounded-md p-1 text-white/30 transition-colors hover:bg-red-500/10 hover:text-red-400"
+                      className="ml-1 rounded-md p-1 text-slate-300 transition-colors hover:bg-red-500/10 hover:text-red-600"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -546,7 +546,7 @@ export default function AdminSubscriptionsPage() {
 
               {/* Plan id slug — editable only for non-protected plans */}
               <div>
-                <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/40">
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-slate-400">
                   Plan ID (slug)
                 </label>
                 <input
@@ -556,11 +556,11 @@ export default function AdminSubscriptionsPage() {
                   onChange={(e) => renamePlanId(pIdx, e.target.value)}
                 />
                 {isProtected ? (
-                  <p className="mt-1 text-[10px] text-white/30">
+                  <p className="mt-1 text-[10px] text-slate-300">
                     Built-in plan — id is locked
                   </p>
                 ) : (
-                  <p className="mt-1 text-[10px] text-white/30">
+                  <p className="mt-1 text-[10px] text-slate-300">
                     URL-safe slug, e.g. <code>annual-special</code>
                   </p>
                 )}
@@ -568,7 +568,7 @@ export default function AdminSubscriptionsPage() {
 
               {/* Visibility — public vs affiliate-only */}
               <div>
-                <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/40">
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-slate-400">
                   Visibility
                 </label>
                 <div className="flex gap-1.5">
@@ -590,8 +590,8 @@ export default function AdminSubscriptionsPage() {
                         className={cn(
                           "flex flex-1 items-center justify-center gap-1.5 rounded-lg border py-1.5 text-xs font-medium capitalize transition-colors",
                           active
-                            ? "border-electric-500/50 bg-electric-500/15 text-electric-300"
-                            : "border-white/10 bg-white/[0.04] text-white/50 hover:bg-white/[0.08]",
+                            ? "border-electric-500/50 bg-electric-500/15 text-electric-700"
+                            : "border-slate-200 bg-slate-100 text-slate-500 hover:bg-slate-200",
                         )}
                       >
                         <Icon className="h-3.5 w-3.5" />
@@ -600,7 +600,7 @@ export default function AdminSubscriptionsPage() {
                     );
                   })}
                 </div>
-                <p className="mt-1 text-[10px] text-white/30">
+                <p className="mt-1 text-[10px] text-slate-300">
                   {isAffiliate
                     ? "Hidden from the website. Granted manually after the affiliate forwards payment."
                     : "Shown on the public website and billing page."}
@@ -609,7 +609,7 @@ export default function AdminSubscriptionsPage() {
 
               {/* Name */}
               <div>
-                <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/40">
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-slate-400">
                   Plan name
                 </label>
                 <input
@@ -621,7 +621,7 @@ export default function AdminSubscriptionsPage() {
 
               {/* Billing period */}
               <div>
-                <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/40">
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-slate-400">
                   Billing period
                 </label>
                 <div className="flex gap-1.5">
@@ -633,8 +633,8 @@ export default function AdminSubscriptionsPage() {
                       className={cn(
                         "flex-1 rounded-lg border py-1.5 text-xs font-medium capitalize transition-colors",
                         plan.billingPeriod === bp
-                          ? "border-electric-500/50 bg-electric-500/15 text-electric-300"
-                          : "border-white/10 bg-white/[0.04] text-white/50 hover:bg-white/[0.08]",
+                          ? "border-electric-500/50 bg-electric-500/15 text-electric-700"
+                          : "border-slate-200 bg-slate-100 text-slate-500 hover:bg-slate-200",
                       )}
                     >
                       {bp}
@@ -645,11 +645,11 @@ export default function AdminSubscriptionsPage() {
 
               {/* Price */}
               <div>
-                <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/40">
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-slate-400">
                   Price / {plan.billingPeriod === "annual" ? "year" : "month"}
                 </label>
                 <div className="relative">
-                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-white/40">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">
                     ₱
                   </span>
                   <input
@@ -668,7 +668,7 @@ export default function AdminSubscriptionsPage() {
 
               {/* Tagline */}
               <div>
-                <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/40">
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-slate-400">
                   Tagline
                 </label>
                 <input
@@ -682,7 +682,7 @@ export default function AdminSubscriptionsPage() {
 
               {/* Checkout URL — per-plan Gumroad link */}
               <div>
-                <label className="mb-1 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-white/40">
+                <label className="mb-1 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-slate-400">
                   <Link2 className="h-3 w-3" />
                   Checkout URL
                 </label>
@@ -698,19 +698,19 @@ export default function AdminSubscriptionsPage() {
                     updatePlan(pIdx, { checkoutUrl: e.target.value })
                   }
                 />
-                <p className="mt-1 text-[10px] text-white/30">
+                <p className="mt-1 text-[10px] text-slate-300">
                   The &ldquo;Buy&rdquo; button on the billing page sends users here.
                 </p>
               </div>
 
               {/* Affiliate commission */}
               <div>
-                <label className="mb-1 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-white/40">
+                <label className="mb-1 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-slate-400">
                   <Coins className="h-3 w-3" />
                   Affiliate commission
                 </label>
                 <div className="relative">
-                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-white/40">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">
                     ₱
                   </span>
                   <input
@@ -725,7 +725,7 @@ export default function AdminSubscriptionsPage() {
                     }
                   />
                 </div>
-                <p className="mt-1 text-[10px] text-white/30">
+                <p className="mt-1 text-[10px] text-slate-300">
                   Paid to the affiliate on signup AND on every renewal. 0 = no
                   commission.
                 </p>
@@ -733,7 +733,7 @@ export default function AdminSubscriptionsPage() {
 
               {/* Activation duration */}
               <div>
-                <label className="mb-1 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-white/40">
+                <label className="mb-1 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-slate-400">
                   <Clock className="h-3 w-3" />
                   Activation duration
                 </label>
@@ -763,7 +763,7 @@ export default function AdminSubscriptionsPage() {
                     <option value="years">years</option>
                   </select>
                 </div>
-                <p className="mt-1 text-[10px] text-white/30">
+                <p className="mt-1 text-[10px] text-slate-300">
                   How long an activation lasts before renewal is due.
                 </p>
               </div>
@@ -774,7 +774,7 @@ export default function AdminSubscriptionsPage() {
                   A user can also be granted per-user overrides in
                   /admin/users that beat these values. */}
               <div>
-                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-white/40">
+                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-slate-400">
                   Plan limits
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -803,7 +803,7 @@ export default function AdminSubscriptionsPage() {
                     onChange={(v) => updateLimits(pIdx, { trainingsActivate: v })}
                   />
                 </div>
-                <p className="mt-1 text-[10px] text-white/35">
+                <p className="mt-1 text-[10px] text-slate-400">
                   Blank = use the default for this plan id (shown as
                   placeholder). 0 = block. 999 = effectively unlimited.
                   Per-user overrides in <code>/admin/users</code> can grant
@@ -824,12 +824,12 @@ export default function AdminSubscriptionsPage() {
                   on the pricing card alongside the canonical features.
                   Useful for marketing copy ("Everything in Free", etc).
                   These do NOT gate functionality — they're display only. */}
-              <details className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
-                <summary className="cursor-pointer text-[11px] font-medium uppercase tracking-wider text-white/40 hover:text-white/65">
+              <details className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <summary className="cursor-pointer text-[11px] font-medium uppercase tracking-wider text-slate-400 hover:text-slate-600">
                   Custom display lines{" "}
                   {plan.features.length > 0 && `(${plan.features.length})`}
                 </summary>
-                <p className="mt-2 text-[10px] text-white/35">
+                <p className="mt-2 text-[10px] text-slate-400">
                   Display-only — shown on the pricing card, doesn&apos;t
                   affect feature gating. Use for marketing lines like
                   &ldquo;Everything in Free&rdquo;.
@@ -860,7 +860,7 @@ export default function AdminSubscriptionsPage() {
                         type="button"
                         onClick={() => removeFeature(pIdx, fIdx)}
                         aria-label="Remove feature"
-                        className="shrink-0 rounded-md p-1.5 text-white/30 transition-colors hover:bg-red-500/10 hover:text-red-400"
+                        className="shrink-0 rounded-md p-1.5 text-slate-300 transition-colors hover:bg-red-500/10 hover:text-red-600"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -870,7 +870,7 @@ export default function AdminSubscriptionsPage() {
                 <button
                   type="button"
                   onClick={() => addFeature(pIdx)}
-                  className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-white/[0.12] py-1.5 text-[11px] font-medium text-white/45 transition-colors hover:border-white/25 hover:text-white/70"
+                  className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-white/[0.12] py-1.5 text-[11px] font-medium text-slate-500 transition-colors hover:border-white/25 hover:text-slate-600"
                 >
                   <Plus className="h-3.5 w-3.5" /> Add custom line
                 </button>
@@ -883,13 +883,13 @@ export default function AdminSubscriptionsPage() {
           <button
             type="button"
             onClick={addPlan}
-            className="flex min-h-[18rem] flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-white/[0.12] p-5 text-sm font-medium text-white/45 transition-colors hover:border-electric-500/40 hover:bg-electric-500/[0.04] hover:text-electric-300"
+            className="flex min-h-[18rem] flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-white/[0.12] p-5 text-sm font-medium text-slate-500 transition-colors hover:border-electric-500/40 hover:bg-electric-500/[0.04] hover:text-electric-700"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.06]">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100">
               <Plus className="h-5 w-5" />
             </span>
             Add new plan
-            <span className="text-[11px] font-normal text-white/30">
+            <span className="text-[11px] font-normal text-slate-300">
               Create a custom plan (affiliate or public)
             </span>
           </button>
@@ -920,10 +920,10 @@ function PlanFeatureToggles({
   return (
     <div>
       <div className="mb-1.5 flex items-baseline justify-between">
-        <label className="text-[11px] font-medium uppercase tracking-wider text-white/40">
+        <label className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
           Features
         </label>
-        <span className="text-[10px] text-white/30">
+        <span className="text-[10px] text-slate-300">
           {enabledCount} of {grouped.reduce((s, g) => s + g.features.length, 0)}{" "}
           enabled
         </span>
@@ -931,7 +931,7 @@ function PlanFeatureToggles({
       <div className="space-y-3">
         {grouped.map(({ category, features }) => (
           <div key={category}>
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-white/35">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
               {category}
             </p>
             <div className="space-y-1">
@@ -969,7 +969,7 @@ function FeatureToggleRow({
         "flex w-full items-start gap-2.5 rounded-lg border px-2.5 py-1.5 text-left transition-colors",
         enabled
           ? "border-jade-500/30 bg-jade-500/[0.06]"
-          : "border-white/[0.06] bg-white/[0.015] hover:bg-white/[0.04]",
+          : "border-slate-200 bg-slate-50 hover:bg-slate-100",
       )}
     >
       <span
@@ -989,13 +989,13 @@ function FeatureToggleRow({
         <span
           className={cn(
             "block text-xs font-medium",
-            enabled ? "text-white" : "text-white/65",
+            enabled ? "text-slate-900" : "text-slate-600",
           )}
         >
           {feature.label}
         </span>
         {feature.hint && (
-          <span className="mt-0.5 block text-[10px] text-white/35">
+          <span className="mt-0.5 block text-[10px] text-slate-400">
             {feature.hint}
           </span>
         )}
@@ -1031,11 +1031,11 @@ function LimitInput({
 }) {
   return (
     <div>
-      <p className="mb-1 text-[10px] text-white/45">{label}</p>
+      <p className="mb-1 text-[10px] text-slate-500">{label}</p>
       <input
         type="number"
         min={0}
-        className="h-9 w-full rounded-lg border border-white/[0.07] bg-white/[0.03] px-2.5 text-sm text-white outline-none focus:border-electric-500/50"
+        className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-sm text-slate-900 outline-none focus:border-electric-500/50"
         value={value ?? ""}
         placeholder={`Default: ${defaultValue >= 999 ? "∞" : defaultValue}`}
         onChange={(e) => {

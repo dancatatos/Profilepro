@@ -316,8 +316,8 @@ export default function LeadsPage() {
               className={cn(
                 "flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-medium transition-colors",
                 filter === f.key
-                  ? "border-electric-500/50 bg-electric-500/15 text-electric-300"
-                  : "border-white/10 bg-white/[0.04] text-white/65 hover:bg-white/[0.08]",
+                  ? "border-electric-500/50 bg-electric-500/15 text-electric-700"
+                  : "border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-200",
               )}
             >
               {f.label}
@@ -325,8 +325,8 @@ export default function LeadsPage() {
                 className={cn(
                   "rounded-full px-1.5 text-[10px]",
                   filter === f.key
-                    ? "bg-electric-500/20 text-electric-200"
-                    : "bg-white/[0.08] text-white/45",
+                    ? "bg-electric-500/20 text-electric-700"
+                    : "bg-slate-200 text-slate-500",
                 )}
               >
                 {f.count}
@@ -342,7 +342,7 @@ export default function LeadsPage() {
               onClick={() =>
                 allVisibleSelected ? clearSelection() : selectAllVisible()
               }
-              className="ml-auto flex items-center gap-1.5 rounded-lg border border-white/10 px-2.5 py-1 text-[11px] font-medium text-white/65 hover:bg-white/[0.05]"
+              className="ml-auto flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-100"
             >
               {allVisibleSelected ? (
                 <CheckSquare className="h-3.5 w-3.5" />
@@ -362,7 +362,7 @@ export default function LeadsPage() {
           description="When prospects submit your lead capture form, they'll appear here."
         />
       ) : visibleLeads.length === 0 ? (
-        <Card className="p-8 text-center text-sm text-white/40">
+        <Card className="p-8 text-center text-sm text-slate-400">
           No leads in this view. Try a different filter.
         </Card>
       ) : (
@@ -398,9 +398,9 @@ export default function LeadsPage() {
                     className="shrink-0"
                   >
                     {isSelected ? (
-                      <CheckSquare className="h-5 w-5 text-electric-300" />
+                      <CheckSquare className="h-5 w-5 text-electric-700" />
                     ) : (
-                      <Square className="h-5 w-5 text-white/30" />
+                      <Square className="h-5 w-5 text-slate-300" />
                     )}
                   </button>
                 )}
@@ -415,14 +415,14 @@ export default function LeadsPage() {
                       overlapped the email/phone line on long funnel
                       sources like "funnel:amare-ph-recruitment". */}
                   <div className="flex items-baseline gap-2">
-                    <p className="min-w-0 flex-1 truncate text-sm font-medium text-white">
+                    <p className="min-w-0 flex-1 truncate text-sm font-medium text-slate-900">
                       {lead.name}
                     </p>
-                    <span className="shrink-0 text-[10px] text-white/35">
+                    <span className="shrink-0 text-[10px] text-slate-400">
                       {timeAgo(lead.createdAt)}
                     </span>
                   </div>
-                  <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-white/45">
+                  <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-slate-500">
                     {lead.email && (
                       <span className="flex min-w-0 items-center gap-1">
                         <Mail className="h-3 w-3 shrink-0" />
@@ -436,7 +436,7 @@ export default function LeadsPage() {
                       </span>
                     )}
                     {lead.customAnswers && lead.customAnswers.length > 0 && (
-                      <span className="flex items-center gap-1 rounded-md bg-electric-500/12 px-1.5 py-0.5 text-[10px] font-medium text-electric-300">
+                      <span className="flex items-center gap-1 rounded-md bg-electric-500/12 px-1.5 py-0.5 text-[10px] font-medium text-electric-700">
                         💬 {lead.customAnswers.length} answer
                         {lead.customAnswers.length === 1 ? "" : "s"}
                       </span>
@@ -449,24 +449,24 @@ export default function LeadsPage() {
                       string is short and human-readable. */}
                   <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                     {pipeline ? (
-                      <span className="flex max-w-full items-center gap-1 rounded-md bg-electric-500/12 px-1.5 py-0.5 text-[10px] font-medium text-electric-300">
+                      <span className="flex max-w-full items-center gap-1 rounded-md bg-electric-500/12 px-1.5 py-0.5 text-[10px] font-medium text-electric-700">
                         <KanbanSquare className="h-3 w-3 shrink-0" />
                         <span className="truncate">
                           {pipeline.name}
                           {stageName && (
                             <>
-                              <span className="text-electric-300/55"> · </span>
+                              <span className="text-electric-700/55"> · </span>
                               {stageName}
                             </>
                           )}
                         </span>
                       </span>
                     ) : (
-                      <span className="rounded-md bg-white/[0.05] px-1.5 py-0.5 text-[10px] font-medium text-white/45">
+                      <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
                         Not in pipeline
                       </span>
                     )}
-                    <span className="max-w-[10rem] truncate rounded-md bg-white/[0.04] px-1.5 py-0.5 text-[10px] font-medium text-white/55">
+                    <span className="max-w-[10rem] truncate rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
                       {formatLeadSource(lead.source)}
                     </span>
                   </div>
@@ -485,7 +485,7 @@ export default function LeadsPage() {
                       setPendingDelete({ kind: "one", lead });
                     }}
                     aria-label={`Delete ${lead.name}`}
-                    className="ml-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white/30 transition-colors hover:bg-red-500/10 hover:text-red-400"
+                    className="ml-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-red-500/10 hover:text-red-600"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -500,17 +500,17 @@ export default function LeadsPage() {
           when at least one lead is selected. Designed to feel like an
           iOS action sheet: high contrast, primary CTA, easy to cancel. */}
       {selecting && (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-ink-950/95 px-4 py-3 pb-safe shadow-2xl backdrop-blur">
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-slate-50/95 px-4 py-3 pb-safe shadow-2xl backdrop-blur">
           <div className="mx-auto flex max-w-5xl items-center gap-2.5">
             <button
               type="button"
               onClick={exitSelectMode}
               aria-label="Exit selection"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 text-white/65 hover:bg-white/5"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100"
             >
               <X className="h-4 w-4" />
             </button>
-            <p className="flex-1 truncate text-sm font-medium text-white">
+            <p className="flex-1 truncate text-sm font-medium text-slate-900">
               {selectedCount === 0
                 ? "Tap a lead to select"
                 : `${selectedCount} selected`}
@@ -529,7 +529,7 @@ export default function LeadsPage() {
                 });
               }}
               leftIcon={<Trash2 className="h-3.5 w-3.5" />}
-              className="!border-red-500/30 !text-red-300 hover:!bg-red-500/10"
+              className="!border-red-500/30 !text-red-700 hover:!bg-red-500/10"
             >
               Delete
             </Button>
@@ -568,7 +568,7 @@ export default function LeadsPage() {
         body={
           pendingDelete?.kind === "one" ? (
             <p>
-              <span className="font-medium text-white">
+              <span className="font-medium text-slate-900">
                 {pendingDelete.lead.name}
               </span>{" "}
               and all their contact info will be permanently removed from

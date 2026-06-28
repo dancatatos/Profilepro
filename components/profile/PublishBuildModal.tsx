@@ -91,10 +91,10 @@ export function PublishBuildModal({
           <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-300 to-gold-500">
             <Crown className="h-6 w-6 text-ink-950" />
           </span>
-          <h3 className="mt-3 font-display text-base font-bold text-gold-200">
+          <h3 className="mt-3 font-display text-base font-bold text-amber-700">
             Sharing builds is a Pro feature
           </h3>
-          <p className="mx-auto mt-1 max-w-xs text-sm text-white/50">
+          <p className="mx-auto mt-1 max-w-xs text-sm text-slate-500">
             Upgrade to Pro to publish your profile as a reusable template and
             pass it to your team with a share code.
           </p>
@@ -110,22 +110,22 @@ export function PublishBuildModal({
         /* ── Success — show the share code ── */
         <div className="flex flex-col items-center py-4 text-center">
           <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-jade-500/15">
-            <Check className="h-6 w-6 text-jade-400" />
+            <Check className="h-6 w-6 text-jade-600" />
           </span>
-          <p className="mt-3 text-sm font-semibold text-white">
+          <p className="mt-3 text-sm font-semibold text-slate-900">
             Your build is live
           </p>
-          <p className="mt-0.5 text-xs text-white/45">
+          <p className="mt-0.5 text-xs text-slate-500">
             Anyone on Pro or Team can add your build with this code.
           </p>
-          <div className="mt-4 flex w-full items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-3">
-            <span className="flex-1 text-center font-display text-lg font-bold tracking-[0.2em] text-electric-300">
+          <div className="mt-4 flex w-full items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <span className="flex-1 text-center font-display text-lg font-bold tracking-[0.2em] text-electric-700">
               {code}
             </span>
             <button
               onClick={copyCode}
               aria-label="Copy code"
-              className="rounded-lg bg-white/10 p-2 text-white/70 hover:bg-white/15"
+              className="rounded-lg bg-slate-200 p-2 text-slate-600 hover:bg-white/15"
             >
               <Copy className="h-4 w-4" />
             </button>
@@ -135,7 +135,7 @@ export function PublishBuildModal({
               Done
             </Button>
           </div>
-          <p className="mt-3 text-xs text-white/35">
+          <p className="mt-3 text-xs text-slate-400">
             Manage or revoke shared builds any time on the Shared Builds page.
           </p>
         </div>
@@ -143,22 +143,22 @@ export function PublishBuildModal({
         /* ── Publish form ── */
         <div className="space-y-4 pb-2">
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-white/65">
+            <label className="mb-1.5 block text-xs font-medium text-slate-600">
               Build name
             </label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Recruiter Build 2026"
-              className="w-full rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-electric-500/60"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 outline-none placeholder:text-slate-300 focus:border-electric-500/60"
             />
           </div>
-          <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
-            <p className="flex items-center gap-1.5 text-xs font-medium text-white/70">
-              <Package className="h-3.5 w-3.5 text-electric-400" />
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p className="flex items-center gap-1.5 text-xs font-medium text-slate-600">
+              <Package className="h-3.5 w-3.5 text-electric-600" />
               What gets shared
             </p>
-            <p className="mt-1 text-xs leading-relaxed text-white/45">
+            <p className="mt-1 text-xs leading-relaxed text-slate-500">
               Your theme, section layout and copy. Links are cleared so
               recipients add their own — and your name, photo and contact
               details are never included.

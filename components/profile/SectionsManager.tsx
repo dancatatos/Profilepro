@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 import type { ProfileSection } from "@/types";
 
 const FIELD =
-  "h-10 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-electric-500/60";
+  "h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 placeholder:text-slate-300 outline-none focus:border-electric-500/60";
 
 function metaFor(type: ProfileSection["type"]): SectionMeta {
   return (
@@ -39,12 +39,12 @@ function SectionCard({ section }: { section: ProfileSection }) {
       value={section}
       dragListener={false}
       dragControls={controls}
-      className="overflow-hidden rounded-2xl border border-white/[0.07] bg-ink-850"
+      className="overflow-hidden rounded-2xl border border-slate-200 bg-white"
     >
       <div className="flex items-center gap-2 p-2.5">
         <button
           onPointerDown={(e) => controls.start(e)}
-          className="cursor-grab touch-none p-1 text-white/30 active:cursor-grabbing"
+          className="cursor-grab touch-none p-1 text-slate-300 active:cursor-grabbing"
           aria-label="Drag to reorder"
         >
           <GripVertical className="h-4 w-4" />
@@ -52,14 +52,14 @@ function SectionCard({ section }: { section: ProfileSection }) {
         <span
           className={cn(
             "flex h-8 w-8 items-center justify-center rounded-lg",
-            section.enabled ? "bg-electric-500/12" : "bg-white/[0.04]",
+            section.enabled ? "bg-electric-500/12" : "bg-slate-100",
           )}
         >
           <Icon
             name={meta.icon}
             className={cn(
               "h-4 w-4",
-              section.enabled ? "text-electric-400" : "text-white/30",
+              section.enabled ? "text-electric-600" : "text-slate-300",
             )}
           />
         </span>
@@ -67,10 +67,10 @@ function SectionCard({ section }: { section: ProfileSection }) {
           onClick={() => setOpen((o) => !o)}
           className="min-w-0 flex-1 text-left"
         >
-          <p className="truncate text-sm font-medium text-white">
+          <p className="truncate text-sm font-medium text-slate-900">
             {section.title || meta.label}
           </p>
-          <p className="truncate text-xs text-white/40">{meta.label}</p>
+          <p className="truncate text-xs text-slate-400">{meta.label}</p>
         </button>
         <Switch
           checked={section.enabled}
@@ -78,7 +78,7 @@ function SectionCard({ section }: { section: ProfileSection }) {
         />
         <button
           onClick={() => setOpen((o) => !o)}
-          className="p-1.5 text-white/40"
+          className="p-1.5 text-slate-400"
           aria-label="Expand"
         >
           <ChevronDown
@@ -96,7 +96,7 @@ function SectionCard({ section }: { section: ProfileSection }) {
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="space-y-3 border-t border-white/[0.06] p-3">
+            <div className="space-y-3 border-t border-slate-200 p-3">
               <input
                 value={section.title || ""}
                 onChange={(e) =>
@@ -112,7 +112,7 @@ function SectionCard({ section }: { section: ProfileSection }) {
               />
               <button
                 onClick={() => removeSection(section.id)}
-                className="flex items-center gap-1.5 text-xs font-medium text-red-300"
+                className="flex items-center gap-1.5 text-xs font-medium text-red-700"
               >
                 <Trash2 className="h-3.5 w-3.5" />
                 Remove section
@@ -149,7 +149,7 @@ export function SectionsManager() {
 
       <button
         onClick={() => setAddOpen(true)}
-        className="flex w-full items-center justify-center gap-1.5 rounded-2xl border border-dashed border-white/15 py-3 text-sm font-medium text-white/60 hover:border-electric-500/40 hover:text-white"
+        className="flex w-full items-center justify-center gap-1.5 rounded-2xl border border-dashed border-slate-300 py-3 text-sm font-medium text-slate-500 hover:border-electric-500/40 hover:text-slate-900"
       >
         <Plus className="h-4 w-4" />
         Add section
@@ -173,20 +173,20 @@ export function SectionsManager() {
                   className="flex items-center gap-3 rounded-xl border border-gold-400/20 bg-gold-400/[0.04] p-3 text-left transition-colors hover:border-gold-400/45"
                 >
                   <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold-400/12">
-                    <Icon name={s.icon} className="h-5 w-5 text-gold-300" />
+                    <Icon name={s.icon} className="h-5 w-5 text-amber-700" />
                   </span>
                   <div className="min-w-0">
-                    <p className="flex items-center gap-1.5 text-sm font-medium text-white">
+                    <p className="flex items-center gap-1.5 text-sm font-medium text-slate-900">
                       {s.label}
-                      <span className="rounded bg-gold-400/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-gold-300">
+                      <span className="rounded bg-gold-400/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-700">
                         Pro
                       </span>
                     </p>
-                    <p className="truncate text-xs text-white/45">
+                    <p className="truncate text-xs text-slate-500">
                       {s.description}
                     </p>
                   </div>
-                  <Lock className="ml-auto h-4 w-4 shrink-0 text-gold-300/70" />
+                  <Lock className="ml-auto h-4 w-4 shrink-0 text-amber-700/70" />
                 </Link>
               );
             }
@@ -197,18 +197,18 @@ export function SectionsManager() {
                   addSection(s.type);
                   setAddOpen(false);
                 }}
-                className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3 text-left hover:border-electric-500/40"
+                className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-left hover:border-electric-500/40"
               >
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-electric-500/12">
-                  <Icon name={s.icon} className="h-5 w-5 text-electric-400" />
+                  <Icon name={s.icon} className="h-5 w-5 text-electric-600" />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-white">{s.label}</p>
-                  <p className="truncate text-xs text-white/45">
+                  <p className="text-sm font-medium text-slate-900">{s.label}</p>
+                  <p className="truncate text-xs text-slate-500">
                     {s.description}
                   </p>
                 </div>
-                <Plus className="ml-auto h-4 w-4 text-white/30" />
+                <Plus className="ml-auto h-4 w-4 text-slate-300" />
               </button>
             );
           })}
@@ -260,7 +260,7 @@ function BackgroundEditor({
   const hasOverrides = Boolean(section.cardBg || section.containerBg);
 
   return (
-    <div className="rounded-xl border border-white/[0.06] bg-white/[0.02]">
+    <div className="rounded-xl border border-slate-200 bg-slate-50">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -268,7 +268,7 @@ function BackgroundEditor({
       >
         <div className="flex items-center gap-2 min-w-0">
           <span
-            className="h-4 w-4 shrink-0 rounded border border-white/15"
+            className="h-4 w-4 shrink-0 rounded border border-slate-300"
             style={{
               background:
                 section.containerBg
@@ -280,14 +280,14 @@ function BackgroundEditor({
                     : "transparent",
             }}
           />
-          <span className="text-xs font-medium text-white/65">
-            Background {hasOverrides && <span className="text-electric-300">· overridden</span>}
+          <span className="text-xs font-medium text-slate-600">
+            Background {hasOverrides && <span className="text-electric-700">· overridden</span>}
           </span>
         </div>
-        <span className="text-xs text-white/45">{open ? "−" : "+"}</span>
+        <span className="text-xs text-slate-500">{open ? "−" : "+"}</span>
       </button>
       {open && (
-        <div className="space-y-4 border-t border-white/[0.06] p-3">
+        <div className="space-y-4 border-t border-slate-200 p-3">
           <BgSwatchRow
             label="Section container (full stripe)"
             hint="Paints a colored band behind the whole section."
@@ -300,7 +300,7 @@ function BackgroundEditor({
             value={section.cardBg}
             onChange={(v) => onChange({ cardBg: v })}
           />
-          <p className="text-[10px] text-white/35">
+          <p className="text-[10px] text-slate-400">
             Text colour auto-flips light or dark for readability based on
             the chosen background.
           </p>
@@ -327,10 +327,10 @@ function BgSwatchRow({
 
   return (
     <div>
-      <p className="text-[11px] font-medium uppercase tracking-wider text-white/55">
+      <p className="text-[11px] font-medium uppercase tracking-wider text-slate-500">
         {label}
       </p>
-      <p className="mt-0.5 text-[10px] text-white/40">{hint}</p>
+      <p className="mt-0.5 text-[10px] text-slate-400">{hint}</p>
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
         {/* None button — clears the override. */}
         <button
@@ -342,8 +342,8 @@ function BgSwatchRow({
           className={cn(
             "rounded-md border px-2 py-1 text-[11px] font-medium",
             !value
-              ? "border-electric-500/50 bg-electric-500/15 text-electric-200"
-              : "border-white/10 bg-white/[0.03] text-white/55 hover:text-white",
+              ? "border-electric-500/50 bg-electric-500/15 text-electric-700"
+              : "border-slate-200 bg-slate-50 text-slate-500 hover:text-slate-900",
           )}
         >
           None
@@ -361,7 +361,7 @@ function BgSwatchRow({
               "h-7 w-7 rounded-md border transition-transform hover:scale-110",
               value === sw.value
                 ? "border-electric-500 ring-2 ring-electric-500/30"
-                : "border-white/15",
+                : "border-slate-300",
             )}
             style={{ background: sw.swatch }}
           />
@@ -372,8 +372,8 @@ function BgSwatchRow({
           className={cn(
             "rounded-md border px-2 py-1 text-[11px] font-medium",
             customMode
-              ? "border-electric-500/50 bg-electric-500/15 text-electric-200"
-              : "border-white/10 bg-white/[0.03] text-white/55 hover:text-white",
+              ? "border-electric-500/50 bg-electric-500/15 text-electric-700"
+              : "border-slate-200 bg-slate-50 text-slate-500 hover:text-slate-900",
           )}
         >
           Custom
@@ -389,7 +389,7 @@ function BgSwatchRow({
                 : "#FFFFFF"
             }
             onChange={(e) => onChange(e.target.value)}
-            className="h-9 w-12 cursor-pointer rounded-md border border-white/10 bg-transparent"
+            className="h-9 w-12 cursor-pointer rounded-md border border-slate-200 bg-transparent"
           />
           <input
             value={value ?? ""}

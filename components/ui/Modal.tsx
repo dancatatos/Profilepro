@@ -65,22 +65,22 @@ export function Modal({
             exit={{ y: "100%", opacity: 0 }}
             transition={{ type: "spring", stiffness: 320, damping: 34 }}
             className={cn(
-              "glass-strong relative z-10 flex max-h-[90dvh] w-full flex-col",
+              "relative z-10 flex max-h-[90dvh] w-full flex-col bg-white shadow-card-soft",
               "rounded-t-3xl sm:rounded-3xl",
               SIZES[size],
             )}
           >
-            <div className="mx-auto mt-2.5 h-1 w-9 rounded-full bg-white/15 sm:hidden" />
+            <div className="mx-auto mt-2.5 h-1 w-9 rounded-full bg-slate-300 sm:hidden" />
             {(title || description) && (
               <div className="flex items-start justify-between gap-3 px-5 pb-3 pt-4">
                 <div className="min-w-0">
                   {title && (
-                    <h2 className="font-display text-base font-semibold text-white">
+                    <h2 className="font-display text-base font-semibold text-slate-900">
                       {title}
                     </h2>
                   )}
                   {description && (
-                    <p className="mt-0.5 text-xs text-white/45">
+                    <p className="mt-0.5 text-xs text-slate-500">
                       {description}
                     </p>
                   )}
@@ -88,7 +88,7 @@ export function Modal({
                 <button
                   onClick={onClose}
                   aria-label="Close"
-                  className="rounded-lg p-1.5 text-white/40 no-tap-highlight hover:bg-white/5 active:scale-90"
+                  className="rounded-lg p-1.5 text-slate-400 no-tap-highlight hover:bg-slate-100 active:scale-90"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -98,7 +98,7 @@ export function Modal({
               {children}
             </div>
             {footer && (
-              <div className="border-t border-white/[0.06] p-4 pb-safe">
+              <div className="border-t border-slate-200 p-4 pb-safe">
                 {footer}
               </div>
             )}

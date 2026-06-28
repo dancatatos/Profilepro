@@ -40,8 +40,8 @@ export default async function BrandingDebugPage({
   if (!username) {
     return (
       <Shell>
-        <p className="text-sm text-white/65">
-          Pass <code className="rounded bg-white/[0.05] px-1.5 py-0.5">?u=&lt;username&gt;</code> to
+        <p className="text-sm text-slate-600">
+          Pass <code className="rounded bg-slate-100 px-1.5 py-0.5">?u=&lt;username&gt;</code> to
           diagnose a specific user.
         </p>
       </Shell>
@@ -51,7 +51,7 @@ export default async function BrandingDebugPage({
   if (!isFirebaseConfigured) {
     return (
       <Shell title={`Diagnose @${username}`}>
-        <p className="text-sm text-red-300">Firebase not configured.</p>
+        <p className="text-sm text-red-700">Firebase not configured.</p>
       </Shell>
     );
   }
@@ -159,9 +159,9 @@ function Shell({
   title?: string;
 }) {
   return (
-    <div className="min-h-dvh bg-ink-950 p-6 text-white">
+    <div className="min-h-dvh bg-slate-50 p-6 text-slate-900">
       <h1 className="font-display text-lg font-bold">{title}</h1>
-      <p className="mt-1 text-xs text-white/45">
+      <p className="mt-1 text-xs text-slate-500">
         Trace of the resolveCanRemoveBranding logic for the public profile + funnel pages.
       </p>
       <div className="mt-6 max-w-2xl space-y-2">{children}</div>
@@ -180,13 +180,13 @@ function Row({
 }) {
   const cls =
     accent === "good"
-      ? "text-jade-300"
+      ? "text-jade-600"
       : accent === "bad"
-        ? "text-red-300"
-        : "text-white";
+        ? "text-red-700"
+        : "text-slate-900";
   return (
-    <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3">
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-white/45">
+    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
         {label}
       </p>
       <p className={`mt-0.5 break-all font-mono text-sm ${cls}`}>{value}</p>

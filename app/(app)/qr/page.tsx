@@ -136,11 +136,11 @@ export default function QRPage() {
               className="mx-auto"
             />
           </div>
-          <p className="mt-4 text-center text-xs text-white/45">
+          <p className="mt-4 text-center text-xs text-slate-500">
             High-resolution 1024px PNG — print-ready for tarps and cards.
           </p>
-          <div className="mt-3 flex w-full items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-1.5 pl-3">
-            <span className="flex-1 truncate text-xs text-white/55">{url}</span>
+          <div className="mt-3 flex w-full items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1.5 pl-3">
+            <span className="flex-1 truncate text-xs text-slate-500">{url}</span>
             <Button
               size="sm"
               variant="outline"
@@ -156,28 +156,28 @@ export default function QRPage() {
 
         <div className="space-y-3">
           <Card className="p-5">
-            <h3 className="font-display text-sm font-semibold text-white">
+            <h3 className="font-display text-sm font-semibold text-slate-900">
               Where to use your QR code
             </h3>
             <div className="mt-3 space-y-2.5">
               {USE_CASES.map((u) => (
                 <div key={u.title} className="flex gap-3">
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-electric-500/12">
-                    <QrCode className="h-4 w-4 text-electric-400" />
+                    <QrCode className="h-4 w-4 text-electric-600" />
                   </span>
                   <div>
-                    <p className="text-sm font-medium text-white">{u.title}</p>
-                    <p className="text-xs text-white/45">{u.desc}</p>
+                    <p className="text-sm font-medium text-slate-900">{u.title}</p>
+                    <p className="text-xs text-slate-500">{u.desc}</p>
                   </div>
                 </div>
               ))}
             </div>
           </Card>
           <Card className="p-5">
-            <h3 className="font-display text-sm font-semibold text-white">
+            <h3 className="font-display text-sm font-semibold text-slate-900">
               Pro tip
             </h3>
-            <p className="mt-1.5 text-xs text-white/50">
+            <p className="mt-1.5 text-xs text-slate-500">
               Pair your QR code with a strong call-to-action like &ldquo;Scan
               to see how I can help you&rdquo; for the best results.
             </p>

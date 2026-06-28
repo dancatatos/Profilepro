@@ -84,31 +84,31 @@ function AIRecommendPanel({
     <div className="rounded-2xl border border-electric-500/20 bg-gradient-to-b from-electric-500/[0.07] to-ink-900/40 p-4">
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-electric-400" />
-          <span className="text-sm font-semibold text-white">
+          <Sparkles className="h-4 w-4 text-electric-600" />
+          <span className="text-sm font-semibold text-slate-900">
             AI Theme Match
           </span>
         </div>
         <button
           onClick={onClose}
-          className="text-xs text-white/40 transition-colors hover:text-white"
+          className="text-xs text-slate-400 transition-colors hover:text-slate-900"
         >
           Close
         </button>
       </div>
-      <p className="mb-3 text-xs text-white/45">
+      <p className="mb-3 text-xs text-slate-500">
         Tell us about your brand and we&apos;ll pick themes that fit.
       </p>
 
       <div className="space-y-3">
         <div>
-          <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-white/40">
+          <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-slate-400">
             Your Niche
           </label>
           <select
             value={niche}
             onChange={(e) => setNiche(e.target.value)}
-            className="h-9 w-full rounded-lg border border-white/10 bg-white/[0.05] px-3 text-xs text-white outline-none focus:border-electric-500/50"
+            className="h-9 w-full rounded-lg border border-slate-200 bg-slate-100 px-3 text-xs text-slate-900 outline-none focus:border-electric-500/50"
           >
             <option value="">Select a niche…</option>
             {NICHES.map((n) => (
@@ -120,13 +120,13 @@ function AIRecommendPanel({
         </div>
 
         <div>
-          <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-white/40">
+          <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-slate-400">
             Branding Style
           </label>
           <select
             value={style}
             onChange={(e) => setStyle(e.target.value)}
-            className="h-9 w-full rounded-lg border border-white/10 bg-white/[0.05] px-3 text-xs text-white outline-none focus:border-electric-500/50"
+            className="h-9 w-full rounded-lg border border-slate-200 bg-slate-100 px-3 text-xs text-slate-900 outline-none focus:border-electric-500/50"
           >
             <option value="">Select a style…</option>
             {STYLES.map((s) => (
@@ -138,7 +138,7 @@ function AIRecommendPanel({
         </div>
 
         <div>
-          <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-white/40">
+          <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-slate-400">
             Audience Vibe
           </label>
           <div className="flex gap-2">
@@ -149,8 +149,8 @@ function AIRecommendPanel({
                 className={cn(
                   "flex-1 rounded-lg border py-1.5 text-xs font-medium capitalize transition-colors",
                   gender === g
-                    ? "border-electric-500/50 bg-electric-500/15 text-electric-300"
-                    : "border-white/10 bg-white/[0.04] text-white/50 hover:bg-white/[0.08]",
+                    ? "border-electric-500/50 bg-electric-500/15 text-electric-700"
+                    : "border-slate-200 bg-slate-100 text-slate-500 hover:bg-slate-200",
                 )}
               >
                 {g === "any" ? "Any / Neutral" : g}
@@ -162,7 +162,7 @@ function AIRecommendPanel({
         <button
           onClick={run}
           disabled={!niche && !style}
-          className="h-9 w-full rounded-xl bg-brand-gradient text-sm font-semibold text-white transition-opacity disabled:opacity-40"
+          className="h-9 w-full rounded-xl bg-brand-gradient text-sm font-semibold text-slate-900 transition-opacity disabled:opacity-40"
         >
           Find My Theme
         </button>
@@ -170,7 +170,7 @@ function AIRecommendPanel({
 
       {results && (
         <div className="mt-4">
-          <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-white/40">
+          <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-slate-400">
             Recommended for you
           </p>
           <div className="grid grid-cols-3 gap-2">
@@ -184,7 +184,7 @@ function AIRecommendPanel({
                     onPick(id);
                     onClose();
                   }}
-                  className="group overflow-hidden rounded-xl border border-white/10 text-left transition-all hover:border-electric-500/50"
+                  className="group overflow-hidden rounded-xl border border-slate-200 text-left transition-all hover:border-electric-500/50"
                 >
                   <div className="relative aspect-[3/4] w-full overflow-hidden">
                     <ThemeMiniPreview theme={tc} />
@@ -194,7 +194,7 @@ function AIRecommendPanel({
                       </span>
                     )}
                   </div>
-                  <p className="truncate px-1.5 py-1 text-[10px] font-medium text-white/80">
+                  <p className="truncate px-1.5 py-1 text-[10px] font-medium text-slate-700">
                     {tc.name}
                   </p>
                 </button>
@@ -231,7 +231,7 @@ function ThemeGalleryCard({
           ? "border-electric-500 ring-2 ring-electric-500/40"
           : premium
             ? "border-gold-400/25 bg-gold-400/[0.03] hover:-translate-y-0.5 hover:border-gold-400/55 hover:shadow-glow-gold"
-            : "border-white/10 hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.03]",
+            : "border-slate-200 hover:-translate-y-0.5 hover:border-white/25 hover:bg-slate-50",
       )}
     >
       {/* Preview */}
@@ -254,16 +254,16 @@ function ThemeGalleryCard({
         {/* Active check */}
         {active && (
           <span className="absolute left-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-electric-500 ring-2 ring-white/25">
-            <Check className="h-3 w-3 text-white" />
+            <Check className="h-3 w-3 text-slate-900" />
           </span>
         )}
 
         {/* Lock overlay */}
         {locked && (
-          <div className="absolute inset-0 flex items-center justify-center bg-ink-950/45 backdrop-blur-[1px]">
-            <div className="flex items-center gap-1 rounded-full bg-ink-950/85 px-2 py-1 ring-1 ring-gold-400/30">
-              <Lock className="h-3 w-3 text-gold-300" />
-              <span className="text-[9px] font-bold tracking-wide text-gold-200">
+          <div className="absolute inset-0 flex items-center justify-center bg-slate-50/45 backdrop-blur-[1px]">
+            <div className="flex items-center gap-1 rounded-full bg-slate-50/85 px-2 py-1 ring-1 ring-gold-400/30">
+              <Lock className="h-3 w-3 text-amber-700" />
+              <span className="text-[9px] font-bold tracking-wide text-amber-700">
                 PRO
               </span>
             </div>
@@ -276,7 +276,7 @@ function ThemeGalleryCard({
             {theme.effects.slice(0, 2).map((fx) => (
               <span
                 key={fx}
-                className="rounded-md bg-black/55 px-1.5 py-0.5 text-[8px] font-medium text-white/85 backdrop-blur-sm"
+                className="rounded-md bg-black/55 px-1.5 py-0.5 text-[8px] font-medium text-slate-800 backdrop-blur-sm"
               >
                 {EFFECT_LABELS[fx]}
               </span>
@@ -290,12 +290,12 @@ function ThemeGalleryCard({
         <p
           className={cn(
             "truncate text-xs font-semibold",
-            active ? "text-electric-300" : "text-white",
+            active ? "text-electric-700" : "text-slate-900",
           )}
         >
           {theme.name}
         </p>
-        <p className="truncate text-[10px] text-white/35">
+        <p className="truncate text-[10px] text-slate-400">
           {theme.description}
         </p>
       </div>
@@ -359,25 +359,25 @@ export function ThemePicker() {
     <div className="space-y-4">
       {/* ── Currently applied ── */}
       {current && (
-        <div className="flex items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-2.5">
+        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-2.5">
           <div className="relative h-16 w-12 shrink-0 overflow-hidden rounded-lg">
             <ThemeMiniPreview theme={current} />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-medium uppercase tracking-wider text-white/35">
+              <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400">
                 Applied
               </span>
               {current.tier === "premium" && (
-                <span className="flex items-center gap-0.5 rounded bg-gold-400/15 px-1.5 py-0.5 text-[9px] font-bold uppercase text-gold-300">
+                <span className="flex items-center gap-0.5 rounded bg-gold-400/15 px-1.5 py-0.5 text-[9px] font-bold uppercase text-amber-700">
                   <Crown className="h-2.5 w-2.5" /> Premium
                 </span>
               )}
             </div>
-            <p className="truncate text-sm font-semibold text-white">
+            <p className="truncate text-sm font-semibold text-slate-900">
               {current.name}
             </p>
-            <p className="truncate text-[11px] text-white/40">
+            <p className="truncate text-[11px] text-slate-400">
               {current.description}
             </p>
           </div>
@@ -389,19 +389,19 @@ export function ThemePicker() {
         onClick={() => setShowAI((v) => !v)}
         className="flex w-full items-center gap-2 rounded-xl border border-electric-500/20 bg-electric-500/[0.06] px-3 py-2.5 text-left transition-colors hover:bg-electric-500/10"
       >
-        <Sparkles className="h-4 w-4 shrink-0 text-electric-400" />
+        <Sparkles className="h-4 w-4 shrink-0 text-electric-600" />
         <div className="flex-1">
-          <p className="text-xs font-semibold text-electric-300">
+          <p className="text-xs font-semibold text-electric-700">
             AI Theme Match
           </p>
-          <p className="text-[11px] text-white/40">
+          <p className="text-[11px] text-slate-400">
             Get themes picked for your brand
           </p>
         </div>
         {showAI ? (
-          <ChevronUp className="h-4 w-4 text-white/30" />
+          <ChevronUp className="h-4 w-4 text-slate-300" />
         ) : (
-          <ChevronDown className="h-4 w-4 text-white/30" />
+          <ChevronDown className="h-4 w-4 text-slate-300" />
         )}
       </button>
 
@@ -414,12 +414,12 @@ export function ThemePicker() {
 
       {/* ── Search ── */}
       <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-300" />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search themes…"
-          className="h-9 w-full rounded-xl border border-white/10 bg-white/[0.04] pl-8 pr-3 text-xs text-white outline-none placeholder:text-white/30 focus:border-electric-500/50"
+          className="h-9 w-full rounded-xl border border-slate-200 bg-slate-100 pl-8 pr-3 text-xs text-slate-900 outline-none placeholder:text-slate-300 focus:border-electric-500/50"
         />
       </div>
 
@@ -432,8 +432,8 @@ export function ThemePicker() {
             className={cn(
               "shrink-0 rounded-full px-3 py-1 text-[11px] font-medium transition-colors",
               category === cat
-                ? "bg-electric-500/20 text-electric-300 ring-1 ring-electric-500/40"
-                : "bg-white/[0.05] text-white/45 hover:bg-white/[0.09] hover:text-white/70",
+                ? "bg-electric-500/20 text-electric-700 ring-1 ring-electric-500/40"
+                : "bg-slate-100 text-slate-500 hover:bg-white/[0.09] hover:text-slate-600",
             )}
           >
             {cat}
@@ -442,7 +442,7 @@ export function ThemePicker() {
       </div>
 
       {search && (
-        <p className="text-[11px] text-white/35">
+        <p className="text-[11px] text-slate-400">
           {filtered.length} theme{filtered.length !== 1 ? "s" : ""} found
         </p>
       )}
@@ -451,8 +451,8 @@ export function ThemePicker() {
       {freeThemes.length > 0 && (
         <div className="space-y-2.5">
           <div className="flex items-baseline gap-2">
-            <h3 className="text-sm font-semibold text-white">Essentials</h3>
-            <span className="text-[11px] text-white/35">
+            <h3 className="text-sm font-semibold text-slate-900">Essentials</h3>
+            <span className="text-[11px] text-slate-400">
               {freeThemes.length} free
             </span>
           </div>
@@ -472,7 +472,7 @@ export function ThemePicker() {
           {freeThemes.length > FREE_LIMIT && (
             <button
               onClick={() => setShowAllFree((v) => !v)}
-              className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/[0.06] bg-white/[0.02] py-2 text-[11px] font-medium text-white/45 transition-colors hover:bg-white/[0.05] hover:text-white/70"
+              className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 py-2 text-[11px] font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-600"
             >
               {showAllFree ? (
                 <>
@@ -495,17 +495,17 @@ export function ThemePicker() {
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-baseline gap-2">
               <div className="flex items-center gap-1.5">
-                <Crown className="h-4 w-4 text-gold-400" />
-                <h3 className="text-sm font-bold text-gold-200">
+                <Crown className="h-4 w-4 text-amber-700" />
+                <h3 className="text-sm font-bold text-amber-700">
                   Premium Collection
                 </h3>
               </div>
-              <span className="text-[11px] text-gold-300/50">
+              <span className="text-[11px] text-amber-700/50">
                 {premiumThemes.length}
               </span>
             </div>
             {!isPro && (
-              <span className="rounded-full bg-gold-400/12 px-2 py-0.5 text-[10px] font-semibold text-gold-300">
+              <span className="rounded-full bg-gold-400/12 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
                 PRO
               </span>
             )}
@@ -529,7 +529,7 @@ export function ThemePicker() {
           {premiumThemes.length > PREMIUM_LIMIT && (
             <button
               onClick={() => setShowAllPremium((v) => !v)}
-              className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl border border-gold-400/15 bg-gold-400/[0.04] py-2 text-[11px] font-medium text-gold-300/70 transition-colors hover:bg-gold-400/[0.09] hover:text-gold-300"
+              className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl border border-gold-400/15 bg-gold-400/[0.04] py-2 text-[11px] font-medium text-amber-700/70 transition-colors hover:bg-gold-400/[0.09] hover:text-amber-700"
             >
               {showAllPremium ? (
                 <>
@@ -553,10 +553,10 @@ export function ThemePicker() {
                 <Crown className="h-4 w-4 text-ink-950" />
               </div>
               <div className="flex-1">
-                <p className="text-xs font-bold text-gold-200">
+                <p className="text-xs font-bold text-amber-700">
                   Unlock the Premium Collection
                 </p>
-                <p className="text-[11px] text-white/45">
+                <p className="text-[11px] text-slate-500">
                   Animated, glass, neon &amp; luxury themes
                 </p>
               </div>
@@ -569,7 +569,7 @@ export function ThemePicker() {
       )}
 
       {filtered.length === 0 && (
-        <p className="py-8 text-center text-sm text-white/30">
+        <p className="py-8 text-center text-sm text-slate-300">
           No themes match &ldquo;{search}&rdquo;
         </p>
       )}

@@ -44,7 +44,7 @@ import type { Affiliate, AffiliateInvite } from "@/types";
 
 function CodeBadge({ code }: { code: string }) {
   return (
-    <span className="inline-flex items-center rounded-md bg-electric-500/12 px-2 py-0.5 font-mono text-[11px] font-semibold text-electric-300">
+    <span className="inline-flex items-center rounded-md bg-electric-500/12 px-2 py-0.5 font-mono text-[11px] font-semibold text-electric-700">
       {code}
     </span>
   );
@@ -232,7 +232,7 @@ function InviteAffiliateModal({
             }
           />
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-white/55">
+            <label className="mb-1.5 block text-xs font-medium text-slate-500">
               Admin notes (optional)
             </label>
             <textarea
@@ -240,14 +240,14 @@ function InviteAffiliateModal({
               value={adminNotes}
               onChange={(e) => setAdminNotes(e.target.value)}
               placeholder="Private note about this affiliate — not visible to them."
-              className="w-full rounded-lg border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white outline-none placeholder:text-white/30 focus:border-electric-500/40"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-300 focus:border-electric-500/40"
             />
           </div>
         </div>
       ) : invite ? (
         <div className="space-y-4 pb-4">
           <div className="rounded-xl border border-jade-500/30 bg-jade-500/[0.05] p-4">
-            <div className="flex items-center gap-2 text-jade-300">
+            <div className="flex items-center gap-2 text-jade-600">
               <Check className="h-4 w-4" />
               <p className="text-sm font-medium">
                 {emailStatus === "sent"
@@ -257,7 +257,7 @@ function InviteAffiliateModal({
                     : `Invite created for ${invite.displayName}`}
               </p>
             </div>
-            <p className="mt-1 text-xs text-jade-300/70">
+            <p className="mt-1 text-xs text-jade-600/70">
               Code reserved: <span className="font-mono">{invite.code}</span>
               {emailStatus === "failed" && (
                 <>
@@ -270,11 +270,11 @@ function InviteAffiliateModal({
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-white/55">
+            <label className="mb-1.5 block text-xs font-medium text-slate-500">
               Accept link — share this with {invite.displayName}
             </label>
-            <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-1.5 pl-3">
-              <span className="flex-1 truncate text-xs text-white/65">
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1.5 pl-3">
+              <span className="flex-1 truncate text-xs text-slate-600">
                 {inviteAcceptUrl(invite.token)}
               </span>
               <Button
@@ -294,16 +294,16 @@ function InviteAffiliateModal({
                 {copied ? "Copied" : "Copy"}
               </Button>
             </div>
-            <p className="mt-1.5 text-[11px] text-white/40">
+            <p className="mt-1.5 text-[11px] text-slate-400">
               They&apos;ll set a password and immediately land in their dashboard.
             </p>
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
-            <p className="mb-1 text-[11px] font-medium uppercase tracking-wider text-white/45">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p className="mb-1 text-[11px] font-medium uppercase tracking-wider text-slate-500">
               Preview — their referral link will be
             </p>
-            <p className="font-mono text-xs text-electric-300">
+            <p className="font-mono text-xs text-electric-700">
               {referralShareUrl(invite.code)}
             </p>
           </div>
@@ -311,7 +311,7 @@ function InviteAffiliateModal({
       ) : null}
 
       {step === "form" ? (
-        <div className="flex gap-2 border-t border-white/[0.06] p-4 pb-safe">
+        <div className="flex gap-2 border-t border-slate-200 p-4 pb-safe">
           <Button variant="outline" fullWidth onClick={onClose}>
             Cancel
           </Button>
@@ -325,7 +325,7 @@ function InviteAffiliateModal({
           </Button>
         </div>
       ) : (
-        <div className="border-t border-white/[0.06] p-4 pb-safe">
+        <div className="border-t border-slate-200 p-4 pb-safe">
           <Button fullWidth onClick={onClose}>
             Done
           </Button>
@@ -414,10 +414,10 @@ export default function AdminAffiliatesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-2xl font-bold text-white">
+          <h1 className="font-display text-2xl font-bold text-slate-900">
             Affiliates
           </h1>
-          <p className="text-sm text-white/45">
+          <p className="text-sm text-slate-500">
             Invite affiliates, manage codes and track their referrals.
           </p>
         </div>
@@ -452,17 +452,17 @@ export default function AdminAffiliatesPage() {
             className={
               s.electric
                 ? "rounded-xl border border-electric-500/30 bg-electric-500/[0.05] px-4 py-2 text-sm"
-                : "rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-2 text-sm"
+                : "rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm"
             }
           >
             <span
               className={
-                s.electric ? "text-electric-300/80" : "text-white/40"
+                s.electric ? "text-electric-700/80" : "text-slate-400"
               }
             >
               {s.label}:{" "}
             </span>
-            <span className="font-semibold text-white">
+            <span className="font-semibold text-slate-900">
               {fetching ? "…" : s.value}
             </span>
           </div>
@@ -473,13 +473,13 @@ export default function AdminAffiliatesPage() {
       {pendingInvites.length > 0 && (
         <Card className="p-5">
           <div className="mb-3 flex items-center gap-2">
-            <Mail className="h-4 w-4 text-electric-400" />
-            <h2 className="font-display text-base font-semibold text-white">
+            <Mail className="h-4 w-4 text-electric-600" />
+            <h2 className="font-display text-base font-semibold text-slate-900">
               Pending invites
             </h2>
             <Badge tone="blue">{pendingInvites.length}</Badge>
           </div>
-          <p className="mb-4 text-xs text-white/45">
+          <p className="mb-4 text-xs text-slate-500">
             Invites that haven&apos;t been accepted yet. Each link works for 14
             days.
           </p>
@@ -491,17 +491,17 @@ export default function AdminAffiliatesPage() {
               return (
                 <div
                   key={invite.token}
-                  className="flex flex-col gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3 sm:flex-row sm:items-center"
+                  className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:flex-row sm:items-center"
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-sm font-medium text-white truncate">
+                      <p className="text-sm font-medium text-slate-900 truncate">
                         {invite.displayName}
                       </p>
                       <CodeBadge code={invite.code} />
                       {expired && <Badge tone="danger">Expired</Badge>}
                     </div>
-                    <p className="text-xs text-white/45 truncate">
+                    <p className="text-xs text-slate-500 truncate">
                       {invite.email} · created {timeAgo(invite.createdAt)}
                     </p>
                   </div>
@@ -539,11 +539,11 @@ export default function AdminAffiliatesPage() {
       {/* Affiliate list */}
       <Card className="p-5">
         <div className="mb-5 flex items-center justify-between gap-4">
-          <h2 className="font-display text-base font-semibold text-white">
+          <h2 className="font-display text-base font-semibold text-slate-900">
             All affiliates
           </h2>
           <div className="relative w-64">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-300" />
             <Input
               placeholder="Search name, email or code…"
               value={search}
@@ -554,12 +554,12 @@ export default function AdminAffiliatesPage() {
         </div>
 
         {fetching ? (
-          <div className="flex h-40 items-center justify-center text-sm text-white/40">
+          <div className="flex h-40 items-center justify-center text-sm text-slate-400">
             Loading affiliates…
           </div>
         ) : filteredAffiliates.length === 0 ? (
-          <div className="flex h-40 flex-col items-center justify-center gap-2 text-center text-sm text-white/40">
-            <Handshake className="h-8 w-8 text-white/20" />
+          <div className="flex h-40 flex-col items-center justify-center gap-2 text-center text-sm text-slate-400">
+            <Handshake className="h-8 w-8 text-slate-300" />
             <p>
               {search
                 ? "No affiliates match that search."
@@ -572,7 +572,7 @@ export default function AdminAffiliatesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-white/[0.06] text-xs text-white/40">
+                <tr className="border-b border-slate-200 text-xs text-slate-400">
                   <th className="pb-3 text-left font-medium">Affiliate</th>
                   <th className="pb-3 text-left font-medium">Code</th>
                   <th className="pb-3 text-left font-medium">Joined</th>
@@ -586,14 +586,14 @@ export default function AdminAffiliatesPage() {
                   <tr key={a.uid} className="group">
                     <td className="py-3 pr-4">
                       <div className="flex items-center gap-2.5">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-electric-500/15 text-xs font-bold uppercase text-electric-300">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-electric-500/15 text-xs font-bold uppercase text-electric-700">
                           {(a.displayName || a.email)[0]}
                         </div>
                         <div className="min-w-0">
-                          <p className="font-medium text-white truncate">
+                          <p className="font-medium text-slate-900 truncate">
                             {a.displayName || "—"}
                           </p>
-                          <p className="text-xs text-white/40 truncate">
+                          <p className="text-xs text-slate-400 truncate">
                             {maskEmail(a.email)}
                           </p>
                         </div>
@@ -602,10 +602,10 @@ export default function AdminAffiliatesPage() {
                     <td className="py-3 pr-4">
                       <CodeBadge code={a.code} />
                     </td>
-                    <td className="py-3 pr-4 text-white/50">
+                    <td className="py-3 pr-4 text-slate-500">
                       {timeAgo(a.createdAt)}
                     </td>
-                    <td className="py-3 pr-4 text-white/70">
+                    <td className="py-3 pr-4 text-slate-600">
                       ₱{(a.stats?.totalEarned ?? 0).toLocaleString()}
                     </td>
                     <td className="py-3 pr-4">
@@ -638,7 +638,7 @@ export default function AdminAffiliatesPage() {
         )}
 
         {filteredAffiliates.length > 0 && (
-          <p className="mt-4 text-right text-xs text-white/30">
+          <p className="mt-4 text-right text-xs text-slate-300">
             Showing {filteredAffiliates.length} of {affiliates.length}{" "}
             affiliates
           </p>
@@ -646,7 +646,7 @@ export default function AdminAffiliatesPage() {
       </Card>
 
       <Card className="p-4">
-        <p className="text-xs text-white/35">
+        <p className="text-xs text-slate-400">
           Each affiliate gets a unique <code>/r/CODE</code> link. New users who
           click it are silently attributed for 30 days — every plan you
           manually upgrade them to will create a commission record for the

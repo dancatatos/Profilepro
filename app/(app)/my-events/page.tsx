@@ -164,7 +164,7 @@ export default function MyEventsPage() {
       />
 
       {loading && rows.length === 0 ? (
-        <Card className="p-8 text-center text-sm text-white/40">
+        <Card className="p-8 text-center text-sm text-slate-400">
           Loading events…
         </Card>
       ) : rows.length === 0 && pastRows.length === 0 ? (
@@ -194,7 +194,7 @@ export default function MyEventsPage() {
         <>
           {rows.length > 0 && (
             <div className="space-y-2.5">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-white/45">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                 Upcoming
               </p>
               {rows.map((row) => (
@@ -209,7 +209,7 @@ export default function MyEventsPage() {
           )}
           {pastRows.length > 0 && (
             <div className="space-y-2.5">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-white/45">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                 Past
               </p>
               {pastRows.map((row) => (
@@ -310,16 +310,16 @@ function EventCard({
             className="h-[76px] w-[76px] shrink-0 rounded-xl object-cover"
           />
         ) : (
-          <span className="flex h-[76px] w-[76px] shrink-0 items-center justify-center rounded-xl bg-electric-500/15 text-electric-300">
+          <span className="flex h-[76px] w-[76px] shrink-0 items-center justify-center rounded-xl bg-electric-500/15 text-electric-700">
             <Calendar className="h-7 w-7" />
           </span>
         )}
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] text-white/45">{row.team.name}</p>
-          <p className="truncate text-sm font-semibold text-white">
+          <p className="text-[11px] text-slate-500">{row.team.name}</p>
+          <p className="truncate text-sm font-semibold text-slate-900">
             {row.event.title}
           </p>
-          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-white/55">
+          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-slate-500">
             <span className="flex items-center gap-1">
               <Clock className="h-3 w-3" /> {dateLine} · {timeLine}
             </span>
@@ -366,7 +366,7 @@ function EventCard({
                 href={row.event.locationUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="ml-auto rounded-lg bg-electric-500/15 px-3 py-1.5 text-[11px] font-medium text-electric-200 hover:bg-electric-500/25"
+                className="ml-auto rounded-lg bg-electric-500/15 px-3 py-1.5 text-[11px] font-medium text-electric-700 hover:bg-electric-500/25"
               >
                 Join call →
               </Link>
@@ -498,27 +498,27 @@ function EventPreviewModal({
           />
         )}
 
-        <div className="space-y-1.5 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
-          <div className="flex items-start gap-2 text-sm text-white/80">
-            <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-electric-300" />
+        <div className="space-y-1.5 rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <div className="flex items-start gap-2 text-sm text-slate-700">
+            <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-electric-700" />
             <div>
               <p>{dateLine}</p>
-              <p className="text-xs text-white/55">
+              <p className="text-xs text-slate-500">
                 {timeLine} · {event.timezone}
               </p>
             </div>
           </div>
           {event.locationLabel && (
-            <div className="flex items-start gap-2 text-sm text-white/80">
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-electric-300" />
+            <div className="flex items-start gap-2 text-sm text-slate-700">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-electric-700" />
               <span>{event.locationLabel}</span>
             </div>
           )}
         </div>
 
         {event.description && (
-          <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/75">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
               {event.description}
             </p>
           </div>
@@ -529,7 +529,7 @@ function EventPreviewModal({
         {/* RSVP buttons inside the modal so committing doesn't require
             closing it first. Same handlers as the card. */}
         <div>
-          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-white/45">
+          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
             RSVP
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -566,7 +566,7 @@ function EventPreviewModal({
           <a
             href={icsHref}
             download={`${slugify(event.title)}.ics`}
-            className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-white/75 hover:bg-white/[0.05]"
+            className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100"
           >
             <CalendarPlus className="h-3.5 w-3.5" />
             Add to calendar
@@ -576,7 +576,7 @@ function EventPreviewModal({
               type="button"
               onClick={handleCardDownload}
               disabled={downloadingCard}
-              className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-white/75 hover:bg-white/[0.05] disabled:opacity-50"
+              className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50"
             >
               <Download className="h-3.5 w-3.5" />
               {downloadingCard ? "Saving…" : "Download invitation card"}
@@ -588,7 +588,7 @@ function EventPreviewModal({
                 href={event.locationUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 rounded-lg bg-brand-gradient px-3 py-2 text-xs font-semibold text-white shadow-glow-blue"
+                className="flex items-center gap-1.5 rounded-lg bg-brand-gradient px-3 py-2 text-xs font-semibold text-slate-900 shadow-glow-blue"
               >
                 Join call →
               </Link>
@@ -677,8 +677,8 @@ function RsvpButton({
       className={cn(
         "flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-medium transition-colors disabled:opacity-50",
         active
-          ? "border-electric-500/60 bg-electric-500/[0.10] text-electric-200"
-          : "border-white/10 text-white/65 hover:bg-white/[0.05]",
+          ? "border-electric-500/60 bg-electric-500/[0.10] text-electric-700"
+          : "border-slate-200 text-slate-600 hover:bg-slate-100",
       )}
     >
       {icon}

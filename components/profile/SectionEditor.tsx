@@ -46,7 +46,7 @@ import type {
 } from "@/types";
 
 const FIELD =
-  "h-10 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-electric-500/60";
+  "h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 placeholder:text-slate-300 outline-none focus:border-electric-500/60";
 
 const CTA_ICONS = [
   "Users", "Phone", "MessageCircle", "GraduationCap", "Calendar",
@@ -65,10 +65,10 @@ function RowCard({
   onRemove: () => void;
 }) {
   return (
-    <div className="relative space-y-2 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
+    <div className="relative space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
       <button
         onClick={onRemove}
-        className="absolute right-2 top-2 rounded-md p-1 text-white/30 hover:text-red-400"
+        className="absolute right-2 top-2 rounded-md p-1 text-slate-300 hover:text-red-600"
         aria-label="Remove"
       >
         <X className="h-4 w-4" />
@@ -82,7 +82,7 @@ function AddRow({ label, onClick }: { label: string; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/15 py-2.5 text-xs font-medium text-white/55 hover:border-electric-500/40 hover:text-white"
+      className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-300 py-2.5 text-xs font-medium text-slate-500 hover:border-electric-500/40 hover:text-slate-900"
     >
       <Plus className="h-4 w-4" />
       {label}
@@ -108,8 +108,8 @@ function IconPicker({
           className={cn(
             "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border",
             value === name
-              ? "border-electric-500 bg-electric-500/15 text-electric-300"
-              : "border-white/10 text-white/45",
+              ? "border-electric-500 bg-electric-500/15 text-electric-700"
+              : "border-slate-200 text-slate-500",
           )}
         >
           <Icon name={name} className="h-4 w-4" />
@@ -135,7 +135,7 @@ function CtaEditor({ section }: { section: CtaSection }) {
   return (
     <div className="space-y-2.5">
       <div>
-        <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/45">
+        <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-slate-500">
           Button alignment
         </label>
         <Select
@@ -187,7 +187,7 @@ function CtaEditor({ section }: { section: CtaSection }) {
           {/* "After click" picker — the new control. Hint reminds the
               user that "next step" only works inside funnels. */}
           <div>
-            <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/45">
+            <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-slate-500">
               After click
             </label>
             <Select
@@ -242,7 +242,7 @@ function CtaEditor({ section }: { section: CtaSection }) {
             />
           </div>
           <div>
-            <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/45">
+            <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-slate-500">
               Hover effect
             </label>
             <Select
@@ -324,7 +324,7 @@ function CrediblyLinkPicker({
 
   return (
     <div className="space-y-2 rounded-lg border border-electric-500/15 bg-electric-500/[0.04] p-2.5">
-      <p className="text-[10px] text-white/55">
+      <p className="text-[10px] text-slate-500">
         Credibly Link auto-routes to the viewer&apos;s own copy when this
         funnel is cloned to a team member. No hardcoded URLs.
       </p>
@@ -438,7 +438,7 @@ function AboutEditor({ section }: { section: AboutSection }) {
       onChange={(e) => update(section.id, { body: e.target.value })}
       rows={6}
       placeholder="Tell your story — your mission, background and journey."
-      className="w-full resize-none rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-electric-500/60"
+      className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 placeholder:text-slate-300 outline-none focus:border-electric-500/60"
     />
   );
 }
@@ -452,7 +452,7 @@ const RichTextEditor = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="h-40 rounded-xl border border-white/10 bg-white/[0.03]" />
+      <div className="h-40 rounded-xl border border-slate-200 bg-slate-50" />
     ),
   },
 );
@@ -480,7 +480,7 @@ function CountdownEditor({ section }: { section: CountdownSection }) {
         className={FIELD}
       />
       <div>
-        <p className="mb-1.5 text-xs font-medium text-white/65">
+        <p className="mb-1.5 text-xs font-medium text-slate-600">
           Counts down to
         </p>
         <input
@@ -513,7 +513,7 @@ function HeroEditor({ section }: { section: HeroSection }) {
           (image above text in a card). Overlay defaults for new
           heroes; existing data without the field reads as stacked. */}
       <div>
-        <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/45">
+        <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-slate-500">
           Layout
         </label>
         <Select
@@ -527,7 +527,7 @@ function HeroEditor({ section }: { section: HeroSection }) {
           ]}
         />
         {isOverlay && (
-          <p className="mt-1 text-[10px] text-white/35">
+          <p className="mt-1 text-[10px] text-slate-400">
             Leave headline, subhead and CTA all empty for a clean
             full-bleed image with no overlay.
           </p>
@@ -561,7 +561,7 @@ function HeroEditor({ section }: { section: HeroSection }) {
         onChange={(e) => update(section.id, { subtext: e.target.value })}
         rows={2}
         placeholder={isOverlay ? "Short subhead (optional)" : "Short subhead"}
-        className="w-full resize-none rounded-lg border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-electric-500/60"
+        className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-sm text-slate-900 placeholder:text-slate-300 outline-none focus:border-electric-500/60"
       />
 
       {/* Aspect ratio is meaningful in BOTH stacked and overlay — picks
@@ -569,7 +569,7 @@ function HeroEditor({ section }: { section: HeroSection }) {
           so an owner with a 21:9 cinematic banner can pick the right
           aspect even when they prefer the stacked card look. */}
       <div>
-        <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/45">
+        <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-slate-500">
           Aspect ratio
         </label>
         <Select
@@ -609,7 +609,7 @@ function HeroEditor({ section }: { section: HeroSection }) {
           </div>
 
           <div>
-            <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/45">
+            <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-slate-500">
               Overlay darkness
             </label>
             <Select
@@ -629,7 +629,7 @@ function HeroEditor({ section }: { section: HeroSection }) {
           </div>
 
           <div>
-            <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/45">
+            <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-slate-500">
               Text color
             </label>
             <Select
@@ -647,7 +647,7 @@ function HeroEditor({ section }: { section: HeroSection }) {
           </div>
 
           <div>
-            <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/45">
+            <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-slate-500">
               Text position
             </label>
             <div className="grid grid-cols-3 gap-1.5">
@@ -667,8 +667,8 @@ function HeroEditor({ section }: { section: HeroSection }) {
                   className={cn(
                     "rounded-md border py-2 text-lg transition-colors",
                     (section.align ?? "cc") === p.v
-                      ? "border-electric-500/50 bg-electric-500/15 text-electric-200"
-                      : "border-white/10 bg-white/[0.03] text-white/55 hover:text-white",
+                      ? "border-electric-500/50 bg-electric-500/15 text-electric-700"
+                      : "border-slate-200 bg-slate-50 text-slate-500 hover:text-slate-900",
                   )}
                   aria-label={`Align ${p.v}`}
                 >
@@ -691,7 +691,7 @@ function CoverEditor({ section }: { section: CoverSection }) {
 
   return (
     <div className="space-y-3">
-      <p className="text-[10px] text-white/45">
+      <p className="text-[10px] text-slate-500">
         Full-width image with optional headline, subhead and CTA overlay.
         Leave all text empty for a pure image banner.
       </p>
@@ -721,7 +721,7 @@ function CoverEditor({ section }: { section: CoverSection }) {
         onChange={(e) => patch({ subhead: e.target.value })}
         rows={2}
         placeholder="Short subhead (optional)"
-        className="w-full resize-none rounded-lg border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-electric-500/60"
+        className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-sm text-slate-900 placeholder:text-slate-300 outline-none focus:border-electric-500/60"
       />
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <input
@@ -740,7 +740,7 @@ function CoverEditor({ section }: { section: CoverSection }) {
 
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/45">
+          <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-slate-500">
             Aspect ratio
           </label>
           <Select
@@ -758,7 +758,7 @@ function CoverEditor({ section }: { section: CoverSection }) {
           />
         </div>
         <div>
-          <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/45">
+          <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-slate-500">
             Overlay darkness
           </label>
           <Select
@@ -777,7 +777,7 @@ function CoverEditor({ section }: { section: CoverSection }) {
       </div>
 
       <div>
-        <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/45">
+        <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-slate-500">
           Text color
         </label>
         <Select
@@ -793,7 +793,7 @@ function CoverEditor({ section }: { section: CoverSection }) {
       </div>
 
       <div>
-        <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/45">
+        <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-slate-500">
           Text position
         </label>
         <div className="grid grid-cols-3 gap-1.5">
@@ -811,8 +811,8 @@ function CoverEditor({ section }: { section: CoverSection }) {
               className={cn(
                 "rounded-md border py-2 text-lg transition-colors",
                 (section.align ?? "cc") === p.v
-                  ? "border-electric-500/50 bg-electric-500/15 text-electric-200"
-                  : "border-white/10 bg-white/[0.03] text-white/55 hover:text-white",
+                  ? "border-electric-500/50 bg-electric-500/15 text-electric-700"
+                  : "border-slate-200 bg-slate-50 text-slate-500 hover:text-slate-900",
               )}
               aria-label={`Align ${p.v}`}
             >
@@ -912,7 +912,7 @@ function FaqEditor({ section }: { section: FaqSection }) {
             onChange={(e) => edit(it.id, { answer: e.target.value })}
             rows={2}
             placeholder="Answer"
-            className="w-full resize-none rounded-lg border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-electric-500/60"
+            className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-sm text-slate-900 placeholder:text-slate-300 outline-none focus:border-electric-500/60"
           />
         </RowCard>
       ))}
@@ -963,7 +963,7 @@ function PricingCardEditor({ section }: { section: PricingCardSection }) {
         />
       </div>
       <div>
-        <p className="mb-1.5 text-xs font-medium text-white/65">
+        <p className="mb-1.5 text-xs font-medium text-slate-600">
           What&apos;s included
         </p>
         <div className="space-y-2">
@@ -980,7 +980,7 @@ function PricingCardEditor({ section }: { section: PricingCardSection }) {
                   patchFeatures(section.features.filter((x) => x.id !== f.id))
                 }
                 aria-label="Remove feature"
-                className="shrink-0 rounded-md p-1.5 text-white/30 hover:text-red-400"
+                className="shrink-0 rounded-md p-1.5 text-slate-300 hover:text-red-600"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -1112,7 +1112,7 @@ function TestimonialsEditor({ section }: { section: TestimonialsSection }) {
             onChange={(e) => edit(t.id, { quote: e.target.value })}
             rows={2}
             placeholder="Their testimonial quote"
-            className="w-full resize-none rounded-lg border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-electric-500/60"
+            className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-sm text-slate-900 placeholder:text-slate-300 outline-none focus:border-electric-500/60"
           />
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <input
@@ -1132,7 +1132,7 @@ function TestimonialsEditor({ section }: { section: TestimonialsSection }) {
               circular avatar with theme-accent ring next to their name.
               Absent → falls back to initials in the public renderer. */}
           <div>
-            <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/45">
+            <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-slate-500">
               Profile photo (optional)
             </label>
             <ImageUploadField
@@ -1153,8 +1153,8 @@ function TestimonialsEditor({ section }: { section: TestimonialsSection }) {
                   className={cn(
                     "h-5 w-5",
                     i < (t.rating ?? 0)
-                      ? "fill-gold-400 text-gold-400"
-                      : "text-white/20",
+                      ? "fill-gold-400 text-amber-700"
+                      : "text-slate-300",
                   )}
                 />
               </button>
@@ -1213,7 +1213,7 @@ function ProductsEditor({ section }: { section: ProductsSection }) {
             onChange={(e) => edit(p.id, { description: e.target.value })}
             rows={2}
             placeholder="Short description"
-            className="w-full resize-none rounded-lg border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-electric-500/60"
+            className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-sm text-slate-900 placeholder:text-slate-300 outline-none focus:border-electric-500/60"
           />
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <input
@@ -1248,7 +1248,7 @@ function ProductsEditor({ section }: { section: ProductsSection }) {
                   />
                 )}
                 <div>
-                  <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/45">
+                  <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-slate-500">
                     After click
                   </label>
                   <Select
@@ -1308,7 +1308,7 @@ function VideoEditor({ section }: { section: VideoSection }) {
       {/* Layout picker — controls how the public renderer arranges
           videos. "Auto" picks based on count (1=hero, 2-3=row, 4+=grid). */}
       <div>
-        <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/45">
+        <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-slate-500">
           Layout
         </label>
         <Select
@@ -1324,7 +1324,7 @@ function VideoEditor({ section }: { section: VideoSection }) {
             { value: "reels", label: "Reels — portrait scroll strip" },
           ]}
         />
-        <p className="mt-1 text-[10px] text-white/35">
+        <p className="mt-1 text-[10px] text-slate-400">
           {layoutValue === "auto"
             ? "1 video → hero, 2–3 → row, 4+ → grid."
             : layoutValue === "hero"
@@ -1448,7 +1448,7 @@ function ImageEditor({ section }: { section: ImageSection }) {
       />
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/45">
+          <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-slate-500">
             Alignment
           </label>
           <Select
@@ -1464,7 +1464,7 @@ function ImageEditor({ section }: { section: ImageSection }) {
           />
         </div>
         <div>
-          <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/45">
+          <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-slate-500">
             Max width
           </label>
           <Select
@@ -1546,7 +1546,7 @@ function EmbedHtmlEditor({ section }: { section: EmbedHtmlSection }) {
         className={FIELD}
       />
       <div>
-        <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-white/45">
+        <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-slate-500">
           Quick fill (optional)
         </p>
         <div className="flex flex-wrap gap-1.5">
@@ -1562,7 +1562,7 @@ function EmbedHtmlEditor({ section }: { section: EmbedHtmlSection }) {
                   patch({ html: preset.build(input) });
                 }
               }}
-              className="rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1 text-xs text-white/70 hover:border-electric-500/40 hover:text-white"
+              className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-600 hover:border-electric-500/40 hover:text-slate-900"
             >
               {preset.label}
             </button>
@@ -1575,7 +1575,7 @@ function EmbedHtmlEditor({ section }: { section: EmbedHtmlSection }) {
         placeholder='Paste embed code here — e.g. <iframe src="..."></iframe> or a <script> snippet from Calendly, Tally, ManyChat, etc.'
         rows={6}
         spellCheck={false}
-        className="w-full resize-y rounded-lg border border-white/10 bg-white/[0.03] p-3 font-mono text-xs text-white outline-none placeholder:text-white/30 focus:border-electric-500/60"
+        className="w-full resize-y rounded-lg border border-slate-200 bg-slate-50 p-3 font-mono text-xs text-slate-900 outline-none placeholder:text-slate-300 focus:border-electric-500/60"
       />
       <input
         value={section.caption ?? ""}
@@ -1584,7 +1584,7 @@ function EmbedHtmlEditor({ section }: { section: EmbedHtmlSection }) {
         className={FIELD}
       />
       <div>
-        <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-white/45">
+        <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-slate-500">
           Height
         </label>
         <Select
@@ -1598,13 +1598,13 @@ function EmbedHtmlEditor({ section }: { section: EmbedHtmlSection }) {
             { value: "xl", label: "Very tall (1000px)" },
           ]}
         />
-        <p className="mt-1 text-[10px] text-white/35">
+        <p className="mt-1 text-[10px] text-slate-400">
           {height === "auto"
             ? "Iframe grows with content — flows like a native section. Card framing is removed."
             : "Fixed pixel height. Taller content scrolls inside; shorter leaves empty space."}
         </p>
       </div>
-      <p className="text-[11px] leading-relaxed text-white/40">
+      <p className="text-[11px] leading-relaxed text-slate-400">
         Embeds run in a secure sandbox — they can show their content and run
         their own scripts, but they can&apos;t access your profile or steal
         visitor data. Only paste code from providers you trust.
@@ -1652,7 +1652,7 @@ function LeadCaptureEditor({ section }: { section: LeadCaptureSection }) {
         className={FIELD}
       />
       <div>
-        <p className="mb-1.5 text-xs font-medium text-white/65">
+        <p className="mb-1.5 text-xs font-medium text-slate-600">
           Form fields
         </p>
         <div className="flex gap-2">
@@ -1663,8 +1663,8 @@ function LeadCaptureEditor({ section }: { section: LeadCaptureSection }) {
               className={cn(
                 "flex-1 rounded-lg border py-2 text-xs font-medium capitalize",
                 section.fields.includes(f)
-                  ? "border-electric-500 bg-electric-500/15 text-electric-300"
-                  : "border-white/10 text-white/45",
+                  ? "border-electric-500 bg-electric-500/15 text-electric-700"
+                  : "border-slate-200 text-slate-500",
               )}
             >
               {f}
@@ -1677,10 +1677,10 @@ function LeadCaptureEditor({ section }: { section: LeadCaptureSection }) {
           deleting it (useful when running A/B variants). Same shape as
           the Appointment editor's intake questions. */}
       <div>
-        <p className="mb-1.5 text-xs font-medium text-white/65">
+        <p className="mb-1.5 text-xs font-medium text-slate-600">
           Custom questions · optional for visitors · max 5
         </p>
-        <p className="mb-2 text-[10px] text-white/45">
+        <p className="mb-2 text-[10px] text-slate-500">
           Ask qualifying questions to know more about your leads before
           you follow up (e.g. &quot;What&apos;s your biggest challenge?&quot;,
           &quot;What&apos;s your budget?&quot;). Answers appear on the lead
@@ -1717,7 +1717,7 @@ function LeadCaptureEditor({ section }: { section: LeadCaptureSection }) {
                   patchQuestions(questions.filter((x) => x.id !== q.id))
                 }
                 aria-label="Remove question"
-                className="shrink-0 rounded-md p-1.5 text-white/30 hover:text-red-400"
+                className="shrink-0 rounded-md p-1.5 text-slate-300 hover:text-red-600"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -1738,7 +1738,7 @@ function LeadCaptureEditor({ section }: { section: LeadCaptureSection }) {
       </div>
 
       <div className="space-y-2">
-        <p className="text-xs font-medium text-white/65">Chat channels</p>
+        <p className="text-xs font-medium text-slate-600">Chat channels</p>
         <input
           value={section.channels.messengerUrl || ""}
           onChange={(e) =>
@@ -1778,8 +1778,8 @@ function LeadCaptureEditor({ section }: { section: LeadCaptureSection }) {
         const action: LeadCapturePostSubmitAction =
           section.postSubmitAction ?? "next";
         return (
-          <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
-            <p className="mb-2 text-xs font-medium text-white/65">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p className="mb-2 text-xs font-medium text-slate-600">
               After submission
             </p>
             <Select
@@ -1805,7 +1805,7 @@ function LeadCaptureEditor({ section }: { section: LeadCaptureSection }) {
                 className={cn(FIELD, "mt-2")}
               />
             )}
-            <p className="mt-2 text-[10px] text-white/35">
+            <p className="mt-2 text-[10px] text-slate-400">
               The lead is always saved before this action fires.
             </p>
           </div>
@@ -1855,7 +1855,7 @@ function AppointmentEditor({ section }: { section: AppointmentSection }) {
       />
 
       <div>
-        <p className="mb-1.5 text-xs font-medium text-white/65">
+        <p className="mb-1.5 text-xs font-medium text-slate-600">
           Available days
         </p>
         <div className="flex gap-1.5">
@@ -1866,8 +1866,8 @@ function AppointmentEditor({ section }: { section: AppointmentSection }) {
               className={cn(
                 "flex-1 rounded-lg border py-2 text-[11px] font-medium",
                 section.availableDays.includes(i)
-                  ? "border-electric-500 bg-electric-500/15 text-electric-300"
-                  : "border-white/10 text-white/45",
+                  ? "border-electric-500 bg-electric-500/15 text-electric-700"
+                  : "border-slate-200 text-slate-500",
               )}
             >
               {label}
@@ -1878,7 +1878,7 @@ function AppointmentEditor({ section }: { section: AppointmentSection }) {
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <div>
-          <p className="mb-1.5 text-xs font-medium text-white/65">From</p>
+          <p className="mb-1.5 text-xs font-medium text-slate-600">From</p>
           <input
             type="time"
             value={section.startTime}
@@ -1887,7 +1887,7 @@ function AppointmentEditor({ section }: { section: AppointmentSection }) {
           />
         </div>
         <div>
-          <p className="mb-1.5 text-xs font-medium text-white/65">To</p>
+          <p className="mb-1.5 text-xs font-medium text-slate-600">To</p>
           <input
             type="time"
             value={section.endTime}
@@ -1899,7 +1899,7 @@ function AppointmentEditor({ section }: { section: AppointmentSection }) {
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <div>
-          <p className="mb-1.5 text-xs font-medium text-white/65">
+          <p className="mb-1.5 text-xs font-medium text-slate-600">
             Slot length
           </p>
           <Select
@@ -1914,7 +1914,7 @@ function AppointmentEditor({ section }: { section: AppointmentSection }) {
           />
         </div>
         <div>
-          <p className="mb-1.5 text-xs font-medium text-white/65">
+          <p className="mb-1.5 text-xs font-medium text-slate-600">
             Booking window
           </p>
           <Select
@@ -1933,7 +1933,7 @@ function AppointmentEditor({ section }: { section: AppointmentSection }) {
       </div>
 
       <div>
-        <p className="mb-1.5 text-xs font-medium text-white/65">
+        <p className="mb-1.5 text-xs font-medium text-slate-600">
           Intake questions · optional for visitors · max 5
         </p>
         <div className="space-y-2">
@@ -1969,7 +1969,7 @@ function AppointmentEditor({ section }: { section: AppointmentSection }) {
                   )
                 }
                 aria-label="Remove question"
-                className="shrink-0 rounded-md p-1.5 text-white/30 hover:text-red-400"
+                className="shrink-0 rounded-md p-1.5 text-slate-300 hover:text-red-600"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -2074,7 +2074,7 @@ function PaymentEditor({ section }: { section: PaymentSection }) {
         onChange={(e) => patch({ subtext: e.target.value })}
         placeholder="Brief explanation of what they're paying for"
         rows={2}
-        className="w-full resize-none rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-electric-500/60"
+        className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 outline-none placeholder:text-slate-300 focus:border-electric-500/60"
       />
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_120px]">
         <input
@@ -2096,34 +2096,34 @@ function PaymentEditor({ section }: { section: PaymentSection }) {
           <option value="USD">USD ($)</option>
         </select>
       </div>
-      <label className="flex items-center gap-2 text-xs text-white/65">
+      <label className="flex items-center gap-2 text-xs text-slate-600">
         <input
           type="checkbox"
           checked={section.allowCustomAmount ?? false}
           onChange={(e) => patch({ allowCustomAmount: e.target.checked })}
-          className="h-4 w-4 rounded border-white/20 bg-white/[0.04] accent-electric-500"
+          className="h-4 w-4 rounded border-slate-300 bg-slate-100 accent-electric-500"
         />
         Allow visitor to enter a custom amount (e.g. donations)
       </label>
 
       {/* Methods picker — choose which of the profile's methods this
           section shows. Empty selection = show all enabled methods. */}
-      <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
-        <p className="mb-2 text-xs font-medium text-white/65">
+      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+        <p className="mb-2 text-xs font-medium text-slate-600">
           Show these payment methods
         </p>
         {allMethods.length === 0 ? (
           <div className="rounded-lg border border-amber-500/25 bg-amber-500/[0.05] p-3 text-[11px]">
-            <p className="font-medium text-amber-200">
+            <p className="font-medium text-amber-700">
               ⚠ No payment methods configured yet
             </p>
-            <p className="mt-1 text-white/65">
+            <p className="mt-1 text-slate-600">
               Add your GCash / Maya / bank accounts on the{" "}
               <a
                 href="/profile#payment-methods"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-semibold text-electric-300 underline underline-offset-2 hover:text-electric-200"
+                className="font-semibold text-electric-700 underline underline-offset-2 hover:text-electric-700"
               >
                 Payment Methods card in your Profile Builder
               </a>
@@ -2145,8 +2145,8 @@ function PaymentEditor({ section }: { section: PaymentSection }) {
                     className={cn(
                       "rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors",
                       on
-                        ? "border-electric-500/50 bg-electric-500/15 text-electric-300"
-                        : "border-white/10 bg-white/[0.04] text-white/55 hover:bg-white/[0.08]",
+                        ? "border-electric-500/50 bg-electric-500/15 text-electric-700"
+                        : "border-slate-200 bg-slate-100 text-slate-500 hover:bg-slate-200",
                     )}
                   >
                     {m.label}
@@ -2154,7 +2154,7 @@ function PaymentEditor({ section }: { section: PaymentSection }) {
                 );
               })}
             </div>
-            <p className="mt-2 text-[11px] text-white/35">
+            <p className="mt-2 text-[11px] text-slate-400">
               {section.enabledMethodIds.length === 0
                 ? "Showing ALL active payment methods. Pick specific ones to limit this section."
                 : `Showing ${section.enabledMethodIds.length} method(s).`}
@@ -2164,8 +2164,8 @@ function PaymentEditor({ section }: { section: PaymentSection }) {
       </div>
 
       {/* Fields to collect */}
-      <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
-        <p className="mb-2 text-xs font-medium text-white/65">
+      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+        <p className="mb-2 text-xs font-medium text-slate-600">
           Collect from visitor
         </p>
         <div className="flex flex-wrap gap-1.5">
@@ -2179,8 +2179,8 @@ function PaymentEditor({ section }: { section: PaymentSection }) {
                 className={cn(
                   "rounded-lg border px-2.5 py-1 text-xs font-medium capitalize transition-colors",
                   on
-                    ? "border-electric-500/50 bg-electric-500/15 text-electric-300"
-                    : "border-white/10 bg-white/[0.04] text-white/55 hover:bg-white/[0.08]",
+                    ? "border-electric-500/50 bg-electric-500/15 text-electric-700"
+                    : "border-slate-200 bg-slate-100 text-slate-500 hover:bg-slate-200",
                 )}
               >
                 {f}
@@ -2188,7 +2188,7 @@ function PaymentEditor({ section }: { section: PaymentSection }) {
             );
           })}
         </div>
-        <p className="mt-2 text-[11px] text-white/35">
+        <p className="mt-2 text-[11px] text-slate-400">
           Receipt screenshot is always required.
         </p>
       </div>
@@ -2198,7 +2198,7 @@ function PaymentEditor({ section }: { section: PaymentSection }) {
         onChange={(e) => patch({ successMessage: e.target.value })}
         placeholder="Thank-you message shown after submission"
         rows={2}
-        className="w-full resize-none rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-electric-500/60"
+        className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 outline-none placeholder:text-slate-300 focus:border-electric-500/60"
       />
     </div>
   );

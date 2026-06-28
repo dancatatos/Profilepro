@@ -237,10 +237,10 @@ export default function AdminCommissionsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-2xl font-bold text-white">
+          <h1 className="font-display text-2xl font-bold text-slate-900">
             Commissions
           </h1>
-          <p className="text-sm text-white/45">
+          <p className="text-sm text-slate-500">
             Affiliate earnings ledger across all referrals.
           </p>
         </div>
@@ -268,7 +268,7 @@ export default function AdminCommissionsPage() {
       {/* Filters */}
       <Card className="p-3">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-white/40">
+          <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-slate-400">
             <Filter className="h-3.5 w-3.5" />
             Filter
           </div>
@@ -277,14 +277,14 @@ export default function AdminCommissionsPage() {
             options={STATUS_TABS}
             onChange={setStatusFilter}
           />
-          <span className="text-white/20">·</span>
+          <span className="text-slate-300">·</span>
           <FilterPills
             value={typeFilter}
             options={TYPE_TABS}
             onChange={setTypeFilter}
           />
           <div className="relative ml-auto w-64 max-w-full">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-300" />
             <Input
               placeholder="Search affiliate, customer, plan…"
               value={search}
@@ -299,9 +299,9 @@ export default function AdminCommissionsPage() {
       {selected.size > 0 && (
         <Card className="border border-electric-500/30 bg-electric-500/[0.05] p-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-white">
+            <p className="text-sm text-slate-900">
               <span className="font-semibold">{selected.size}</span> selected ·{" "}
-              <span className="text-white/55">total {formatPHP(selectedTotal)}</span>
+              <span className="text-slate-500">total {formatPHP(selectedTotal)}</span>
             </p>
             <div className="flex flex-wrap gap-2">
               <Button
@@ -344,21 +344,21 @@ export default function AdminCommissionsPage() {
       {/* Ledger */}
       <Card className="p-5">
         {loading ? (
-          <div className="flex h-40 items-center justify-center text-sm text-white/40">
+          <div className="flex h-40 items-center justify-center text-sm text-slate-400">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Loading commissions…
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-            <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/[0.04]">
-              <Wallet className="h-6 w-6 text-white/30" />
+            <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
+              <Wallet className="h-6 w-6 text-slate-300" />
             </span>
-            <p className="text-sm font-medium text-white">
+            <p className="text-sm font-medium text-slate-900">
               {commissions.length === 0
                 ? "No commissions yet"
                 : "No commissions match your filter"}
             </p>
-            <p className="max-w-sm text-xs text-white/40">
+            <p className="max-w-sm text-xs text-slate-400">
               {commissions.length === 0
                 ? "Commissions are auto-created when you upgrade a referred user to a paid plan."
                 : "Try clearing one or both filters."}
@@ -368,7 +368,7 @@ export default function AdminCommissionsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-white/[0.06] text-xs text-white/40">
+                <tr className="border-b border-slate-200 text-xs text-slate-400">
                   <th className="pb-3 pr-2 text-left font-medium">
                     <input
                       type="checkbox"
@@ -377,7 +377,7 @@ export default function AdminCommissionsPage() {
                         if (el) el.indeterminate = someFilteredSelected;
                       }}
                       onChange={toggleAllFiltered}
-                      className="h-4 w-4 cursor-pointer rounded border-white/20 bg-white/[0.04] accent-electric-500"
+                      className="h-4 w-4 cursor-pointer rounded border-slate-300 bg-slate-100 accent-electric-500"
                       aria-label="Select all in view"
                     />
                   </th>
@@ -408,27 +408,27 @@ export default function AdminCommissionsPage() {
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => toggleOne(c.id)}
-                          className="h-4 w-4 cursor-pointer rounded border-white/20 bg-white/[0.04] accent-electric-500"
+                          className="h-4 w-4 cursor-pointer rounded border-slate-300 bg-slate-100 accent-electric-500"
                           aria-label={`Select commission ${c.id}`}
                         />
                       </td>
                       <td className="py-3 pr-4">
                         <Link
                           href={`/admin/affiliates/${c.affiliateId}`}
-                          className="inline-flex items-center gap-1.5 rounded-md bg-electric-500/12 px-2 py-0.5 font-mono text-xs font-semibold text-electric-300 hover:bg-electric-500/20"
+                          className="inline-flex items-center gap-1.5 rounded-md bg-electric-500/12 px-2 py-0.5 font-mono text-xs font-semibold text-electric-700 hover:bg-electric-500/20"
                         >
                           {c.affiliateCode}
                         </Link>
                       </td>
                       <td className="py-3 pr-4">
-                        <p className="text-sm text-white">
+                        <p className="text-sm text-slate-900">
                           {c.userDisplayName}
                         </p>
-                        <p className="text-[11px] text-white/45">
+                        <p className="text-[11px] text-slate-500">
                           {c.userEmailMasked}
                         </p>
                       </td>
-                      <td className="py-3 pr-4 text-white/75">{c.planName}</td>
+                      <td className="py-3 pr-4 text-slate-700">{c.planName}</td>
                       <td className="py-3 pr-4">
                         <Badge
                           tone={
@@ -442,7 +442,7 @@ export default function AdminCommissionsPage() {
                           {c.type}
                         </Badge>
                       </td>
-                      <td className="py-3 pr-4 text-white/50">
+                      <td className="py-3 pr-4 text-slate-500">
                         {timeAgo(c.earnedAt)}
                       </td>
                       <td className="py-3 pr-4">
@@ -458,7 +458,7 @@ export default function AdminCommissionsPage() {
                           {c.status}
                         </Badge>
                       </td>
-                      <td className="py-3 pr-4 text-right font-semibold text-white">
+                      <td className="py-3 pr-4 text-right font-semibold text-slate-900">
                         {formatPHP(c.amount)}
                       </td>
                       <td className="py-3 text-right">
@@ -501,14 +501,14 @@ export default function AdminCommissionsPage() {
         )}
 
         {filtered.length > 0 && (
-          <p className="mt-4 text-right text-xs text-white/30">
+          <p className="mt-4 text-right text-xs text-slate-300">
             Showing {filtered.length} of {commissions.length} commissions
           </p>
         )}
       </Card>
 
       <Card className="p-4">
-        <p className="text-xs text-white/35">
+        <p className="text-xs text-slate-400">
           Marking a commission as <strong>paid</strong> updates the affiliate&apos;s
           cached &ldquo;Paid out&rdquo; and &ldquo;Pending payout&rdquo; totals
           on their dashboard. After you&apos;ve sent the money (GCash / bank
@@ -543,15 +543,15 @@ function SummaryTile({
       <p
         className={
           accent === "jade"
-            ? "text-[11px] font-medium uppercase tracking-wider text-jade-300/80"
+            ? "text-[11px] font-medium uppercase tracking-wider text-jade-600/80"
             : accent === "gold"
-              ? "text-[11px] font-medium uppercase tracking-wider text-gold-300/80"
-              : "text-[11px] font-medium uppercase tracking-wider text-white/40"
+              ? "text-[11px] font-medium uppercase tracking-wider text-amber-700/80"
+              : "text-[11px] font-medium uppercase tracking-wider text-slate-400"
         }
       >
         {label}
       </p>
-      <p className="mt-1 font-display text-2xl font-bold text-white">{value}</p>
+      <p className="mt-1 font-display text-2xl font-bold text-slate-900">{value}</p>
     </Card>
   );
 }
@@ -574,8 +574,8 @@ function FilterPills<T extends string>({
           onClick={() => onChange(opt.id)}
           className={
             value === opt.id
-              ? "rounded-lg border border-electric-500/50 bg-electric-500/15 px-2.5 py-1 text-[11px] font-medium text-electric-300"
-              : "rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] font-medium text-white/55 hover:bg-white/[0.08]"
+              ? "rounded-lg border border-electric-500/50 bg-electric-500/15 px-2.5 py-1 text-[11px] font-medium text-electric-700"
+              : "rounded-lg border border-slate-200 bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-500 hover:bg-slate-200"
           }
         >
           {opt.label}

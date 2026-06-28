@@ -83,14 +83,14 @@ export function InviteCodeCard() {
       <form onSubmit={submit} className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <div className="min-w-0 flex-1">
           <div className="mb-1.5 flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-electric-500/15 text-electric-300">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-electric-500/15 text-electric-700">
               <Ticket className="h-3.5 w-3.5" />
             </span>
-            <p className="text-sm font-semibold text-white">
+            <p className="text-sm font-semibold text-slate-900">
               Have an invite code?
             </p>
           </div>
-          <p className="mb-2 text-xs text-white/55">
+          <p className="mb-2 text-xs text-slate-500">
             Paste a team, training, funnel or pipeline code your leader shared.
           </p>
           <input
@@ -99,15 +99,15 @@ export function InviteCodeCard() {
             placeholder="JOIN-ABC123"
             spellCheck={false}
             autoCapitalize="characters"
-            className="w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm uppercase tracking-wide text-white outline-none placeholder:text-white/30 focus:border-electric-500/40"
+            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm uppercase tracking-wide text-slate-900 outline-none placeholder:text-slate-300 focus:border-electric-500/40"
           />
           {kind === "unknown" && value.trim() && (
-            <p className="mt-1.5 text-[10px] text-white/45">
+            <p className="mt-1.5 text-[10px] text-slate-500">
               Unknown code prefix. Expected JOIN- / ACTIVATE- / PIPE- / FUNNEL-.
             </p>
           )}
           {kind && kind !== "unknown" && (
-            <p className="mt-1.5 text-[10px] text-electric-200">
+            <p className="mt-1.5 text-[10px] text-electric-700">
               Detected: {kind} code.
             </p>
           )}

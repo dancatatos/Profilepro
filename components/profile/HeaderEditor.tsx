@@ -84,14 +84,14 @@ export function HeaderEditor() {
         />
       </div>
 
-      <div className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5">
+      <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-3.5">
         <div className="flex items-center gap-2.5">
-          <BadgeCheck className="h-5 w-5 text-electric-400" />
+          <BadgeCheck className="h-5 w-5 text-electric-600" />
           <div>
-            <p className="text-sm font-medium text-white">
+            <p className="text-sm font-medium text-slate-900">
               Verification badge
             </p>
-            <p className="text-xs text-white/40">
+            <p className="text-xs text-slate-400">
               Adds a trust badge to your photo.
             </p>
           </div>
@@ -105,7 +105,7 @@ export function HeaderEditor() {
       {/* Social proof stats */}
       <div>
         <div className="mb-2 flex items-center justify-between">
-          <p className="text-xs font-medium text-white/65">
+          <p className="text-xs font-medium text-slate-600">
             Social proof stats
           </p>
           {h.socialProof.length < 4 && (
@@ -118,7 +118,7 @@ export function HeaderEditor() {
                   ],
                 })
               }
-              className="flex items-center gap-1 text-xs font-medium text-electric-400"
+              className="flex items-center gap-1 text-xs font-medium text-electric-600"
             >
               <Plus className="h-3.5 w-3.5" />
               Add
@@ -132,13 +132,13 @@ export function HeaderEditor() {
                 value={stat.value}
                 onChange={(e) => setStat(stat.id, { value: e.target.value })}
                 placeholder="6+"
-                className="h-10 w-20 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 text-center text-sm text-white outline-none focus:border-electric-500/60"
+                className="h-10 w-20 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-center text-sm text-slate-900 outline-none focus:border-electric-500/60"
               />
               <input
                 value={stat.label}
                 onChange={(e) => setStat(stat.id, { label: e.target.value })}
                 placeholder="Years experience"
-                className="h-10 flex-1 rounded-lg border border-white/10 bg-white/[0.03] px-3 text-sm text-white outline-none focus:border-electric-500/60"
+                className="h-10 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none focus:border-electric-500/60"
               />
               <button
                 onClick={() =>
@@ -148,7 +148,7 @@ export function HeaderEditor() {
                     ),
                   })
                 }
-                className="rounded-lg p-2 text-white/35 hover:text-red-400"
+                className="rounded-lg p-2 text-slate-400 hover:text-red-600"
               >
                 <X className="h-4 w-4" />
               </button>

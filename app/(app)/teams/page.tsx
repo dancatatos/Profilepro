@@ -152,7 +152,7 @@ export default function TeamsPage() {
       />
 
       {loading && spaces.length === 0 ? (
-        <Card className="p-8 text-center text-sm text-white/40">Loading…</Card>
+        <Card className="p-8 text-center text-sm text-slate-400">Loading…</Card>
       ) : spaces.length === 0 ? (
         <EmptyState
           icon="Users"
@@ -173,7 +173,7 @@ export default function TeamsPage() {
             <TeamRow key={s.id} space={s} />
           ))}
           {remaining > 0 && cap < 999 && (
-            <p className="pt-1 text-xs text-white/35">
+            <p className="pt-1 text-xs text-slate-400">
               {remaining} more team-space slot{remaining === 1 ? "" : "s"} available.
             </p>
           )}
@@ -196,7 +196,7 @@ export default function TeamsPage() {
               if (e.key === "Enter" && !creating && name.trim()) handleCreate();
             }}
             placeholder="e.g. Amare PH Team"
-            className="h-11 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-electric-500/60"
+            className="h-11 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 placeholder:text-slate-300 outline-none focus:border-electric-500/60"
             disabled={creating}
           />
           <div className="flex gap-2">
@@ -231,14 +231,14 @@ function TeamRow({ space }: { space: TeamSpace }) {
       onClick={() => router.push(`/teams/${space.id}`)}
       className="flex cursor-pointer items-center gap-3 p-3.5 transition-colors hover:border-electric-500/30"
     >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-electric-500/15 text-electric-300">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-electric-500/15 text-electric-700">
         <Users className="h-5 w-5" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-white">
+        <p className="truncate text-sm font-medium text-slate-900">
           {space.name}
         </p>
-        <p className="mt-0.5 text-xs text-white/45">
+        <p className="mt-0.5 text-xs text-slate-500">
           {space.memberCount ?? 0} member
           {(space.memberCount ?? 0) === 1 ? "" : "s"} · Updated{" "}
           {timeAgo(space.updatedAt)}

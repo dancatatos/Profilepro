@@ -107,15 +107,15 @@ export default function AnalyticsPage() {
         />
 
         {!audit ? (
-          <div className="mt-4 flex flex-col items-center rounded-2xl border border-dashed border-white/10 py-8 text-center">
-            <Gauge className="h-8 w-8 text-white/30" />
-            <p className="mt-2 text-sm text-white/55">
+          <div className="mt-4 flex flex-col items-center rounded-2xl border border-dashed border-slate-200 py-8 text-center">
+            <Gauge className="h-8 w-8 text-slate-300" />
+            <p className="mt-2 text-sm text-slate-500">
               Run an AI audit to score your profile and get improvement tips.
             </p>
           </div>
         ) : (
           <div className="mt-4 space-y-4">
-            <div className="flex flex-wrap justify-around gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
+            <div className="flex flex-wrap justify-around gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <ScoreRing value={audit.scores.overall} accent="blue" label="overall" />
               <ScoreRing value={audit.scores.credibility} size={72} accent="jade" label="credibility" />
               <ScoreRing value={audit.scores.conversion} size={72} accent="gold" label="conversion" />
@@ -124,26 +124,26 @@ export default function AnalyticsPage() {
             </div>
 
             <div>
-              <p className="mb-2 text-xs font-medium text-white/55">
+              <p className="mb-2 text-xs font-medium text-slate-500">
                 Suggestions
               </p>
               <div className="space-y-2">
                 {audit.suggestions.map((sug, i) => (
                   <div
                     key={i}
-                    className="flex items-start gap-2.5 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3"
+                    className="flex items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50 p-3"
                   >
-                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-gold-300" />
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-white">
+                        <span className="text-xs font-semibold text-slate-900">
                           {sug.area}
                         </span>
                         <Badge tone={SEVERITY[sug.severity] || "neutral"}>
                           {sug.severity}
                         </Badge>
                       </div>
-                      <p className="mt-0.5 text-xs text-white/55">
+                      <p className="mt-0.5 text-xs text-slate-500">
                         {sug.suggestion}
                       </p>
                     </div>
@@ -154,14 +154,14 @@ export default function AnalyticsPage() {
 
             {audit.headlineIdeas.length > 0 && (
               <div>
-                <p className="mb-2 text-xs font-medium text-white/55">
+                <p className="mb-2 text-xs font-medium text-slate-500">
                   Stronger headline ideas
                 </p>
                 <div className="space-y-1.5">
                   {audit.headlineIdeas.map((h, i) => (
                     <p
                       key={i}
-                      className="rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2 text-xs text-white/70"
+                      className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600"
                     >
                       {h}
                     </p>

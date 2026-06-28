@@ -26,14 +26,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       {label && (
         <label
           htmlFor={inputId}
-          className="mb-1.5 block text-xs font-medium text-white/65"
+          className="mb-1.5 block text-xs font-medium text-slate-700"
         >
           {label}
         </label>
       )}
       <div className="relative">
         {leftIcon && (
-          <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-white/35">
+          <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
             {leftIcon}
           </span>
         )}
@@ -41,12 +41,12 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           id={inputId}
           ref={ref}
           className={cn(
-            "h-11 w-full rounded-xl border bg-white/[0.03] text-sm text-white",
-            "placeholder:text-white/30 outline-none transition-colors",
-            "focus:border-electric-500/60 focus:bg-white/[0.05]",
+            "h-11 w-full rounded-xl border bg-white text-sm text-slate-900",
+            "placeholder:text-slate-400 outline-none transition-colors",
+            "focus:border-electric-500 focus:ring-2 focus:ring-electric-500/15",
             leftIcon ? "pl-10 pr-3.5" : "px-3.5",
             rightSlot && "pr-11",
-            error ? "border-red-500/60" : "border-white/10",
+            error ? "border-red-500" : "border-slate-200",
             className,
           )}
           {...rest}
@@ -58,9 +58,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         )}
       </div>
       {error ? (
-        <p className="mt-1.5 text-xs text-red-400">{error}</p>
+        <p className="mt-1.5 text-xs text-red-600">{error}</p>
       ) : hint ? (
-        <p className="mt-1.5 text-xs text-white/40">{hint}</p>
+        <p className="mt-1.5 text-xs text-slate-500">{hint}</p>
       ) : null}
     </div>
   );
@@ -88,7 +88,7 @@ export function Textarea({
       {label && (
         <label
           htmlFor={fieldId}
-          className="mb-1.5 block text-xs font-medium text-white/65"
+          className="mb-1.5 block text-xs font-medium text-slate-700"
         >
           {label}
         </label>
@@ -97,18 +97,18 @@ export function Textarea({
         id={fieldId}
         rows={rows}
         className={cn(
-          "w-full resize-none rounded-xl border bg-white/[0.03] px-3.5 py-3 text-sm text-white",
-          "placeholder:text-white/30 outline-none transition-colors",
-          "focus:border-electric-500/60 focus:bg-white/[0.05]",
-          error ? "border-red-500/60" : "border-white/10",
+          "w-full resize-none rounded-xl border bg-white px-3.5 py-3 text-sm text-slate-900",
+          "placeholder:text-slate-400 outline-none transition-colors",
+          "focus:border-electric-500 focus:ring-2 focus:ring-electric-500/15",
+          error ? "border-red-500" : "border-slate-200",
           className,
         )}
         {...rest}
       />
       {error ? (
-        <p className="mt-1.5 text-xs text-red-400">{error}</p>
+        <p className="mt-1.5 text-xs text-red-600">{error}</p>
       ) : hint ? (
-        <p className="mt-1.5 text-xs text-white/40">{hint}</p>
+        <p className="mt-1.5 text-xs text-slate-500">{hint}</p>
       ) : null}
     </div>
   );

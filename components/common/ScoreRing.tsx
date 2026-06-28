@@ -37,7 +37,7 @@ export function ScoreRing({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="rgba(255,255,255,0.08)"
+          stroke="rgba(15,23,42,0.08)"
           strokeWidth={stroke}
         />
         <circle
@@ -56,14 +56,14 @@ export function ScoreRing({
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span
           className={cn(
-            "font-display font-bold leading-none text-white",
+            "font-display font-bold leading-none text-slate-900",
             size > 70 ? "text-xl" : "text-base",
           )}
         >
           {Math.round(clamped)}
         </span>
         {label && (
-          <span className="mt-0.5 text-[9px] uppercase tracking-wide text-white/40">
+          <span className="mt-0.5 text-[9px] uppercase tracking-wide text-slate-400">
             {label}
           </span>
         )}

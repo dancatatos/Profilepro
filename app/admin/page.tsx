@@ -97,19 +97,19 @@ export default function AdminDashboardPage() {
       icon: <Users className="h-5 w-5" />,
       label: "Total users",
       value: fetching ? "…" : String(users.length),
-      color: "text-electric-400",
+      color: "text-electric-600",
     },
     {
       icon: <UserRound className="h-5 w-5" />,
       label: "Profiles",
       value: fetching ? "…" : profileCount !== null ? String(profileCount) : "—",
-      color: "text-jade-400",
+      color: "text-jade-600",
     },
     {
       icon: <Inbox className="h-5 w-5" />,
       label: "Total leads",
       value: fetching ? "…" : leadCount !== null ? String(leadCount) : "—",
-      color: "text-gold-400",
+      color: "text-amber-700",
     },
     {
       icon: <CreditCard className="h-5 w-5" />,
@@ -124,10 +124,10 @@ export default function AdminDashboardPage() {
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-2xl font-bold text-white">
+          <h1 className="font-display text-2xl font-bold text-slate-900">
             Dashboard
           </h1>
-          <p className="text-sm text-white/45">Platform overview.</p>
+          <p className="text-sm text-slate-500">Platform overview.</p>
         </div>
         <Button
           variant="outline"
@@ -144,10 +144,10 @@ export default function AdminDashboardPage() {
         {stats.map((s) => (
           <Card key={s.label} className="p-5">
             <div className={`mb-2 ${s.color}`}>{s.icon}</div>
-            <p className="font-display text-3xl font-bold text-white">
+            <p className="font-display text-3xl font-bold text-slate-900">
               {s.value}
             </p>
-            <p className="mt-1 text-xs text-white/45">{s.label}</p>
+            <p className="mt-1 text-xs text-slate-500">{s.label}</p>
           </Card>
         ))}
       </div>
@@ -155,30 +155,30 @@ export default function AdminDashboardPage() {
       {/* Quick actions */}
       <div className="grid gap-4 sm:grid-cols-2">
         <Card className="p-5">
-          <h3 className="font-display text-sm font-semibold text-white">
+          <h3 className="font-display text-sm font-semibold text-slate-900">
             User Management
           </h3>
-          <p className="mt-1 text-xs text-white/40">
+          <p className="mt-1 text-xs text-slate-400">
             {fetching
               ? "Loading…"
               : `${users.length} total · ${freeCount} free · ${proCount} paid`}
           </p>
           <Link
             href="/admin/users"
-            className="mt-4 flex items-center gap-1.5 text-xs font-medium text-electric-400 hover:text-electric-300 transition-colors"
+            className="mt-4 flex items-center gap-1.5 text-xs font-medium text-electric-600 hover:text-electric-700 transition-colors"
           >
             Manage users <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </Card>
 
         <Card className="p-5">
-          <h3 className="font-display text-sm font-semibold text-white">
+          <h3 className="font-display text-sm font-semibold text-slate-900">
             Platform Health
           </h3>
-          <p className="mt-1 text-xs text-white/40">
+          <p className="mt-1 text-xs text-slate-400">
             All systems operational.
           </p>
-          <p className="mt-4 text-xs text-white/25">
+          <p className="mt-4 text-xs text-slate-300">
             Detailed analytics coming soon.
           </p>
         </Card>
@@ -186,12 +186,12 @@ export default function AdminDashboardPage() {
 
       {/* Feature flags */}
       <div>
-        <h2 className="mb-3 font-display text-sm font-semibold text-white">
+        <h2 className="mb-3 font-display text-sm font-semibold text-slate-900">
           Feature Flags
         </h2>
-        <Card className="divide-y divide-white/[0.06] p-0">
+        <Card className="divide-y divide-slate-200 p-0">
           <FeatureFlagRow
-            icon={<LayoutTemplate className="h-5 w-5 text-electric-400" />}
+            icon={<LayoutTemplate className="h-5 w-5 text-electric-600" />}
             title="Template Marketplace"
             description="Shows the standalone Template Marketplace tab in the user sidebar. Keep this OFF until the marketplace is ready to launch."
             enabled={flags?.templateMarketplace ?? false}
@@ -271,19 +271,19 @@ function FeaturedProfileSection({
 
   return (
     <div>
-      <h2 className="mb-3 font-display text-sm font-semibold text-white">
+      <h2 className="mb-3 font-display text-sm font-semibold text-slate-900">
         Featured Profile (Homepage)
       </h2>
       <Card className="p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gold-400/15">
-            <Star className="h-5 w-5 text-gold-300" />
+            <Star className="h-5 w-5 text-amber-700" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-white">
+            <p className="text-sm font-semibold text-slate-900">
               Showcased profile on the marketing site
             </p>
-            <p className="mt-1 text-xs text-white/55">
+            <p className="mt-1 text-xs text-slate-500">
               The phone mockup in the homepage hero displays this user&apos;s
               live profile. Pick a published customer to show off real photos
               and credibility content. Leave blank for the built-in demo.
@@ -312,21 +312,21 @@ function FeaturedProfileSection({
 
             {/* Power-user path — type a username directly. Kept for
                 speed when the admin already knows who they want. */}
-            <details className="mt-3 rounded-lg border border-white/[0.05] bg-white/[0.02] p-3">
-              <summary className="cursor-pointer text-[11px] font-medium uppercase tracking-wider text-white/40 hover:text-white/65">
+            <details className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+              <summary className="cursor-pointer text-[11px] font-medium uppercase tracking-wider text-slate-400 hover:text-slate-600">
                 Or type a username
               </summary>
               <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-                <div className="flex flex-1 items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-3">
-                  <span className="text-sm text-white/40">@</span>
+                <div className="flex flex-1 items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3">
+                  <span className="text-sm text-slate-400">@</span>
                   <input
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
                     placeholder="username (e.g. dan)"
-                    className="h-10 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/30"
+                    className="h-10 flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-300"
                   />
                   {!dirty && current && (
-                    <Check className="h-4 w-4 shrink-0 text-jade-400" />
+                    <Check className="h-4 w-4 shrink-0 text-jade-600" />
                   )}
                 </div>
                 <Button
@@ -343,16 +343,16 @@ function FeaturedProfileSection({
 
             {current && (
               <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-jade-500/20 bg-jade-500/[0.04] p-2.5">
-                <Check className="h-4 w-4 shrink-0 text-jade-400" />
-                <p className="text-xs text-white/75">
+                <Check className="h-4 w-4 shrink-0 text-jade-600" />
+                <p className="text-xs text-slate-700">
                   Currently featuring{" "}
-                  <strong className="text-jade-200">@{current}</strong>
+                  <strong className="text-jade-600">@{current}</strong>
                 </p>
                 <a
                   href={`/${current}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="ml-auto inline-flex items-center gap-1 text-[11px] text-electric-400 hover:text-electric-300"
+                  className="ml-auto inline-flex items-center gap-1 text-[11px] text-electric-600 hover:text-electric-700"
                 >
                   <ExternalLink className="h-3 w-3" />
                   Preview
@@ -440,32 +440,32 @@ function CustomerPickerModal({
     >
       <div className="space-y-3 pb-3">
         {/* Search */}
-        <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3">
-          <Search className="h-4 w-4 text-white/40" />
+        <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3">
+          <Search className="h-4 w-4 text-slate-400" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name, username or headline"
             autoFocus
-            className="h-11 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/30"
+            className="h-11 flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-300"
           />
         </div>
 
         {/* List */}
         {loading ? (
-          <div className="flex h-32 items-center justify-center text-xs text-white/40">
+          <div className="flex h-32 items-center justify-center text-xs text-slate-400">
             <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
             Loading profiles…
           </div>
         ) : filtered.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-white/10 py-8 text-center">
-            <UserRound className="mx-auto mb-2 h-6 w-6 text-white/20" />
-            <p className="text-sm font-medium text-white/55">
+          <div className="rounded-xl border border-dashed border-slate-200 py-8 text-center">
+            <UserRound className="mx-auto mb-2 h-6 w-6 text-slate-300" />
+            <p className="text-sm font-medium text-slate-500">
               {search.trim()
                 ? "No published profiles match that search."
                 : "No published profiles yet."}
             </p>
-            <p className="mt-1 text-xs text-white/35">
+            <p className="mt-1 text-xs text-slate-400">
               {search.trim()
                 ? "Try a different search term."
                 : "Users need to publish their profile to be eligible."}
@@ -485,7 +485,7 @@ function CustomerPickerModal({
                     "flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors",
                     isCurrent
                       ? "border-jade-500/40 bg-jade-500/[0.06]"
-                      : "border-white/[0.07] bg-white/[0.02] hover:border-electric-500/40 hover:bg-white/[0.05]",
+                      : "border-slate-200 bg-slate-50 hover:border-electric-500/40 hover:bg-slate-100",
                   )}
                 >
                   <Avatar
@@ -495,30 +495,30 @@ function CustomerPickerModal({
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
-                      <p className="truncate text-sm font-semibold text-white">
+                      <p className="truncate text-sm font-semibold text-slate-900">
                         {p.header.displayName}
                       </p>
                       {isCurrent && (
-                        <span className="rounded-full bg-jade-500/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-jade-300">
+                        <span className="rounded-full bg-jade-500/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-jade-600">
                           Featured
                         </span>
                       )}
                     </div>
-                    <p className="truncate text-[11px] text-white/40">
+                    <p className="truncate text-[11px] text-slate-400">
                       @{p.username}
                       {p.header.headline ? ` · ${p.header.headline}` : ""}
                     </p>
                   </div>
                   {p.header.avatarUrl ? (
                     <span
-                      className="shrink-0 rounded-full bg-jade-500/15 px-2 py-0.5 text-[10px] font-medium text-jade-300"
+                      className="shrink-0 rounded-full bg-jade-500/15 px-2 py-0.5 text-[10px] font-medium text-jade-600"
                       title="Has a real avatar photo"
                     >
                       📸 photo
                     </span>
                   ) : (
                     <span
-                      className="shrink-0 rounded-full bg-white/[0.05] px-2 py-0.5 text-[10px] text-white/35"
+                      className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-400"
                       title="No avatar — will show initials"
                     >
                       no photo
@@ -530,7 +530,7 @@ function CustomerPickerModal({
           </div>
         )}
 
-        <p className="text-[10px] text-white/35">
+        <p className="text-[10px] text-slate-400">
           Tip: profiles with a real avatar photo convert better than
           initials. Look for the green &ldquo;📸 photo&rdquo; badge.
         </p>
@@ -561,21 +561,21 @@ function FeatureFlagRow({
       <div className="mt-0.5 shrink-0">{icon}</div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <h3 className="font-display text-sm font-semibold text-white">
+          <h3 className="font-display text-sm font-semibold text-slate-900">
             {title}
           </h3>
           <span
             className={cn(
               "rounded-full px-2 py-0.5 text-[10px] font-semibold",
               enabled
-                ? "bg-jade-500/15 text-jade-300"
-                : "bg-white/[0.06] text-white/40",
+                ? "bg-jade-500/15 text-jade-600"
+                : "bg-slate-100 text-slate-400",
             )}
           >
             {enabled ? "ON" : "OFF"}
           </span>
         </div>
-        <p className="mt-1 text-xs leading-relaxed text-white/45">
+        <p className="mt-1 text-xs leading-relaxed text-slate-500">
           {description}
         </p>
       </div>

@@ -67,7 +67,7 @@ export function TopBar() {
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-white/[0.06] bg-ink-900/70 px-4 backdrop-blur-xl lg:px-8">
+      <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-slate-200 bg-white/85 px-4 backdrop-blur-xl lg:px-8">
         <button
           onClick={() => setMenuOpen(true)}
           aria-label={
@@ -75,7 +75,7 @@ export function TopBar() {
               ? `Open menu — ${urgentTasks} follow-ups due`
               : "Open menu"
           }
-          className="relative rounded-lg p-2 text-white/70 no-tap-highlight hover:bg-white/5 lg:hidden"
+          className="relative rounded-lg p-2 text-slate-600 no-tap-highlight hover:bg-slate-100 lg:hidden"
         >
           <Menu className="h-5 w-5" />
           {/* Tiny red pulse dot mirrors the sidebar badge so mobile
@@ -89,14 +89,14 @@ export function TopBar() {
           )}
         </button>
 
-        <h1 className="flex-1 truncate font-display text-base font-semibold text-white lg:text-lg">
+        <h1 className="flex-1 truncate font-display text-base font-semibold text-slate-900 lg:text-lg">
           {pageTitle(pathname)}
         </h1>
 
         <Link
           href={publicUrl}
           target="_blank"
-          className="hidden items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-white/70 hover:bg-white/5 sm:flex"
+          className="hidden items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 sm:flex"
         >
           <ExternalLink className="h-3.5 w-3.5" />
           View live profile

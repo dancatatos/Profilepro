@@ -251,18 +251,18 @@ export default function EventDetailPage() {
 
       {/* Details + RSVP summary */}
       <Card className="space-y-2 p-4">
-        <div className="flex items-center gap-2 text-sm text-white/80">
-          <CalendarIcon className="h-4 w-4 text-electric-300" />
+        <div className="flex items-center gap-2 text-sm text-slate-700">
+          <CalendarIcon className="h-4 w-4 text-electric-700" />
           {whenLine}
         </div>
         {event.locationLabel && (
-          <div className="flex items-center gap-2 text-sm text-white/80">
-            <MapPin className="h-4 w-4 text-electric-300" />
+          <div className="flex items-center gap-2 text-sm text-slate-700">
+            <MapPin className="h-4 w-4 text-electric-700" />
             {event.locationLabel}
           </div>
         )}
         {event.description && (
-          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-white/70">
+          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-600">
             {event.description}
           </p>
         )}
@@ -282,8 +282,8 @@ export default function EventDetailPage() {
       <Card className="p-4">
         <div className="mb-2 flex items-start justify-between gap-2">
           <div>
-            <p className="text-xs font-medium text-white">Invitation card</p>
-            <p className="mt-0.5 text-[11px] text-white/45">
+            <p className="text-xs font-medium text-slate-900">Invitation card</p>
+            <p className="mt-0.5 text-[11px] text-slate-500">
               Share-ready graphic for your team. Members get a one-tap
               download from /my-events.
             </p>
@@ -307,7 +307,7 @@ export default function EventDetailPage() {
           folder="media"
         />
         {savingCard && (
-          <p className="mt-2 text-[11px] text-white/45">Saving…</p>
+          <p className="mt-2 text-[11px] text-slate-500">Saving…</p>
         )}
       </Card>
 
@@ -321,27 +321,27 @@ export default function EventDetailPage() {
 
       {/* RSVP list */}
       <Card className="p-0">
-        <div className="border-b border-white/[0.06] p-3.5">
-          <p className="text-xs font-medium text-white">
+        <div className="border-b border-slate-200 p-3.5">
+          <p className="text-xs font-medium text-slate-900">
             RSVPs ({rsvps.length})
           </p>
         </div>
         {rsvps.length === 0 ? (
-          <p className="p-6 text-center text-xs text-white/45">
+          <p className="p-6 text-center text-xs text-slate-500">
             No RSVPs yet. Share the event link or QR with your team.
           </p>
         ) : (
-          <div className="divide-y divide-white/[0.06]">
+          <div className="divide-y divide-slate-200">
             {rsvps.map((r) => (
               <div key={r.id} className="flex items-center gap-3 p-3.5">
                 <span
                   className={cn(
                     "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
                     r.status === "going"
-                      ? "bg-jade-500/15 text-jade-300"
+                      ? "bg-jade-500/15 text-jade-600"
                       : r.status === "maybe"
-                        ? "bg-gold-400/15 text-gold-300"
-                        : "bg-white/[0.05] text-white/50",
+                        ? "bg-gold-400/15 text-amber-700"
+                        : "bg-slate-100 text-slate-500",
                   )}
                 >
                   {r.status === "going" ? (
@@ -353,10 +353,10 @@ export default function EventDetailPage() {
                   )}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-white">
+                  <p className="truncate text-sm font-medium text-slate-900">
                     {r.userId}
                   </p>
-                  <p className="mt-0.5 text-xs text-white/45">
+                  <p className="mt-0.5 text-xs text-slate-500">
                     {r.status} · {timeAgo(r.updatedAt)}
                   </p>
                 </div>
@@ -369,7 +369,7 @@ export default function EventDetailPage() {
 
       {/* Danger zone */}
       <Card className="space-y-2 border-red-500/15 bg-red-500/[0.02] p-4">
-        <p className="text-[10px] font-medium uppercase tracking-wider text-red-300/80">
+        <p className="text-[10px] font-medium uppercase tracking-wider text-red-700/80">
           Danger zone
         </p>
         <div className="flex flex-wrap gap-2">
@@ -388,12 +388,12 @@ export default function EventDetailPage() {
             variant="outline"
             onClick={() => setConfirmDelete(true)}
             leftIcon={<Trash2 className="h-3.5 w-3.5" />}
-            className="!border-red-500/30 !text-red-300 hover:!bg-red-500/10"
+            className="!border-red-500/30 !text-red-700 hover:!bg-red-500/10"
           >
             Delete event
           </Button>
         </div>
-        <p className="text-[11px] text-white/45">
+        <p className="text-[11px] text-slate-500">
           Canceling keeps the event visible with a Canceled badge.
           Deleting removes everything including RSVPs — can&apos;t be undone.
         </p>
@@ -408,11 +408,11 @@ export default function EventDetailPage() {
       >
         <div className="space-y-4 pb-2">
           <div>
-            <p className="mb-1.5 text-xs font-medium text-white/55">
+            <p className="mb-1.5 text-xs font-medium text-slate-500">
               Direct link
             </p>
             <div className="flex items-center gap-2">
-              <code className="flex-1 truncate rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 font-mono text-xs text-electric-300">
+              <code className="flex-1 truncate rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-xs text-electric-700">
                 {joinUrl}
               </code>
               <Button
@@ -426,7 +426,7 @@ export default function EventDetailPage() {
             </div>
           </div>
           <div>
-            <p className="mb-1.5 text-xs font-medium text-white/55">
+            <p className="mb-1.5 text-xs font-medium text-slate-500">
               QR code (for venue posters)
             </p>
             <QRBlock
@@ -434,7 +434,7 @@ export default function EventDetailPage() {
               display={240}
               fileName={`event-${event.id}`}
             />
-            <p className="mt-2 text-center text-[11px] text-white/45">
+            <p className="mt-2 text-center text-[11px] text-slate-500">
               Print this on signs — attendees scan, sign up, get registered
               + checked in in one flow. No leader effort needed.
             </p>
@@ -489,18 +489,18 @@ function SummaryStat({
 }) {
   const accentClass =
     accent === "jade"
-      ? "text-jade-300"
+      ? "text-jade-600"
       : accent === "gold"
-        ? "text-gold-300"
+        ? "text-amber-700"
         : accent === "blue"
-          ? "text-electric-300"
-          : "text-white";
+          ? "text-electric-700"
+          : "text-slate-900";
   return (
     <Card className="p-3 text-center">
       <p className={cn("font-display text-xl font-bold", accentClass)}>
         {value}
       </p>
-      <p className="text-[10px] uppercase tracking-wider text-white/45">
+      <p className="text-[10px] uppercase tracking-wider text-slate-500">
         {label}
       </p>
     </Card>

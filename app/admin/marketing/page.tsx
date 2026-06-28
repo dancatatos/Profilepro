@@ -129,10 +129,10 @@ export default function AdminMarketingPage() {
     <div className="space-y-4 p-4 sm:space-y-6 sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <h1 className="font-display text-xl font-bold text-white sm:text-2xl">
+          <h1 className="font-display text-xl font-bold text-slate-900 sm:text-2xl">
             Marketing Content
           </h1>
-          <p className="text-xs text-white/45 sm:text-sm">
+          <p className="text-xs text-slate-500 sm:text-sm">
             Edit what appears on crediblyai.com — hero copy, social proof,
             testimonials, FAQ, and final CTA.
           </p>
@@ -141,7 +141,7 @@ export default function AdminMarketingPage() {
           <Link
             href="/"
             target="_blank"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-white/70 transition-colors hover:bg-white/[0.05]"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-100"
           >
             <ExternalLink className="h-3.5 w-3.5" />
             Preview
@@ -168,7 +168,7 @@ export default function AdminMarketingPage() {
       </div>
 
       {dirty && (
-        <div className="rounded-xl border border-electric-500/20 bg-electric-500/[0.06] px-4 py-2.5 text-xs text-electric-200">
+        <div className="rounded-xl border border-electric-500/20 bg-electric-500/[0.06] px-4 py-2.5 text-xs text-electric-700">
           You have unsaved changes. Click <strong>Save changes</strong> to
           publish them to the live homepage.
         </div>
@@ -298,15 +298,15 @@ function SectionCard({
   const [open, setOpen] = useState(defaultOpen);
   return (
     <Card className="overflow-hidden p-0">
-      <div className="flex items-center gap-3 border-b border-white/[0.06] bg-white/[0.02] px-4 py-3">
+      <div className="flex items-center gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
           className="min-w-0 flex-1 text-left"
         >
-          <p className="truncate text-sm font-semibold text-white">{title}</p>
+          <p className="truncate text-sm font-semibold text-slate-900">{title}</p>
           {description && (
-            <p className="mt-0.5 truncate text-[11px] text-white/40">
+            <p className="mt-0.5 truncate text-[11px] text-slate-400">
               {description}
             </p>
           )}
@@ -318,8 +318,8 @@ function SectionCard({
             className={cn(
               "flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium transition-colors",
               enabled
-                ? "bg-jade-500/15 text-jade-300"
-                : "bg-white/[0.05] text-white/45",
+                ? "bg-jade-500/15 text-jade-600"
+                : "bg-slate-100 text-slate-500",
             )}
           >
             {enabled ? (
@@ -339,7 +339,7 @@ function SectionCard({
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-label={open ? "Collapse" : "Expand"}
-          className="rounded-md p-1 text-white/40 hover:bg-white/[0.05] hover:text-white"
+          className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-900"
         >
           {open ? (
             <ChevronUp className="h-4 w-4" />
@@ -366,17 +366,17 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-white/45">
+      <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-slate-500">
         {label}
       </label>
       {children}
-      {hint && <p className="mt-1 text-[10px] text-white/35">{hint}</p>}
+      {hint && <p className="mt-1 text-[10px] text-slate-400">{hint}</p>}
     </div>
   );
 }
 
 const inputCx =
-  "w-full rounded-lg border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white outline-none placeholder:text-white/30 focus:border-electric-500/40";
+  "w-full rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-300 focus:border-electric-500/40";
 
 /* ── Hero editor ───────────────────────────────────────────────── */
 
@@ -512,7 +512,7 @@ function SocialProofEditor({
       onToggleEnabled={(next) => onChange({ enabled: next })}
     >
       {section.stats.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-white/10 py-4 text-center text-xs text-white/45">
+        <div className="rounded-lg border border-dashed border-slate-200 py-4 text-center text-xs text-slate-500">
           No stats yet — click &ldquo;Add stat&rdquo; below.
         </div>
       ) : (
@@ -520,7 +520,7 @@ function SocialProofEditor({
           {section.stats.map((s) => (
             <div
               key={s.id}
-              className="grid gap-2 rounded-lg border border-white/[0.07] bg-white/[0.02] p-2.5 sm:grid-cols-[140px_1fr_auto] sm:items-center"
+              className="grid gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2.5 sm:grid-cols-[140px_1fr_auto] sm:items-center"
             >
               <input
                 value={s.value}
@@ -541,7 +541,7 @@ function SocialProofEditor({
                 type="button"
                 onClick={() => removeStat(s.id)}
                 aria-label="Remove stat"
-                className="rounded-md p-1.5 text-white/30 transition-colors hover:bg-red-500/10 hover:text-red-400"
+                className="rounded-md p-1.5 text-slate-300 transition-colors hover:bg-red-500/10 hover:text-red-600"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -611,7 +611,7 @@ function TestimonialsEditor({
       </div>
 
       {section.items.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-white/10 py-4 text-center text-xs text-white/45">
+        <div className="rounded-lg border border-dashed border-slate-200 py-4 text-center text-xs text-slate-500">
           No testimonials yet — click &ldquo;Add testimonial&rdquo; below.
         </div>
       ) : (
@@ -619,7 +619,7 @@ function TestimonialsEditor({
           {section.items.map((t) => (
             <div
               key={t.id}
-              className="space-y-2 rounded-lg border border-white/[0.07] bg-white/[0.02] p-3"
+              className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3"
             >
               <div className="grid gap-2 sm:grid-cols-2">
                 <Field label="Name">
@@ -683,8 +683,8 @@ function TestimonialsEditor({
                   </select>
                 </Field>
               </div>
-              <div className="flex items-center justify-between border-t border-white/[0.06] pt-2">
-                <div className="flex gap-0.5 text-gold-300">
+              <div className="flex items-center justify-between border-t border-slate-200 pt-2">
+                <div className="flex gap-0.5 text-amber-700">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star
                       key={i}
@@ -692,7 +692,7 @@ function TestimonialsEditor({
                         "h-3.5 w-3.5",
                         i < (t.rating ?? 0)
                           ? "fill-gold-300"
-                          : "fill-transparent text-white/15",
+                          : "fill-transparent text-slate-900/15",
                       )}
                     />
                   ))}
@@ -700,7 +700,7 @@ function TestimonialsEditor({
                 <button
                   type="button"
                   onClick={() => removeItem(t.id)}
-                  className="flex items-center gap-1 rounded-md p-1.5 text-xs text-white/40 transition-colors hover:bg-red-500/10 hover:text-red-400"
+                  className="flex items-center gap-1 rounded-md p-1.5 text-xs text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-600"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                   Remove
@@ -777,7 +777,7 @@ function VideoTestimonialsEditor({
       </div>
 
       {section.items.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-white/10 py-4 text-center text-xs text-white/45">
+        <div className="rounded-lg border border-dashed border-slate-200 py-4 text-center text-xs text-slate-500">
           No videos yet — click &ldquo;Add video&rdquo; below.
         </div>
       ) : (
@@ -785,7 +785,7 @@ function VideoTestimonialsEditor({
           {section.items.map((v) => (
             <div
               key={v.id}
-              className="space-y-2 rounded-lg border border-white/[0.07] bg-white/[0.02] p-3"
+              className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3"
             >
               <Field label="Video title">
                 <input
@@ -822,11 +822,11 @@ function VideoTestimonialsEditor({
                   placeholder="Maria Santos · Wellness Coach"
                 />
               </Field>
-              <div className="flex justify-end border-t border-white/[0.06] pt-2">
+              <div className="flex justify-end border-t border-slate-200 pt-2">
                 <button
                   type="button"
                   onClick={() => removeItem(v.id)}
-                  className="flex items-center gap-1 rounded-md p-1.5 text-xs text-white/40 transition-colors hover:bg-red-500/10 hover:text-red-400"
+                  className="flex items-center gap-1 rounded-md p-1.5 text-xs text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-600"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                   Remove
@@ -887,7 +887,7 @@ function FaqEditor({
       </Field>
 
       {section.items.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-white/10 py-4 text-center text-xs text-white/45">
+        <div className="rounded-lg border border-dashed border-slate-200 py-4 text-center text-xs text-slate-500">
           No FAQ items yet — click &ldquo;Add question&rdquo; below.
         </div>
       ) : (
@@ -895,7 +895,7 @@ function FaqEditor({
           {section.items.map((f) => (
             <div
               key={f.id}
-              className="space-y-2 rounded-lg border border-white/[0.07] bg-white/[0.02] p-3"
+              className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3"
             >
               <input
                 value={f.question}
@@ -918,7 +918,7 @@ function FaqEditor({
                 <button
                   type="button"
                   onClick={() => removeItem(f.id)}
-                  className="flex items-center gap-1 rounded-md p-1.5 text-xs text-white/40 transition-colors hover:bg-red-500/10 hover:text-red-400"
+                  className="flex items-center gap-1 rounded-md p-1.5 text-xs text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-600"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                   Remove
@@ -1042,7 +1042,7 @@ function FeatureLabelsEditor({
           />
         </Field>
       </div>
-      <p className="mt-1 text-[11px] text-white/40">
+      <p className="mt-1 text-[11px] text-slate-400">
         Examples: <code>Programs</code> / <code>Program</code>, <code>Academy</code> /
         <code> Module</code>, <code>Coaching</code> / <code>Session</code>. Refresh the
         app after saving to see the new label everywhere it&apos;s used.
@@ -1129,21 +1129,21 @@ function DashboardNavEditor({
             <div
               key={key}
               className={cn(
-                "flex items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.02] p-2.5",
+                "flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2.5",
                 isHidden && "opacity-50",
               )}
             >
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/[0.05] text-[10px] font-semibold text-white/55">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-100 text-[10px] font-semibold text-slate-500">
                 {idx + 1}
               </span>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-white">
+                <p className="truncate text-sm font-medium text-slate-900">
                   {item.label}
                 </p>
-                <p className="truncate text-[10px] text-white/40">
+                <p className="truncate text-[10px] text-slate-400">
                   {item.href}
                   {isLocked && (
-                    <span className="ml-1.5 rounded bg-electric-500/15 px-1 py-0.5 text-electric-300">
+                    <span className="ml-1.5 rounded bg-electric-500/15 px-1 py-0.5 text-electric-700">
                       Always visible
                     </span>
                   )}
@@ -1157,8 +1157,8 @@ function DashboardNavEditor({
                 className={cn(
                   "rounded-md border px-2 py-1 text-[10px] font-medium transition-colors disabled:opacity-30",
                   isHidden
-                    ? "border-white/10 text-white/45 hover:bg-white/[0.05]"
-                    : "border-jade-500/30 bg-jade-500/[0.08] text-jade-300 hover:bg-jade-500/15",
+                    ? "border-slate-200 text-slate-500 hover:bg-slate-100"
+                    : "border-jade-500/30 bg-jade-500/[0.08] text-jade-600 hover:bg-jade-500/15",
                 )}
                 aria-label={isHidden ? "Show in sidebar" : "Hide from sidebar"}
               >
@@ -1170,7 +1170,7 @@ function DashboardNavEditor({
                 onClick={() => move(idx, -1)}
                 disabled={idx === 0}
                 aria-label="Move up"
-                className="rounded p-1 text-white/40 hover:text-white disabled:opacity-25"
+                className="rounded p-1 text-slate-400 hover:text-slate-900 disabled:opacity-25"
               >
                 <ArrowUp className="h-3.5 w-3.5" />
               </button>
@@ -1179,7 +1179,7 @@ function DashboardNavEditor({
                 onClick={() => move(idx, 1)}
                 disabled={idx === merged.length - 1}
                 aria-label="Move down"
-                className="rounded p-1 text-white/40 hover:text-white disabled:opacity-25"
+                className="rounded p-1 text-slate-400 hover:text-slate-900 disabled:opacity-25"
               >
                 <ArrowDown className="h-3.5 w-3.5" />
               </button>
@@ -1190,11 +1190,11 @@ function DashboardNavEditor({
       <button
         type="button"
         onClick={reset}
-        className="mt-3 rounded-lg border border-white/10 px-3 py-1.5 text-[11px] font-medium text-white/65 hover:bg-white/[0.05]"
+        className="mt-3 rounded-lg border border-slate-200 px-3 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-100"
       >
         Reset to default order
       </button>
-      <p className="mt-2 text-[11px] text-white/40">
+      <p className="mt-2 text-[11px] text-slate-400">
         Dashboard and Settings stay visible no matter what — locking them
         keeps users from getting stranded. Brand-new nav items that ship
         with future updates appear at the bottom automatically.
@@ -1250,13 +1250,13 @@ function TrustPhotoEditor({
         </Field>
         {photoUrl?.trim() && (
           <div className="mt-2">
-            <p className="mb-1 text-[11px] uppercase tracking-wider text-white/40">
+            <p className="mb-1 text-[11px] uppercase tracking-wider text-slate-400">
               Preview
             </p>
             <img
               src={photoUrl}
               alt={photoAlt ?? ""}
-              className="aspect-[4/3] w-full max-w-md rounded-xl border border-white/10 object-cover"
+              className="aspect-[4/3] w-full max-w-md rounded-xl border border-slate-200 object-cover"
               loading="lazy"
             />
           </div>
@@ -1411,13 +1411,13 @@ function HomepageDeepDivesEditor({
       defaultOpen={false}
     >
       <div className="mb-3 flex items-center justify-between">
-        <p className="text-[11px] text-white/45">
+        <p className="text-[11px] text-slate-500">
           Render order on the homepage (top → bottom = section 1 → 4).
         </p>
         <button
           type="button"
           onClick={resetOrder}
-          className="rounded-md px-2 py-1 text-[10px] font-medium text-white/45 hover:bg-white/[0.05] hover:text-white"
+          className="rounded-md px-2 py-1 text-[10px] font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-900"
         >
           Reset order
         </button>
@@ -1426,11 +1426,11 @@ function HomepageDeepDivesEditor({
         {deepDives.map((d, i) => (
           <div
             key={d.id}
-            className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3"
+            className="rounded-xl border border-slate-200 bg-slate-50 p-3"
           >
             <div className="mb-3 flex items-center justify-between gap-2">
-              <p className="min-w-0 flex-1 truncate text-xs font-semibold uppercase tracking-wider text-white/55">
-                <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded bg-white/[0.06] text-[10px] text-white/65">
+              <p className="min-w-0 flex-1 truncate text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded bg-slate-100 text-[10px] text-slate-600">
                   {i + 1}
                 </span>
                 {d.eyebrow || d.id}
@@ -1441,7 +1441,7 @@ function HomepageDeepDivesEditor({
                   onClick={() => move(d.id, -1)}
                   disabled={i === 0}
                   aria-label="Move up"
-                  className="rounded-md p-1 text-white/55 hover:bg-white/[0.05] hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+                  className="rounded-md p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-30"
                 >
                   <ArrowUp className="h-3.5 w-3.5" />
                 </button>
@@ -1450,14 +1450,14 @@ function HomepageDeepDivesEditor({
                   onClick={() => move(d.id, 1)}
                   disabled={i === deepDives.length - 1}
                   aria-label="Move down"
-                  className="rounded-md p-1 text-white/55 hover:bg-white/[0.05] hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+                  className="rounded-md p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-30"
                 >
                   <ArrowDown className="h-3.5 w-3.5" />
                 </button>
                 <button
                   type="button"
                   onClick={() => resetToDefault(d.id)}
-                  className="ml-1 rounded-md px-2 py-1 text-[10px] font-medium text-white/45 hover:bg-white/[0.05] hover:text-white"
+                  className="ml-1 rounded-md px-2 py-1 text-[10px] font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-900"
                 >
                   Reset
                 </button>
@@ -1529,8 +1529,8 @@ function HomepageDeepDivesEditor({
                       className={cn(
                         "rounded-md border px-3 py-1.5 text-xs font-medium capitalize transition-colors",
                         d.blob === b
-                          ? "border-electric-500/40 bg-electric-500/15 text-electric-200"
-                          : "border-white/10 bg-white/[0.03] text-white/60 hover:text-white",
+                          ? "border-electric-500/40 bg-electric-500/15 text-electric-700"
+                          : "border-slate-200 bg-slate-50 text-slate-500 hover:text-slate-900",
                       )}
                     >
                       {b}
