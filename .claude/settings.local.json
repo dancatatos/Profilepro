@@ -78,7 +78,8 @@
       "Bash(git revert *)",
       "Bash(npx firebase *)",
       "Bash(git ls-remote *)",
-      "Bash(echo \"EXIT_CODE=$?\")"
+      "Bash(echo \"EXIT_CODE=$?\")",
+      "Bash(echo \"EXIT=$?\")"
     ]
   }
 }

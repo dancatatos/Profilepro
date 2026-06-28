@@ -112,8 +112,11 @@ export default function DashboardPage() {
           doesn't take up space for users who haven't joined any team. */}
       <UpcomingEventsCard />
 
-      {/* Completeness + AI */}
-      <Card className="overflow-hidden p-5">
+      {/* Completeness + AI — soft electric-blue gradient wash, same
+          treatment as TodayTasksCard's urgent state. Signals "your
+          progress, on track" without screaming for attention like the
+          red overdue card does. */}
+      <Card className="relative overflow-hidden border-2 border-electric-500/25 bg-gradient-to-br from-electric-500/[0.10] via-electric-500/[0.04] to-transparent p-5 transition-all hover:border-electric-500/40">
         <div className="flex items-center gap-5">
           <ScoreRing value={score} accent={score >= 70 ? "jade" : "blue"} label="ready" />
           <div className="min-w-0 flex-1">
@@ -440,9 +443,9 @@ function UpcomingEventsCard() {
 
   return (
     <Link href="/my-events" className="block">
-      <Card className="p-4 transition-colors hover:border-electric-500/30 sm:p-5">
+      <Card className="relative overflow-hidden border-2 border-jade-500/25 bg-gradient-to-br from-jade-500/[0.10] via-jade-500/[0.04] to-transparent p-4 transition-all hover:border-jade-500/40 sm:p-5">
         <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-electric-500/15 text-electric-700">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-jade-500/15 text-jade-600">
             <CalendarIcon className="h-5 w-5" />
           </span>
           <div className="min-w-0 flex-1">
