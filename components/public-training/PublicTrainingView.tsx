@@ -21,6 +21,7 @@ import {
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
+  ChevronDown,
   Download,
   GraduationCap,
   KeyRound,
@@ -53,6 +54,11 @@ export function PublicTrainingView({
      mount because Firestore reads need auth context. */
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
+  /* Collapsed/expanded state for the per-lesson Downloads block.
+     Shared across lessons in the session: once the learner picks
+     "compact view" we honour it as they advance through the curriculum.
+     Default expanded so first-time viewers see what's available. */
+  const [downloadsExpanded, setDownloadsExpanded] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -267,25 +273,51 @@ export function PublicTrainingView({
             )}
 
             {canPlayActive && (active.resources?.length ?? 0) > 0 && (
-              <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-                <p className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-white/40">
-                  <Download className="h-3 w-3" />
-                  Downloads
-                </p>
-                <div className="space-y-1.5">
-                  {(active.resources ?? []).map((r) => (
-                    <a
-                      key={r.id}
-                      href={r.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.02] px-3 py-2 text-xs text-white/75 transition-colors hover:border-electric-500/30 hover:text-white"
-                    >
-                      <Download className="h-3.5 w-3.5 text-electric-300" />
-                      {r.label || r.url}
-                    </a>
-                  ))}
-                </div>
+              <div className="rounded-xl border border-white/[0.06] bg-white/[0.02]">
+                {/* Header is now the toggle — click anywhere on this row
+                    to collapse or expand. Keeps the lesson list below
+                    one screen-tap away when the leader attached a long
+                    list of materials. */}
+                <button
+                  type="button"
+                  onClick={() => setDownloadsExpanded((v) => !v)}
+                  aria-expanded={downloadsExpanded}
+                  aria-controls={`downloads-${active.id}`}
+                  className="flex w-full items-center justify-between px-4 py-3 text-left no-tap-highlight hover:bg-white/[0.02]"
+                >
+                  <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-white/40">
+                    <Download className="h-3 w-3" />
+                    Downloads
+                    <span className="rounded bg-white/[0.06] px-1.5 py-0.5 text-[10px] font-bold text-white/60">
+                      {active.resources?.length}
+                    </span>
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 text-white/40 transition-transform duration-200",
+                      downloadsExpanded ? "rotate-0" : "-rotate-90",
+                    )}
+                  />
+                </button>
+                {downloadsExpanded && (
+                  <div
+                    id={`downloads-${active.id}`}
+                    className="space-y-1.5 px-4 pb-4"
+                  >
+                    {(active.resources ?? []).map((r) => (
+                      <a
+                        key={r.id}
+                        href={r.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.02] px-3 py-2 text-xs text-white/75 transition-colors hover:border-electric-500/30 hover:text-white"
+                      >
+                        <Download className="h-3.5 w-3.5 text-electric-300" />
+                        {r.label || r.url}
+                      </a>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

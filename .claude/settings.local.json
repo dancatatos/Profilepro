@@ -79,7 +79,9 @@
       "Bash(npx firebase *)",
       "Bash(git ls-remote *)",
       "Bash(echo \"EXIT_CODE=$?\")",
-      "Bash(echo \"EXIT=$?\")"
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(awk '{print $1}')",
+      "mcp__visualize__show_widget"
     ]
   }
 }
