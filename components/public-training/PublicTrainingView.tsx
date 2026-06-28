@@ -22,11 +22,18 @@ import {
   ArrowRight,
   CheckCircle2,
   ChevronDown,
+  Cloud,
   Download,
+  ExternalLink,
+  FileImage,
+  FileSpreadsheet,
+  FileText,
   GraduationCap,
   KeyRound,
   Lock,
   PlayCircle,
+  Video,
+  Youtube,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/Button";
@@ -38,7 +45,12 @@ import {
 import { normalizeVideoUrl } from "@/lib/video";
 import { cn } from "@/lib/utils";
 import { TrainingPurchaseForm } from "./TrainingPurchaseForm";
-import type { Profile, Training, TrainingLesson } from "@/types";
+import type {
+  Profile,
+  Training,
+  TrainingLesson,
+  UniversityResource,
+} from "@/types";
 
 export function PublicTrainingView({
   profile,
@@ -302,20 +314,42 @@ export function PublicTrainingView({
                 {downloadsExpanded && (
                   <div
                     id={`downloads-${active.id}`}
-                    className="space-y-1.5 px-4 pb-4"
+                    className="space-y-2 px-4 pb-4"
                   >
-                    {(active.resources ?? []).map((r) => (
-                      <a
-                        key={r.id}
-                        href={r.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.02] px-3 py-2 text-xs text-white/75 transition-colors hover:border-electric-500/30 hover:text-white"
-                      >
-                        <Download className="h-3.5 w-3.5 text-electric-300" />
-                        {r.label || r.url}
-                      </a>
-                    ))}
+                    {(active.resources ?? []).map((r) => {
+                      const meta = describeResource(r);
+                      return (
+                        <a
+                          key={r.id}
+                          href={r.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3 transition-all hover:border-electric-500/40 hover:bg-white/[0.04]"
+                        >
+                          <span
+                            className={cn(
+                              "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
+                              meta.iconBg,
+                              meta.iconColor,
+                            )}
+                          >
+                            <meta.Icon className="h-5 w-5" />
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-sm font-medium text-white">
+                              {meta.name}
+                            </span>
+                            <span className="block truncate text-[11px] text-white/40">
+                              {meta.subtitle}
+                            </span>
+                          </span>
+                          <span className="flex shrink-0 items-center gap-1.5 rounded-lg bg-electric-500/15 px-3 py-1.5 text-xs font-medium text-electric-200 transition-colors group-hover:bg-electric-500/25">
+                            <meta.ActionIcon className="h-3.5 w-3.5" />
+                            {meta.actionLabel}
+                          </span>
+                        </a>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -487,4 +521,206 @@ function UnlockBlock({
       </Link>
     </div>
   );
+}
+
+/* ───────────────────────────────────────────────────────────────
+   Resource type detection
+   ───────────────────────────────────────────────────────────────
+   Most leaders paste a Google Drive / Docs / YouTube / Notion link
+   and skip the name field, so we map the URL to a friendly name +
+   themed icon. Hostname checks beat extension checks because the
+   common case is a sharing URL (no extension visible in the path).
+*/
+type ResourceIcon = typeof Download;
+interface ResourceMeta {
+  name: string;
+  subtitle: string;
+  Icon: ResourceIcon;
+  iconBg: string;
+  iconColor: string;
+  ActionIcon: ResourceIcon;
+  actionLabel: string;
+}
+
+function describeResource(r: UniversityResource): ResourceMeta {
+  const url = r.url || "";
+  let hostname = "";
+  try {
+    hostname = new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    /* invalid URL — fall through to the generic preset */
+  }
+  const lower = url.toLowerCase();
+  const ext = lower.match(/\.([a-z0-9]{2,5})(?:\?|#|$)/)?.[1];
+
+  /* ── Hostname detection — runs before extension because cloud
+        sharing links usually have no extension in the path. ── */
+  if (hostname.includes("drive.google.com")) {
+    return {
+      name: r.label || "Google Drive file",
+      subtitle: "drive.google.com",
+      Icon: Cloud,
+      iconBg: "bg-electric-500/15",
+      iconColor: "text-electric-300",
+      ActionIcon: ExternalLink,
+      actionLabel: "Open",
+    };
+  }
+  if (hostname.includes("docs.google.com")) {
+    return {
+      name: r.label || "Google Doc",
+      subtitle: "docs.google.com",
+      Icon: FileText,
+      iconBg: "bg-electric-500/15",
+      iconColor: "text-electric-300",
+      ActionIcon: ExternalLink,
+      actionLabel: "Open",
+    };
+  }
+  if (hostname.includes("sheets.google.com")) {
+    return {
+      name: r.label || "Google Sheet",
+      subtitle: "sheets.google.com",
+      Icon: FileSpreadsheet,
+      iconBg: "bg-jade-500/15",
+      iconColor: "text-jade-300",
+      ActionIcon: ExternalLink,
+      actionLabel: "Open",
+    };
+  }
+  if (hostname.includes("youtube.com") || hostname.includes("youtu.be")) {
+    return {
+      name: r.label || "YouTube video",
+      subtitle: "youtube.com",
+      Icon: Youtube,
+      iconBg: "bg-red-500/15",
+      iconColor: "text-red-300",
+      ActionIcon: PlayCircle,
+      actionLabel: "Watch",
+    };
+  }
+  if (hostname.includes("notion.so") || hostname.includes("notion.site")) {
+    return {
+      name: r.label || "Notion page",
+      subtitle: hostname,
+      Icon: FileText,
+      iconBg: "bg-white/10",
+      iconColor: "text-white/70",
+      ActionIcon: ExternalLink,
+      actionLabel: "Open",
+    };
+  }
+  if (hostname.includes("dropbox.com")) {
+    return {
+      name: r.label || "Dropbox file",
+      subtitle: "dropbox.com",
+      Icon: Cloud,
+      iconBg: "bg-electric-500/15",
+      iconColor: "text-electric-300",
+      ActionIcon: ExternalLink,
+      actionLabel: "Open",
+    };
+  }
+  if (hostname.includes("vimeo.com")) {
+    return {
+      name: r.label || "Vimeo video",
+      subtitle: "vimeo.com",
+      Icon: Video,
+      iconBg: "bg-electric-500/15",
+      iconColor: "text-electric-300",
+      ActionIcon: PlayCircle,
+      actionLabel: "Watch",
+    };
+  }
+
+  /* ── Extension detection — for direct-link uploads (Firebase
+        Storage, S3, etc.) we can guess from the URL path. ── */
+  if (ext === "pdf") {
+    return {
+      name: r.label || "PDF document",
+      subtitle: hostname || "PDF",
+      Icon: FileText,
+      iconBg: "bg-red-500/15",
+      iconColor: "text-red-300",
+      ActionIcon: Download,
+      actionLabel: "Download",
+    };
+  }
+  if (ext && ["xlsx", "xls", "csv"].includes(ext)) {
+    return {
+      name: r.label || "Spreadsheet",
+      subtitle: hostname || ext.toUpperCase(),
+      Icon: FileSpreadsheet,
+      iconBg: "bg-jade-500/15",
+      iconColor: "text-jade-300",
+      ActionIcon: Download,
+      actionLabel: "Download",
+    };
+  }
+  if (ext && ["pptx", "ppt", "keynote", "key"].includes(ext)) {
+    return {
+      name: r.label || "Presentation",
+      subtitle: hostname || ext.toUpperCase(),
+      Icon: FileText,
+      iconBg: "bg-amber-500/15",
+      iconColor: "text-amber-300",
+      ActionIcon: Download,
+      actionLabel: "Download",
+    };
+  }
+  if (ext && ["doc", "docx", "rtf", "txt"].includes(ext)) {
+    return {
+      name: r.label || "Document",
+      subtitle: hostname || ext.toUpperCase(),
+      Icon: FileText,
+      iconBg: "bg-electric-500/15",
+      iconColor: "text-electric-300",
+      ActionIcon: Download,
+      actionLabel: "Download",
+    };
+  }
+  if (ext && ["jpg", "jpeg", "png", "gif", "webp", "svg"].includes(ext)) {
+    return {
+      name: r.label || "Image",
+      subtitle: hostname || ext.toUpperCase(),
+      Icon: FileImage,
+      iconBg: "bg-jade-500/15",
+      iconColor: "text-jade-300",
+      ActionIcon: Download,
+      actionLabel: "Download",
+    };
+  }
+  if (ext && ["mp4", "mov", "webm", "m4v"].includes(ext)) {
+    return {
+      name: r.label || "Video",
+      subtitle: hostname || ext.toUpperCase(),
+      Icon: Video,
+      iconBg: "bg-red-500/15",
+      iconColor: "text-red-300",
+      ActionIcon: PlayCircle,
+      actionLabel: "Watch",
+    };
+  }
+  if (ext && ["zip", "rar", "7z"].includes(ext)) {
+    return {
+      name: r.label || "Archive",
+      subtitle: hostname || ext.toUpperCase(),
+      Icon: Download,
+      iconBg: "bg-amber-500/15",
+      iconColor: "text-amber-300",
+      ActionIcon: Download,
+      actionLabel: "Download",
+    };
+  }
+
+  /* ── Generic fallback — labelled link of unknown type. ── */
+  return {
+    name: r.label || "Material",
+    subtitle: hostname || "Link",
+    Icon: ExternalLink,
+    iconBg: "bg-electric-500/15",
+    iconColor: "text-electric-300",
+    ActionIcon: ExternalLink,
+    actionLabel: "Open",
+  };
 }
