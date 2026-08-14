@@ -277,14 +277,30 @@ function EventRow({
       }
       className={cn(
         "flex cursor-pointer items-center gap-3 p-3.5 transition-colors hover:border-electric-500/30",
-        dimmed && "opacity-60",
+        /* Past-event recession — subtle bg tint instead of blanket
+           opacity so slate text stays readable on white. */
+        dimmed && "bg-slate-50",
       )}
     >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-electric-500/15 text-electric-700">
+      <span
+        className={cn(
+          "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+          dimmed
+            ? "bg-slate-100 text-slate-400"
+            : "bg-electric-500/15 text-electric-700",
+        )}
+      >
         <Calendar className="h-5 w-5" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-slate-900">{event.title}</p>
+        <p
+          className={cn(
+            "truncate text-sm font-medium",
+            dimmed ? "text-slate-500" : "text-slate-900",
+          )}
+        >
+          {event.title}
+        </p>
         <p className="mt-0.5 text-xs text-slate-500">
           {when} · {event.timezone}
         </p>

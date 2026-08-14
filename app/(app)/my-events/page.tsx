@@ -247,6 +247,10 @@ function EventCard({
 }) {
   const { account } = useAuth();
   const [busy, setBusy] = useState(false);
+  /* Track thumbnail load failure per-row so a dead bannerUrl (deleted
+     asset, expired token, CORS-hiccup) falls back to the calendar
+     icon instead of the browser's broken-image placeholder. */
+  const [thumbBroken, setThumbBroken] = useState(false);
 
   const handleRsvp = async (status: EventRsvp["status"]) => {
     if (!account) return;
@@ -284,11 +288,19 @@ function EventCard({
     minute: "2-digit",
   });
 
+  /* Past-event recession, light-theme-aware. Dark-theme used blanket
+     opacity-60 (safe because white text stayed white-ish) but on a
+     white workspace that same opacity turns slate text to unreadable
+     ghost text. Instead: nudge the surface a shade grayer + soften
+     the title colour only. Date/team/location stay slate-500 which
+     is already muted enough. */
+  const showBanner = !!row.event.bannerUrl && !thumbBroken;
+
   return (
     <Card
       className={cn(
         "p-3 transition-colors hover:border-electric-500/30",
-        dimmed && "opacity-60",
+        dimmed && "bg-slate-50",
       )}
     >
       {/* Header row — thumbnail + details. The whole header is the
@@ -302,21 +314,36 @@ function EventCard({
       >
         {/* Thumbnail — banner image if present, calendar icon fallback.
             Aspect-square @ 76px keeps cards compact (~110px total) so
-            5-6 fit on a phone screen. */}
-        {row.event.bannerUrl ? (
+            5-6 fit on a phone screen. Broken URLs (deleted asset,
+            expired Storage token, CORS) auto-swap to the fallback. */}
+        {showBanner ? (
           <img
             src={row.event.bannerUrl}
             alt=""
-            className="h-[76px] w-[76px] shrink-0 rounded-xl object-cover"
+            onError={() => setThumbBroken(true)}
+            className={cn(
+              "h-[76px] w-[76px] shrink-0 rounded-xl object-cover",
+              dimmed && "opacity-70",
+            )}
           />
         ) : (
-          <span className="flex h-[76px] w-[76px] shrink-0 items-center justify-center rounded-xl bg-electric-500/15 text-electric-700">
+          <span
+            className={cn(
+              "flex h-[76px] w-[76px] shrink-0 items-center justify-center rounded-xl bg-electric-500/15 text-electric-700",
+              dimmed && "bg-slate-100 text-slate-400",
+            )}
+          >
             <Calendar className="h-7 w-7" />
           </span>
         )}
         <div className="min-w-0 flex-1">
           <p className="text-[11px] text-slate-500">{row.team.name}</p>
-          <p className="truncate text-sm font-semibold text-slate-900">
+          <p
+            className={cn(
+              "truncate text-sm font-semibold",
+              dimmed ? "text-slate-500" : "text-slate-900",
+            )}
+          >
             {row.event.title}
           </p>
           <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-slate-500">

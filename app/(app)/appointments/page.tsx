@@ -17,6 +17,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { FullScreenLoader } from "@/components/ui/Spinner";
 import { listBookings, cancelBooking } from "@/lib/firebase/firestore";
+import { cn } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 import type { Booking } from "@/types";
 
@@ -51,20 +52,39 @@ function BookingCard({
   onCancel: () => void;
   past?: boolean;
 }) {
+  /* Past-booking recession — swap blanket opacity for a subtle bg
+     tint + softer title colour. On the light theme, opacity-60 on
+     slate text turns unreadable; the tinted bg + text-slate-500
+     title reads clearly as "past" without vanishing. */
   return (
-    <Card className={past ? "p-4 opacity-60" : "p-4"}>
+    <Card className={cn("p-4", past && "bg-slate-50")}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <CalendarDays className="h-4 w-4 text-electric-600" />
-            <p className="text-sm font-semibold text-slate-900">
+            <CalendarDays
+              className={cn(
+                "h-4 w-4",
+                past ? "text-slate-400" : "text-electric-600",
+              )}
+            />
+            <p
+              className={cn(
+                "text-sm font-semibold",
+                past ? "text-slate-500" : "text-slate-900",
+              )}
+            >
               {fmtDate(booking.date)} · {fmtTime(booking.time)}
             </p>
             <span className="text-[11px] text-slate-400">
               {booking.durationMin} min
             </span>
           </div>
-          <p className="mt-1.5 text-sm font-medium text-slate-900">
+          <p
+            className={cn(
+              "mt-1.5 text-sm font-medium",
+              past ? "text-slate-500" : "text-slate-900",
+            )}
+          >
             {booking.name}
           </p>
           <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5">
