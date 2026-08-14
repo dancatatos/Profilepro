@@ -9,6 +9,7 @@ import { Icon } from "@/components/ui/Icon";
 import { ImageUploadField } from "./ImageUploadField";
 import { VideoUploadField } from "./VideoUploadField";
 import { TypographyPanel } from "./TypographyPanel";
+import { ElementTypographyOverride } from "./ElementTypographyOverride";
 import dynamic from "next/dynamic";
 import { SOCIAL_PLATFORMS } from "@/lib/constants";
 import { useProfileStore } from "@/store/profileStore";
@@ -567,19 +568,31 @@ function HeroEditor({ section }: { section: HeroSection }) {
         label="Background video (autoplays muted, loops)"
       />
 
-      <input
-        value={section.headline}
-        onChange={(e) => update(section.id, { headline: e.target.value })}
-        placeholder={isOverlay ? "Big bold headline (optional)" : "Big bold headline"}
-        className={FIELD}
-      />
-      <textarea
-        value={section.subtext}
-        onChange={(e) => update(section.id, { subtext: e.target.value })}
-        rows={2}
-        placeholder={isOverlay ? "Short subhead (optional)" : "Short subhead"}
-        className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-sm text-slate-900 placeholder:text-slate-300 outline-none focus:border-electric-500/60"
-      />
+      <ElementTypographyOverride
+        label="Headline"
+        value={section.headlineStyle}
+        onChange={(headlineStyle) => update(section.id, { headlineStyle })}
+      >
+        <input
+          value={section.headline}
+          onChange={(e) => update(section.id, { headline: e.target.value })}
+          placeholder={isOverlay ? "Big bold headline (optional)" : "Big bold headline"}
+          className={FIELD}
+        />
+      </ElementTypographyOverride>
+      <ElementTypographyOverride
+        label="Subtext"
+        value={section.subtextStyle}
+        onChange={(subtextStyle) => update(section.id, { subtextStyle })}
+      >
+        <textarea
+          value={section.subtext}
+          onChange={(e) => update(section.id, { subtext: e.target.value })}
+          rows={2}
+          placeholder={isOverlay ? "Short subhead (optional)" : "Short subhead"}
+          className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-sm text-slate-900 placeholder:text-slate-300 outline-none focus:border-electric-500/60"
+        />
+      </ElementTypographyOverride>
 
       {/* Aspect ratio is meaningful in BOTH stacked and overlay — picks
           the shape the image/video renders at. Lives outside isOverlay
@@ -609,20 +622,33 @@ function HeroEditor({ section }: { section: HeroSection }) {
       {isOverlay && (
         <>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <input
-              value={section.ctaLabel ?? ""}
-              onChange={(e) =>
-                update(section.id, { ctaLabel: e.target.value })
+            <ElementTypographyOverride
+              label="CTA label"
+              value={section.ctaLabelStyle}
+              onChange={(ctaLabelStyle) =>
+                update(section.id, { ctaLabelStyle })
               }
-              placeholder="CTA label (optional)"
-              className={FIELD}
-            />
-            <input
-              value={section.ctaUrl ?? ""}
-              onChange={(e) => update(section.id, { ctaUrl: e.target.value })}
-              placeholder="CTA URL"
-              className={FIELD}
-            />
+            >
+              <input
+                value={section.ctaLabel ?? ""}
+                onChange={(e) =>
+                  update(section.id, { ctaLabel: e.target.value })
+                }
+                placeholder="CTA label (optional)"
+                className={FIELD}
+              />
+            </ElementTypographyOverride>
+            <div>
+              <label className="mb-1.5 block text-[10px] font-medium uppercase tracking-wider text-slate-500">
+                CTA URL
+              </label>
+              <input
+                value={section.ctaUrl ?? ""}
+                onChange={(e) => update(section.id, { ctaUrl: e.target.value })}
+                placeholder="CTA URL"
+                className={FIELD}
+              />
+            </div>
           </div>
 
           <div>
@@ -732,32 +758,55 @@ function CoverEditor({ section }: { section: CoverSection }) {
         label="Cover video (autoplays muted, loops)"
       />
 
-      <input
-        value={section.headline ?? ""}
-        onChange={(e) => patch({ headline: e.target.value })}
-        placeholder="Big bold headline (optional)"
-        className={FIELD}
-      />
-      <textarea
-        value={section.subhead ?? ""}
-        onChange={(e) => patch({ subhead: e.target.value })}
-        rows={2}
-        placeholder="Short subhead (optional)"
-        className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-sm text-slate-900 placeholder:text-slate-300 outline-none focus:border-electric-500/60"
-      />
+      <ElementTypographyOverride
+        label="Headline"
+        value={section.headlineStyle}
+        onChange={(headlineStyle) => patch({ headlineStyle })}
+      >
+        <input
+          value={section.headline ?? ""}
+          onChange={(e) => patch({ headline: e.target.value })}
+          placeholder="Big bold headline (optional)"
+          className={FIELD}
+        />
+      </ElementTypographyOverride>
+      <ElementTypographyOverride
+        label="Subhead"
+        value={section.subheadStyle}
+        onChange={(subheadStyle) => patch({ subheadStyle })}
+      >
+        <textarea
+          value={section.subhead ?? ""}
+          onChange={(e) => patch({ subhead: e.target.value })}
+          rows={2}
+          placeholder="Short subhead (optional)"
+          className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-sm text-slate-900 placeholder:text-slate-300 outline-none focus:border-electric-500/60"
+        />
+      </ElementTypographyOverride>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <input
-          value={section.ctaLabel ?? ""}
-          onChange={(e) => patch({ ctaLabel: e.target.value })}
-          placeholder="CTA label (optional)"
-          className={FIELD}
-        />
-        <input
-          value={section.ctaUrl ?? ""}
-          onChange={(e) => patch({ ctaUrl: e.target.value })}
-          placeholder="CTA URL"
-          className={FIELD}
-        />
+        <ElementTypographyOverride
+          label="CTA label"
+          value={section.ctaLabelStyle}
+          onChange={(ctaLabelStyle) => patch({ ctaLabelStyle })}
+        >
+          <input
+            value={section.ctaLabel ?? ""}
+            onChange={(e) => patch({ ctaLabel: e.target.value })}
+            placeholder="CTA label (optional)"
+            className={FIELD}
+          />
+        </ElementTypographyOverride>
+        <div>
+          <label className="mb-1.5 block text-[10px] font-medium uppercase tracking-wider text-slate-500">
+            CTA URL
+          </label>
+          <input
+            value={section.ctaUrl ?? ""}
+            onChange={(e) => patch({ ctaUrl: e.target.value })}
+            placeholder="CTA URL"
+            className={FIELD}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
