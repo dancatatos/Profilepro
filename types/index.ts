@@ -628,6 +628,82 @@ export interface SectionBase {
   cardBg?: SectionBgValue;
   /** Override for the full-width section container stripe colour. */
   containerBg?: SectionBgValue;
+  /**
+   * Section-level typography default. When set, every text element
+   * in this section inherits these values (font family / size / weight
+   * / color / alignment / etc.) unless the element has its own
+   * override in one of the per-element style fields (e.g. HeroSection's
+   * `headlineStyle`). Unset falls back to the profile theme.
+   */
+  textStyle?: TextStyle;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Typography customization — per-section + per-element overrides
+   ───────────────────────────────────────────────────────────── */
+
+/** Curated Google Fonts loaded via next/font. "theme" defers to the
+ *  profile theme's default font so leaders can revert to on-brand. */
+export type TextFontFamily =
+  | "theme"
+  | "inter"
+  | "manrope"
+  | "poppins"
+  | "space-grotesk"
+  | "playfair"
+  | "dm-serif"
+  | "bebas"
+  | "anton";
+
+/** T-shirt-sized font-size multiplier relative to the element's base
+ *  size (a Hero headline "L" is bigger than a Benefits item "L").
+ *  "theme" leaves the element at its theme-driven default. */
+export type TextFontSize = "theme" | "xs" | "sm" | "md" | "lg" | "xl";
+
+export type TextFontWeight =
+  | "theme"
+  | "light"
+  | "normal"
+  | "medium"
+  | "semibold"
+  | "bold"
+  | "black";
+
+/** Curated color options. "theme" inherits. Named tokens read from
+ *  the current theme so a colour choice stays on-brand when the owner
+ *  switches themes. `custom` uses `customColor` (hex or CSS color). */
+export type TextColorToken =
+  | "theme"
+  | "primary"
+  | "secondary"
+  | "muted"
+  | "accent"
+  | "white"
+  | "black"
+  | "custom";
+
+export type TextAlign = "theme" | "left" | "center" | "right";
+export type TextLetterSpacing = "theme" | "tight" | "normal" | "wide" | "wider";
+export type TextLineHeight = "theme" | "tight" | "snug" | "normal" | "relaxed";
+
+/**
+ * A single typography override. Every field is optional so any
+ * combination works — an override that only sets `fontFamily` leaves
+ * every other property to inherit from the section-level default (or
+ * theme, if the section default is also unset).
+ */
+export interface TextStyle {
+  fontFamily?: TextFontFamily;
+  fontSize?: TextFontSize;
+  fontWeight?: TextFontWeight;
+  color?: TextColorToken;
+  /** Only used when `color === "custom"`. CSS colour string. */
+  customColor?: string;
+  align?: TextAlign;
+  italic?: boolean;
+  underline?: boolean;
+  letterSpacing?: TextLetterSpacing;
+  lineHeight?: TextLineHeight;
 }
 
 /**
@@ -783,6 +859,12 @@ export interface CoverSection extends SectionBase {
    * full-bleed sections.
    */
   videoUrl?: string;
+  /** Per-element typography override — beats section-level `textStyle`. */
+  headlineStyle?: TextStyle;
+  /** Per-element typography override — beats section-level `textStyle`. */
+  subheadStyle?: TextStyle;
+  /** Per-element typography override — beats section-level `textStyle`. */
+  ctaLabelStyle?: TextStyle;
   headline?: string;
   subhead?: string;
   ctaLabel?: string;
@@ -797,6 +879,12 @@ export interface HeroSection extends SectionBase {
   type: "hero";
   headline: string;
   subtext: string;
+  /** Per-element typography override — beats section-level `textStyle`. */
+  headlineStyle?: TextStyle;
+  /** Per-element typography override — beats section-level `textStyle`. */
+  subtextStyle?: TextStyle;
+  /** Per-element typography override — beats section-level `textStyle`. */
+  ctaLabelStyle?: TextStyle;
   /** Optional background image URL. */
   backgroundUrl?: string;
   /**

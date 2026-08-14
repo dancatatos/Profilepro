@@ -10,6 +10,7 @@ import { RichTextRenderer } from "@/components/ui/RichTextRenderer";
 import { CountdownTimer } from "./CountdownTimer";
 import { ctaButtonClasses } from "@/lib/theme";
 import { cn, isValidEmail, normalizeExternalUrl, toEmbedUrl } from "@/lib/utils";
+import { resolveTextStyle, textStyleToCss } from "@/lib/textStyle";
 import type {
   AnalyticsEventType,
   EmbedHtmlSection,
@@ -733,7 +734,10 @@ export function SectionRenderer({
         <SectionShell title={section.title} narrow="2xl" section={section}>
           <p
             className="whitespace-pre-line text-sm leading-relaxed"
-            style={V.text2}
+            style={{
+              ...V.text2,
+              ...textStyleToCss(section.textStyle, 14),
+            }}
           >
             {section.body}
           </p>
@@ -743,7 +747,13 @@ export function SectionRenderer({
     case "text":
       return (
         <SectionShell title={section.title} narrow="2xl" section={section}>
-          <div className="text-sm leading-relaxed" style={V.text2}>
+          <div
+            className="text-sm leading-relaxed"
+            style={{
+              ...V.text2,
+              ...textStyleToCss(section.textStyle, 14),
+            }}
+          >
             <RichTextRenderer doc={section.doc} />
           </div>
         </SectionShell>
@@ -828,7 +838,16 @@ export function SectionRenderer({
                   {section.headline?.trim() && (
                     <h2
                       className="font-display text-2xl font-bold leading-tight"
-                      style={V.text}
+                      style={{
+                        ...V.text,
+                        ...textStyleToCss(
+                          resolveTextStyle(
+                            section.textStyle,
+                            section.headlineStyle,
+                          ),
+                          24,
+                        ),
+                      }}
                     >
                       {section.headline}
                     </h2>
@@ -836,7 +855,16 @@ export function SectionRenderer({
                   {section.subtext?.trim() && (
                     <p
                       className="mt-2 text-sm leading-relaxed"
-                      style={V.text2}
+                      style={{
+                        ...V.text2,
+                        ...textStyleToCss(
+                          resolveTextStyle(
+                            section.textStyle,
+                            section.subtextStyle,
+                          ),
+                          14,
+                        ),
+                      }}
                     >
                       {section.subtext}
                     </p>
@@ -960,7 +988,17 @@ export function SectionRenderer({
                   {section.headline?.trim() && (
                     <h2
                       className="font-display text-3xl font-bold leading-[1.1] sm:text-4xl lg:text-5xl"
-                      style={{ color: textCol, textShadow }}
+                      style={{
+                        color: textCol,
+                        textShadow,
+                        ...textStyleToCss(
+                          resolveTextStyle(
+                            section.textStyle,
+                            section.headlineStyle,
+                          ),
+                          40,
+                        ),
+                      }}
                     >
                       {section.headline}
                     </h2>
@@ -968,7 +1006,18 @@ export function SectionRenderer({
                   {section.subtext?.trim() && (
                     <p
                       className="mt-3 text-sm leading-relaxed sm:text-base"
-                      style={{ color: textCol, textShadow, opacity: 0.92 }}
+                      style={{
+                        color: textCol,
+                        textShadow,
+                        opacity: 0.92,
+                        ...textStyleToCss(
+                          resolveTextStyle(
+                            section.textStyle,
+                            section.subtextStyle,
+                          ),
+                          16,
+                        ),
+                      }}
                     >
                       {section.subtext}
                     </p>
@@ -980,7 +1029,16 @@ export function SectionRenderer({
                       rel="noopener noreferrer"
                       onClick={() => track("cta_click", `hero-${section.id}`)}
                       className="mt-5 inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold transition-transform active:scale-[0.98]"
-                      style={V.btn}
+                      style={{
+                        ...V.btn,
+                        ...textStyleToCss(
+                          resolveTextStyle(
+                            section.textStyle,
+                            section.ctaLabelStyle,
+                          ),
+                          14,
+                        ),
+                      }}
                     >
                       {section.ctaLabel}
                     </a>
@@ -1143,7 +1201,17 @@ export function SectionRenderer({
                   {section.headline?.trim() && (
                     <h2
                       className="font-display text-3xl font-bold leading-[1.05] sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl"
-                      style={{ color: textCol, textShadow }}
+                      style={{
+                        color: textCol,
+                        textShadow,
+                        ...textStyleToCss(
+                          resolveTextStyle(
+                            section.textStyle,
+                            section.headlineStyle,
+                          ),
+                          56,
+                        ),
+                      }}
                     >
                       {section.headline}
                     </h2>
@@ -1151,7 +1219,18 @@ export function SectionRenderer({
                   {section.subhead?.trim() && (
                     <p
                       className="mt-3 text-sm leading-relaxed sm:mt-4 sm:text-base md:text-lg lg:text-xl"
-                      style={{ color: textCol, textShadow, opacity: 0.92 }}
+                      style={{
+                        color: textCol,
+                        textShadow,
+                        opacity: 0.92,
+                        ...textStyleToCss(
+                          resolveTextStyle(
+                            section.textStyle,
+                            section.subheadStyle,
+                          ),
+                          18,
+                        ),
+                      }}
                     >
                       {section.subhead}
                     </p>
@@ -1163,7 +1242,16 @@ export function SectionRenderer({
                       rel="noopener noreferrer"
                       onClick={() => track("cta_click", `cover-${section.id}`)}
                       className="mt-5 inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold transition-transform active:scale-[0.98] sm:mt-7 sm:px-8 sm:py-3.5 sm:text-base"
-                      style={V.btn}
+                      style={{
+                        ...V.btn,
+                        ...textStyleToCss(
+                          resolveTextStyle(
+                            section.textStyle,
+                            section.ctaLabelStyle,
+                          ),
+                          16,
+                        ),
+                      }}
                     >
                       {section.ctaLabel}
                     </a>

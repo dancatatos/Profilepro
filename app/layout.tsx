@@ -1,5 +1,17 @@
 import type { Metadata, Viewport } from "next";
-import { Caveat, Inter, JetBrains_Mono, Schibsted_Grotesk } from "next/font/google";
+import {
+  Anton,
+  Bebas_Neue,
+  Caveat,
+  DM_Serif_Display,
+  Inter,
+  JetBrains_Mono,
+  Manrope,
+  Playfair_Display,
+  Poppins,
+  Schibsted_Grotesk,
+  Space_Grotesk,
+} from "next/font/google";
 import { Providers } from "@/components/providers/Providers";
 import { APP } from "@/lib/constants";
 import { getMarketingContent } from "@/lib/firebase/firestore";
@@ -38,6 +50,55 @@ const marker = Caveat({
   subsets: ["latin"],
   weight: ["500"],
   variable: "--font-marker",
+  display: "swap",
+});
+
+/* ─────────────────────────────────────────────────────────────
+   Custom typography palette — 8 curated Google Fonts owners can
+   pick per-section on public profile / funnel text elements. Each
+   loads as a CSS variable that renderer resolves via a helper.
+   Kept intentionally short — every combo has been visually vetted.
+   ───────────────────────────────────────────────────────────── */
+const tpManrope = Manrope({
+  subsets: ["latin"],
+  weight: ["400", "500", "700", "800"],
+  variable: "--tp-font-manrope",
+  display: "swap",
+});
+const tpPoppins = Poppins({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--tp-font-poppins",
+  display: "swap",
+});
+const tpSpaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  variable: "--tp-font-space-grotesk",
+  display: "swap",
+});
+const tpPlayfair = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["400", "600", "700", "900"],
+  variable: "--tp-font-playfair",
+  display: "swap",
+});
+const tpDmSerif = DM_Serif_Display({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--tp-font-dm-serif",
+  display: "swap",
+});
+const tpBebas = Bebas_Neue({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--tp-font-bebas",
+  display: "swap",
+});
+const tpAnton = Anton({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--tp-font-anton",
   display: "swap",
 });
 
@@ -113,7 +174,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${display.variable} ${mono.variable} ${marker.variable}`}
+      className={`${inter.variable} ${display.variable} ${mono.variable} ${marker.variable} ${tpManrope.variable} ${tpPoppins.variable} ${tpSpaceGrotesk.variable} ${tpPlayfair.variable} ${tpDmSerif.variable} ${tpBebas.variable} ${tpAnton.variable}`}
     >
       <body className="font-sans antialiased">
         <Providers>{children}</Providers>

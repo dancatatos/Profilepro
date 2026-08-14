@@ -8,6 +8,7 @@ import { Select } from "@/components/ui/Select";
 import { Icon } from "@/components/ui/Icon";
 import { ImageUploadField } from "./ImageUploadField";
 import { VideoUploadField } from "./VideoUploadField";
+import { TypographyPanel } from "./TypographyPanel";
 import dynamic from "next/dynamic";
 import { SOCIAL_PLATFORMS } from "@/lib/constants";
 import { useProfileStore } from "@/store/profileStore";
@@ -433,13 +434,19 @@ function SocialsEditor({ section }: { section: SocialsSection }) {
 function AboutEditor({ section }: { section: AboutSection }) {
   const { updateSection: update } = useSections();
   return (
-    <textarea
-      value={section.body}
-      onChange={(e) => update(section.id, { body: e.target.value })}
-      rows={6}
-      placeholder="Tell your story — your mission, background and journey."
-      className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 placeholder:text-slate-300 outline-none focus:border-electric-500/60"
-    />
+    <div className="space-y-3">
+      <textarea
+        value={section.body}
+        onChange={(e) => update(section.id, { body: e.target.value })}
+        rows={6}
+        placeholder="Tell your story — your mission, background and journey."
+        className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 placeholder:text-slate-300 outline-none focus:border-electric-500/60"
+      />
+      <TypographyPanel
+        value={section.textStyle}
+        onChange={(textStyle) => update(section.id, { textStyle })}
+      />
+    </div>
   );
 }
 
@@ -460,10 +467,16 @@ const RichTextEditor = dynamic(
 function TextEditor({ section }: { section: TextSection }) {
   const { updateSection: update } = useSections();
   return (
-    <RichTextEditor
-      value={section.doc}
-      onChange={(doc) => update(section.id, { doc })}
-    />
+    <div className="space-y-3">
+      <RichTextEditor
+        value={section.doc}
+        onChange={(doc) => update(section.id, { doc })}
+      />
+      <TypographyPanel
+        value={section.textStyle}
+        onChange={(textStyle) => update(section.id, { textStyle })}
+      />
+    </div>
   );
 }
 
@@ -679,6 +692,11 @@ function HeroEditor({ section }: { section: HeroSection }) {
           </div>
         </>
       )}
+
+      <TypographyPanel
+        value={section.textStyle}
+        onChange={(textStyle) => update(section.id, { textStyle })}
+      />
     </div>
   );
 }
@@ -821,6 +839,11 @@ function CoverEditor({ section }: { section: CoverSection }) {
           ))}
         </div>
       </div>
+
+      <TypographyPanel
+        value={section.textStyle}
+        onChange={(textStyle) => update(section.id, { textStyle })}
+      />
     </div>
   );
 }
