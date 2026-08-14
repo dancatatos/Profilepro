@@ -69,14 +69,20 @@ const FONT_FAMILY_CSS: Record<TextFontFamily, string | undefined> = {
  * Font-size base varies per element role (a Hero headline "L" is
  * bigger than a Benefits item "L"). Callers pass their element's
  * base px value; the multiplier scales from there.
+ *
+ * Multipliers deliberately dramatic — earlier version (0.72 → 1.4)
+ * produced changes so subtle they read as "nothing happened",
+ * especially on Hero headlines where the responsive class already
+ * puts the base at 48px on desktop and XL only bumped it to 56px.
+ * The wider spread below makes XS/S/L/XL each visibly distinct.
  */
 const SIZE_MULT: Record<TextFontSize, number | undefined> = {
   theme: undefined,
-  xs: 0.72,
-  sm: 0.86,
+  xs: 0.6,
+  sm: 0.8,
   md: 1.0,
-  lg: 1.18,
-  xl: 1.4,
+  lg: 1.45,
+  xl: 2.0,
 };
 
 const WEIGHT_CSS: Record<TextFontWeight, number | undefined> = {
@@ -165,7 +171,20 @@ export function textStyleToCss(
 
   if (style.fontSize && style.fontSize !== "theme" && baseFontSize) {
     const mult = SIZE_MULT[style.fontSize];
-    if (mult) out.fontSize = `${Math.round(baseFontSize * mult)}px`;
+    if (mult) {
+      out.fontSize = `${Math.round(baseFontSize * mult)}px`;
+      /* Tailwind's t-shirt size classes (text-sm etc.) set BOTH
+         font-size AND a fixed rem-based line-height. Our inline
+         font-size overrides the former but the fixed line-height
+         stays, crowding the enlarged text so the container
+         re-flows but the glyphs look "the same size". Explicitly
+         set a proportional line-height whenever we override size
+         so the visual scales with the number. Skip when the user
+         set their own lineHeight — their choice wins. */
+      if (!style.lineHeight || style.lineHeight === "theme") {
+        out.lineHeight = 1.25;
+      }
+    }
   }
 
   const weight = style.fontWeight && WEIGHT_CSS[style.fontWeight];
