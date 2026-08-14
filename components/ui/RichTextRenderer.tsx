@@ -48,20 +48,34 @@ function renderNode(node: RichTextNode, key: string): ReactNode {
           {children.length > 0 ? children : <br />}
         </p>
       );
-    case "heading":
+    case "heading": {
+      /* Em-relative font-size + weight so headings scale WITH the
+         parent's font-size. Previously used text-lg / text-base
+         Tailwind classes which set an absolute px value — that
+         override child-side broke the outer wrapper's inline
+         font-size (from section typography's Size picker), so
+         picking XL bumped the container spacing but the actual
+         heading glyphs stayed at 18/16px. em-relative fixes it:
+         h2 = 1.5× parent, h3 = 1.25× parent. */
+      const isH2 = node.attrs?.level === 2;
       return (
         <p
           key={key}
-          style={{ ...alignStyle, color: "var(--tp-text)" }}
+          style={{
+            ...alignStyle,
+            color: "var(--tp-text)",
+            fontSize: isH2 ? "1.5em" : "1.25em",
+            fontWeight: isH2 ? 700 : 600,
+            lineHeight: 1.2,
+          }}
           className={
-            node.attrs?.level === 2
-              ? "mb-1.5 mt-1 text-lg font-bold first:mt-0"
-              : "mb-1 mt-1 text-base font-semibold first:mt-0"
+            isH2 ? "mb-1.5 mt-1 first:mt-0" : "mb-1 mt-1 first:mt-0"
           }
         >
           {children}
         </p>
       );
+    }
     case "bulletList":
       return (
         <ul key={key} className="mb-2 list-disc space-y-0.5 pl-5 last:mb-0">
