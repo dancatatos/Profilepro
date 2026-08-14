@@ -60,8 +60,8 @@ function TBtn({
       className={cn(
         "flex h-8 min-w-[2rem] items-center justify-center rounded-md px-1.5 text-xs font-medium transition-colors",
         active
-          ? "bg-electric-500/20 text-electric-300"
-          : "text-white/55 hover:bg-white/10 hover:text-white",
+          ? "bg-electric-500/15 text-electric-700"
+          : "text-slate-500 hover:bg-slate-100 hover:text-slate-900",
       )}
     >
       {children}
@@ -70,9 +70,9 @@ function TBtn({
 }
 
 function Toolbar({ editor }: { editor: Editor }) {
-  const divider = <span className="mx-0.5 h-5 w-px self-center bg-white/10" />;
+  const divider = <span className="mx-0.5 h-5 w-px self-center bg-slate-200" />;
   return (
-    <div className="flex flex-wrap items-center gap-0.5 border-b border-white/10 p-1.5">
+    <div className="flex flex-wrap items-center gap-0.5 border-b border-slate-200 bg-slate-50 p-1.5">
       <TBtn
         label="Body text"
         active={editor.isActive("paragraph")}
@@ -177,7 +177,7 @@ export function RichTextEditor({
   });
 
   return (
-    <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
       {editor && <Toolbar editor={editor} />}
       <EditorContent editor={editor} />
     </div>
