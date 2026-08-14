@@ -509,6 +509,10 @@ function CountdownEditor({ section }: { section: CountdownSection }) {
         placeholder="Message shown when the timer ends"
         className={FIELD}
       />
+      <TypographyPanel
+        value={section.textStyle}
+        onChange={(textStyle) => update(section.id, { textStyle })}
+      />
     </div>
   );
 }
@@ -905,6 +909,10 @@ function BenefitsEditor({ section }: { section: BenefitsSection }) {
           ])
         }
       />
+      <TypographyPanel
+        value={section.textStyle}
+        onChange={(textStyle) => update(section.id, { textStyle })}
+      />
     </div>
   );
 }
@@ -947,6 +955,10 @@ function FaqEditor({ section }: { section: FaqSection }) {
             { id: uid("fq"), question: "", answer: "" },
           ])
         }
+      />
+      <TypographyPanel
+        value={section.textStyle}
+        onChange={(textStyle) => update(section.id, { textStyle })}
       />
     </div>
   );
@@ -1058,6 +1070,10 @@ function PricingCardEditor({ section }: { section: PricingCardSection }) {
           </>
         );
       })()}
+      <TypographyPanel
+        value={section.textStyle}
+        onChange={(textStyle) => update(section.id, { textStyle })}
+      />
     </div>
   );
 }
@@ -1105,6 +1121,10 @@ function CredibilityEditor({ section }: { section: CredibilitySection }) {
             { id: uid("cr"), title: "New achievement", icon: "Award" },
           ])
         }
+      />
+      <TypographyPanel
+        value={section.textStyle}
+        onChange={(textStyle) => update(section.id, { textStyle })}
       />
     </div>
   );
@@ -1199,6 +1219,10 @@ function TestimonialsEditor({ section }: { section: TestimonialsSection }) {
             },
           ])
         }
+      />
+      <TypographyPanel
+        value={section.textStyle}
+        onChange={(textStyle) => update(section.id, { textStyle })}
       />
     </div>
   );
@@ -1308,6 +1332,10 @@ function ProductsEditor({ section }: { section: ProductsSection }) {
             },
           ])
         }
+      />
+      <TypographyPanel
+        value={section.textStyle}
+        onChange={(textStyle) => update(section.id, { textStyle })}
       />
     </div>
   );

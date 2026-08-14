@@ -558,8 +558,16 @@ function EmbedHtmlView({ section }: { section: EmbedHtmlSection }) {
    FAQ accordion
 ────────────────────────────────────────── */
 
-function FaqList({ items }: { items: FaqItem[] }) {
+function FaqList({
+  items,
+  textStyle,
+}: {
+  items: FaqItem[];
+  textStyle?: import("@/types").TextStyle;
+}) {
   const [openId, setOpenId] = useState<string | null>(items[0]?.id ?? null);
+  const questionStyle = { ...V.text, ...textStyleToCss(textStyle, 14) };
+  const answerStyle = { ...V.text2, ...textStyleToCss(textStyle, 14) };
   return (
     <div className="space-y-2">
       {items.map((it) => {
@@ -571,7 +579,7 @@ function FaqList({ items }: { items: FaqItem[] }) {
               onClick={() => setOpenId(isOpen ? null : it.id)}
               className="flex w-full items-center justify-between gap-3 p-4 text-left"
             >
-              <p className="text-sm font-medium" style={V.text}>
+              <p className="text-sm font-medium" style={questionStyle}>
                 {it.question}
               </p>
               <ChevronDown
@@ -585,7 +593,7 @@ function FaqList({ items }: { items: FaqItem[] }) {
             {isOpen && (
               <p
                 className="whitespace-pre-line px-4 pb-4 text-sm leading-relaxed"
-                style={V.text2}
+                style={answerStyle}
               >
                 {it.answer}
               </p>
@@ -764,7 +772,13 @@ export function SectionRenderer({
         <SectionShell title={section.title} section={section}>
           <div className="p-4 text-center" style={V.card}>
             {section.headline && (
-              <p className="mb-3 text-sm font-medium" style={V.text2}>
+              <p
+                className="mb-3 text-sm font-medium"
+                style={{
+                  ...V.text2,
+                  ...textStyleToCss(section.textStyle, 14),
+                }}
+              >
                 {section.headline}
               </p>
             )}
@@ -1280,11 +1294,23 @@ export function SectionRenderer({
                   style={{ color: "var(--tp-accent)" }}
                 />
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold" style={V.text}>
+                  <p
+                    className="text-sm font-semibold"
+                    style={{
+                      ...V.text,
+                      ...textStyleToCss(section.textStyle, 14),
+                    }}
+                  >
                     {it.title}
                   </p>
                   {it.detail && (
-                    <p className="mt-0.5 text-xs" style={V.text3}>
+                    <p
+                      className="mt-0.5 text-xs"
+                      style={{
+                        ...V.text3,
+                        ...textStyleToCss(section.textStyle, 12),
+                      }}
+                    >
                       {it.detail}
                     </p>
                   )}
@@ -1298,7 +1324,7 @@ export function SectionRenderer({
     case "faq":
       return (
         <SectionShell title={section.title} narrow="2xl" section={section}>
-          <FaqList items={section.items} />
+          <FaqList items={section.items} textStyle={section.textStyle} />
         </SectionShell>
       );
 
@@ -1308,19 +1334,22 @@ export function SectionRenderer({
           <div className="overflow-hidden p-5" style={V.card}>
             <p
               className="text-center font-display text-base font-semibold"
-              style={V.text}
+              style={{ ...V.text, ...textStyleToCss(section.textStyle, 16) }}
             >
               {section.headline}
             </p>
             <div className="my-3 flex items-baseline justify-center gap-2">
               <span
                 className="font-display text-3xl font-bold"
-                style={V.text}
+                style={{ ...V.text, ...textStyleToCss(section.textStyle, 30) }}
               >
                 {section.price}
               </span>
               {section.priceNote && (
-                <span className="text-xs" style={V.text3}>
+                <span
+                  className="text-xs"
+                  style={{ ...V.text3, ...textStyleToCss(section.textStyle, 12) }}
+                >
                   · {section.priceNote}
                 </span>
               )}
@@ -1331,7 +1360,7 @@ export function SectionRenderer({
                   <li
                     key={f.id}
                     className="flex items-start gap-2 text-sm"
-                    style={V.text2}
+                    style={{ ...V.text2, ...textStyleToCss(section.textStyle, 14) }}
                   >
                     <Check
                       className="mt-0.5 h-4 w-4 shrink-0"
@@ -1402,12 +1431,15 @@ export function SectionRenderer({
                 />
                 <p
                   className="mt-2 text-sm font-semibold leading-snug"
-                  style={V.text}
+                  style={{ ...V.text, ...textStyleToCss(section.textStyle, 14) }}
                 >
                   {it.title}
                 </p>
                 {it.subtitle && (
-                  <p className="mt-0.5 text-[11px]" style={V.text3}>
+                  <p
+                    className="mt-0.5 text-[11px]"
+                    style={{ ...V.text3, ...textStyleToCss(section.textStyle, 11) }}
+                  >
                     {it.subtitle}
                   </p>
                 )}
@@ -1480,12 +1512,15 @@ export function SectionRenderer({
                   <div className="min-w-0">
                     <p
                       className="truncate text-sm font-semibold"
-                      style={V.text}
+                      style={{ ...V.text, ...textStyleToCss(section.textStyle, 14) }}
                     >
                       {t.authorName}
                     </p>
                     {t.authorRole && (
-                      <p className="truncate text-xs" style={V.text3}>
+                      <p
+                        className="truncate text-xs"
+                        style={{ ...V.text3, ...textStyleToCss(section.textStyle, 12) }}
+                      >
                         {t.authorRole}
                       </p>
                     )}
@@ -1514,7 +1549,7 @@ export function SectionRenderer({
                 {t.quote && (
                   <p
                     className="break-words text-sm leading-relaxed"
-                    style={V.text2}
+                    style={{ ...V.text2, ...textStyleToCss(section.textStyle, 14) }}
                   >
                     &ldquo;{t.quote}&rdquo;
                   </p>
@@ -1598,14 +1633,14 @@ export function SectionRenderer({
                 <div className="px-1 pt-4 text-center">
                   <p
                     className="font-display text-lg font-bold leading-tight"
-                    style={V.accent}
+                    style={{ ...V.accent, ...textStyleToCss(section.textStyle, 18) }}
                   >
                     {p.title}
                   </p>
                   {p.description && (
                     <p
                       className="mt-1.5 line-clamp-3 text-sm leading-relaxed"
-                      style={V.text2}
+                      style={{ ...V.text2, ...textStyleToCss(section.textStyle, 14) }}
                     >
                       {p.description}
                     </p>
@@ -1613,7 +1648,7 @@ export function SectionRenderer({
                   {p.price && (
                     <p
                       className="mt-1.5 text-sm font-semibold"
-                      style={V.accent}
+                      style={{ ...V.accent, ...textStyleToCss(section.textStyle, 14) }}
                     >
                       {p.price}
                     </p>
