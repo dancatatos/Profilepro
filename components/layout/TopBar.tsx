@@ -130,15 +130,15 @@ export function TopBar() {
                 className={cn(
                   "flex items-center gap-3 rounded-xl px-3 py-3 text-sm",
                   active
-                    ? "bg-white/[0.06] font-medium text-white"
-                    : "text-white/65",
+                    ? "bg-electric-500/[0.08] font-medium text-slate-900"
+                    : "text-slate-600 hover:bg-slate-50",
                 )}
               >
                 <Icon
                   name={item.icon}
                   className={cn(
                     "h-5 w-5",
-                    active ? "text-electric-400" : "text-white/40",
+                    active ? "text-electric-600" : "text-slate-400",
                   )}
                 />
                 {item.label}
@@ -156,9 +156,9 @@ export function TopBar() {
             <Link
               href="/admin"
               onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-white/65"
+              className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-600 hover:bg-slate-50"
             >
-              <Icon name="Shield" className="h-5 w-5 text-white/40" />
+              <Icon name="Shield" className="h-5 w-5 text-slate-400" />
               Admin Panel
               <Badge tone="gold" className="ml-auto">
                 Admin
@@ -167,7 +167,7 @@ export function TopBar() {
           )}
           <button
             onClick={signOut}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-red-300"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-red-600 hover:bg-red-500/[0.06]"
           >
             <LogOut className="h-5 w-5" />
             Sign out
