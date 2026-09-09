@@ -455,6 +455,17 @@ export interface CrediblyLinkSpec {
    * one-route-per-user buckets above.
    */
   targetTag?: string;
+  /**
+   * Optional step inside a "funnel" target. Holds the step's slug
+   * when the step has one (survives cloning AND reordering), else its
+   * 1-based index as a string. Appended to the resolved URL as
+   * `?step={targetStep}` — the funnel renderer already accepts either
+   * form and silently falls back to step 1 when the reference no
+   * longer matches anything (e.g. the recruit deleted that step in
+   * their clone). Absent = land on the first step, the original
+   * behaviour for every spec created before this field existed.
+   */
+  targetStep?: string;
 }
 
 /**

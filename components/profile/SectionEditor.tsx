@@ -304,7 +304,17 @@ function CrediblyLinkPicker({
   onChange: (spec: CrediblyLinkSpec) => void;
 }) {
   const { account } = useAuth();
-  const [funnels, setFunnels] = useState<{ slug: string; name: string }[]>([]);
+  const [funnels, setFunnels] = useState<
+    {
+      slug: string;
+      bundleTag?: string;
+      name: string;
+      /** Step options for the deep-link picker — value is the step's
+       *  slug when set (survives cloning + reordering), else its
+       *  1-based index as a string. */
+      steps: { value: string; label: string }[];
+    }[]
+  >([]);
   const [trainings, setTrainings] = useState<{ slug: string; title: string }[]>([]);
   const targetType = value?.targetType ?? "profile";
 
@@ -312,7 +322,17 @@ function CrediblyLinkPicker({
     if (!account?.uid) return;
     listFunnels(account.uid)
       .then((items) =>
-        setFunnels(items.map((f) => ({ slug: f.slug, name: f.name }))),
+        setFunnels(
+          items.map((f) => ({
+            slug: f.slug,
+            bundleTag: f.bundleTag,
+            name: f.name,
+            steps: f.steps.map((s, i) => ({
+              value: s.slug || String(i + 1),
+              label: `${i + 1} · ${s.name || `Step ${i + 1}`}`,
+            })),
+          })),
+        ),
       )
       .catch(() => null);
     listTrainingsByOwner(account.uid)
@@ -323,6 +343,16 @@ function CrediblyLinkPicker({
   }, [account?.uid]);
 
   const needsTag = targetType === "funnel" || targetType === "training";
+
+  /* The funnel the current spec points at — matched by slug (what the
+     picker itself stores) with bundleTag fallback for older specs. */
+  const selectedFunnel =
+    targetType === "funnel" && value?.targetTag
+      ? funnels.find(
+          (f) =>
+            f.slug === value.targetTag || f.bundleTag === value.targetTag,
+        )
+      : undefined;
 
   return (
     <div className="space-y-2 rounded-lg border border-electric-500/15 bg-electric-500/[0.04] p-2.5">
@@ -352,12 +382,41 @@ function CrediblyLinkPicker({
       {needsTag && targetType === "funnel" && (
         <Select
           value={value?.targetTag ?? ""}
+          /* Switching funnels intentionally DROPS any targetStep — the
+             old step reference belongs to the previous funnel. */
           onChange={(v) => onChange({ targetType: "funnel", targetTag: v })}
           options={[
             { value: "", label: "— Pick a funnel —" },
             ...funnels.map((f) => ({ value: f.slug, label: f.name })),
           ]}
         />
+      )}
+      {selectedFunnel && selectedFunnel.steps.length > 1 && (
+        <div>
+          <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-slate-500">
+            Land on step
+          </label>
+          <Select
+            value={value?.targetStep ?? ""}
+            onChange={(v) => {
+              /* Omit the key entirely when "first step" is picked so
+                 we never persist an undefined field to Firestore. */
+              const spec: CrediblyLinkSpec = {
+                targetType: "funnel",
+                targetTag: value?.targetTag,
+              };
+              if (v) spec.targetStep = v;
+              onChange(spec);
+            }}
+            options={[
+              { value: "", label: "First step (default)" },
+              ...selectedFunnel.steps.map((s) => ({
+                value: s.value,
+                label: s.label,
+              })),
+            ]}
+          />
+        </div>
       )}
       {needsTag && targetType === "training" && (
         <Select

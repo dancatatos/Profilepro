@@ -62,7 +62,15 @@ export async function resolveCrediblyLink(
     case "funnel": {
       if (!spec.targetTag) return null;
       const slug = await lookupFunnelSlug(deps.ownerId, spec.targetTag);
-      return slug ? `/${username}/${slug}` : null;
+      if (!slug) return null;
+      /* Optional step deep-link. The funnel renderer accepts a step
+         slug or 1-based index and falls back to step 1 when the ref
+         doesn't match — so a stale step in a team clone degrades
+         gracefully instead of 404ing. */
+      const stepQuery = spec.targetStep
+        ? `?step=${encodeURIComponent(spec.targetStep)}`
+        : "";
+      return `/${username}/${slug}${stepQuery}`;
     }
     case "training": {
       if (!spec.targetTag) return null;

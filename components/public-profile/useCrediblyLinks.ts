@@ -152,7 +152,12 @@ function resolveOne(
         funnels.find(
           (f) => f.slug === spec.targetTag && f.status === "published",
         );
-      return f ? `/${ownerUsername}/${f.slug}` : null;
+      if (!f) return null;
+      /* Optional step deep-link — mirrors the server resolver. */
+      const stepQuery = spec.targetStep
+        ? `?step=${encodeURIComponent(spec.targetStep)}`
+        : "";
+      return `/${ownerUsername}/${f.slug}${stepQuery}`;
     }
     case "training": {
       if (!spec.targetTag) return null;
