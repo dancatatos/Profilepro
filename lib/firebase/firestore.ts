@@ -1527,10 +1527,13 @@ export async function createBooking(input: {
   phone: string;
   email: string;
   answers: BookingAnswer[];
-}): Promise<void> {
+}): Promise<string> {
   if (!isFirebaseConfigured) {
     throw new Error("Booking is unavailable in demo mode.");
   }
+  /* Pre-allocate the booking id so we can return it — the public
+     pages feed it to the appointment-reminder automation trigger. */
+  const bookingRef = doc(collection(db, COL.bookings));
   await runTransaction(db, async (tx) => {
     const slotRef = doc(
       db,
@@ -1545,7 +1548,7 @@ export async function createBooking(input: {
       date: input.date,
       time: input.time,
     });
-    tx.set(doc(collection(db, COL.bookings)), {
+    tx.set(bookingRef, {
       profileId: input.profileId,
       ownerId: input.ownerId,
       date: input.date,
@@ -1559,6 +1562,7 @@ export async function createBooking(input: {
       serverCreatedAt: serverTimestamp(),
     });
   });
+  return bookingRef.id;
 }
 
 /** List the owner's bookings, ordered by date + time. */

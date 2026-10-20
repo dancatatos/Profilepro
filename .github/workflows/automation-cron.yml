@@ -1,0 +1,37 @@
+# Automation cron pinger.
+#
+# Vercel's Hobby plan limits crons to once per day, which is far too
+# coarse for automation wait steps and appointment reminders. This
+# workflow pings the cron endpoint every 10 minutes instead — the
+# endpoint itself is idempotent and authenticated, so the Vercel daily
+# cron staying enabled alongside is harmless (just a redundant tick).
+#
+# Setup (one-time): add a repository secret named CRON_SECRET with the
+# same value as the CRON_SECRET environment variable in Vercel.
+#   GitHub repo → Settings → Secrets and variables → Actions →
+#   New repository secret.
+#
+# Note: GitHub schedules are best-effort — ticks can lag a few minutes
+# under load. Fine for this use case.
+
+name: Automation cron
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping automations cron endpoint
+        run: |
+          if [ -z "${{ secrets.CRON_SECRET }}" ]; then
+            echo "CRON_SECRET repository secret is not set — skipping."
+            exit 0
+          fi
+          curl -fsS -m 120 \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "https://www.crediblyai.com/api/cron/automations"

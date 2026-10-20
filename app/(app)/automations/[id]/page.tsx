@@ -44,6 +44,7 @@ import type {
   Automation,
   AutomationNode,
   AutomationWaitNode,
+  AutomationWaitUntilNode,
   Pipeline,
 } from "@/types";
 
@@ -147,6 +148,16 @@ export default function AutomationEditorPage() {
         { id: uid("n"), type: "wait", amount: 1, unit: "days" },
       ],
     });
+
+  const addWaitUntil = () =>
+    patch({
+      nodes: [
+        ...automation.nodes,
+        { id: uid("n"), type: "wait_until", amount: 1, unit: "hours" },
+      ],
+    });
+
+  const isApptTrigger = automation.trigger === "appointment_booked";
 
   const save = async () => {
     if (!automation.name.trim()) {
@@ -252,6 +263,24 @@ export default function AutomationEditorPage() {
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-600">
+              Trigger
+            </label>
+            <Select
+              value={automation.trigger}
+              onChange={(v) =>
+                patch({ trigger: v as Automation["trigger"] })
+              }
+              options={[
+                { value: "lead_captured", label: "New lead captured" },
+                {
+                  value: "appointment_booked",
+                  label: "Appointment booked",
+                },
+              ]}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600">
               Status
             </label>
             <Select
@@ -266,6 +295,9 @@ export default function AutomationEditorPage() {
               ]}
             />
           </div>
+        </div>
+
+        {!isApptTrigger && (
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-600">
               Which leads enroll
@@ -284,7 +316,7 @@ export default function AutomationEditorPage() {
               ]}
             />
           </div>
-        </div>
+        )}
 
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
@@ -320,9 +352,9 @@ export default function AutomationEditorPage() {
           </div>
         </div>
         <p className="text-[11px] text-slate-500">
-          Emails due outside the window wait until it opens (Philippine
-          time) — nobody gets a 3&nbsp;AM welcome email. Sender shows as
-          your name; replies go to your inbox.
+          {isApptTrigger
+            ? "Appointment reminders ignore the send window — a “starts in 1 hour” email must go out on time, whatever the hour. Sender shows as your name; replies go to your inbox."
+            : "Emails due outside the window wait until it opens (Philippine time) — nobody gets a 3 AM welcome email. Sender shows as your name; replies go to your inbox."}
         </p>
       </Card>
 
@@ -351,7 +383,11 @@ export default function AutomationEditorPage() {
               </span>
               <p className="flex-1 text-sm font-semibold text-slate-900">
                 {idx + 1} ·{" "}
-                {node.type === "email" ? "Send email" : "Wait"}
+                {node.type === "email"
+                  ? "Send email"
+                  : node.type === "wait_until"
+                    ? "Before the appointment"
+                    : "Wait"}
               </p>
               <button
                 type="button"
@@ -414,7 +450,18 @@ export default function AutomationEditorPage() {
                   </code>{" "}
                   <code className="rounded bg-slate-100 px-1 py-0.5 text-electric-700">
                     {"{phone}"}
-                  </code>{" "}
+                  </code>
+                  {isApptTrigger && (
+                    <>
+                      {" "}
+                      <code className="rounded bg-slate-100 px-1 py-0.5 text-electric-700">
+                        {"{date}"}
+                      </code>{" "}
+                      <code className="rounded bg-slate-100 px-1 py-0.5 text-electric-700">
+                        {"{time}"}
+                      </code>
+                    </>
+                  )}{" "}
                   auto-fill ·{" "}
                   <code className="rounded bg-slate-100 px-1 py-0.5 text-electric-700">
                     [text](https://link)
@@ -439,7 +486,7 @@ export default function AutomationEditorPage() {
                   value={(node as AutomationWaitNode).unit}
                   onChange={(v) =>
                     patchNode(node.id, {
-                      unit: v as AutomationWaitNode["unit"],
+                      unit: v as AutomationWaitUntilNode["unit"],
                     })
                   }
                   options={[
@@ -450,14 +497,16 @@ export default function AutomationEditorPage() {
                   className="w-36"
                 />
                 <span className="text-xs text-slate-500">
-                  before the next step
+                  {node.type === "wait_until"
+                    ? "before the appointment starts, send the next step"
+                    : "before the next step"}
                 </span>
               </div>
             )}
           </Card>
         ))}
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
             size="sm"
@@ -474,7 +523,25 @@ export default function AutomationEditorPage() {
           >
             Add wait
           </Button>
+          {isApptTrigger && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={addWaitUntil}
+              leftIcon={<Timer className="h-3.5 w-3.5" />}
+            >
+              Add &ldquo;before appointment&rdquo;
+            </Button>
+          )}
         </div>
+        {isApptTrigger && (
+          <p className="text-[11px] text-slate-500">
+            Typical reminder flow: Email (confirmation, sends right after
+            booking) → <strong>Before appointment: 1 hour</strong> → Email
+            (&ldquo;starts in 1 hour&rdquo;). Reminders auto-cancel when
+            the appointment is deleted.
+          </p>
+        )}
       </div>
 
       {/* ── Danger zone ── */}

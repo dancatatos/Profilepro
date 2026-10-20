@@ -161,7 +161,7 @@ export function FunnelView({
 
   const onBook: BookingSubmitFn = async (data) => {
     if (!live) return;
-    await createBooking({
+    const bookingId = await createBooking({
       profileId,
       ownerId,
       date: data.date,
@@ -172,6 +172,15 @@ export function FunnelView({
       email: data.email,
       answers: data.answers,
     });
+    /* Fire-and-forget: enroll into appointment-reminder automations. */
+    if (bookingId) {
+      fetch("/api/automations/enroll", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId, ownerId }),
+        keepalive: true,
+      }).catch(() => null);
+    }
   };
 
   const cta = step.cta;

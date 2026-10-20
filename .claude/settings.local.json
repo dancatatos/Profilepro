@@ -85,7 +85,8 @@
       "Bash(git commit -m ' *)",
       "Read(//c/Users/Project/Desktop/Volten/Legends System/**)",
       "Read(//c/Users/Project/Desktop/Volten/Legends System/app/**)",
-      "Bash(ls \"C:\\\\Users\\\\Project\\\\Desktop\\\\Volten\" 2>&1)"
+      "Bash(ls \"C:\\\\Users\\\\Project\\\\Desktop\\\\Volten\" 2>&1)",
+      "Bash(gh auth *)"
     ]
   }
 }

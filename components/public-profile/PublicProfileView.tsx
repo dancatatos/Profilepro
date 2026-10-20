@@ -94,7 +94,7 @@ export function PublicProfileView({
 
   const onBook: BookingSubmitFn = async (data) => {
     if (!live) return;
-    await createBooking({
+    const bookingId = await createBooking({
       profileId: profile.id,
       ownerId: profile.ownerId,
       date: data.date,
@@ -105,6 +105,15 @@ export function PublicProfileView({
       email: data.email,
       answers: data.answers,
     });
+    /* Fire-and-forget: enroll into appointment-reminder automations. */
+    if (bookingId) {
+      fetch("/api/automations/enroll", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId, ownerId: profile.ownerId }),
+        keepalive: true,
+      }).catch(() => null);
+    }
   };
 
   const { header } = profile;

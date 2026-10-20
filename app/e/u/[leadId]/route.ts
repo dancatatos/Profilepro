@@ -26,11 +26,14 @@ function page(title: string, body: string): NextResponse {
 }
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ leadId: string }> },
 ): Promise<NextResponse> {
-  const { leadId } = await params;
-  if (!isAdminConfigured() || !leadId) {
+  const { leadId: recordId } = await params;
+  /* ?t=b marks a BOOKING recipient (appointment-reminder emails);
+     default is a lead. Same one-click outcome either way. */
+  const isBooking = new URL(req.url).searchParams.get("t") === "b";
+  if (!isAdminConfigured() || !recordId) {
     return page(
       "Something went wrong",
       "We couldn't process the unsubscribe. Reply to the email instead and the sender will remove you manually.",
@@ -38,22 +41,20 @@ export async function GET(
   }
   try {
     const db = getAdminDb();
-    const leadRef = db.collection("leads").doc(leadId);
-    const snap = await leadRef.get();
-    if (!snap.exists) {
-      /* Lead already deleted — nothing left to email, so the outcome
-         the visitor wanted is already true. */
-      return page(
-        "You're unsubscribed",
-        "You won't receive any more automated emails from this sender.",
-      );
+    const ref = db
+      .collection(isBooking ? "bookings" : "leads")
+      .doc(recordId);
+    const snap = await ref.get();
+    if (snap.exists) {
+      await ref.update({ unsubscribed: true });
     }
-    await leadRef.update({ unsubscribed: true });
+    /* Record already deleted → nothing left to email; the outcome the
+       visitor wanted is already true. Fall through to cancel + page. */
 
-    /* Cancel every active enrollment for this lead. */
+    /* Cancel every active enrollment for this recipient. */
     const active = await db
       .collection("automation_enrollments")
-      .where("leadId", "==", leadId)
+      .where(isBooking ? "bookingId" : "leadId", "==", recordId)
       .where("status", "==", "active")
       .get();
     const now = Date.now();

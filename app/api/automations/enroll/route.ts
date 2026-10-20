@@ -16,10 +16,11 @@
 import { NextResponse } from "next/server";
 import { isAdminConfigured } from "@/lib/firebase/admin";
 import { isEmailConfigured } from "@/lib/email/client";
-import { enrollLead } from "@/lib/automation/engine";
+import { enrollBooking, enrollLead } from "@/lib/automation/engine";
 
 interface Payload {
   leadId?: unknown;
+  bookingId?: unknown;
   ownerId?: unknown;
 }
 
@@ -38,8 +39,9 @@ export async function POST(req: Request): Promise<NextResponse> {
     );
   }
   const leadId = typeof body.leadId === "string" ? body.leadId : "";
+  const bookingId = typeof body.bookingId === "string" ? body.bookingId : "";
   const ownerId = typeof body.ownerId === "string" ? body.ownerId : "";
-  if (!leadId || !ownerId) {
+  if ((!leadId && !bookingId) || !ownerId) {
     return NextResponse.json(
       { ok: false, reason: "missing_fields" },
       { status: 400 },
@@ -47,7 +49,9 @@ export async function POST(req: Request): Promise<NextResponse> {
   }
 
   try {
-    const result = await enrollLead(leadId, ownerId);
+    const result = leadId
+      ? await enrollLead(leadId, ownerId)
+      : await enrollBooking(bookingId, ownerId);
     return NextResponse.json({ ok: true, ...result });
   } catch (err) {
     console.error("[Credibly] automation enroll failed:", err);

@@ -1147,6 +1147,12 @@ export interface Booking {
   phone: string;
   email: string;
   answers: BookingAnswer[];
+  /**
+   * Set when the visitor unsubscribed from automated emails via the
+   * /e/u link in an appointment-reminder email. Gates all platform-
+   * sent email to this booking's address.
+   */
+  unsubscribed?: boolean;
   createdAt: number;
 }
 
@@ -1546,8 +1552,16 @@ export interface Pipeline {
 
 export type AutomationStatus = "draft" | "published" | "paused";
 
-/** Phase 1 has a single trigger. Future: "stage_entered", "payment_approved". */
-export type AutomationTrigger = "lead_captured";
+/**
+ * What starts an enrollment.
+ *   "lead_captured"      — a visitor submits a lead form (profile or funnel)
+ *   "appointment_booked" — a visitor books through an Appointment section;
+ *                          the enrollment carries the appointment datetime
+ *                          as its anchor so "wait until X before the
+ *                          appointment" steps can compute exact send times
+ * Future: "stage_entered", "payment_approved".
+ */
+export type AutomationTrigger = "lead_captured" | "appointment_booked";
 
 /**
  * One automated email. `subject` + `body` support the SAME merge
@@ -1570,7 +1584,25 @@ export interface AutomationWaitNode {
   unit: "minutes" | "hours" | "days";
 }
 
-export type AutomationNode = AutomationEmailNode | AutomationWaitNode;
+/**
+ * Anchor-based wait — "resume at {appointment time} minus amount·unit".
+ * Only meaningful on "appointment_booked" automations (the enrollment
+ * carries anchorAt). If the computed moment is already past but the
+ * appointment is still upcoming, the flow proceeds immediately; if the
+ * appointment itself has passed, the enrollment completes silently —
+ * nobody wants a "starts in 1 hour" email after the meeting.
+ */
+export interface AutomationWaitUntilNode {
+  id: string;
+  type: "wait_until";
+  amount: number;
+  unit: "minutes" | "hours" | "days";
+}
+
+export type AutomationNode =
+  | AutomationEmailNode
+  | AutomationWaitNode
+  | AutomationWaitUntilNode;
 
 export interface AutomationSettings {
   /**
@@ -1613,7 +1645,15 @@ export interface AutomationEnrollment {
   id: string;
   automationId: string;
   ownerId: string;
-  leadId: string;
+  /** Set for lead_captured enrollments — the recipient is this lead. */
+  leadId?: string;
+  /** Set for appointment_booked enrollments — recipient is the booking's visitor. */
+  bookingId?: string;
+  /**
+   * Appointment start (epoch ms) for appointment_booked enrollments —
+   * the anchor that wait_until nodes count back from.
+   */
+  anchorAt?: number;
   /** Index into Automation.nodes of the NEXT node to execute. */
   nextNodeIndex: number;
   status: "active" | "completed" | "canceled";
@@ -1634,7 +1674,9 @@ export interface AutomationSend {
   automationId: string;
   nodeId: string;
   enrollmentId: string;
-  leadId: string;
+  /** Recipient record — lead for lead_captured, booking for appointment_booked. */
+  leadId?: string;
+  bookingId?: string;
   /** Recipient email snapshot at send time. */
   to: string;
   subject: string;

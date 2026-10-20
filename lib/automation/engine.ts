@@ -31,6 +31,7 @@ import type {
   AutomationEnrollment,
   AutomationNode,
   AutomationSettings,
+  Booking,
   Lead,
 } from "@/types";
 
@@ -88,15 +89,90 @@ function waitMs(node: AutomationNode): number {
   return Math.max(0, node.amount) * mult;
 }
 
+/* ── Recipient abstraction ───────────────────────────────────────
+   lead_captured enrollments email a Lead; appointment_booked ones
+   email a Booking's visitor. Same merge fields either way, with
+   {date}/{time} extras for bookings. */
+
+interface Recipient {
+  kind: "lead" | "booking";
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  unsubscribed: boolean;
+  /** Extra merge fields — {date} / {time} for bookings. */
+  extra: Record<string, string>;
+}
+
+async function loadRecipient(
+  enrollment: AutomationEnrollment,
+): Promise<Recipient | null> {
+  const db = getAdminDb();
+  if (enrollment.leadId) {
+    const snap = await db.collection("leads").doc(enrollment.leadId).get();
+    if (!snap.exists) return null;
+    const lead = snap.data() as Lead;
+    return {
+      kind: "lead",
+      id: snap.id,
+      name: lead.name,
+      email: lead.email ?? null,
+      phone: lead.phone ?? null,
+      unsubscribed: !!lead.unsubscribed,
+      extra: {},
+    };
+  }
+  if (enrollment.bookingId) {
+    const snap = await db
+      .collection("bookings")
+      .doc(enrollment.bookingId)
+      .get();
+    if (!snap.exists) return null;
+    const booking = snap.data() as Booking;
+    const when = enrollment.anchorAt ? new Date(enrollment.anchorAt) : null;
+    return {
+      kind: "booking",
+      id: snap.id,
+      name: booking.name,
+      email: booking.email ?? null,
+      phone: booking.phone ?? null,
+      unsubscribed: !!booking.unsubscribed,
+      extra: {
+        date: when
+          ? when.toLocaleDateString("en-PH", {
+              weekday: "long",
+              month: "long",
+              day: "numeric",
+              timeZone: "Asia/Manila",
+            })
+          : booking.date,
+        time: when
+          ? when.toLocaleTimeString("en-PH", {
+              hour: "numeric",
+              minute: "2-digit",
+              timeZone: "Asia/Manila",
+            })
+          : booking.time,
+      },
+    };
+  }
+  return null;
+}
+
 /* ── Email rendering ─────────────────────────────────────────── */
 
-function fillMergeFields(text: string, lead: Lead): string {
-  const firstName = lead.name.split(/\s+/)[0] || lead.name;
-  return text
+function fillMergeFields(text: string, r: Recipient): string {
+  const firstName = r.name.split(/\s+/)[0] || r.name;
+  let out = text
     .replace(/\{name\}/gi, firstName)
-    .replace(/\{fullname\}/gi, lead.name)
-    .replace(/\{email\}/gi, lead.email ?? "")
-    .replace(/\{phone\}/gi, lead.phone ?? "");
+    .replace(/\{fullname\}/gi, r.name)
+    .replace(/\{email\}/gi, r.email ?? "")
+    .replace(/\{phone\}/gi, r.phone ?? "");
+  for (const [k, v] of Object.entries(r.extra)) {
+    out = out.replace(new RegExp(`\\{${k}\\}`, "gi"), v);
+  }
+  return out;
 }
 
 const MD_LINK = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
@@ -111,10 +187,10 @@ const BARE_URL = /(https?:\/\/[^\s<>"')\]]+)/g;
  */
 function renderBodyHtml(
   rawBody: string,
-  lead: Lead,
+  recipient: Recipient,
   wrapUrl: (url: string) => string,
 ): string {
-  const filled = fillMergeFields(rawBody, lead);
+  const filled = fillMergeFields(rawBody, recipient);
 
   /* Extract markdown links FIRST into placeholder tokens so the bare
      URL pass can't double-process their URLs. */
@@ -166,12 +242,10 @@ async function runEnrollment({ automation, enrollment }: RunDeps): Promise<{
   const db = getAdminDb();
   let sent = 0;
 
-  /* Load the lead fresh each run — unsubscribes / deletions between
-     waits must stop the sequence. */
-  const leadSnap = await db.collection("leads").doc(enrollment.leadId).get();
-  const lead = leadSnap.exists
-    ? ({ ...(leadSnap.data() as Lead), id: leadSnap.id } as Lead)
-    : null;
+  /* Load the recipient fresh each run — unsubscribes / deletions
+     between waits must stop the sequence. A deleted booking also
+     cancels pending appointment reminders (cancel-safety). */
+  const recipient = await loadRecipient(enrollment);
 
   const finish = async (
     patch: Partial<AutomationEnrollment>,
@@ -182,10 +256,14 @@ async function runEnrollment({ automation, enrollment }: RunDeps): Promise<{
       .update({ ...patch, updatedAt: Date.now() });
   };
 
-  if (!lead || lead.unsubscribed || !lead.email) {
+  if (!recipient || recipient.unsubscribed || !recipient.email) {
     await finish({ status: "canceled" });
     return { sent };
   }
+
+  /* Appointment reminders are time-critical — the send window must
+     not hold a "starts in 1 hour" email until 8 AM tomorrow. */
+  const timeCritical = automation.trigger === "appointment_booked";
 
   const ownerSnap = await db
     .collection("users")
@@ -203,20 +281,39 @@ async function runEnrollment({ automation, enrollment }: RunDeps): Promise<{
     }
 
     if (node.type === "wait") {
-      const due = applyWindow(
-        new Date(Date.now() + waitMs(node)),
-        automation.settings,
-      );
+      const raw = new Date(Date.now() + waitMs(node));
+      const due = timeCritical ? raw : applyWindow(raw, automation.settings);
       await finish({ nextNodeIndex: i + 1, dueAt: due.getTime() });
       return { sent };
     }
 
-    /* email node */
-    const windowed = applyWindow(new Date(), automation.settings);
-    if (windowed.getTime() > Date.now() + 60_000) {
-      /* Outside the send window — hold THIS node until it opens. */
-      await finish({ nextNodeIndex: i, dueAt: windowed.getTime() });
+    if (node.type === "wait_until") {
+      const anchor = enrollment.anchorAt ?? 0;
+      if (!anchor || anchor <= Date.now()) {
+        /* Appointment already happened (or anchor missing) — a "starts
+           soon" reminder after the fact helps nobody. */
+        await finish({ status: "completed", nextNodeIndex: i });
+        return { sent };
+      }
+      const due = anchor - waitMs(node);
+      if (due <= Date.now()) {
+        /* Past the reminder mark but the appointment is still ahead —
+           proceed immediately (late enroll / coarse cron tick). */
+        i += 1;
+        continue;
+      }
+      await finish({ nextNodeIndex: i + 1, dueAt: due });
       return { sent };
+    }
+
+    /* email node */
+    if (!timeCritical) {
+      const windowed = applyWindow(new Date(), automation.settings);
+      if (windowed.getTime() > Date.now() + 60_000) {
+        /* Outside the send window — hold THIS node until it opens. */
+        await finish({ nextNodeIndex: i, dueAt: windowed.getTime() });
+        return { sent };
+      }
     }
 
     /* Pre-allocate the send doc id so tracking URLs can embed it. */
@@ -224,9 +321,11 @@ async function runEnrollment({ automation, enrollment }: RunDeps): Promise<{
     const wrapUrl = (url: string) =>
       `${APP_URL()}/e/c/${sendRef.id}?u=${encodeURIComponent(url)}`;
 
-    const subject = fillMergeFields(node.subject, lead);
-    const bodyHtml = renderBodyHtml(node.body, lead, wrapUrl);
-    const unsubUrl = `${APP_URL()}/e/u/${lead.id}`;
+    const subject = fillMergeFields(node.subject, recipient);
+    const bodyHtml = renderBodyHtml(node.body, recipient, wrapUrl);
+    const unsubUrl = `${APP_URL()}/e/u/${recipient.id}${
+      recipient.kind === "booking" ? "?t=b" : ""
+    }`;
     const pixel = `<img src="${APP_URL()}/e/o/${sendRef.id}" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;">`;
     const senderName = owner?.displayName || "Your Credibly contact";
     const footer = `Sent on behalf of ${escapeHtml(senderName)} via <a href="https://www.crediblyai.com" style="color:#555866;">Credibly</a>. <a href="${unsubUrl}" style="color:#555866;">Unsubscribe</a>`;
@@ -239,7 +338,7 @@ async function runEnrollment({ automation, enrollment }: RunDeps): Promise<{
       }) + pixel;
 
     const res = await sendEmail({
-      to: lead.email,
+      to: recipient.email,
       subject,
       html,
       category: "automation",
@@ -255,8 +354,10 @@ async function runEnrollment({ automation, enrollment }: RunDeps): Promise<{
         automationId: automation.id,
         nodeId: node.id,
         enrollmentId: enrollment.id,
-        leadId: lead.id,
-        to: lead.email,
+        ...(recipient.kind === "lead"
+          ? { leadId: recipient.id }
+          : { bookingId: recipient.id }),
+        to: recipient.email,
         subject,
         sentAt: Date.now(),
       });
@@ -350,6 +451,77 @@ export async function enrollLead(
       automationId: automation.id,
       ownerId,
       leadId,
+      nextNodeIndex: 0,
+      status: "active",
+      dueAt: now,
+      createdAt: now,
+      updatedAt: now,
+    };
+    await enrollRef.set(enrollment);
+    await doc.ref.update({
+      enrollCount: (automation.enrollCount ?? 0) + 1,
+    });
+    enrolled += 1;
+
+    const r = await runEnrollment({ automation, enrollment });
+    sent += r.sent;
+  }
+  return { enrolled, sent };
+}
+
+/**
+ * Enroll a fresh appointment booking into every published
+ * appointment_booked automation. The booking's start datetime becomes
+ * the enrollment anchor that wait_until nodes count back from.
+ * Bookings carry no timezone — PH-market product, so Asia/Manila
+ * (UTC+8, no DST) is assumed when converting date+time to epoch.
+ */
+export async function enrollBooking(
+  bookingId: string,
+  ownerId: string,
+): Promise<{ enrolled: number; sent: number }> {
+  const db = getAdminDb();
+
+  const snap = await db.collection("bookings").doc(bookingId).get();
+  if (!snap.exists) return { enrolled: 0, sent: 0 };
+  const booking = { ...(snap.data() as Booking), id: snap.id } as Booking;
+  if (booking.ownerId !== ownerId) return { enrolled: 0, sent: 0 };
+  if (!booking.email || booking.unsubscribed) return { enrolled: 0, sent: 0 };
+
+  const anchorAt = Date.parse(`${booking.date}T${booking.time}:00+08:00`);
+  if (!Number.isFinite(anchorAt) || anchorAt <= Date.now()) {
+    return { enrolled: 0, sent: 0 };
+  }
+
+  const autosSnap = await db
+    .collection("automations")
+    .where("ownerId", "==", ownerId)
+    .where("status", "==", "published")
+    .where("trigger", "==", "appointment_booked")
+    .get();
+
+  let enrolled = 0;
+  let sent = 0;
+  for (const doc of autosSnap.docs) {
+    const automation = { ...(doc.data() as Automation), id: doc.id };
+    if ((automation.nodes ?? []).length === 0) continue;
+
+    const existing = await db
+      .collection("automation_enrollments")
+      .where("automationId", "==", automation.id)
+      .where("bookingId", "==", bookingId)
+      .limit(1)
+      .get();
+    if (!existing.empty) continue;
+
+    const now = Date.now();
+    const enrollRef = db.collection("automation_enrollments").doc();
+    const enrollment: AutomationEnrollment = {
+      id: enrollRef.id,
+      automationId: automation.id,
+      ownerId,
+      bookingId,
+      anchorAt,
       nextNodeIndex: 0,
       status: "active",
       dueAt: now,
