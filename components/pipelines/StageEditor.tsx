@@ -17,6 +17,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ChevronUp,
   GripVertical,
+  Link2,
   MessageSquarePlus,
   Plus,
   Save,
@@ -518,6 +519,12 @@ function SortableStageRow({
                       {"{phone}"}
                     </code>{" "}
                     — they auto-fill from the lead&apos;s record on copy.
+                    For links, write{" "}
+                    <code className="rounded bg-slate-100 px-1 py-0.5 text-[10px] text-electric-700">
+                      [tap here](https://your-link.com)
+                    </code>{" "}
+                    — it copies as &ldquo;tap here: your-link.com&rdquo; so the
+                    URL turns clickable when sent in Messenger.
                   </p>
                 </>
               )}
@@ -538,6 +545,29 @@ function SortableStageRow({
                           className="h-7 w-28 rounded border border-slate-200 bg-slate-100 px-2 text-[11px] text-slate-900 outline-none focus:border-electric-500/40"
                         />
                         <span className="flex-1" />
+                        {/* Insert-link helper — appends the markdown-style
+                            snippet so leaders don't have to memorise the
+                            syntax. On copy it flattens to "text: url"
+                            (the only link form a Messenger paste keeps). */}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateMessage(idx, {
+                              body:
+                                msg.body +
+                                (msg.body.endsWith("\n") || !msg.body
+                                  ? ""
+                                  : "\n") +
+                                "[tap here](https://)",
+                            })
+                          }
+                          aria-label="Insert link"
+                          title="Insert a link — edit the text in [brackets] and the URL in (parentheses)"
+                          className="flex items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-medium text-electric-700 transition-colors hover:bg-electric-500/10"
+                        >
+                          <Link2 className="h-3.5 w-3.5" />
+                          Link
+                        </button>
                         <button
                           type="button"
                           onClick={() => removeMessage(idx)}

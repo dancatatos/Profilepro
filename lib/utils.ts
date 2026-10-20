@@ -114,6 +114,25 @@ export function normalizeExternalUrl(raw: string | undefined | null): string {
 }
 
 /** Copy text to the clipboard, returns success. */
+/**
+ * Flatten markdown-style links in a follow-up message template into
+ * the plain-text form chat apps understand.
+ *
+ *   "[get the offer](https://x.com/offer)" → "get the offer: https://x.com/offer"
+ *
+ * Why not real hyperlinks: Messenger / WhatsApp / Viber composers only
+ * accept plain text on paste, so hidden-URL anchor text can't survive
+ * the leader's copy-paste flow. Text-colon-URL reads naturally and the
+ * chat app auto-linkifies the URL at send time. If templates are ever
+ * sent as HTML email, swap this for a real <a> conversion there.
+ */
+export function flattenMessageLinks(text: string): string {
+  return text.replace(
+    /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+    "$1: $2",
+  );
+}
+
 export async function copyToClipboard(text: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(text);

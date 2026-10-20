@@ -45,7 +45,12 @@ import {
 } from "@/lib/firebase/firestore";
 import { useTaskCountStore } from "@/store/taskCountStore";
 import { useProfileStore } from "@/store/profileStore";
-import { copyToClipboard, timeAgo, timeUntil } from "@/lib/utils";
+import {
+  copyToClipboard,
+  flattenMessageLinks,
+  timeAgo,
+  timeUntil,
+} from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 import { cn } from "@/lib/utils";
 import type { Lead, Pipeline, PipelineStage, SentMessageLog } from "@/types";
@@ -173,11 +178,18 @@ export function LeadDetailModal({
    */
   const personalize = (text: string): string => {
     const firstName = lead.name.split(/\s+/)[0] || lead.name;
-    return text
-      .replace(/\{name\}/gi, firstName)
-      .replace(/\{fullname\}/gi, lead.name)
-      .replace(/\{email\}/gi, lead.email ?? "")
-      .replace(/\{phone\}/gi, lead.phone ?? "");
+    /* flattenMessageLinks runs LAST so [text](url) written in templates
+       becomes "text: url" — the only link form that survives pasting
+       into Messenger / Viber (their composers are plain-text only; the
+       URL auto-linkifies at send time). Preview + copy share this
+       function, so what the leader sees is exactly what pastes. */
+    return flattenMessageLinks(
+      text
+        .replace(/\{name\}/gi, firstName)
+        .replace(/\{fullname\}/gi, lead.name)
+        .replace(/\{email\}/gi, lead.email ?? "")
+        .replace(/\{phone\}/gi, lead.phone ?? ""),
+    );
   };
 
   const copyVariant = async (text: string, idx: number) => {
