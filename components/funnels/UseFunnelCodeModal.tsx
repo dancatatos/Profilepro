@@ -111,7 +111,7 @@ export function UseFunnelCodeModal({
               if (e.key === "Enter") find();
             }}
             placeholder="FNL-XXXXXX"
-            className="h-11 w-full flex-1 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 text-sm tracking-widest text-white outline-none placeholder:text-white/25 focus:border-electric-500/60"
+            className="h-11 w-full flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm tracking-widest text-slate-900 outline-none placeholder:text-slate-300 focus:border-electric-500/60"
           />
           <Button
             onClick={find}
@@ -125,9 +125,9 @@ export function UseFunnelCodeModal({
         </div>
 
         {found && (
-          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3">
-            <p className="text-sm font-semibold text-white">{found.name}</p>
-            <p className="mt-0.5 text-xs text-white/45">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p className="text-sm font-semibold text-slate-900">{found.name}</p>
+            <p className="mt-0.5 text-xs text-slate-500">
               Shared by {found.ownerName} · {found.funnel.steps.length} step
               {found.funnel.steps.length === 1 ? "" : "s"}
             </p>

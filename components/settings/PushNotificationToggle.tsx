@@ -96,8 +96,8 @@ export function PushNotificationToggle() {
   if (loading) {
     return (
       <Card className="flex items-center gap-3 p-4">
-        <Loader2 className="h-5 w-5 animate-spin text-white/40" />
-        <p className="text-sm text-white/55">Checking notifications…</p>
+        <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+        <p className="text-sm text-slate-500">Checking notifications…</p>
       </Card>
     );
   }
@@ -108,16 +108,16 @@ export function PushNotificationToggle() {
   if (permission === "unsupported") {
     return (
       <Card className="flex items-start gap-3 p-4">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.05]">
-          <Smartphone className="h-5 w-5 text-white/40" />
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">
+          <Smartphone className="h-5 w-5 text-slate-400" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-white">
+          <p className="text-sm font-semibold text-slate-900">
             Daily follow-up reminders
           </p>
-          <p className="mt-0.5 text-xs text-white/55">
+          <p className="mt-0.5 text-xs text-slate-500">
             This browser doesn&apos;t support push notifications.
-            <strong className="text-white/70">
+            <strong className="text-slate-600">
               {" "}
               On iPhone, install Credibly to your home screen first
             </strong>{" "}
@@ -135,13 +135,13 @@ export function PushNotificationToggle() {
     return (
       <Card className="flex items-start gap-3 p-4">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-500/15">
-          <BellOff className="h-5 w-5 text-red-300" />
+          <BellOff className="h-5 w-5 text-red-700" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-white">
+          <p className="text-sm font-semibold text-slate-900">
             Notifications blocked
           </p>
-          <p className="mt-0.5 text-xs text-white/55">
+          <p className="mt-0.5 text-xs text-slate-500">
             You previously blocked notifications for this site. To
             re-enable: tap the 🔒 icon in your address bar →
             Notifications → Allow, then refresh the page.
@@ -156,13 +156,13 @@ export function PushNotificationToggle() {
     return (
       <Card className="flex items-center gap-3 p-4">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-jade-500/15">
-          <BellRing className="h-5 w-5 text-jade-300" />
+          <BellRing className="h-5 w-5 text-jade-600" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-white">
+          <p className="text-sm font-semibold text-slate-900">
             Daily reminders are on
           </p>
-          <p className="mt-0.5 text-xs text-white/55">
+          <p className="mt-0.5 text-xs text-slate-500">
             You&apos;ll get a push notification at 9 AM PHT when leads
             are due — on this device.
           </p>
@@ -184,13 +184,13 @@ export function PushNotificationToggle() {
   return (
     <Card className="flex items-center gap-3 p-4">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-electric-500/15">
-        <BellRing className="h-5 w-5 text-electric-300" />
+        <BellRing className="h-5 w-5 text-electric-700" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-white">
+        <p className="text-sm font-semibold text-slate-900">
           Get daily follow-up reminders
         </p>
-        <p className="mt-0.5 text-xs text-white/55">
+        <p className="mt-0.5 text-xs text-slate-500">
           Free push notification at 9 AM PHT each day when leads need
           following up. Enable once per device.
         </p>

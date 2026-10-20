@@ -148,11 +148,11 @@ export function ShareModal({
     <Modal open={open} onClose={onClose} title="Share your profile">
       <div className="space-y-5 pb-3">
         {/* URL row */}
-        <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-1.5 pl-3.5">
-          <span className="flex-1 truncate text-sm text-white/65">{url}</span>
+        <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1.5 pl-3.5">
+          <span className="flex-1 truncate text-sm text-slate-600">{url}</span>
           <button
             onClick={copyLink}
-            className="flex items-center gap-1.5 rounded-lg bg-brand-gradient px-3 py-2 text-xs font-semibold text-white"
+            className="flex items-center gap-1.5 rounded-lg bg-brand-gradient px-3 py-2 text-xs font-semibold text-slate-900"
           >
             {copied ? (
               <Check className="h-3.5 w-3.5" />
@@ -177,13 +177,13 @@ export function ShareModal({
 
         {/* Social targets */}
         <div>
-          <p className="mb-2.5 text-xs font-medium text-white/45">Share to</p>
+          <p className="mb-2.5 text-xs font-medium text-slate-500">Share to</p>
           <div className="grid grid-cols-4 gap-2.5">
             {TARGETS.map((t) => (
               <button
                 key={t.platform}
                 onClick={() => handleTarget(t)}
-                className="flex flex-col items-center gap-1.5 rounded-xl border border-white/[0.07] bg-white/[0.03] py-3 no-tap-highlight active:scale-95"
+                className="flex flex-col items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 py-3 no-tap-highlight active:scale-95"
               >
                 <span
                   className="flex h-9 w-9 items-center justify-center rounded-full"
@@ -191,24 +191,24 @@ export function ShareModal({
                 >
                   <SocialIcon platform={t.platform} className="h-4 w-4" />
                 </span>
-                <span className="text-[10px] text-white/55">{t.label}</span>
+                <span className="text-[10px] text-slate-500">{t.label}</span>
               </button>
             ))}
             <button
               onClick={nativeShare}
-              className="flex flex-col items-center gap-1.5 rounded-xl border border-white/[0.07] bg-white/[0.03] py-3 no-tap-highlight active:scale-95"
+              className="flex flex-col items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 py-3 no-tap-highlight active:scale-95"
             >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-slate-900">
                 <Share2 className="h-4 w-4" />
               </span>
-              <span className="text-[10px] text-white/55">More</span>
+              <span className="text-[10px] text-slate-500">More</span>
             </button>
           </div>
         </div>
 
         {/* QR */}
-        <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
-          <p className="mb-3 text-center text-xs font-medium text-white/45">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <p className="mb-3 text-center text-xs font-medium text-slate-500">
             Or scan the QR code
           </p>
           <QRBlock value={url} display={170} fileName="credibly-profile-qr" />

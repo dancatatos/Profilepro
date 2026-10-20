@@ -138,7 +138,7 @@ export function AIFunnelModal({
             key={i}
             className={cn(
               "h-1 flex-1 rounded-full transition-colors",
-              i <= step ? "bg-electric-500" : "bg-white/10",
+              i <= step ? "bg-electric-500" : "bg-slate-200",
             )}
           />
         ))}
@@ -147,18 +147,18 @@ export function AIFunnelModal({
       {generating ? (
         <div className="flex flex-col items-center py-10 text-center">
           <span className="flex h-14 w-14 animate-pulse items-center justify-center rounded-2xl bg-brand-gradient shadow-glow-blue">
-            <Sparkles className="h-7 w-7 text-white" />
+            <Sparkles className="h-7 w-7 text-slate-900" />
           </span>
-          <p className="mt-4 font-display text-sm font-semibold text-white">
+          <p className="mt-4 font-display text-sm font-semibold text-slate-900">
             Building your funnel…
           </p>
-          <p className="mt-1 text-xs text-white/45">
+          <p className="mt-1 text-xs text-slate-500">
             Writing each step&apos;s headline, copy and CTA.
           </p>
         </div>
       ) : isTypeStep ? (
         <div className="space-y-2 pb-2">
-          <p className="font-display text-base font-semibold text-white">
+          <p className="font-display text-base font-semibold text-slate-900">
             What kind of funnel?
           </p>
           {AI_FUNNEL_TYPES.map((t) => (
@@ -169,11 +169,11 @@ export function AIFunnelModal({
                 "w-full rounded-xl border p-3 text-left transition-colors",
                 funnelType === t.id
                   ? "border-electric-500 bg-electric-500/10"
-                  : "border-white/10 hover:border-white/20",
+                  : "border-slate-200 hover:border-slate-300",
               )}
             >
-              <p className="text-sm font-semibold text-white">{t.label}</p>
-              <p className="mt-0.5 text-xs text-white/45">{t.description}</p>
+              <p className="text-sm font-semibold text-slate-900">{t.label}</p>
+              <p className="mt-0.5 text-xs text-slate-500">{t.description}</p>
             </button>
           ))}
         </div>
@@ -189,7 +189,7 @@ export function AIFunnelModal({
             }))}
           />
           <div>
-            <p className="mb-1.5 text-xs font-medium text-white/65">Language</p>
+            <p className="mb-1.5 text-xs font-medium text-slate-600">Language</p>
             <div className="flex gap-2">
               {(["english", "taglish"] as AILanguage[]).map((lang) => (
                 <button
@@ -198,8 +198,8 @@ export function AIFunnelModal({
                   className={cn(
                     "flex flex-1 items-center justify-center gap-1.5 rounded-xl border py-2.5 text-sm font-medium capitalize",
                     language === lang
-                      ? "border-electric-500 bg-electric-500/15 text-electric-300"
-                      : "border-white/10 text-white/55",
+                      ? "border-electric-500 bg-electric-500/15 text-electric-700"
+                      : "border-slate-200 text-slate-500",
                   )}
                 >
                   <Languages className="h-4 w-4" />
@@ -211,7 +211,7 @@ export function AIFunnelModal({
         </div>
       ) : question ? (
         <div className="pb-2">
-          <p className="font-display text-base font-semibold text-white">
+          <p className="font-display text-base font-semibold text-slate-900">
             {question.q}
           </p>
           <textarea
@@ -222,7 +222,7 @@ export function AIFunnelModal({
             }
             placeholder={question.placeholder}
             rows={3}
-            className="mt-3 w-full resize-none rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-electric-500/60"
+            className="mt-3 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-electric-500/60"
           />
         </div>
       ) : null}

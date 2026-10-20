@@ -18,7 +18,7 @@ export function CardTemplatePicker({
 }) {
   return (
     <div className={className}>
-      <p className="mb-2 text-xs font-medium text-white/55">Card style</p>
+      <p className="mb-2 text-xs font-medium text-slate-500">Card style</p>
       <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
         {CARD_TEMPLATES.map((t) => {
           const isActive = t.id === active;
@@ -62,7 +62,7 @@ export function CardTemplatePicker({
               <p
                 className={cn(
                   "mt-1 text-center text-[10px]",
-                  isActive ? "text-white" : "text-white/45",
+                  isActive ? "text-slate-900" : "text-slate-500",
                 )}
               >
                 {t.name}

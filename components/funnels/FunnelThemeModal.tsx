@@ -46,21 +46,21 @@ export function FunnelThemeModal({
                 "relative flex flex-col overflow-hidden rounded-xl border p-1.5 text-left transition-all",
                 active
                   ? "border-electric-500 ring-2 ring-electric-500/40"
-                  : "border-white/10 hover:border-white/25",
+                  : "border-slate-200 hover:border-white/25",
               )}
             >
               <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg">
                 <ThemeMiniPreview theme={tc} />
                 {active && (
                   <span className="absolute left-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-electric-500 ring-2 ring-white/25">
-                    <Check className="h-3 w-3 text-white" />
+                    <Check className="h-3 w-3 text-slate-900" />
                   </span>
                 )}
               </div>
               <p
                 className={cn(
                   "mt-1.5 truncate px-0.5 text-[11px] font-medium",
-                  active ? "text-electric-300" : "text-white/75",
+                  active ? "text-electric-700" : "text-slate-700",
                 )}
               >
                 {tc.name}

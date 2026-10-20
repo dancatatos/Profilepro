@@ -121,7 +121,7 @@ export function AddToPipelineModal({
         description="You need at least one pipeline before you can import leads."
       >
         <div className="space-y-3 pb-2">
-          <p className="text-sm text-white/65">
+          <p className="text-sm text-slate-600">
             Head to the Follow-Up tab and create your first pipeline —
             then come back here to bulk-add leads.
           </p>
@@ -147,7 +147,7 @@ export function AddToPipelineModal({
       <div className="space-y-4 pb-3">
         {/* Pipeline picker — list of cards */}
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-white/65">
+          <label className="mb-1.5 block text-xs font-medium text-slate-600">
             Pipeline
           </label>
           <div className="space-y-1.5">
@@ -162,22 +162,22 @@ export function AddToPipelineModal({
                     "flex w-full items-center gap-2.5 rounded-xl border p-2.5 text-left transition-colors",
                     selected
                       ? "border-electric-500 bg-electric-500/10"
-                      : "border-white/10 hover:border-white/20",
+                      : "border-slate-200 hover:border-slate-300",
                   )}
                 >
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-electric-500/15">
-                    <KanbanSquare className="h-4 w-4 text-electric-300" />
+                    <KanbanSquare className="h-4 w-4 text-electric-700" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-white">
+                    <p className="truncate text-sm font-medium text-slate-900">
                       {p.name}
                       {p.isDefault && (
-                        <span className="ml-1.5 rounded-full bg-white/[0.08] px-1.5 py-0.5 text-[9px] font-medium text-white/55">
+                        <span className="ml-1.5 rounded-full bg-slate-200 px-1.5 py-0.5 text-[9px] font-medium text-slate-500">
                           DEFAULT
                         </span>
                       )}
                     </p>
-                    <p className="truncate text-[11px] text-white/40">
+                    <p className="truncate text-[11px] text-slate-400">
                       {p.stages.length} stage{p.stages.length === 1 ? "" : "s"}
                     </p>
                   </div>
@@ -191,7 +191,7 @@ export function AddToPipelineModal({
             user picks a new pipeline. */}
         {selectedPipeline && sortedStages.length > 0 && (
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-white/65">
+            <label className="mb-1.5 block text-xs font-medium text-slate-600">
               Start in stage
             </label>
             <div className="flex flex-wrap gap-1.5">
@@ -203,15 +203,15 @@ export function AddToPipelineModal({
                   className={cn(
                     "rounded-lg border px-2.5 py-1 text-[11px] font-medium transition-colors",
                     stageId === s.id
-                      ? "border-electric-500/50 bg-electric-500/15 text-electric-300"
-                      : "border-white/10 bg-white/[0.04] text-white/65 hover:bg-white/[0.08]",
+                      ? "border-electric-500/50 bg-electric-500/15 text-electric-700"
+                      : "border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-200",
                   )}
                 >
                   {s.name}
                 </button>
               ))}
             </div>
-            <p className="mt-1.5 text-[10px] text-white/30">
+            <p className="mt-1.5 text-[10px] text-slate-400">
               Next follow-up task will be scheduled based on the stage&apos;s
               days-before-next-task setting.
             </p>

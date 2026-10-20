@@ -18,7 +18,7 @@ export function QRTemplatePicker({
 }) {
   return (
     <div className={className}>
-      <p className="mb-2 text-xs font-medium text-white/55">QR style</p>
+      <p className="mb-2 text-xs font-medium text-slate-500">QR style</p>
       <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
         {QR_TEMPLATES.map((t) => {
           const isActive = t.id === active;
@@ -57,7 +57,7 @@ export function QRTemplatePicker({
               <p
                 className={cn(
                   "mt-1 text-center text-[10px]",
-                  isActive ? "text-white" : "text-white/45",
+                  isActive ? "text-slate-900" : "text-slate-500",
                 )}
               >
                 {t.name}

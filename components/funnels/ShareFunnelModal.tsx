@@ -76,22 +76,22 @@ export function ShareFunnelModal({
       {code ? (
         <div className="flex flex-col items-center py-4 text-center">
           <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-jade-500/15">
-            <Check className="h-6 w-6 text-jade-400" />
+            <Check className="h-6 w-6 text-jade-600" />
           </span>
-          <p className="mt-3 text-sm font-semibold text-white">
+          <p className="mt-3 text-sm font-semibold text-slate-900">
             Your funnel is shared
           </p>
-          <p className="mt-0.5 text-xs text-white/45">
+          <p className="mt-0.5 text-xs text-slate-500">
             Anyone on Pro or Team can clone it with this code.
           </p>
-          <div className="mt-4 flex w-full items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-3">
-            <span className="flex-1 text-center font-display text-lg font-bold tracking-[0.2em] text-electric-300">
+          <div className="mt-4 flex w-full items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <span className="flex-1 text-center font-display text-lg font-bold tracking-[0.2em] text-electric-700">
               {code}
             </span>
             <button
               onClick={copyCode}
               aria-label="Copy code"
-              className="rounded-lg bg-white/10 p-2 text-white/70 hover:bg-white/15"
+              className="rounded-lg bg-slate-200 p-2 text-slate-600 hover:bg-white/15"
             >
               <Copy className="h-4 w-4" />
             </button>
@@ -101,18 +101,18 @@ export function ShareFunnelModal({
               Done
             </Button>
           </div>
-          <p className="mt-3 text-xs text-white/35">
+          <p className="mt-3 text-xs text-slate-400">
             Manage or revoke shared funnels any time on the Funnels page.
           </p>
         </div>
       ) : (
         <div className="space-y-4 pb-2">
-          <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
-            <p className="flex items-center gap-1.5 text-xs font-medium text-white/70">
-              <Package className="h-3.5 w-3.5 text-electric-400" />
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p className="flex items-center gap-1.5 text-xs font-medium text-slate-600">
+              <Package className="h-3.5 w-3.5 text-electric-600" />
               What gets shared
             </p>
-            <p className="mt-1 text-xs leading-relaxed text-white/45">
+            <p className="mt-1 text-xs leading-relaxed text-slate-500">
               Every step, its layout and copy. Links are cleared so the
               recipient adds their own. Shares the funnel as it looks right
               now.

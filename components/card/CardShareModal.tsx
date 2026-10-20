@@ -48,7 +48,7 @@ const APP_TILES: {
 ];
 
 const tileCls =
-  "flex flex-col items-center gap-1.5 rounded-xl border border-white/[0.07] bg-white/[0.03] py-3 no-tap-highlight active:scale-95";
+  "flex flex-col items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 py-3 no-tap-highlight active:scale-95";
 
 export function CardShareModal({
   open,
@@ -151,7 +151,7 @@ export function CardShareModal({
   return (
     <Modal open={open} onClose={onClose} title="Share your business card">
       <div className="space-y-4 pb-3">
-        <p className="text-xs text-white/45">
+        <p className="text-xs text-slate-500">
           Pick an app — your card image is copied to the clipboard, so you
           can paste it (Ctrl / ⌘ + V) straight into the chat.
         </p>
@@ -172,29 +172,29 @@ export function CardShareModal({
               >
                 <SocialIcon platform={app.platform} className="h-4 w-4" />
               </span>
-              <span className="text-[10px] text-white/55">{app.label}</span>
+              <span className="text-[10px] text-slate-500">{app.label}</span>
             </button>
           ))}
 
           <button onClick={copyOnly} className={tileCls}>
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-slate-700">
               <Copy className="h-4 w-4" />
             </span>
-            <span className="text-[10px] text-white/55">Copy image</span>
+            <span className="text-[10px] text-slate-500">Copy image</span>
           </button>
 
           <button onClick={savePng} className={tileCls}>
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-slate-700">
               <Download className="h-4 w-4" />
             </span>
-            <span className="text-[10px] text-white/55">Save image</span>
+            <span className="text-[10px] text-slate-500">Save image</span>
           </button>
 
           <button onClick={nativeShare} className={tileCls}>
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-slate-700">
               <Share2 className="h-4 w-4" />
             </span>
-            <span className="text-[10px] text-white/55">More</span>
+            <span className="text-[10px] text-slate-500">More</span>
           </button>
         </div>
       </div>

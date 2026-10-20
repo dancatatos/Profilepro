@@ -152,22 +152,22 @@ export function AddLeadModal({
       <div className="space-y-4 pb-3">
         {/* Name (required) */}
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-white/65">
-            Name <span className="text-red-400">*</span>
+          <label className="mb-1.5 block text-xs font-medium text-slate-600">
+            Name <span className="text-red-600">*</span>
           </label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Maria Santos"
             autoFocus
-            className="w-full rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-electric-500/60"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-electric-500/60"
           />
         </div>
 
         {/* Email + Phone — side by side on desktop */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-white/65">
+            <label className="mb-1.5 block text-xs font-medium text-slate-600">
               Email
             </label>
             <input
@@ -175,11 +175,11 @@ export function AddLeadModal({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="maria@example.com"
-              className="w-full rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-electric-500/60"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-electric-500/60"
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-white/65">
+            <label className="mb-1.5 block text-xs font-medium text-slate-600">
               Phone
             </label>
             <input
@@ -187,14 +187,14 @@ export function AddLeadModal({
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="09xx xxx xxxx"
-              className="w-full rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-electric-500/60"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-electric-500/60"
             />
           </div>
         </div>
 
         {/* Source — preset chips, "Other" reveals a text input */}
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-white/65">
+          <label className="mb-1.5 block text-xs font-medium text-slate-600">
             Source
           </label>
           <div className="flex flex-wrap gap-1.5">
@@ -206,8 +206,8 @@ export function AddLeadModal({
                 className={cn(
                   "rounded-lg border px-2.5 py-1 text-[11px] font-medium transition-colors",
                   sourcePreset === p
-                    ? "border-electric-500/50 bg-electric-500/15 text-electric-300"
-                    : "border-white/10 bg-white/[0.04] text-white/65 hover:bg-white/[0.08]",
+                    ? "border-electric-500/50 bg-electric-500/15 text-electric-700"
+                    : "border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-200",
                 )}
               >
                 {p}
@@ -219,7 +219,7 @@ export function AddLeadModal({
               value={customSource}
               onChange={(e) => setCustomSource(e.target.value)}
               placeholder="Where did they come from?"
-              className="mt-2 w-full rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-electric-500/60"
+              className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-electric-500/60"
             />
           )}
         </div>
@@ -227,7 +227,7 @@ export function AddLeadModal({
         {/* Stage picker — defaults to the first stage but the user can
             drop the lead in any stage if they're already further along. */}
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-white/65">
+          <label className="mb-1.5 block text-xs font-medium text-slate-600">
             Start in stage
           </label>
           <div className="flex flex-wrap gap-1.5">
@@ -239,8 +239,8 @@ export function AddLeadModal({
                 className={cn(
                   "rounded-lg border px-2.5 py-1 text-[11px] font-medium transition-colors",
                   stageId === s.id
-                    ? "border-electric-500/50 bg-electric-500/15 text-electric-300"
-                    : "border-white/10 bg-white/[0.04] text-white/65 hover:bg-white/[0.08]",
+                    ? "border-electric-500/50 bg-electric-500/15 text-electric-700"
+                    : "border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-200",
                 )}
               >
                 {s.name}

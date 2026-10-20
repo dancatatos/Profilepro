@@ -190,11 +190,11 @@ export function FunnelLinkModal({
     >
       <div className="space-y-4 pb-3">
         {/* URL row with copy */}
-        <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-1.5 pl-3.5">
-          <span className="flex-1 truncate text-sm text-white/65">{url}</span>
+        <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1.5 pl-3.5">
+          <span className="flex-1 truncate text-sm text-slate-600">{url}</span>
           <button
             onClick={copyLink}
-            className="flex items-center gap-1.5 rounded-lg bg-brand-gradient px-3 py-2 text-xs font-semibold text-white"
+            className="flex items-center gap-1.5 rounded-lg bg-brand-gradient px-3 py-2 text-xs font-semibold text-slate-900"
           >
             {copied ? (
               <Check className="h-3.5 w-3.5" />
@@ -218,7 +218,7 @@ export function FunnelLinkModal({
 
         {/* Per-platform shortcuts (mobile-friendly grid) */}
         <div>
-          <p className="mb-2.5 text-xs font-medium text-white/45">
+          <p className="mb-2.5 text-xs font-medium text-slate-500">
             Or send to
           </p>
           <div className="grid grid-cols-4 gap-2.5">
@@ -226,7 +226,7 @@ export function FunnelLinkModal({
               <button
                 key={t.platform}
                 onClick={() => handleTarget(t)}
-                className="flex flex-col items-center gap-1.5 rounded-xl border border-white/[0.07] bg-white/[0.03] py-3 no-tap-highlight active:scale-95"
+                className="flex flex-col items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 py-3 no-tap-highlight active:scale-95"
               >
                 <span
                   className="flex h-9 w-9 items-center justify-center rounded-full"
@@ -234,19 +234,19 @@ export function FunnelLinkModal({
                 >
                   <SocialIcon platform={t.platform} className="h-4 w-4" />
                 </span>
-                <span className="text-[10px] text-white/55">{t.label}</span>
+                <span className="text-[10px] text-slate-500">{t.label}</span>
               </button>
             ))}
             <a
               href={url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex flex-col items-center gap-1.5 rounded-xl border border-white/[0.07] bg-white/[0.03] py-3 no-tap-highlight active:scale-95"
+              className="flex flex-col items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 py-3 no-tap-highlight active:scale-95"
             >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-slate-900">
                 <ExternalLink className="h-4 w-4" />
               </span>
-              <span className="text-[10px] text-white/55">Open</span>
+              <span className="text-[10px] text-slate-500">Open</span>
             </a>
           </div>
         </div>
@@ -254,16 +254,16 @@ export function FunnelLinkModal({
         {/* QR — collapsed by default since most shares are link-only.
             User taps to reveal + download (matches the "only if
             requested" framing from the original request). */}
-        <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-3">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
           {showQr ? (
             <div className="space-y-2">
-              <p className="text-center text-xs font-medium text-white/45">
+              <p className="text-center text-xs font-medium text-slate-500">
                 Scan to open this funnel
               </p>
               <QRBlock value={url} display={170} fileName={fileName} />
               <button
                 onClick={() => setShowQr(false)}
-                className="block w-full pt-1 text-center text-[11px] text-white/40 hover:text-white/65"
+                className="block w-full pt-1 text-center text-[11px] text-slate-400 hover:text-slate-600"
               >
                 Hide QR
               </button>
@@ -271,7 +271,7 @@ export function FunnelLinkModal({
           ) : (
             <button
               onClick={() => setShowQr(true)}
-              className="flex w-full items-center justify-center gap-2 py-1.5 text-xs font-medium text-white/65 hover:text-white"
+              className="flex w-full items-center justify-center gap-2 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900"
             >
               <QrCode className="h-4 w-4" />
               Generate a QR code for this funnel

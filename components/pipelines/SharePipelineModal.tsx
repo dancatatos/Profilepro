@@ -101,8 +101,8 @@ export function SharePipelineModal({
     >
       <div className="space-y-4 pb-3">
         <Card className="space-y-1.5 p-3">
-          <p className="text-xs font-semibold text-white">{pipeline.name}</p>
-          <p className="text-[11px] text-white/45">
+          <p className="text-xs font-semibold text-slate-900">{pipeline.name}</p>
+          <p className="text-[11px] text-slate-500">
             {pipeline.stages.length} stages · {pipeline.industry}
           </p>
           {pipeline.cloneCount != null && pipeline.cloneCount > 0 && (
@@ -117,17 +117,17 @@ export function SharePipelineModal({
 
         {/* Share code */}
         <div>
-          <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-white/40">
+          <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-slate-400">
             Share code
           </label>
           {generating || !code ? (
-            <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm text-white/55">
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-500">
               <Loader2 className="h-4 w-4 animate-spin" />
               Generating code…
             </div>
           ) : (
-            <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-1.5 pl-3">
-              <span className="flex-1 font-mono text-sm font-semibold tracking-wider text-electric-300">
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1.5 pl-3">
+              <span className="flex-1 font-mono text-sm font-semibold tracking-wider text-electric-700">
                 {code}
               </span>
               <Button
@@ -151,11 +151,11 @@ export function SharePipelineModal({
         {/* Full clone link */}
         {code && (
           <div>
-            <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-white/40">
+            <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-slate-400">
               Clone link (auto-opens the clone form)
             </label>
-            <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-1.5 pl-3">
-              <span className="flex-1 truncate text-xs text-white/65">
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1.5 pl-3">
+              <span className="flex-1 truncate text-xs text-slate-600">
                 {cloneUrl}
               </span>
               <Button
@@ -176,14 +176,14 @@ export function SharePipelineModal({
           </div>
         )}
 
-        <p className="text-[11px] text-white/40">
+        <p className="text-[11px] text-slate-400">
           Cloned pipelines copy the stage configuration + AI prompt context.
           Leads themselves stay private — each team member captures their
           own leads through their own Credibly profile.
         </p>
       </div>
 
-      <div className="border-t border-white/[0.06] p-4 pb-safe">
+      <div className="border-t border-slate-200 p-4 pb-safe">
         <Button fullWidth variant="outline" onClick={onClose}>
           Done
         </Button>
@@ -290,7 +290,7 @@ export function ClonePipelineModal({
               if (e.key === "Enter") doLookup(code);
             }}
             placeholder="PIPE-XXXXXX"
-            className="h-11 w-full flex-1 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 text-sm tracking-widest text-white outline-none placeholder:text-white/25 focus:border-electric-500/60"
+            className="h-11 w-full flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm tracking-widest text-slate-900 outline-none placeholder:text-slate-300 focus:border-electric-500/60"
           />
           <Button
             onClick={() => doLookup(code)}
@@ -305,8 +305,8 @@ export function ClonePipelineModal({
 
         {found && (
           <Card className="space-y-1 p-3">
-            <p className="text-sm font-semibold text-white">{found.name}</p>
-            <p className="text-[11px] text-white/45">
+            <p className="text-sm font-semibold text-slate-900">{found.name}</p>
+            <p className="text-[11px] text-slate-500">
               {found.stages.length} stages · {found.industry}
               {found.cloneCount != null && found.cloneCount > 0
                 ? ` · cloned ${found.cloneCount}× already`
@@ -321,7 +321,7 @@ export function ClonePipelineModal({
         )}
       </div>
 
-      <div className="flex gap-2 border-t border-white/[0.06] p-4 pb-safe">
+      <div className="flex gap-2 border-t border-slate-200 p-4 pb-safe">
         <Button variant="outline" fullWidth onClick={onClose} disabled={cloning}>
           Close
         </Button>
