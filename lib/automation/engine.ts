@@ -369,6 +369,15 @@ async function runEnrollment({ automation, enrollment }: RunDeps): Promise<{
 
     const subject = fillMergeFields(node.subject, recipient);
     const bodyHtml = renderBodyHtml(node.body, recipient, wrapUrl);
+    /* Inbox preview snippet — the first words of the actual message.
+       Inboxes render "subject — snippet", so passing the subject as
+       the preview makes every email show a doubled subject line. */
+    const previewText =
+      fillMergeFields(node.body, recipient)
+        .replace(/\[([^\]]+)\]\(([^)]*)\)/g, "$1")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 140) || subject;
     const unsubUrl = `${APP_URL()}/e/u/${recipient.id}${
       recipient.kind === "booking" ? "?t=b" : ""
     }`;
@@ -384,7 +393,7 @@ async function runEnrollment({ automation, enrollment }: RunDeps): Promise<{
 
     const html =
       emailLayout({
-        preview: subject,
+        preview: previewText,
         body: bodyHtml,
         footer,
       }) + pixel;
