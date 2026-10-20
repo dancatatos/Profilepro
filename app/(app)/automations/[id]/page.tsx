@@ -451,8 +451,62 @@ export default function AutomationEditorPage() {
         </div>
         <p className="text-[11px] text-slate-500">
           {isApptTrigger
-            ? "Appointment reminders ignore the send window — a “starts in 1 hour” email must go out on time, whatever the hour. Sender shows as your name; replies go to your inbox."
-            : "Emails due outside the window wait until it opens (Philippine time) — nobody gets a 3 AM welcome email. Sender shows as your name; replies go to your inbox."}
+            ? "Appointment reminders ignore the send window — a “starts in 1 hour” email must go out on time, whatever the hour."
+            : "Emails due outside the window wait until it opens (Philippine time) — nobody gets a 3 AM welcome email."}
+        </p>
+
+        {/* ── Sender ── */}
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              Send emails as
+            </label>
+            <input
+              value={automation.settings.senderName ?? ""}
+              onChange={(e) =>
+                patch({
+                  settings: {
+                    ...automation.settings,
+                    senderName: e.target.value,
+                  },
+                })
+              }
+              placeholder="Default: your name via Credibly"
+              className={FIELD}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              From address
+            </label>
+            <div className="flex items-stretch">
+              <input
+                value={automation.settings.senderLocal ?? ""}
+                onChange={(e) =>
+                  patch({
+                    settings: {
+                      ...automation.settings,
+                      senderLocal: e.target.value
+                        .toLowerCase()
+                        .replace(/[^a-z0-9._-]/g, ""),
+                    },
+                  })
+                }
+                placeholder="noreply"
+                className={cn(FIELD, "rounded-r-none")}
+              />
+              <span className="flex items-center rounded-r-xl border border-l-0 border-slate-200 bg-slate-100 px-3 text-sm text-slate-500">
+                @crediblyai.com
+              </span>
+            </div>
+          </div>
+        </div>
+        <p className="text-[11px] text-slate-500">
+          The name and address leads see in their inbox, e.g. SideBiz Pro
+          Team &lt;sidebiz@crediblyai.com&gt;. Leave blank to send as your
+          name via Credibly from noreply@. Any address name works
+          instantly (the @crediblyai.com part is fixed since it&apos;s the
+          verified sending domain). Replies always go to your own inbox.
         </p>
       </Card>
 

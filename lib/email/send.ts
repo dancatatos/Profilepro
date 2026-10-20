@@ -37,29 +37,78 @@ export interface SendEmailOptions {
    * the sender's real inbox. Unset = the platform default sender.
    */
   fromName?: string;
+  /**
+   * Custom sender display name used EXACTLY as given — no "via Credibly"
+   * suffix (the GHL-style per-automation sender). Takes precedence over
+   * `fromName` when both are set.
+   */
+  fromNameExact?: string;
+  /**
+   * Custom mailbox (local part, before the @) for the From address. The
+   * domain always stays the configured verified domain — a mailbox on a
+   * verified domain delivers without extra setup, any other domain
+   * would be rejected by Resend. Invalid characters are stripped; an
+   * empty result falls back to the configured address.
+   */
+  fromLocal?: string;
 }
 
 /**
- * Build the From header. The display name is user-controlled text, so
- * strip every character with meaning inside an email header (angle
- * brackets, quotes, newlines, separators) to rule out header injection,
- * and cap the length so inbox UIs don't truncate awkwardly.
+ * Strip every character with meaning inside an email header (angle
+ * brackets, quotes, newlines, separators) from a user-controlled
+ * display name to rule out header injection, and cap the length so
+ * inbox UIs don't truncate awkwardly.
  */
-function buildFrom(fromName?: string): string {
-  const configured = getEmailFrom();
-  if (!fromName) return configured;
-  const clean = fromName
+function cleanDisplayName(name: string): string {
+  return name
     .replace(/[<>"\\\r\n;,@]/g, " ")
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 48)
     .trim();
-  if (!clean) return configured;
+}
+
+/**
+ * Build the From header. The ADDRESS domain always stays the configured
+ * verified domain (deliverability: SPF/DKIM only authorize our domain);
+ * `fromLocal` may swap the mailbox in front of it, and the display name
+ * comes from `fromNameExact` (used as typed) or `fromName` (suffixed
+ * "via Credibly"). All three are user-controlled text, so names are
+ * header-sanitized and the mailbox is reduced to safe address chars.
+ */
+function buildFrom(opts: {
+  fromName?: string;
+  fromNameExact?: string;
+  fromLocal?: string;
+}): string {
+  const configured = getEmailFrom();
   /* Pull the bare address out of `Name <addr>` (or use as-is when the
      env var holds a bare address). */
   const match = configured.match(/<([^>]+)>/);
-  const address = match ? match[1] : configured;
-  return `${clean} via Credibly <${address}>`;
+  let address = match ? match[1] : configured;
+
+  if (opts.fromLocal) {
+    const local = opts.fromLocal
+      .toLowerCase()
+      .replace(/[^a-z0-9._-]/g, "")
+      .replace(/^[._-]+|[._-]+$/g, "")
+      .slice(0, 48);
+    const at = address.lastIndexOf("@");
+    if (local && at > -1) address = `${local}${address.slice(at)}`;
+  }
+
+  const exact = opts.fromNameExact ? cleanDisplayName(opts.fromNameExact) : "";
+  if (exact) return `${exact} <${address}>`;
+
+  const name = opts.fromName ? cleanDisplayName(opts.fromName) : "";
+  if (name) return `${name} via Credibly <${address}>`;
+
+  /* No display-name override: keep the configured name but honour a
+     mailbox override (configured may be `Name <addr>` or bare). */
+  if (opts.fromLocal && match) {
+    return `${configured.slice(0, configured.indexOf("<"))}<${address}>`.trim();
+  }
+  return opts.fromLocal ? address : configured;
 }
 
 export type SendEmailResult =
@@ -79,7 +128,7 @@ export async function sendEmail(
   }
   try {
     const { data, error } = await client.emails.send({
-      from: buildFrom(opts.fromName),
+      from: buildFrom(opts),
       to: opts.to,
       subject: opts.subject,
       html: opts.html,

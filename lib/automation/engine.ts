@@ -373,7 +373,13 @@ async function runEnrollment({ automation, enrollment }: RunDeps): Promise<{
       recipient.kind === "booking" ? "?t=b" : ""
     }`;
     const pixel = `<img src="${APP_URL()}/e/o/${sendRef.id}" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;">`;
-    const senderName = owner?.displayName || "Your Credibly contact";
+    /* Per-automation custom sender (settings.senderName / senderLocal)
+       beats the account default "{owner} via Credibly". The footer
+       mirrors whichever name the inbox shows, so the attribution and
+       the From line never contradict each other. */
+    const customSender = automation.settings.senderName?.trim();
+    const senderName =
+      customSender || owner?.displayName || "Your Credibly contact";
     const footer = `Sent on behalf of ${escapeHtml(senderName)} via <a href="https://www.crediblyai.com" style="color:#555866;">Credibly</a>. <a href="${unsubUrl}" style="color:#555866;">Unsubscribe</a>`;
 
     const html =
@@ -389,6 +395,8 @@ async function runEnrollment({ automation, enrollment }: RunDeps): Promise<{
       html,
       category: "automation",
       fromName: owner?.displayName,
+      fromNameExact: customSender,
+      fromLocal: automation.settings.senderLocal?.trim(),
       replyTo: owner?.email,
     });
 

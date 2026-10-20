@@ -1640,6 +1640,19 @@ export interface AutomationSettings {
   windowEnd: number;
   /** IANA timezone the window is evaluated in. Default Asia/Manila. */
   timezone: string;
+  /**
+   * Custom From display name for this automation's emails, used exactly
+   * as typed (e.g. "SideBiz Pro Team"). Empty/unset falls back to the
+   * account default: "{owner name} via Credibly".
+   */
+  senderName?: string;
+  /**
+   * Custom mailbox (the part before the @) for this automation's From
+   * address. The domain is fixed to the platform's verified sending
+   * domain — any mailbox on it delivers without extra setup. Empty/
+   * unset falls back to the platform default (noreply).
+   */
+  senderLocal?: string;
 }
 
 export interface Automation {
