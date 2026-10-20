@@ -20,15 +20,27 @@ import {
   autoEnrollPipeline,
   enrollBooking,
   enrollLead,
+  enrollStageEntered,
 } from "@/lib/automation/engine";
 
 interface Payload {
   leadId?: unknown;
+  /** Bulk stage pings (event "stage") — capped server-side. */
+  leadIds?: unknown;
   bookingId?: unknown;
   ownerId?: unknown;
   /** Funnel/profile pipeline override — validated server-side. */
   pipelineId?: unknown;
+  /**
+   * "stage" = the lead's stage changed (Kanban drag, bulk add) — run
+   * ONLY stage_entered automations, never lead_captured: an old lead
+   * being dragged around the board must not get a welcome email.
+   * Absent = a new lead/booking — the full treatment.
+   */
+  event?: unknown;
 }
+
+const MAX_BULK = 100;
 
 export async function POST(req: Request): Promise<NextResponse> {
   if (!isAdminConfigured()) {
@@ -49,14 +61,45 @@ export async function POST(req: Request): Promise<NextResponse> {
   const ownerId = typeof body.ownerId === "string" ? body.ownerId : "";
   const pipelineId =
     typeof body.pipelineId === "string" ? body.pipelineId : undefined;
-  if ((!leadId && !bookingId) || !ownerId) {
-    return NextResponse.json(
-      { ok: false, reason: "missing_fields" },
-      { status: 400 },
-    );
-  }
+  const isStageEvent = body.event === "stage";
+  const leadIds = Array.isArray(body.leadIds)
+    ? (body.leadIds.filter((x) => typeof x === "string") as string[]).slice(
+        0,
+        MAX_BULK,
+      )
+    : [];
 
   try {
+    /* ── Stage-change pings — stage_entered automations only ── */
+    if (isStageEvent) {
+      const ids = leadId ? [leadId] : leadIds;
+      if (ids.length === 0) {
+        return NextResponse.json(
+          { ok: false, reason: "missing_fields" },
+          { status: 400 },
+        );
+      }
+      if (!isEmailConfigured()) {
+        return NextResponse.json({ ok: true, enrolled: 0, sent: 0 });
+      }
+      let enrolled = 0;
+      let sent = 0;
+      for (const id of ids) {
+        const r = await enrollStageEntered(id, ownerId || undefined);
+        enrolled += r.enrolled;
+        sent += r.sent;
+      }
+      return NextResponse.json({ ok: true, enrolled, sent });
+    }
+
+    /* ── New lead / booking — the full treatment ── */
+    if ((!leadId && !bookingId) || !ownerId) {
+      return NextResponse.json(
+        { ok: false, reason: "missing_fields" },
+        { status: 400 },
+      );
+    }
+
     /* 1. Pipeline routing — lands the lead on the owner's Kanban in
        the right pipeline's first stage. Runs BEFORE the automation
        enroll so pipeline-filtered automations see the real
@@ -70,9 +113,19 @@ export async function POST(req: Request): Promise<NextResponse> {
     if (!isEmailConfigured()) {
       return NextResponse.json({ ok: true, pipelined, enrolled: 0, sent: 0 });
     }
-    const result = leadId
-      ? await enrollLead(leadId, ownerId)
-      : await enrollBooking(bookingId, ownerId);
+    if (leadId) {
+      /* lead_captured automations + stage_entered for whatever stage
+         the routing just landed them in. Both dedup internally. */
+      const captured = await enrollLead(leadId, ownerId);
+      const staged = await enrollStageEntered(leadId, ownerId);
+      return NextResponse.json({
+        ok: true,
+        pipelined,
+        enrolled: captured.enrolled + staged.enrolled,
+        sent: captured.sent + staged.sent,
+      });
+    }
+    const result = await enrollBooking(bookingId, ownerId);
     return NextResponse.json({ ok: true, pipelined, ...result });
   } catch (err) {
     console.error("[Credibly] automation enroll failed:", err);

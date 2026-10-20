@@ -208,6 +208,14 @@ export default function AutomationEditorPage() {
       toast.error("Every email step needs a subject and a body.");
       return;
     }
+    if (
+      automation.status === "published" &&
+      automation.trigger === "stage_entered" &&
+      (!automation.triggerPipelineId || !automation.triggerStageId)
+    ) {
+      toast.error("Pick the pipeline and stage that trigger this automation.");
+      return;
+    }
     setSaving(true);
     try {
       await upsertAutomation({
@@ -309,6 +317,10 @@ export default function AutomationEditorPage() {
                   value: "appointment_booked",
                   label: "Appointment booked",
                 },
+                {
+                  value: "stage_entered",
+                  label: "Lead enters a pipeline stage",
+                },
               ]}
             />
           </div>
@@ -330,7 +342,7 @@ export default function AutomationEditorPage() {
           </div>
         </div>
 
-        {!isApptTrigger && (
+        {automation.trigger === "lead_captured" && (
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-600">
               Which leads enroll
@@ -348,6 +360,59 @@ export default function AutomationEditorPage() {
                 })),
               ]}
             />
+          </div>
+        )}
+
+        {automation.trigger === "stage_entered" && (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-600">
+                Pipeline
+              </label>
+              <Select
+                value={automation.triggerPipelineId ?? ""}
+                onChange={(v) =>
+                  /* Switching pipelines resets the stage — the old
+                     stage id belongs to the previous pipeline. */
+                  patch({
+                    triggerPipelineId: v || undefined,
+                    triggerStageId: undefined,
+                  })
+                }
+                options={[
+                  { value: "", label: "— Pick a pipeline —" },
+                  ...pipelines.map((p) => ({ value: p.id, label: p.name })),
+                ]}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-600">
+                When a lead enters stage
+              </label>
+              <Select
+                value={automation.triggerStageId ?? ""}
+                onChange={(v) =>
+                  patch({ triggerStageId: v || undefined })
+                }
+                options={[
+                  { value: "", label: "— Pick a stage —" },
+                  ...(
+                    pipelines.find(
+                      (p) => p.id === automation.triggerPipelineId,
+                    )?.stages ?? []
+                  )
+                    .slice()
+                    .sort((a, b) => a.sortOrder - b.sortOrder)
+                    .map((s) => ({ value: s.id, label: s.name })),
+                ]}
+              />
+            </div>
+            <p className="text-[11px] text-slate-500 sm:col-span-2">
+              Fires the first time a lead lands in this stage — Kanban
+              drag, manual add, bulk add, or a new lead auto-routed
+              there. A lead only ever enrolls once per automation, so
+              moving them out and back doesn&apos;t re-send.
+            </p>
           </div>
         )}
 

@@ -1559,9 +1559,15 @@ export type AutomationStatus = "draft" | "published" | "paused";
  *                          the enrollment carries the appointment datetime
  *                          as its anchor so "wait until X before the
  *                          appointment" steps can compute exact send times
- * Future: "stage_entered", "payment_approved".
+ *   "stage_entered"      — a lead enters a specific pipeline stage
+ *                          (Kanban drag, manual add, bulk add, or the
+ *                          capture auto-routing landing them there)
+ * Future: "payment_approved".
  */
-export type AutomationTrigger = "lead_captured" | "appointment_booked";
+export type AutomationTrigger =
+  | "lead_captured"
+  | "appointment_booked"
+  | "stage_entered";
 
 /**
  * One automated email. `subject` + `body` support the SAME merge
@@ -1645,8 +1651,17 @@ export interface Automation {
   /**
    * Optional pipeline filter — only leads routed into one of these
    * pipelines enroll. Empty / absent = every captured lead enrolls.
+   * (lead_captured trigger only.)
    */
   pipelineIds?: string[];
+  /**
+   * stage_entered trigger config — the (pipeline, stage) pair that
+   * starts this automation. Both required when that trigger is
+   * published. A lead enrolls the FIRST time it enters the stage;
+   * re-entering later never re-enrolls (dedup per automation+lead).
+   */
+  triggerPipelineId?: string;
+  triggerStageId?: string;
   /** Ordered flow. Executed top-to-bottom; waits pause execution. */
   nodes: AutomationNode[];
   settings: AutomationSettings;

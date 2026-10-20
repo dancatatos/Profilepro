@@ -795,6 +795,26 @@ export async function updateLead(
  * and computes the next-task timestamp from the stage's
  * daysBeforeNextTask hint.
  */
+/**
+ * Fire-and-forget ping to the automation engine. The server re-reads
+ * all state from Firestore (never trusts the payload), so callers just
+ * announce "something changed for these leads" and move on. Failures
+ * are swallowed — automations are a side effect, never a blocker.
+ */
+function pingAutomationEnroll(body: Record<string, unknown>): void {
+  if (typeof window === "undefined") return;
+  try {
+    void fetch("/api/automations/enroll", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      keepalive: true,
+    }).catch(() => null);
+  } catch {
+    /* ignore */
+  }
+}
+
 export async function moveLeadToStage(
   leadId: string,
   pipelineId: string,
@@ -814,6 +834,9 @@ export async function moveLeadToStage(
     patch.nextTaskAt = null; // no follow-up due — terminal stage
   }
   await updateDoc(doc(db, COL.leads, leadId), patch);
+  /* Stage-entered automations — "stage" event runs ONLY those, so an
+     old lead dragged across the Kanban never gets a welcome email. */
+  pingAutomationEnroll({ leadId, event: "stage" });
   /* Fire any training auto-grants attached to this (pipeline, stage)
      pair. Best-effort — failures here mustn't block the stage move
      itself (the auto-grant is a nice-to-have, the move is the
@@ -949,6 +972,12 @@ export async function enrollLeadsInPipeline(
     nextTaskAt,
   };
 
+  /* Stage-entered automations for the bulk add — one ping, server
+     loops (capped there). Fired before the writes complete would race
+     the server's read, so it goes after the loop below. */
+  const pingAfter = () =>
+    pingAutomationEnroll({ leadIds: leadIds.slice(0, 100), event: "stage" });
+
   /* Chunk into 450 so each batch stays comfortably below Firestore's
      500-op ceiling (includes any internal index updates the SDK adds). */
   const CHUNK = 450;
@@ -960,6 +989,7 @@ export async function enrollLeadsInPipeline(
     }
     await batch.commit();
   }
+  pingAfter();
 }
 
 /**

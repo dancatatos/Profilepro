@@ -131,6 +131,15 @@ export function AddLeadModal({
         ...payload,
         serverCreatedAt: serverTimestamp(),
       });
+      /* Manually-added leads are NEW leads — fire the full automation
+         treatment (lead_captured + stage_entered for the stage they
+         were placed in). Fire-and-forget; never blocks the save. */
+      fetch("/api/automations/enroll", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leadId: ref.id, ownerId }),
+        keepalive: true,
+      }).catch(() => null);
       onAdded({ ...payload, id: ref.id });
       toast.success(`Added ${trimmed} to ${stage.name}.`);
       onClose();

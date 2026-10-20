@@ -656,6 +656,81 @@ export async function enrollBooking(
 }
 
 /**
+ * Enroll a lead into stage_entered automations matching the stage it
+ * CURRENTLY sits in. The server reads pipeline/stage from the lead doc
+ * itself (never from the caller), so a stale or malicious ping can't
+ * enroll into the wrong stage. ownerId, when provided, acts as an
+ * extra consistency check; when omitted it derives from the lead.
+ * Dedup per (automation, lead) — first entry into the stage enrolls,
+ * re-entering later never re-sends.
+ */
+export async function enrollStageEntered(
+  leadId: string,
+  ownerId?: string,
+): Promise<{ enrolled: number; sent: number }> {
+  const db = getAdminDb();
+  const zero = { enrolled: 0, sent: 0 };
+
+  const leadSnap = await db.collection("leads").doc(leadId).get();
+  if (!leadSnap.exists) return zero;
+  const lead = { ...(leadSnap.data() as Lead), id: leadSnap.id } as Lead;
+  if (ownerId && lead.ownerId !== ownerId) return zero;
+  if (!lead.pipelineId || !lead.stageId) return zero;
+  if (!lead.email || lead.unsubscribed) return zero;
+
+  const autosSnap = await db
+    .collection("automations")
+    .where("ownerId", "==", lead.ownerId)
+    .where("status", "==", "published")
+    .where("trigger", "==", "stage_entered")
+    .get();
+
+  let enrolled = 0;
+  let sent = 0;
+  for (const doc of autosSnap.docs) {
+    const automation = { ...(doc.data() as Automation), id: doc.id };
+    if (
+      automation.triggerPipelineId !== lead.pipelineId ||
+      automation.triggerStageId !== lead.stageId
+    ) {
+      continue;
+    }
+    if ((automation.nodes ?? []).length === 0) continue;
+
+    const existing = await db
+      .collection("automation_enrollments")
+      .where("automationId", "==", automation.id)
+      .where("leadId", "==", leadId)
+      .limit(1)
+      .get();
+    if (!existing.empty) continue;
+
+    const now = Date.now();
+    const enrollRef = db.collection("automation_enrollments").doc();
+    const enrollment: AutomationEnrollment = {
+      id: enrollRef.id,
+      automationId: automation.id,
+      ownerId: lead.ownerId,
+      leadId,
+      nextNodeIndex: 0,
+      status: "active",
+      dueAt: now,
+      createdAt: now,
+      updatedAt: now,
+    };
+    await enrollRef.set(enrollment);
+    await doc.ref.update({
+      enrollCount: (automation.enrollCount ?? 0) + 1,
+    });
+    enrolled += 1;
+
+    const r = await runEnrollment({ automation, enrollment });
+    sent += r.sent;
+  }
+  return { enrolled, sent };
+}
+
+/**
  * Cron worker: continue every active enrollment whose dueAt has
  * passed. Batched so a pile-up can't blow the function timeout —
  * anything beyond the batch waits for the next tick.
