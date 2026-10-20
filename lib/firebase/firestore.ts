@@ -612,16 +612,30 @@ export async function deleteAutomation(id: string): Promise<void> {
   await deleteDoc(doc(db, COL.automations, id));
 }
 
+export interface AutomationNodeStats {
+  sends: number;
+  opens: number;
+  clicks: number;
+}
+
+export interface AutomationStats extends AutomationNodeStats {
+  /** Per email-step counts keyed by node id — the editor shows these
+      on each step so the owner can watch a sequence progress. */
+  byNode: Record<string, AutomationNodeStats>;
+}
+
 /**
- * Owner-side stats for one automation: send / open / click counts.
- * Reads the server-written automation_sends log (rules allow owner
- * reads). Capped at 500 recent sends — enough for the editor header.
+ * Owner-side stats for one automation: send / open / click counts,
+ * total and per email step. Reads the server-written automation_sends
+ * log (rules allow owner reads). Capped at 500 recent sends — enough
+ * for the editor header.
  */
 export async function getAutomationStats(
   automationId: string,
   ownerId: string,
-): Promise<{ sends: number; opens: number; clicks: number }> {
-  if (!isFirebaseConfigured) return { sends: 0, opens: 0, clicks: 0 };
+): Promise<AutomationStats> {
+  if (!isFirebaseConfigured)
+    return { sends: 0, opens: 0, clicks: 0, byNode: {} };
   const snap = await getDocs(
     query(
       collection(db, COL.automationSends),
@@ -632,12 +646,19 @@ export async function getAutomationStats(
   );
   let opens = 0;
   let clicks = 0;
+  const byNode: Record<string, AutomationNodeStats> = {};
   for (const d of snap.docs) {
     const data = d.data() as AutomationSend;
     if (data.openedAt) opens += 1;
     if (data.clickedAt) clicks += 1;
+    if (data.nodeId) {
+      const n = (byNode[data.nodeId] ??= { sends: 0, opens: 0, clicks: 0 });
+      n.sends += 1;
+      if (data.openedAt) n.opens += 1;
+      if (data.clickedAt) n.clicks += 1;
+    }
   }
-  return { sends: snap.size, opens, clicks };
+  return { sends: snap.size, opens, clicks, byNode };
 }
 
 /**
@@ -813,6 +834,17 @@ function pingAutomationEnroll(body: Record<string, unknown>): void {
   } catch {
     /* ignore */
   }
+}
+
+/**
+ * Fire-and-forget "flush due sequence emails now" ping — called when
+ * the owner opens an automations page. The 10-minute GitHub cron is
+ * best-effort, so the owner looking at their automations doubles as an
+ * extra tick: any overdue wait/schedule step sends right away instead
+ * of waiting for the next cron pass.
+ */
+export function pingAutomationTick(): void {
+  pingAutomationEnroll({ event: "tick" });
 }
 
 export async function moveLeadToStage(

@@ -21,7 +21,25 @@ import {
   enrollBooking,
   enrollLead,
   enrollStageEntered,
+  processDue,
 } from "@/lib/automation/engine";
+
+/**
+ * Opportunistic queue flush. GitHub's free scheduler is best-effort
+ * (observed lagging hours behind), so every enroll/stage/tick request
+ * also processes a batch of due enrollments — lead activity and the
+ * owner simply using the app keep the sequence emails flowing even
+ * between cron ticks. processDue claims atomically, so overlapping
+ * with the real cron is safe. Failures are swallowed: flushing is a
+ * bonus, never a reason to fail the actual enroll.
+ */
+async function flushDue(): Promise<void> {
+  try {
+    await processDue(25);
+  } catch {
+    /* ignore — the cron will catch up */
+  }
+}
 
 interface Payload {
   leadId?: unknown;
@@ -70,6 +88,18 @@ export async function POST(req: Request): Promise<NextResponse> {
     : [];
 
   try {
+    /* ── Tick pings — flush due sequence emails, nothing else ──
+       Sent by the app's automation pages on load. Unauthenticated is
+       fine: processing due enrollments is exactly what the cron does,
+       and a stranger calling it only makes emails go out ON TIME. */
+    if (body.event === "tick") {
+      if (!isEmailConfigured()) {
+        return NextResponse.json({ ok: true, processed: 0, sent: 0 });
+      }
+      const r = await processDue(50);
+      return NextResponse.json({ ok: true, ...r });
+    }
+
     /* ── Stage-change pings — stage_entered automations only ── */
     if (isStageEvent) {
       const ids = leadId ? [leadId] : leadIds;
@@ -89,6 +119,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         enrolled += r.enrolled;
         sent += r.sent;
       }
+      await flushDue();
       return NextResponse.json({ ok: true, enrolled, sent });
     }
 
@@ -118,6 +149,7 @@ export async function POST(req: Request): Promise<NextResponse> {
          the routing just landed them in. Both dedup internally. */
       const captured = await enrollLead(leadId, ownerId);
       const staged = await enrollStageEntered(leadId, ownerId);
+      await flushDue();
       return NextResponse.json({
         ok: true,
         pipelined,
@@ -126,6 +158,7 @@ export async function POST(req: Request): Promise<NextResponse> {
       });
     }
     const result = await enrollBooking(bookingId, ownerId);
+    await flushDue();
     return NextResponse.json({ ok: true, pipelined, ...result });
   } catch (err) {
     console.error("[Credibly] automation enroll failed:", err);

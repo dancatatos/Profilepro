@@ -19,7 +19,11 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/common/EmptyState";
 import { FullScreenLoader } from "@/components/ui/Spinner";
-import { listAutomations, upsertAutomation } from "@/lib/firebase/firestore";
+import {
+  listAutomations,
+  pingAutomationTick,
+  upsertAutomation,
+} from "@/lib/firebase/firestore";
 import { uid } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
 import type { Automation } from "@/types";
@@ -50,6 +54,9 @@ export default function AutomationsPage() {
 
   useEffect(() => {
     load();
+    /* Opening this page doubles as a cron tick — overdue sequence
+       emails flush immediately instead of waiting for the scheduler. */
+    pingAutomationTick();
   }, [load]);
 
   const createAutomation = async () => {

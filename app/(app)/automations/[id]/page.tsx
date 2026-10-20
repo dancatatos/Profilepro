@@ -37,7 +37,9 @@ import {
   getAutomation,
   getAutomationStats,
   listPipelinesForUser,
+  pingAutomationTick,
   upsertAutomation,
+  type AutomationStats,
 } from "@/lib/firebase/firestore";
 import { cn, uid } from "@/lib/utils";
 import { toast } from "@/store/uiStore";
@@ -77,11 +79,7 @@ export default function AutomationEditorPage() {
 
   const [automation, setAutomation] = useState<Automation | null>(null);
   const [pipelines, setPipelines] = useState<Pipeline[]>([]);
-  const [stats, setStats] = useState<{
-    sends: number;
-    opens: number;
-    clicks: number;
-  } | null>(null);
+  const [stats, setStats] = useState<AutomationStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -105,6 +103,10 @@ export default function AutomationEditorPage() {
 
   useEffect(() => {
     load();
+    /* Opening the editor doubles as a cron tick — overdue sequence
+       emails flush immediately, and the stats the owner is about to
+       look at reflect them. */
+    pingAutomationTick();
   }, [load]);
 
   if (authLoading || loading) {
@@ -547,6 +549,21 @@ export default function AutomationEditorPage() {
                       ? "Before the appointment"
                       : "Wait"}
               </p>
+              {node.type === "email" && stats?.byNode[node.id] && (
+                <span className="hidden shrink-0 items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-medium text-slate-600 sm:flex">
+                  <Send className="h-3 w-3 text-electric-600" />
+                  {stats.byNode[node.id].sends} sent
+                  <span className="text-slate-300">·</span>
+                  <Eye className="h-3 w-3 text-jade-600" />
+                  {stats.byNode[node.id].opens} opened
+                  {stats.byNode[node.id].clicks > 0 && (
+                    <>
+                      <span className="text-slate-300">·</span>
+                      {stats.byNode[node.id].clicks} clicked
+                    </>
+                  )}
+                </span>
+              )}
               <button
                 type="button"
                 onClick={() => moveNode(idx, -1)}
