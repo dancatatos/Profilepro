@@ -44,6 +44,16 @@ const APP_URL = () =>
 /** Hard cap on nodes executed in one pass — guards against bad data. */
 const MAX_STEPS_PER_RUN = 50;
 
+/**
+ * Lateness grace for schedule steps with ifPast "skip". The cron ticks
+ * every ~10 minutes, so a send firing a few minutes after its exact
+ * moment is normal operation — within this grace it still sends.
+ * Beyond it (cron outage, secret missing, long downtime) the moment is
+ * considered gone and the flow stops instead of sending stale,
+ * time-bound content.
+ */
+const SCHEDULE_GRACE_MS = 3_600_000; // 1 hour
+
 /* ── Send window ─────────────────────────────────────────────── */
 
 function hourIn(d: Date, tz: string): number {
@@ -288,13 +298,15 @@ async function runEnrollment({ automation, enrollment }: RunDeps): Promise<{
     }
 
     if (node.type === "schedule") {
-      if (node.at <= Date.now()) {
-        if (node.ifPast === "skip") {
-          /* The moment passed before this recipient got here — the
-             time-bound campaign is over for them. End cleanly. */
+      const lateMs = Date.now() - node.at;
+      if (lateMs >= 0) {
+        if (node.ifPast === "skip" && lateMs > SCHEDULE_GRACE_MS) {
+          /* More than the grace past the moment — the time-bound
+             campaign is over for this recipient. End cleanly. */
           await finish({ status: "completed", nextNodeIndex: i });
           return { sent };
         }
+        /* On time or within grace — proceed. */
         i += 1;
         continue;
       }
@@ -326,7 +338,20 @@ async function runEnrollment({ automation, enrollment }: RunDeps): Promise<{
     /* An email directly after a schedule step inherits that step's
        explicit datetime — the owner picked 9 PM on purpose, so the
        send window must not push it to tomorrow morning. */
-    const afterSchedule = automation.nodes[i - 1]?.type === "schedule";
+    const prevNode = automation.nodes[i - 1];
+    const afterSchedule = prevNode?.type === "schedule";
+    /* Grace check on RESUME: an enrollment parked at a schedule step
+       that the cron only picked up much later (outage, missing
+       secret) must honour the same 1-hour cutoff as late enrollees —
+       otherwise a "doors open NOW" email could land a day late. */
+    if (
+      afterSchedule &&
+      prevNode.ifPast === "skip" &&
+      Date.now() - prevNode.at > SCHEDULE_GRACE_MS
+    ) {
+      await finish({ status: "completed", nextNodeIndex: i });
+      return { sent };
+    }
     if (!timeCritical && !afterSchedule) {
       const windowed = applyWindow(new Date(), automation.settings);
       if (windowed.getTime() > Date.now() + 60_000) {

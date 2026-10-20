@@ -542,7 +542,8 @@ export default function AutomationEditorPage() {
                       },
                       {
                         value: "skip",
-                        label: "If the date already passed: stop the flow",
+                        label:
+                          "If more than 1 hour late: stop the flow",
                       },
                     ]}
                     className="w-full sm:w-96"
@@ -551,8 +552,12 @@ export default function AutomationEditorPage() {
                 <p className="text-[10px] text-slate-500">
                   Sends at this exact time even outside the send window —
                   the date you pick is the schedule. &ldquo;Stop the
-                  flow&rdquo; suits launch-day campaigns; &ldquo;continue
-                  anyway&rdquo; suits evergreen content.
+                  flow&rdquo; has a 1-hour allowance: up to an hour late
+                  still sends (the engine checks every ~10 minutes, so a
+                  few minutes&rsquo; delay is normal); beyond that the
+                  moment is treated as missed. Suits launch-day
+                  campaigns. &ldquo;Continue anyway&rdquo; suits evergreen
+                  content.
                 </p>
               </div>
             ) : (

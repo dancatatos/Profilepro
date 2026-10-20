@@ -1602,11 +1602,14 @@ export interface AutomationWaitUntilNode {
 /**
  * Absolute-datetime wait — "hold here until {at}, then continue".
  * Works on every trigger (no anchor needed; the date IS the anchor).
- * `ifPast` decides what happens when someone reaches this step after
- * the moment already passed:
+ * `ifPast` decides what happens when the step is reached (or resumed)
+ * after the moment already passed:
  *   "continue" (default) — proceed immediately (evergreen content)
- *   "skip"               — end the flow (time-bound campaign is over;
- *                          don't send stale "today's the day!" emails)
+ *   "skip"               — end the flow when MORE than 1 hour late
+ *                          (SCHEDULE_GRACE_MS in the engine). Within
+ *                          the hour still sends — the cron ticks every
+ *                          ~10 min, so minutes-late is normal
+ *                          operation, not a missed moment.
  */
 export interface AutomationScheduleNode {
   id: string;
