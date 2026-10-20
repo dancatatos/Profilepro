@@ -100,6 +100,14 @@ export async function POST(req: Request): Promise<NextResponse<Result>> {
     );
   }
 
+  /* ── Personalized sender ──
+     The blast reads as coming from the LEADER ("Maria Santos via
+     Credibly") instead of the bare platform name, and replies land in
+     the leader's real inbox. Missing owner doc degrades to the
+     platform default sender — never blocks the send. */
+  const ownerSnap = await db.collection("users").doc(event.ownerId).get();
+  const owner = ownerSnap.exists ? (ownerSnap.data() as AccountUser) : null;
+
   /* ── Resolve team + members ── */
   const teamSnap = await db.collection("team_spaces").doc(event.teamSpaceId).get();
   if (!teamSnap.exists) {
@@ -179,6 +187,8 @@ export async function POST(req: Request): Promise<NextResponse<Result>> {
       subject,
       html,
       category: "event_created",
+      fromName: owner?.displayName,
+      replyTo: owner?.email,
     });
     if (res.ok) sent += 1;
     else failed += 1;

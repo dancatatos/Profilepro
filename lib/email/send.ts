@@ -28,6 +28,38 @@ export interface SendEmailOptions {
   category?: string;
   /** Optional Reply-To address — defaults to no reply-to header. */
   replyTo?: string;
+  /**
+   * Personalized sender display name. When set, the From header becomes
+   * `"{fromName} via Credibly" <configured-address>` — the DocuSign /
+   * Calendly pattern. The ADDRESS part always stays on our verified
+   * domain (deliverability: SPF/DKIM only authorize our domain), only
+   * the display name changes. Pair with `replyTo` so responses land in
+   * the sender's real inbox. Unset = the platform default sender.
+   */
+  fromName?: string;
+}
+
+/**
+ * Build the From header. The display name is user-controlled text, so
+ * strip every character with meaning inside an email header (angle
+ * brackets, quotes, newlines, separators) to rule out header injection,
+ * and cap the length so inbox UIs don't truncate awkwardly.
+ */
+function buildFrom(fromName?: string): string {
+  const configured = getEmailFrom();
+  if (!fromName) return configured;
+  const clean = fromName
+    .replace(/[<>"\\\r\n;,@]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 48)
+    .trim();
+  if (!clean) return configured;
+  /* Pull the bare address out of `Name <addr>` (or use as-is when the
+     env var holds a bare address). */
+  const match = configured.match(/<([^>]+)>/);
+  const address = match ? match[1] : configured;
+  return `${clean} via Credibly <${address}>`;
 }
 
 export type SendEmailResult =
@@ -47,7 +79,7 @@ export async function sendEmail(
   }
   try {
     const { data, error } = await client.emails.send({
-      from: getEmailFrom(),
+      from: buildFrom(opts.fromName),
       to: opts.to,
       subject: opts.subject,
       html: opts.html,

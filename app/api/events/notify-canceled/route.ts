@@ -92,6 +92,12 @@ export async function POST(req: Request): Promise<NextResponse<Result>> {
     );
   }
 
+  /* Personalized sender — cancellation reads as coming from the leader,
+     replies go to their inbox. Falls back to the platform sender when
+     the owner doc is missing. */
+  const ownerSnap = await db.collection("users").doc(event.ownerId).get();
+  const owner = ownerSnap.exists ? (ownerSnap.data() as AccountUser) : null;
+
   /* RSVPs that were planning to attend get the heads-up. */
   const rsvpSnap = await db
     .collection("event_rsvps")
@@ -131,6 +137,8 @@ export async function POST(req: Request): Promise<NextResponse<Result>> {
       subject,
       html,
       category: "event_canceled",
+      fromName: owner?.displayName,
+      replyTo: owner?.email,
     });
     if (res.ok) sent += 1;
     else failed += 1;

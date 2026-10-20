@@ -143,6 +143,16 @@ export async function GET(req: Request): Promise<NextResponse<CronResult>> {
       continue;
     }
 
+    /* Personalized sender — reminders read as coming from the event's
+       leader, replies land in their inbox. Reuses the user cache since
+       the owner is often also an RSVP'd recipient on other events. */
+    let eventOwner = userCache.get(event.ownerId);
+    if (eventOwner === undefined) {
+      const os = await db.collection("users").doc(event.ownerId).get();
+      eventOwner = os.exists ? (os.data() as AccountUser) : null;
+      userCache.set(event.ownerId, eventOwner);
+    }
+
     /* Build display copy once per event. */
     const start = new Date(event.startAt);
     const whenLine = `${start.toLocaleString("en-PH", {
@@ -185,6 +195,8 @@ export async function GET(req: Request): Promise<NextResponse<CronResult>> {
           subject,
           html,
           category: "event_reminder",
+          fromName: eventOwner?.displayName,
+          replyTo: eventOwner?.email,
         });
         if (res.ok) result.emailsSent += 1;
         else result.emailsFailed += 1;
