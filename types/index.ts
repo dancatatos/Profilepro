@@ -1599,10 +1599,28 @@ export interface AutomationWaitUntilNode {
   unit: "minutes" | "hours" | "days";
 }
 
+/**
+ * Absolute-datetime wait — "hold here until {at}, then continue".
+ * Works on every trigger (no anchor needed; the date IS the anchor).
+ * `ifPast` decides what happens when someone reaches this step after
+ * the moment already passed:
+ *   "continue" (default) — proceed immediately (evergreen content)
+ *   "skip"               — end the flow (time-bound campaign is over;
+ *                          don't send stale "today's the day!" emails)
+ */
+export interface AutomationScheduleNode {
+  id: string;
+  type: "schedule";
+  /** Epoch ms of the exact resume moment. */
+  at: number;
+  ifPast?: "continue" | "skip";
+}
+
 export type AutomationNode =
   | AutomationEmailNode
   | AutomationWaitNode
-  | AutomationWaitUntilNode;
+  | AutomationWaitUntilNode
+  | AutomationScheduleNode;
 
 export interface AutomationSettings {
   /**

@@ -287,6 +287,22 @@ async function runEnrollment({ automation, enrollment }: RunDeps): Promise<{
       return { sent };
     }
 
+    if (node.type === "schedule") {
+      if (node.at <= Date.now()) {
+        if (node.ifPast === "skip") {
+          /* The moment passed before this recipient got here — the
+             time-bound campaign is over for them. End cleanly. */
+          await finish({ status: "completed", nextNodeIndex: i });
+          return { sent };
+        }
+        i += 1;
+        continue;
+      }
+      /* Exact datetime is the owner's explicit intent — no window. */
+      await finish({ nextNodeIndex: i + 1, dueAt: node.at });
+      return { sent };
+    }
+
     if (node.type === "wait_until") {
       const anchor = enrollment.anchorAt ?? 0;
       if (!anchor || anchor <= Date.now()) {
@@ -307,7 +323,11 @@ async function runEnrollment({ automation, enrollment }: RunDeps): Promise<{
     }
 
     /* email node */
-    if (!timeCritical) {
+    /* An email directly after a schedule step inherits that step's
+       explicit datetime — the owner picked 9 PM on purpose, so the
+       send window must not push it to tomorrow morning. */
+    const afterSchedule = automation.nodes[i - 1]?.type === "schedule";
+    if (!timeCritical && !afterSchedule) {
       const windowed = applyWindow(new Date(), automation.settings);
       if (windowed.getTime() > Date.now() + 60_000) {
         /* Outside the send window — hold THIS node until it opens. */

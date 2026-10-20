@@ -15,6 +15,7 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowUp,
+  CalendarClock,
   Mail,
   MousePointerClick,
   Plus,
@@ -43,10 +44,23 @@ import { toast } from "@/store/uiStore";
 import type {
   Automation,
   AutomationNode,
+  AutomationScheduleNode,
   AutomationWaitNode,
   AutomationWaitUntilNode,
   Pipeline,
 } from "@/types";
+
+/** Epoch ms ⇄ <input type="datetime-local"> value (browser-local). */
+function toLocalInput(ms: number): string {
+  if (!ms) return "";
+  const d = new Date(ms);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function fromLocalInput(v: string): number {
+  const ms = Date.parse(v);
+  return Number.isFinite(ms) ? ms : 0;
+}
 
 const FIELD =
   "h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-electric-500 focus:ring-2 focus:ring-electric-500/15";
@@ -154,6 +168,25 @@ export default function AutomationEditorPage() {
       nodes: [
         ...automation.nodes,
         { id: uid("n"), type: "wait_until", amount: 1, unit: "hours" },
+      ],
+    });
+
+  const addSchedule = () =>
+    patch({
+      nodes: [
+        ...automation.nodes,
+        {
+          id: uid("n"),
+          type: "schedule",
+          /* Default: tomorrow 9 AM local — a sane editable starting point. */
+          at: (() => {
+            const d = new Date();
+            d.setDate(d.getDate() + 1);
+            d.setHours(9, 0, 0, 0);
+            return d.getTime();
+          })(),
+          ifPast: "continue",
+        },
       ],
     });
 
@@ -372,11 +405,15 @@ export default function AutomationEditorPage() {
                   "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
                   node.type === "email"
                     ? "bg-electric-500/10 text-electric-600"
-                    : "bg-amber-500/10 text-amber-700",
+                    : node.type === "schedule"
+                      ? "bg-jade-500/10 text-jade-600"
+                      : "bg-amber-500/10 text-amber-700",
                 )}
               >
                 {node.type === "email" ? (
                   <Mail className="h-4 w-4" />
+                ) : node.type === "schedule" ? (
+                  <CalendarClock className="h-4 w-4" />
                 ) : (
                   <Timer className="h-4 w-4" />
                 )}
@@ -385,9 +422,11 @@ export default function AutomationEditorPage() {
                 {idx + 1} ·{" "}
                 {node.type === "email"
                   ? "Send email"
-                  : node.type === "wait_until"
-                    ? "Before the appointment"
-                    : "Wait"}
+                  : node.type === "schedule"
+                    ? "Wait until a specific date & time"
+                    : node.type === "wait_until"
+                      ? "Before the appointment"
+                      : "Wait"}
               </p>
               <button
                 type="button"
@@ -469,6 +508,53 @@ export default function AutomationEditorPage() {
                   becomes a real clickable link in the email.
                 </p>
               </div>
+            ) : node.type === "schedule" ? (
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    type="datetime-local"
+                    value={toLocalInput((node as AutomationScheduleNode).at)}
+                    onChange={(e) =>
+                      patchNode(node.id, {
+                        at: fromLocalInput(e.target.value),
+                      })
+                    }
+                    className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-electric-500"
+                  />
+                  <span className="text-xs text-slate-500">
+                    hold here, then continue at this exact moment
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Select
+                    value={
+                      (node as AutomationScheduleNode).ifPast ?? "continue"
+                    }
+                    onChange={(v) =>
+                      patchNode(node.id, {
+                        ifPast: v as AutomationScheduleNode["ifPast"],
+                      })
+                    }
+                    options={[
+                      {
+                        value: "continue",
+                        label: "If the date already passed: continue anyway",
+                      },
+                      {
+                        value: "skip",
+                        label: "If the date already passed: stop the flow",
+                      },
+                    ]}
+                    className="w-full sm:w-96"
+                  />
+                </div>
+                <p className="text-[10px] text-slate-500">
+                  Sends at this exact time even outside the send window —
+                  the date you pick is the schedule. &ldquo;Stop the
+                  flow&rdquo; suits launch-day campaigns; &ldquo;continue
+                  anyway&rdquo; suits evergreen content.
+                </p>
+              </div>
             ) : (
               <div className="flex items-center gap-2">
                 <input
@@ -522,6 +608,14 @@ export default function AutomationEditorPage() {
             leftIcon={<Timer className="h-3.5 w-3.5" />}
           >
             Add wait
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={addSchedule}
+            leftIcon={<CalendarClock className="h-3.5 w-3.5" />}
+          >
+            Add date &amp; time
           </Button>
           {isApptTrigger && (
             <Button
