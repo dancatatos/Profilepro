@@ -86,7 +86,10 @@
       "Read(//c/Users/Project/Desktop/Volten/Legends System/**)",
       "Read(//c/Users/Project/Desktop/Volten/Legends System/app/**)",
       "Bash(ls \"C:\\\\Users\\\\Project\\\\Desktop\\\\Volten\" 2>&1)",
-      "Bash(gh auth *)"
+      "Bash(gh auth *)",
+      "Bash(node \"C:\\\\Users\\\\Project\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-Project-Desktop-Firebase-Project-Portfolio-builder\\\\65ee801f-f6ea-4a46-af6f-f94972cc088b\\\\scratchpad\\\\diagnose-automation.js\")",
+      "Bash(awk '/FIREBASE_ADMIN_PRIVATE_KEY/{print length\\($0\\); exit}' .env.local)",
+      "Bash(powershell -Command \"Get-Date -Format 'yyyy-MM-dd HH:mm K'; [TimeZoneInfo]::Local.DisplayName\")"
     ]
   }
 }

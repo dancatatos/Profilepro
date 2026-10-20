@@ -407,10 +407,18 @@ async function runEnrollment({ automation, enrollment }: RunDeps): Promise<{
         subject,
         sentAt: Date.now(),
       });
+    } else {
+      /* Send failures are skipped, not retried — a hard bounce retried
+         daily forever would hurt the sending domain's reputation. The
+         sequence continues so one bad send doesn't strand the lead.
+         LOUDLY logged though: "no email arrived" bugs are opaque
+         without this line in the Vercel function logs. */
+      console.error(
+        `[Credibly] automation send FAILED — automation=${automation.id} node=${node.id} to=${recipient.email} reason=${res.reason}${
+          "error" in res && res.error ? ` error=${res.error}` : ""
+        }`,
+      );
     }
-    /* Send failures are skipped, not retried — a hard bounce retried
-       daily forever would hurt the sending domain's reputation. The
-       sequence continues so one bad send doesn't strand the lead. */
 
     i += 1;
   }
