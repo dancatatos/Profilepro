@@ -79,14 +79,20 @@ export function PublicProfileView({
         ? { customAnswers: data.customAnswers }
         : {}),
     });
-    /* Fire-and-forget: enroll the lead into the owner's published
-       email automations. keepalive lets the request survive an
-       immediate navigation; failures never block the visitor. */
-    if (leadId && data.email) {
+    /* Fire-and-forget: route the lead into the owner's follow-up
+       pipeline (profile pipelineId override → default pipeline) and
+       enroll into published email automations. Always fired — pipeline
+       routing matters even for phone-only leads. keepalive survives
+       an immediate navigation; failures never block the visitor. */
+    if (leadId) {
       fetch("/api/automations/enroll", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ leadId, ownerId: profile.ownerId }),
+        body: JSON.stringify({
+          leadId,
+          ownerId: profile.ownerId,
+          ...(profile.pipelineId ? { pipelineId: profile.pipelineId } : {}),
+        }),
         keepalive: true,
       }).catch(() => null);
     }

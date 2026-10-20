@@ -145,13 +145,19 @@ export function FunnelView({
           ? { customAnswers: data.customAnswers }
           : {}),
       });
-      /* Fire-and-forget automation enroll — keepalive survives the
-         funnel auto-advance; failures never block the visitor. */
-      if (leadId && data.email) {
+      /* Fire-and-forget: pipeline routing (funnel pipelineId override
+         → owner default) + automation enroll. Always fired — pipeline
+         routing matters even for phone-only leads. keepalive survives
+         the funnel auto-advance. */
+      if (leadId) {
         fetch("/api/automations/enroll", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ leadId, ownerId }),
+          body: JSON.stringify({
+            leadId,
+            ownerId,
+            ...(funnel.pipelineId ? { pipelineId: funnel.pipelineId } : {}),
+          }),
           keepalive: true,
         }).catch(() => null);
       }

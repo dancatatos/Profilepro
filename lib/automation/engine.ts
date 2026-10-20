@@ -33,6 +33,7 @@ import type {
   AutomationSettings,
   Booking,
   Lead,
+  Pipeline,
 } from "@/types";
 
 const APP_URL = () =>
@@ -420,6 +421,75 @@ async function runEnrollment({ automation, enrollment }: RunDeps): Promise<{
 }
 
 /* ── Public API ──────────────────────────────────────────────── */
+
+/**
+ * Route a freshly captured lead into a follow-up pipeline — the
+ * server-side version of the long-dead autoEnrollLeadInDefaultPipeline
+ * (which could never run: anonymous visitors can't read pipelines or
+ * update leads under Firestore rules; the Admin SDK can).
+ *
+ * Pipeline resolution: the caller's preferred pipeline (the funnel's
+ * or profile's pipelineId override, validated to belong to the owner)
+ * → else the owner's default pipeline. The lead lands in the first
+ * stage with the stage's daysBeforeNextTask driving nextTaskAt — the
+ * exact shape moveLeadToStage() writes, so the Kanban, daily task
+ * list, and nav badge all pick it up natively. No-ops when the lead
+ * is already in a pipeline or the owner has none.
+ */
+export async function autoEnrollPipeline(
+  leadId: string,
+  ownerId: string,
+  preferredPipelineId?: string,
+): Promise<boolean> {
+  const db = getAdminDb();
+  const leadRef = db.collection("leads").doc(leadId);
+  const leadSnap = await leadRef.get();
+  if (!leadSnap.exists) return false;
+  const lead = leadSnap.data() as Lead;
+  if (lead.ownerId !== ownerId) return false;
+  if (lead.pipelineId) return false;
+
+  let pipeline: Pipeline | null = null;
+  if (preferredPipelineId) {
+    const ps = await db
+      .collection("pipelines")
+      .doc(preferredPipelineId)
+      .get()
+      .catch(() => null);
+    if (ps?.exists) {
+      const p = ps.data() as Pipeline;
+      if (p.ownerId === ownerId) pipeline = { ...p, id: ps.id };
+    }
+  }
+  if (!pipeline) {
+    const ds = await db
+      .collection("pipelines")
+      .where("ownerId", "==", ownerId)
+      .where("isDefault", "==", true)
+      .limit(1)
+      .get()
+      .catch(() => null);
+    if (ds && !ds.empty) {
+      pipeline = { ...(ds.docs[0].data() as Pipeline), id: ds.docs[0].id };
+    }
+  }
+  if (!pipeline || (pipeline.stages ?? []).length === 0) return false;
+
+  const first = [...pipeline.stages].sort(
+    (a, b) => a.sortOrder - b.sortOrder,
+  )[0];
+  const now = Date.now();
+  await leadRef.update({
+    pipelineId: pipeline.id,
+    stageId: first.id,
+    stageEnteredAt: now,
+    nextTaskAt:
+      first.daysBeforeNextTask && first.daysBeforeNextTask > 0
+        ? now + first.daysBeforeNextTask * 86_400_000
+        : null,
+  });
+  return true;
+}
 
 /**
  * Enroll a freshly captured lead into every matching published

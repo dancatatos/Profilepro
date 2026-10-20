@@ -16,16 +16,22 @@
 import { NextResponse } from "next/server";
 import { isAdminConfigured } from "@/lib/firebase/admin";
 import { isEmailConfigured } from "@/lib/email/client";
-import { enrollBooking, enrollLead } from "@/lib/automation/engine";
+import {
+  autoEnrollPipeline,
+  enrollBooking,
+  enrollLead,
+} from "@/lib/automation/engine";
 
 interface Payload {
   leadId?: unknown;
   bookingId?: unknown;
   ownerId?: unknown;
+  /** Funnel/profile pipeline override — validated server-side. */
+  pipelineId?: unknown;
 }
 
 export async function POST(req: Request): Promise<NextResponse> {
-  if (!isAdminConfigured() || !isEmailConfigured()) {
+  if (!isAdminConfigured()) {
     return NextResponse.json({ ok: false, reason: "not_configured" });
   }
 
@@ -41,6 +47,8 @@ export async function POST(req: Request): Promise<NextResponse> {
   const leadId = typeof body.leadId === "string" ? body.leadId : "";
   const bookingId = typeof body.bookingId === "string" ? body.bookingId : "";
   const ownerId = typeof body.ownerId === "string" ? body.ownerId : "";
+  const pipelineId =
+    typeof body.pipelineId === "string" ? body.pipelineId : undefined;
   if ((!leadId && !bookingId) || !ownerId) {
     return NextResponse.json(
       { ok: false, reason: "missing_fields" },
@@ -49,10 +57,23 @@ export async function POST(req: Request): Promise<NextResponse> {
   }
 
   try {
+    /* 1. Pipeline routing — lands the lead on the owner's Kanban in
+       the right pipeline's first stage. Runs BEFORE the automation
+       enroll so pipeline-filtered automations see the real
+       pipelineId. Works even when email isn't configured. */
+    let pipelined = false;
+    if (leadId) {
+      pipelined = await autoEnrollPipeline(leadId, ownerId, pipelineId);
+    }
+
+    /* 2. Email automations — needs Resend. */
+    if (!isEmailConfigured()) {
+      return NextResponse.json({ ok: true, pipelined, enrolled: 0, sent: 0 });
+    }
     const result = leadId
       ? await enrollLead(leadId, ownerId)
       : await enrollBooking(bookingId, ownerId);
-    return NextResponse.json({ ok: true, ...result });
+    return NextResponse.json({ ok: true, pipelined, ...result });
   } catch (err) {
     console.error("[Credibly] automation enroll failed:", err);
     return NextResponse.json(
