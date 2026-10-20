@@ -23,6 +23,8 @@ import type {
   AIGenerationRecord,
   AnalyticsEvent,
   AnalyticsSummary,
+  Automation,
+  AutomationSend,
   Booking,
   BookingAnswer,
   Commission,
@@ -91,6 +93,11 @@ export const COL = {
   teamMemberships: "team_memberships",
   teamEvents: "team_events",
   eventRsvps: "event_rsvps",
+  /* Email automations — graphs owned by users; enrollments + sends
+     are written by the server engine only (Admin SDK). */
+  automations: "automations",
+  automationEnrollments: "automation_enrollments",
+  automationSends: "automation_sends",
 } as const;
 
 /** Subcollection name for a user's saved-build locker. */
@@ -573,6 +580,64 @@ export async function upsertPipeline(pipeline: Pipeline): Promise<void> {
 export async function deletePipeline(id: string): Promise<void> {
   if (!isFirebaseConfigured) return;
   await deleteDoc(doc(db, COL.pipelines, id));
+}
+
+/* ---------------- Email Automations ---------------- */
+
+export async function listAutomations(ownerId: string): Promise<Automation[]> {
+  if (!isFirebaseConfigured) return [];
+  const snap = await getDocs(
+    query(collection(db, COL.automations), where("ownerId", "==", ownerId)),
+  );
+  return snap.docs
+    .map((d) => ({ ...(d.data() as Automation), id: d.id }))
+    .sort((a, b) => b.updatedAt - a.updatedAt);
+}
+
+export async function getAutomation(id: string): Promise<Automation | null> {
+  if (!isFirebaseConfigured) return null;
+  const snap = await getDoc(doc(db, COL.automations, id));
+  return snap.exists()
+    ? ({ ...(snap.data() as Automation), id: snap.id } as Automation)
+    : null;
+}
+
+export async function upsertAutomation(automation: Automation): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await setDoc(doc(db, COL.automations, automation.id), automation);
+}
+
+export async function deleteAutomation(id: string): Promise<void> {
+  if (!isFirebaseConfigured) return;
+  await deleteDoc(doc(db, COL.automations, id));
+}
+
+/**
+ * Owner-side stats for one automation: send / open / click counts.
+ * Reads the server-written automation_sends log (rules allow owner
+ * reads). Capped at 500 recent sends — enough for the editor header.
+ */
+export async function getAutomationStats(
+  automationId: string,
+  ownerId: string,
+): Promise<{ sends: number; opens: number; clicks: number }> {
+  if (!isFirebaseConfigured) return { sends: 0, opens: 0, clicks: 0 };
+  const snap = await getDocs(
+    query(
+      collection(db, COL.automationSends),
+      where("ownerId", "==", ownerId),
+      where("automationId", "==", automationId),
+      fsLimit(500),
+    ),
+  );
+  let opens = 0;
+  let clicks = 0;
+  for (const d of snap.docs) {
+    const data = d.data() as AutomationSend;
+    if (data.openedAt) opens += 1;
+    if (data.clickedAt) clicks += 1;
+  }
+  return { sends: snap.size, opens, clicks };
 }
 
 /**
@@ -1280,13 +1345,16 @@ export async function isUsernameAvailable(
 
 export async function createLead(
   lead: Omit<Lead, "id" | "createdAt">,
-): Promise<void> {
-  if (!isFirebaseConfigured) return;
-  await addDoc(collection(db, COL.leads), {
+): Promise<string | null> {
+  if (!isFirebaseConfigured) return null;
+  const ref = await addDoc(collection(db, COL.leads), {
     ...lead,
     createdAt: Date.now(),
     serverCreatedAt: serverTimestamp(),
   });
+  /* The id feeds the automation-enroll trigger on public pages —
+     existing callers that ignore the return value are unaffected. */
+  return ref.id;
 }
 
 /**

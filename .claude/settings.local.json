@@ -82,7 +82,10 @@
       "Bash(echo \"EXIT=$?\")",
       "Bash(awk '{print $1}')",
       "mcp__visualize__show_widget",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Read(//c/Users/Project/Desktop/Volten/Legends System/**)",
+      "Read(//c/Users/Project/Desktop/Volten/Legends System/app/**)",
+      "Bash(ls \"C:\\\\Users\\\\Project\\\\Desktop\\\\Volten\" 2>&1)"
     ]
   }
 }

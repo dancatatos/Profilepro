@@ -68,7 +68,7 @@ export function PublicProfileView({
 
   const onLead: LeadSubmitFn = async (data) => {
     if (!live) return;
-    await createLead({
+    const leadId = await createLead({
       profileId: profile.id,
       ownerId: profile.ownerId,
       name: data.name,
@@ -79,6 +79,17 @@ export function PublicProfileView({
         ? { customAnswers: data.customAnswers }
         : {}),
     });
+    /* Fire-and-forget: enroll the lead into the owner's published
+       email automations. keepalive lets the request survive an
+       immediate navigation; failures never block the visitor. */
+    if (leadId && data.email) {
+      fetch("/api/automations/enroll", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leadId, ownerId: profile.ownerId }),
+        keepalive: true,
+      }).catch(() => null);
+    }
   };
 
   const onBook: BookingSubmitFn = async (data) => {

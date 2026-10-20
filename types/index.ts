@@ -1368,6 +1368,14 @@ export interface Lead {
    * custom questions or the visitor skipped them all.
    */
   customAnswers?: LeadCustomAnswer[];
+  /**
+   * Set when the lead clicked an Unsubscribe link in an automated
+   * email. The automation engine refuses to email unsubscribed leads
+   * and cancels their active enrollments — legally required opt-out
+   * (CAN-SPAM / DPA hygiene). Manual copy-paste follow-ups are not
+   * affected; this only gates platform-sent email.
+   */
+  unsubscribed?: boolean;
 }
 
 export interface LeadCustomAnswer {
@@ -1528,6 +1536,111 @@ export interface Pipeline {
   clonedFromBundleSource?: string;
   createdAt: number;
   updatedAt: number;
+}
+
+/* ---------------- Email Automations ---------------- */
+/* Adapted from the Legends System automation engine (graph of nodes,
+   enroll-on-trigger, cron-resumed waits). Phase 1 ships Email + Wait
+   nodes with a lead-captured trigger; the node union is designed to
+   grow Task / Condition / Stage nodes (Phases 2-3) without migration. */
+
+export type AutomationStatus = "draft" | "published" | "paused";
+
+/** Phase 1 has a single trigger. Future: "stage_entered", "payment_approved". */
+export type AutomationTrigger = "lead_captured";
+
+/**
+ * One automated email. `subject` + `body` support the SAME merge
+ * fields as follow-up templates ({name} {fullname} {email} {phone})
+ * plus [text](url) links, which render as real hyperlinks in the
+ * HTML email (unlike the copy-paste templates where they flatten).
+ */
+export interface AutomationEmailNode {
+  id: string;
+  type: "email";
+  subject: string;
+  body: string;
+}
+
+/** Pause before the next node. The engine re-checks via cron. */
+export interface AutomationWaitNode {
+  id: string;
+  type: "wait";
+  amount: number;
+  unit: "minutes" | "hours" | "days";
+}
+
+export type AutomationNode = AutomationEmailNode | AutomationWaitNode;
+
+export interface AutomationSettings {
+  /**
+   * Send-window hours (0-23). Emails that come due outside the window
+   * are held until it opens — nobody gets a 3 AM welcome email.
+   */
+  windowStart: number;
+  windowEnd: number;
+  /** IANA timezone the window is evaluated in. Default Asia/Manila. */
+  timezone: string;
+}
+
+export interface Automation {
+  id: string;
+  ownerId: string;
+  name: string;
+  status: AutomationStatus;
+  trigger: AutomationTrigger;
+  /**
+   * Optional pipeline filter — only leads routed into one of these
+   * pipelines enroll. Empty / absent = every captured lead enrolls.
+   */
+  pipelineIds?: string[];
+  /** Ordered flow. Executed top-to-bottom; waits pause execution. */
+  nodes: AutomationNode[];
+  settings: AutomationSettings;
+  /** Lifetime number of leads enrolled — list-page stat. */
+  enrollCount?: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+/**
+ * One lead's progress through one automation. Server-written only
+ * (Admin SDK) — clients read for stats but never write. `dueAt` is
+ * when the next node should run; the cron claims active enrollments
+ * whose dueAt has passed.
+ */
+export interface AutomationEnrollment {
+  id: string;
+  automationId: string;
+  ownerId: string;
+  leadId: string;
+  /** Index into Automation.nodes of the NEXT node to execute. */
+  nextNodeIndex: number;
+  status: "active" | "completed" | "canceled";
+  dueAt: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+/**
+ * Log of one automated email send — powers open/click stats today
+ * and the clicked/opened condition branches in Phase 3. The open
+ * pixel (/e/o) stamps openedAt; the click redirect (/e/c) stamps
+ * clickedAt; both first-touch only.
+ */
+export interface AutomationSend {
+  id: string;
+  ownerId: string;
+  automationId: string;
+  nodeId: string;
+  enrollmentId: string;
+  leadId: string;
+  /** Recipient email snapshot at send time. */
+  to: string;
+  subject: string;
+  sentAt: number;
+  openedAt?: number;
+  clickedAt?: number;
 }
 
 /* ---------------- Analytics ---------------- */

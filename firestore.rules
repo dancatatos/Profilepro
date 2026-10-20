@@ -199,6 +199,31 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // ---- Email Automations ----
+    // Graphs are owner-authored from /automations. Enrollments and
+    // the send log are written EXCLUSIVELY by the server engine
+    // (Admin SDK bypasses rules) — clients only read their own rows
+    // for the stats header. Tracking writes (opens/clicks/unsub)
+    // also arrive via Admin SDK routes, never the client.
+    match /automations/{automationId} {
+      allow read, list: if isAdmin()
+        || (isSignedIn() && resource.data.ownerId == request.auth.uid);
+      allow create, update: if isSignedIn()
+        && request.resource.data.ownerId == request.auth.uid;
+      allow delete: if isAdmin()
+        || (isSignedIn() && resource.data.ownerId == request.auth.uid);
+    }
+    match /automation_enrollments/{enrollmentId} {
+      allow read, list: if isAdmin()
+        || (isSignedIn() && resource.data.ownerId == request.auth.uid);
+      allow write: if false;
+    }
+    match /automation_sends/{sendId} {
+      allow read, list: if isAdmin()
+        || (isSignedIn() && resource.data.ownerId == request.auth.uid);
+      allow write: if false;
+    }
+
     // ---- Follow-Up Pipelines (owner-scoped + share-code lookup) ----
     // The owner has full CRUD on their pipelines. Any signed-in user
     // can list/read for the "clone by share code" path — security

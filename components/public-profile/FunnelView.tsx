@@ -134,7 +134,7 @@ export function FunnelView({
    */
   const onLead: LeadSubmitFn = async (data, options) => {
     if (live) {
-      await createLead({
+      const leadId = await createLead({
         profileId,
         ownerId,
         name: data.name,
@@ -145,6 +145,16 @@ export function FunnelView({
           ? { customAnswers: data.customAnswers }
           : {}),
       });
+      /* Fire-and-forget automation enroll — keepalive survives the
+         funnel auto-advance; failures never block the visitor. */
+      if (leadId && data.email) {
+        fetch("/api/automations/enroll", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ leadId, ownerId }),
+          keepalive: true,
+        }).catch(() => null);
+      }
     }
     if (!options?.skipAdvance) advance();
   };
