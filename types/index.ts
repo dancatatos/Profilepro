@@ -1694,6 +1694,13 @@ export interface AutomationEnrollment {
   id: string;
   automationId: string;
   ownerId: string;
+  /**
+   * Short processing lease (epoch ms). A worker atomically sets this
+   * before running the enrollment so concurrent workers (cron tick,
+   * page-open tick ping, enroll flush) can't double-send; cleared at
+   * every stopping point, so it only lingers after a crashed run.
+   */
+  claimedUntil?: number;
   /** Set for lead_captured enrollments — the recipient is this lead. */
   leadId?: string;
   /** Set for appointment_booked enrollments — recipient is the booking's visitor. */

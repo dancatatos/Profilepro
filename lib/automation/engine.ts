@@ -253,6 +253,29 @@ async function runEnrollment({ automation, enrollment }: RunDeps): Promise<{
   const db = getAdminDb();
   let sent = 0;
 
+  /* Atomic claim — several workers can reach the same due enrollment
+     at once (the cron tick, a page-open tick ping, and an enroll's
+     flush all call into here), and without a gate each would send the
+     same email. The transaction lets exactly one caller take a short
+     lease; everyone else backs off. The lease simply expires — once
+     this run finishes, dueAt/status have moved on, so a stale lease
+     only ever delays a crashed run's retry, never drops it. */
+  const enrollRef = db.collection("automation_enrollments").doc(enrollment.id);
+  const CLAIM_MS = 120_000;
+  const claimed = await db.runTransaction(async (tx) => {
+    const snap = await tx.get(enrollRef);
+    if (!snap.exists) return false;
+    const cur = snap.data() as AutomationEnrollment & {
+      claimedUntil?: number;
+    };
+    if (cur.status !== "active") return false;
+    if (cur.nextNodeIndex !== enrollment.nextNodeIndex) return false;
+    if ((cur.claimedUntil ?? 0) > Date.now()) return false;
+    tx.update(enrollRef, { claimedUntil: Date.now() + CLAIM_MS });
+    return true;
+  });
+  if (!claimed) return { sent };
+
   /* Load the recipient fresh each run — unsubscribes / deletions
      between waits must stop the sequence. A deleted booking also
      cancels pending appointment reminders (cancel-safety). */
@@ -261,10 +284,12 @@ async function runEnrollment({ automation, enrollment }: RunDeps): Promise<{
   const finish = async (
     patch: Partial<AutomationEnrollment>,
   ): Promise<void> => {
+    /* claimedUntil: 0 releases the claim at every legitimate stopping
+       point — the lease only outlives a run that crashed mid-flight. */
     await db
       .collection("automation_enrollments")
       .doc(enrollment.id)
-      .update({ ...patch, updatedAt: Date.now() });
+      .update({ ...patch, claimedUntil: 0, updatedAt: Date.now() });
   };
 
   if (!recipient || recipient.unsubscribed || !recipient.email) {
